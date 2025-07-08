@@ -1,0 +1,17 @@
+<tr id="used_ticket_<%= ticket.id %>">
+  <td class="text-center"><%= ticket.title %></td>
+  <td class="text-nowrap text-center"><%= ticket.purchase_date.strftime("%Y-%m-%d") %></td>
+  <td class="text-nowrap text-center"><%= ticket.expiry_date.strftime("%Y-%m-%d") %></td>
+  <td class="text-center"><%= ticket.total_count %> 回</td>
+  <td class="text-center text-muted">0 回</td>
+  <td class="text-center">
+    <div class="btn-group btn-group-sm" role="group">
+      <%= button_to "削除", admin_ticket_path(ticket),
+          method: :delete,
+          remote: true,
+          form: { data: { turbo_stream: true } },
+          class: "btn btn-outline-danger",
+          data: { confirm: "このチケットを削除しますか？" } %>
+    </div>
+  </td>
+</tr>

@@ -1,0 +1,15 @@
+<div class="container my-5">
+  <div class="card shadow">
+    <div class="card-header bg-dark text-white">
+      <h2 class="mb-0">新規テンプレート作成</h2>
+    </div>
+
+    <div class="card-body">
+      <%= render partial: "form", locals: { template: @template } %>
+
+      <div class="mt-4">
+        <%= link_to "← テンプレート一覧に戻る", admin_ticket_templates_path, class: "btn btn-outline-secondary" %>
+      </div>
+    </div>
+  </div>
+</div>

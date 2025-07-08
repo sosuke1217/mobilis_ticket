@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  total_count: 1
+  remaining_count: 1
+  purchase_date: 2025-06-10 17:40:10
+  expiry_date: 2025-06-10 17:40:10
+
+two:
+  total_count: 1
+  remaining_count: 1
+  purchase_date: 2025-06-10 17:40:10
+  expiry_date: 2025-06-10 17:40:10

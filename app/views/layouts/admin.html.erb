@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>管理画面</title>
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+  <%= stylesheet_link_tag    "application", media: "all" %>
+  <%= javascript_importmap_tags %>
+</head>
+<body>
+  <header>
+    <h1>管理ダッシュボード</h1>
+    <%= link_to "ログアウト", destroy_admin_user_session_path, method: :delete, data: { confirm: "本当にログアウトしますか？" } %>
+  </header>
+  <main>
+    <%= yield %>
+  </main>
+</body>
+</html>

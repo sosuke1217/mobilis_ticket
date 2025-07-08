@@ -1,0 +1,110 @@
+<div class="container-lg my-5">
+
+  <!-- 🔷 管理メニューカード -->
+  <div class="card shadow-sm mb-5">
+    <div class="card-header bg-dark text-white fw-bold">
+      <i class="fas fa-tools me-2"></i>管理者ダッシュボード
+    </div>
+    <ul class="list-group list-group-flush">
+      <li class="list-group-item p-0">
+        <%= link_to admin_tickets_path, class: "btn btn-light w-100 text-start rounded-0 border-0 fw-semibold" do %>
+          <i class="fas fa-ticket-alt me-2"></i>チケット一覧
+        <% end %>
+      </li>
+      <li class="list-group-item p-0">
+        <%= link_to admin_ticket_templates_path, class: "btn btn-light w-100 text-start rounded-0 border-0 fw-semibold" do %>
+          <i class="fas fa-puzzle-piece me-2"></i>テンプレート一覧
+        <% end %>
+      </li>
+      <li class="list-group-item p-0">
+        <%= link_to new_admin_ticket_template_path, class: "btn btn-light w-100 text-start rounded-0 fw-semibold" do %>
+          <i class="fas fa-plus-circle me-2"></i>テンプレート新規作成
+        <% end %>
+      </li>
+      <li class="list-group-item p-0">
+        <%= link_to admin_ticket_usages_path, class: "btn btn-light w-100 text-start rounded-0 border-0 fw-semibold" do %>
+          <i class="fas fa-calendar-check me-2"></i>使用履歴一覧
+        <% end %>
+      </li>
+      <li class="list-group-item p-0">
+        <%= link_to admin_users_path, class: "btn btn-light w-100 text-start rounded-0 border-0 fw-semibold" do %>
+          <i class="fas fa-users me-2"></i>ユーザー一覧
+        <% end %>
+      </li>
+    </ul>
+  </div>
+
+  <!-- 📊 使用状況セクション -->
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h2 class="card-title mb-4">
+        <i class="fas fa-chart-bar me-2"></i>月ごとのテンプレート別使用数
+      </h2>
+      <%= form_with url: admin_root_path, method: :get, local: true do %>
+        <div class="row g-3 align-items-end mb-4">
+          <div class="col-auto">
+            <%= label_tag :month, "月を選択", class: "form-label" %>
+            <%= select_tag :month,
+                  options_for_select(@available_months.map { |m| [m.strftime("%Y年%m月"), m.strftime("%Y-%m")] }, @selected_month.strftime("%Y-%m")),
+                  class: "form-select" %>
+          </div>
+          <div class="col-auto">
+            <%= submit_tag "表示", class: "btn btn-primary" %>
+          </div>
+        </div>
+      <% end %>
+
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <div class="alert alert-secondary d-flex align-items-center">
+            <i class="fas fa-file-invoice-dollar me-2"></i>
+            <strong class="me-2">売上合計（チケット発行）:</strong>
+            <span class="fs-5"><%= number_to_currency(@total_sales_amount, unit: "¥", precision: 0) %></span>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="alert alert-info d-flex align-items-center">
+            <i class="fas fa-check-circle me-2"></i>
+            <strong class="me-2">消化合計（チケット使用）:</strong>
+            <span class="fs-5"><%= number_to_currency(@total_sales, unit: "¥", precision: 0) %></span>
+          </div>
+        </div>
+      </div>
+
+      <% if @template_usage_stats.present? %>
+        <div class="table-responsive">
+          <table class="table table-striped table-hover table-bordered">
+            <thead>
+              <tr>
+                <th>テンプレート名</th>
+                <th>使用回数</th>
+                <th>消化金額</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @template_usage_stats.each do |template_name, count| %>
+                <% unit_price = @template_prices[template_name].to_i %>
+                <% subtotal = unit_price * count %>
+                <tr>
+                  <td><%= template_name %></td>
+                  <td><%= count %></td>
+                  <td><%= number_to_currency(subtotal, unit: "¥", precision: 0) %></td>
+                </tr>
+              <% end %>
+            </tbody>
+            <tfoot>
+              <tr class="table-secondary fw-bold">
+                <td>合計</td>
+                <td><%= @total_usage_count %></td>
+                <td><%= number_to_currency(@total_sales, unit: "¥", precision: 0) %></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      <% else %>
+        <p class="text-muted">この月にはデータがありません。</p>
+      <% end %>
+    </div>
+  </div>
+
+</div>

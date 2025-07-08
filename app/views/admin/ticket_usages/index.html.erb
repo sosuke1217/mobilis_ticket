@@ -1,0 +1,67 @@
+<div class="container my-4">
+  <h1 class="mb-4">使用履歴一覧</h1>
+
+  <!-- 🔍 検索フォーム -->
+  <%= search_form_for @q, url: admin_ticket_usages_path, method: :get, html: { class: "row g-3 align-items-end mb-4" } do |f| %>
+    <div class="col-md-4">
+      <%= f.label :user_name_cont, "ユーザー名", class: "form-label" %>
+      <%= f.text_field :user_name_cont, class: "form-control", placeholder: "例: 山田太郎" %>
+    </div>
+    <div class="col-md-4">
+      <%= f.label :ticket_ticket_template_name_cont, "テンプレート名", class: "form-label" %>
+      <%= f.text_field :ticket_ticket_template_name_cont, class: "form-control", placeholder: "例: 月4回券" %>
+    </div>
+    <div class="col-md-3">
+      <%= label_tag :year_month, "月で絞り込み", class: "form-label" %>
+      <%= select_tag :year_month,
+            options_for_select(month_options, params[:year_month]),
+            include_blank: "全て", class: "form-select" %>
+    </div>
+    <div class="col-md-auto">
+      <%= f.submit "検索", class: "btn btn-primary" %>
+      <%= link_to "リセット", admin_ticket_usages_path, class: "btn btn-outline-secondary ms-2" %>
+    </div>
+  <% end %>
+
+ <div class="mb-3">
+  <%= link_to "CSVでダウンロード",
+      admin_ticket_usages_path(format: :csv, q: params[:q]&.to_unsafe_h, year_month: params[:year_month]),
+      class: "btn btn-sm btn-outline-success" %>
+  </div>
+
+  <!-- 📋 使用履歴テーブル -->
+  <% if @ticket_usages.any? %>
+    <table class="table table-bordered table-hover">
+      <thead class="table-dark">
+        <tr>
+          <th><%= sort_link(@q, :used_at, "日時") %></th>
+          <th><%= sort_link(@q, 'user.name', "ユーザー") %></th>
+          <th><%= sort_link(@q, 'ticket.ticket_template.name', "テンプレート名") %></th>
+          <th><%= sort_link(@q, 'ticket.title', "チケット名") %></th>
+          <th>消化金額</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @ticket_usages.each do |usage| %>
+          <tr>
+            <td><%= l(usage.used_at, format: :short) %></td>
+            <td>
+              <%= link_to(usage.user&.name.presence || usage.user&.line_user_id || "不明", admin_user_path(usage.user), class: "text-decoration-none") if usage.user.present? %>
+            </td>
+            <td><%= usage.ticket&.ticket_template&.name || "不明" %></td>
+            <td><%= usage.ticket&.title || "不明" %></td>
+            <td>
+              <% price = usage.ticket&.unit_price %>
+              <%= price ? number_to_currency(price, unit: "¥", precision: 0) : "不明" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p class="text-muted">使用履歴はまだありません。</p>
+  <% end %>
+  <div class="mt-3">
+    <%= paginate @ticket_usages %>
+  </div>
+</div>

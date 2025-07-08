@@ -1,0 +1,17 @@
+<% if @ticket.remaining_count == 0 %>
+  <%= turbo_stream.remove "ticket_#{@ticket.id}" %>
+
+  <%= turbo_stream.append "used_ticket_table_body" do %>
+    <%= render partial: "admin/tickets/partials/used_ticket_row", locals: { ticket: @ticket } %>
+  <% end %>
+
+  <% if @ticket.user.tickets.where("remaining_count > 0").none? %>
+    <%= turbo_stream.update "active_ticket_section" do %>
+      <div class="p-3"><p class="text-muted">使用可能なチケットはありません。</p></div>
+    <% end %>
+  <% end %>
+<% else %>
+  <%= turbo_stream.replace "ticket_#{@ticket.id}" do %>
+    <%= render partial: "admin/tickets/partials/ticket_row", locals: { ticket: @ticket } %>
+  <% end %>
+<% end %>

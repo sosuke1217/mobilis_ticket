@@ -1,0 +1,89 @@
+<div class="container">
+  <!-- 👤 顧客情報 -->
+  <div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+      <div>
+        <h2 class="mb-1"><%= @user.name.presence || "顧客名未登録" %></h2>
+        <small class="text-muted">会員番号：<%= @user.id %></small>
+      </div>
+      <div class="text-end mt-2 mt-md-0">
+        <small class="text-muted">売上登録日：<%= Date.today.strftime("%Y-%m-%d") %></small>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🧾 チケット発行フォーム -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-dark text-white fw-bold">🎫 チケット発行</div>
+    <div class="card-body">
+      <%= form_with url: admin_user_create_ticket_from_template_path(@user), method: :post do %>
+        <div class="row g-3 align-items-end">
+          <div class="col-md-6">
+            <%= label_tag :template_id, "購入回数券選択", class: "form-label" %>
+            <%= select_tag :template_id,
+                options_from_collection_for_select(@ticket_templates, :id, :name),
+                prompt: "テンプレートを選択",
+                class: "form-select" %>
+          </div>
+          <div class="col-md-auto">
+            <%= submit_tag "発行する", class: "btn btn-primary px-4" %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- 📋 発行済みチケット一覧 -->
+  <div class="card shadow-sm">
+    <div class="card-header bg-success text-white fw-bold">🗂️ 発行済みチケット一覧</div>
+    <div class="card-body p-0" id="active_ticket_section">
+      <% if @active_tickets.any? %>
+        <div class="table-responsive">
+          <table class="table table-hover table-striped align-middle mb-0">
+            <thead class="table-light text-center">
+              <tr>
+                <th>チケット名</th>
+                <th>購入日</th>
+                <th>有効期限</th>
+                <th>消化済</th>
+                <th>残数</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="active_ticket_table_body">
+              <% @active_tickets.each do |ticket| %>
+                <tr id="ticket_<%= ticket.id %>">
+                  <td class="text-center"><%= ticket.title %></td>
+                  <td class="text-nowrap text-center"><%= ticket.purchase_date.strftime("%Y-%m-%d") %></td>
+                  <td class="text-nowrap text-center"><%= ticket.expiry_date.strftime("%Y-%m-%d") %></td>
+                  <td class="text-center"><%= ticket.total_count - ticket.remaining_count %> 回</td>
+                  <td class="text-center fw-bold"><%= ticket.remaining_count %> 回</td>
+                  <td class="text-center">
+                    <div class="btn-group btn-group-sm" role="group">
+                      <%= button_to "消化", use_admin_ticket_path(ticket),
+                          method: :post,
+                          remote: true,
+                          form: { data: { turbo_stream: true } },
+                          class: "btn btn-outline-success",
+                          data: { confirm_remote: "このチケットを1回分使用しますか？" } %>
+                      <%= button_to "削除", admin_ticket_path(ticket),
+                          method: :delete,
+                          remote: true,
+                          form: { data: { turbo_stream: true } },
+                          class: "btn btn-outline-danger",
+                          data: { confirm: "このチケットを削除しますか？" } %>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="p-3">
+          <p class="text-muted mb-0">まだチケットが発行されていません。</p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

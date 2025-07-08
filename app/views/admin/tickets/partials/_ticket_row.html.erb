@@ -1,0 +1,23 @@
+<tr id="ticket_<%= ticket.id %>">
+  <td class="text-center"><%= ticket.title %></td>
+  <td class="text-nowrap text-center"><%= ticket.purchase_date.strftime("%Y-%m-%d") %></td>
+  <td class="text-nowrap text-center"><%= ticket.expiry_date.strftime("%Y-%m-%d") %></td>
+  <td class="text-center"><%= ticket.total_count - ticket.remaining_count %> 回</td>
+  <td class="text-center fw-bold"><%= ticket.remaining_count %> 回</td>
+  <td class="text-center">
+    <div class="btn-group btn-group-sm" role="group">
+      <%= button_to "消化", use_admin_ticket_path(ticket),
+          method: :post,
+          remote: true,
+          form: { data: { turbo_stream: true } },
+          class: "btn btn-outline-success",
+          data: { confirm_remote: "このチケットを1回分使用しますか？" } %>
+      <%= button_to "削除", admin_ticket_path(ticket),
+          method: :delete,
+          remote: true,
+          form: { data: { turbo_stream: true } },
+          class: "btn btn-outline-danger",
+          data: { confirm: "このチケットを削除しますか？" } %>
+    </div>
+  </td>
+</tr>

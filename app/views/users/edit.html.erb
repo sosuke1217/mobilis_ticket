@@ -1,0 +1,12 @@
+<h1>ユーザー名編集</h1>
+
+<%= form_with model: @user, local: true do |f| %>
+  <p>
+    <%= f.label :name, "名前" %><br>
+    <%= f.text_field :name %>
+  </p>
+
+  <p><%= f.submit "更新" %></p>
+<% end %>
+
+<%= link_to "戻る", root_path %>

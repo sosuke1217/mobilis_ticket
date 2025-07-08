@@ -1,0 +1,11 @@
+<% if @ticket.user.tickets.where("remaining_count > 0").count == 1 %>
+  <%# 初めてのチケット発行（テーブル全体を描画） %>
+  <%= turbo_stream.update "active_ticket_section" do %>
+    <%= render partial: "admin/tickets/partials/ticket_table", locals: { tickets: [@ticket] } %>
+  <% end %>
+<% else %>
+  <%# 既にチケットがある場合は1行だけ追加 %>
+  <%= turbo_stream.append "active_ticket_table_body" do %>
+    <%= render partial: "admin/tickets/partials/ticket_row", locals: { ticket: @ticket } %>
+  <% end %>
+<% end %>

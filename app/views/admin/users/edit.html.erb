@@ -1,0 +1,51 @@
+<div class="container my-4">
+  <h1 class="mb-4">ユーザー編集</h1>
+
+  <div class="card">
+    <div class="card-body">
+      <%= form_with model: [:admin, @user], local: true do |f| %>
+
+        <div class="mb-3">
+          <%= f.label :name, "名前", class: "form-label" %>
+          <%= f.text_field :name, class: "form-control" %>
+        </div>
+
+        <div class="mb-3">
+          <%= f.label :birth_date, "生年月日", class: "form-label" %>
+          <%= f.date_field :birth_date, class: "form-control" %>
+        </div>
+
+        <div class="mb-3">
+          <%= f.label :postal_code, "郵便番号", class: "form-label" %>
+          <%= f.text_field :postal_code, class: "form-control" %>
+        </div>
+
+        <div class="mb-3">
+          <%= f.label :address, "住所", class: "form-label" %>
+          <%= f.text_field :address, class: "form-control" %>
+        </div>
+
+        <div class="mb-3">
+          <%= f.label :phone_number, "電話番号", class: "form-label" %>
+          <%= f.telephone_field :phone_number, class: "form-control" %>
+        </div>
+
+        <div class="mb-3">
+          <%= f.label :email, "メールアドレス", class: "form-label" %>
+          <%= f.email_field :email, class: "form-control" %>
+        </div>
+        <!-- 🔼 追加ここまで -->
+
+        <div class="mb-3">
+          <%= f.label :admin_memo, "管理者メモ", class: "form-label" %>
+          <%= f.text_area :admin_memo, rows: 5, class: "form-control", placeholder: "施術メモ、目標、注意点など" %>
+        </div>
+
+        <div>
+          <%= f.submit "更新", class: "btn btn-primary" %>
+          <%= link_to "詳細に戻る", admin_user_path(@user), class: "btn btn-secondary ms-2" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,18 @@
+<h1 class="mb-4">チケット消費記録</h1>
+
+<%= form_with model: [:admin, @usage], url: admin_ticket_usages_path, local: true do |f| %>
+  <div class="mb-3">
+    <%= f.label :ticket_id, "チケット選択", class: "form-label" %>
+    <%= f.collection_select :ticket_id, @tickets, :id,
+          ->(t) { "#{t.user&.name || t.user&.line_user_id} - #{t.title}（残り#{t.remaining_count}回）" },
+          { prompt: "チケットを選択してください" },
+          { class: "form-select" } %>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :note, "施術メモ（任意）", class: "form-label" %>
+    <%= f.text_area :note, rows: 4, class: "form-control", placeholder: "例：肩まわり中心。右肩の可動域に左右差あり。" %>
+  </div>
+
+  <%= f.submit "1回分消費する", class: "btn btn-primary" %>
+<% end %>
