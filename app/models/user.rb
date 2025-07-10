@@ -1,7 +1,14 @@
 class User < ApplicationRecord
   has_many :tickets, dependent: :destroy
   has_many :ticket_usages
+  has_one :notification_preference, dependent: :destroy
+  after_create :build_default_notification_preference
+  
 
+  def build_default_notification_preference
+    create_notification_preference!(enabled: true)
+  end
+  
   def admin?
     admin
   end

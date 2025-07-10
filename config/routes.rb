@@ -9,6 +9,7 @@ Rails.application.routes.draw do
   root to: "admin/dashboard#index"
 
   namespace :admin do
+    get "notification_logs/index"
     root to: "dashboard#index"
   
     resources :tickets, only: [:index, :create, :destroy] do
@@ -24,6 +25,8 @@ Rails.application.routes.draw do
       post 'tickets/create_from_template', to: 'tickets#create_from_template', as: 'create_ticket_from_template'
       get 'ticket_usages', to: 'users#ticket_usages'
     end
+
+    resources :notification_logs, only: [:index, :destroy]
 
   end
   

@@ -36,18 +36,13 @@ class Admin::TicketUsagesController < ApplicationController
     ticket = Ticket.find(params[:ticket_usage][:ticket_id])
     user = ticket.user
   
-    if ticket.remaining_count > 0
-      ticket.with_lock do
-        ticket.remaining_count -= 1
-        ticket.save!
-  
-        TicketUsage.create!(
-          user: user,
-          ticket: ticket,
-          used_at: Time.current,
-          note: params[:ticket_usage][:note] # ← メモを追加！
-        )
-      end
+    if ticket.use_one
+      TicketUsage.create!(
+        user: user,
+        ticket: ticket,
+        used_at: Time.current,
+        note: params[:ticket_usage][:note]
+      )
   
       redirect_to admin_ticket_usages_path, notice: "チケットを1回分消費しました。"
     else

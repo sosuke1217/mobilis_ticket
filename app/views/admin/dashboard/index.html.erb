@@ -1,39 +1,4 @@
 <div class="container-lg my-5">
-
-  <!-- 🔷 管理メニューカード -->
-  <div class="card shadow-sm mb-5">
-    <div class="card-header bg-dark text-white fw-bold">
-      <i class="fas fa-tools me-2"></i>管理者ダッシュボード
-    </div>
-    <ul class="list-group list-group-flush">
-      <li class="list-group-item p-0">
-        <%= link_to admin_tickets_path, class: "btn btn-light w-100 text-start rounded-0 border-0 fw-semibold" do %>
-          <i class="fas fa-ticket-alt me-2"></i>チケット一覧
-        <% end %>
-      </li>
-      <li class="list-group-item p-0">
-        <%= link_to admin_ticket_templates_path, class: "btn btn-light w-100 text-start rounded-0 border-0 fw-semibold" do %>
-          <i class="fas fa-puzzle-piece me-2"></i>テンプレート一覧
-        <% end %>
-      </li>
-      <li class="list-group-item p-0">
-        <%= link_to new_admin_ticket_template_path, class: "btn btn-light w-100 text-start rounded-0 fw-semibold" do %>
-          <i class="fas fa-plus-circle me-2"></i>テンプレート新規作成
-        <% end %>
-      </li>
-      <li class="list-group-item p-0">
-        <%= link_to admin_ticket_usages_path, class: "btn btn-light w-100 text-start rounded-0 border-0 fw-semibold" do %>
-          <i class="fas fa-calendar-check me-2"></i>使用履歴一覧
-        <% end %>
-      </li>
-      <li class="list-group-item p-0">
-        <%= link_to admin_users_path, class: "btn btn-light w-100 text-start rounded-0 border-0 fw-semibold" do %>
-          <i class="fas fa-users me-2"></i>ユーザー一覧
-        <% end %>
-      </li>
-    </ul>
-  </div>
-
   <!-- 📊 使用状況セクション -->
   <div class="card shadow-sm">
     <div class="card-body">

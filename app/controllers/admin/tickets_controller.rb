@@ -56,18 +56,12 @@ class Admin::TicketsController < ApplicationController
   def use
     @ticket = Ticket.find(params[:id])
   
-    if @ticket.remaining_count > 0
-      @ticket.with_lock do
-        @ticket.remaining_count -= 1
-        @ticket.save!
-  
-        # ✅ 使用履歴を記録
-        TicketUsage.create!(
-          ticket: @ticket,
-          user: @ticket.user,
-          used_at: Time.zone.now
-        )
-      end
+    if @ticket.use_one
+      TicketUsage.create!(
+        ticket: @ticket,
+        user: @ticket.user,
+        used_at: Time.zone.now
+      )
   
       respond_to do |format|
         format.turbo_stream

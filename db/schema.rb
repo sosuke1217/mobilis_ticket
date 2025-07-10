@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_07_05_162020) do
+ActiveRecord::Schema[7.2].define(version: 2025_07_08_101407) do
   create_table "admin_users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -21,6 +21,26 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_05_162020) do
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_admin_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_admin_users_on_reset_password_token", unique: true
+  end
+
+  create_table "notification_logs", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.integer "ticket_id", null: false
+    t.string "kind", null: false
+    t.text "message", null: false
+    t.datetime "sent_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ticket_id"], name: "index_notification_logs_on_ticket_id"
+    t.index ["user_id"], name: "index_notification_logs_on_user_id"
+  end
+
+  create_table "notification_preferences", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.boolean "enabled", default: true
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_notification_preferences_on_user_id"
   end
 
   create_table "ticket_templates", force: :cascade do |t|
@@ -71,6 +91,9 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_05_162020) do
     t.date "birth_date"
   end
 
+  add_foreign_key "notification_logs", "tickets"
+  add_foreign_key "notification_logs", "users"
+  add_foreign_key "notification_preferences", "users"
   add_foreign_key "ticket_usages", "tickets"
   add_foreign_key "ticket_usages", "users"
   add_foreign_key "tickets", "users"

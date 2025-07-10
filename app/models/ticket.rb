@@ -17,11 +17,13 @@ class Ticket < ApplicationRecord
   end
 
   def use_one
-    if usable?
-      self.remaining_count -= 1
-      save
-    else
-      false
+    with_lock do
+      if usable?
+        self.remaining_count -= 1
+        save
+      else
+        false
+      end
     end
   end
 
