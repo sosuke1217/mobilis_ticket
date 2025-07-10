@@ -27,6 +27,23 @@ class Ticket < ApplicationRecord
     end
   end
 
+   # Atomically consume one ticket and record the usage
+   def consume_one(note: nil, used_at: Time.current)
+    with_lock do
+      return false unless usable?
+
+      transaction do
+        self.remaining_count -= 1
+        save!
+        ticket_usages.create!(user: user, used_at: used_at, note: note)
+      end
+    end
+
+    true
+  rescue ActiveRecord::RecordInvalid
+    false
+  end
+
   def self.ransackable_attributes(auth_object = nil)
     %w[id ticket_template_id user_id remaining_count created_at updated_at]
   end

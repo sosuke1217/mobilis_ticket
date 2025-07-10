@@ -23,7 +23,7 @@ class User < ApplicationRecord
 
   # ✅ 残チケット枚数の合計
   def active_ticket_count
-    tickets.sum(&:remaining_count)
+    tickets.sum(:remaining_count)
   end
 
   # ✅ 最終来店日（最新の使用履歴）
