@@ -1,0 +1,7 @@
+<select class="form-select" id="available-time-select">
+  <% slots.each do |slot| %>
+    <option value="<%= slot.strftime('%Y-%m-%d %H:%M') %>">
+      <%= slot.strftime('%H:%M') %>
+    </option>
+  <% end %>
+</select>

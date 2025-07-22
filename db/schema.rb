@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_07_08_101407) do
+ActiveRecord::Schema[7.2].define(version: 2025_07_17_123835) do
   create_table "admin_users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -43,6 +43,19 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_08_101407) do
     t.index ["user_id"], name: "index_notification_preferences_on_user_id"
   end
 
+  create_table "reservations", force: :cascade do |t|
+    t.string "name"
+    t.date "date"
+    t.time "time"
+    t.string "course"
+    t.text "note"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "start_time"
+    t.datetime "end_time"
+    t.integer "user_id"
+  end
+
   create_table "ticket_templates", force: :cascade do |t|
     t.string "name"
     t.integer "total_count"
@@ -71,9 +84,9 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_08_101407) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
-    t.date "expires_at"
     t.string "title"
     t.integer "ticket_template_id"
+    t.index ["ticket_template_id"], name: "index_tickets_on_ticket_template_id"
     t.index ["user_id"], name: "index_tickets_on_user_id"
   end
 
@@ -89,6 +102,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_08_101407) do
     t.string "phone_number"
     t.string "email"
     t.date "birth_date"
+    t.index ["line_user_id"], name: "index_users_on_line_user_id", unique: true
   end
 
   add_foreign_key "notification_logs", "tickets"

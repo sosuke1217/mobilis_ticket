@@ -138,7 +138,7 @@
                 <td><%= ticket.remaining_count %> / <%= ticket.total_count %></td>
                 <td><%= ticket.purchase_date.strftime("%Y-%m-%d") %></td>
                 <td>
-                  <% if ticket.expiry_date < Date.today %>
+                  <% if ticket.expiry_date < Time.zone.today %>
                     <span class="badge bg-danger me-1">
                       <i class="fas fa-exclamation-circle me-1"></i>期限切れ
                     </span>

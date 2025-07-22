@@ -5,9 +5,14 @@ class Admin::UsersController < ApplicationController
   def index
     @q = User.ransack(params[:q])
     @users = @q.result(distinct: true).order(created_at: :desc).page(params[:page]).per(20)
+  
+    respond_to do |format|
+      format.html # HTML表示用（テーブルなど）
+      format.json { render json: @users.limit(1000).map { |u| { id: u.id, name: u.name } } }
+    end
   end
   
-
+  
   def show
     @user = User.find(params[:id])
   
@@ -46,12 +51,6 @@ class Admin::UsersController < ApplicationController
   end  
 
   private
-
-  def authenticate_admin!
-    unless current_admin_user?
-      redirect_to root_path, alert: "管理者権限が必要です。"
-    end
-  end
 
   def set_user
     @user = User.find(params[:id])

@@ -4,7 +4,7 @@ class Admin::DashboardController < ApplicationController
 
   def index
     # 月選択（パラメータがない場合は今月）
-    @selected_month = params[:month].present? ? Date.strptime(params[:month], "%Y-%m") : Date.current.beginning_of_month
+    @selected_month = params[:month].present? ? Date.strptime(params[:month], "%Y-%m") : Time.zone.today.beginning_of_month
   
     # セレクトタグ用の月リスト
     @available_months = TicketUsage.distinct

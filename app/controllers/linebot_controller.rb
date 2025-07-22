@@ -15,7 +15,39 @@ class LinebotController < ApplicationController
     events.each do |event|
       case event
       when Line::Bot::Event::Message
-        # （今までの text 処理）
+        next unless event.type == Line::Bot::Event::MessageType::Text
+
+        user_id = event['source']['userId']
+        user = User.find_or_create_by!(line_user_id: user_id)
+
+        if user.notification_preference.nil?
+          user.create_notification_preference!(enabled: true)
+        end
+
+        message_text = event.message['text']
+
+        case message_text
+        when /通知オフ|notification off/i
+          user.notification_preference.update(enabled: false)
+          client.reply_message(event['replyToken'], {
+            type: "text",
+            text: "通知📴をオフにしました。\n今後は期限リマインダーが届きません。\nNotifications 🔕 turned off."
+          })
+
+        when /通知オン|notification on/i
+          user.notification_preference.update(enabled: true)
+          client.reply_message(event['replyToken'], {
+            type: "text",
+            text: "通知🔔をオンにしました。\n期限が近づいたチケットをお知らせします。\nNotifications 🔔 turned on."
+          })
+
+        else
+          client.reply_message(event['replyToken'], {
+            type: "text",
+            text: "「通知オン」または「通知オフ」と送信すると、通知設定を変更できます。\nType 'notification on' or 'notification off' to change your notification settings."
+          })
+        end
+
       when Line::Bot::Event::Postback
         Rails.logger.info "[LINE POSTBACK] data=#{event['postback']['data']}, user=#{event['source']['userId']}"
 
@@ -26,30 +58,35 @@ class LinebotController < ApplicationController
     
         case data
         when "check_tickets"
-          # ✅ 残数確認処理を再利用
-          tickets = user.tickets.where("remaining_count > 0 AND expiry_date >= ?", Date.today)
+          tickets = user.tickets.where("remaining_count > 0 AND expiry_date >= ?", Time.zone.today)
           if tickets.any?
             bubbles = tickets.map do |t|
-              expiry_soon = t.expiry_date <= Date.today + 30.days
+              expiry_soon = t.expiry_date <= Time.zone.today + 30.days
               low_remaining = t.remaining_count == 2
-    
+        
               contents = [
-                { type: "text", text: t.title, weight: "bold", size: "lg", wrap: true },
                 {
                   type: "text",
-                  text: "残り：#{t.remaining_count}回",
+                  text: t.title,
+                  weight: "bold",
+                  size: "lg",
+                  wrap: true
+                },
+                {
+                  type: "text",
+                  text: "残り/Remaining：#{t.remaining_count}回",
                   size: "md",
                   margin: "md"
                 }.merge(low_remaining ? { color: "#FFA500" } : {}),
                 {
                   type: "text",
-                  text: "期限：#{t.expiry_date.strftime('%Y/%m/%d')}",
+                  text: "期限/Exp：#{t.expiry_date.strftime('%Y/%m/%d')}",
                   size: "sm",
                   margin: "sm",
                   color: expiry_soon ? "#FF5555" : "#888888"
                 }
               ]
-    
+        
               {
                 type: "bubble",
                 body: {
@@ -59,10 +96,10 @@ class LinebotController < ApplicationController
                 }
               }
             end
-    
+        
             response = client.reply_message(event['replyToken'], { 
               type: "flex",
-              altText: "使用可能な回数券一覧",
+              altText: "使用可能な回数券一覧 / Available Tickets",
               contents: {
                 type: "carousel",
                 contents: bubbles
@@ -72,17 +109,34 @@ class LinebotController < ApplicationController
           else
             response = client.reply_message(event['replyToken'], {
               type: "text",
-              text: "使用可能な回数券が見つかりません。"
+              text: "使用可能な回数券が見つかりません / No available tickets found."
             })
             Rails.logger.info "[LINE API] status: #{response.code}, body: #{response.body}"
           end
     
         when "usage_history"
-          # ✅ 履歴（ダミーメッセージで仮対応）
-          response = client.reply_message(event['replyToken'], {
-            type: "text",
-            text: "🕓 最近の使用履歴は現在準備中です。"
-          })
+          usages = user.ticket_usages.order(used_at: :desc).limit(12)
+        
+          if usages.any?
+            lines = usages.map do |usage|
+              ticket_title = usage.ticket.title
+              date = usage.used_at.strftime('%Y/%m/%d')
+              "・#{date}：#{ticket_title}"
+            end
+        
+            message = "🕓 直近12回の使用履歴 / Recent 12 Usage Records\n" + lines.join("\n")
+        
+            response = client.reply_message(event['replyToken'], {
+              type: "text",
+              text: message
+            })
+          else
+            response = client.reply_message(event['replyToken'], {
+              type: "text",
+              text: "使用履歴が見つかりません / No usage records found."
+            })
+          end
+        
           Rails.logger.info "[LINE API] status: #{response.code}, body: #{response.body}"
     
         when "booking"

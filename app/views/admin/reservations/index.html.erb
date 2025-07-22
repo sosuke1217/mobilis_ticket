@@ -1,0 +1,32 @@
+<h2>予約一覧</h2>
+<p>
+  <%= link_to '＋ 新規予約を作成する', new_admin_reservation_path, class: 'btn btn-primary' %>
+</p>
+<table>
+  <thead>
+    <tr>
+      <th>お名前</th>
+      <th>日付</th>
+      <th>時間</th>
+      <th>コース</th>
+      <th>メモ</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @reservations.each do |reservation| %>
+      <tr>
+        <td><%= reservation.name %></td>
+        <td><%= reservation.date %></td>
+        <td>
+          <% if reservation.start_time && reservation.end_time %>
+            <%= reservation.start_time.strftime("%H:%M") %>〜<%= reservation.end_time.strftime("%H:%M") %>
+          <% else %>
+            未設定
+          <% end %>
+        </td>
+        <td><%= reservation.course %></td>
+        <td><%= reservation.note %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

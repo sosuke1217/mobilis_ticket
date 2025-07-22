@@ -1,0 +1,185 @@
+<div class="container my-4">
+  <h2>予約カレンダー</h2>
+  <div class="table-responsive">
+    <div id="calendar" style="width: 100%; max-width: 100%; margin: auto;"></div>
+  </div>
+</div>
+
+<!-- 予約作成・編集モーダル -->
+<div class="modal fade" id="reservationModal" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="reservationModalLabel">予約</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+      </div>
+      <div class="modal-body">
+        <form id="reservationForm">
+          <div class="mb-3">
+            <label for="reservationName" class="form-label">名前</label>
+            <input type="text" class="form-control" id="reservationName" required>
+          </div>
+          <div class="mb-3">
+            <label for="reservationCourse" class="form-label">コース</label>
+            <select class="form-control" id="reservationCourse">
+              <option value="40分">40分</option>
+              <option value="60分" selected>60分</option>
+              <option value="80分">80分</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="reservationUserId" class="form-label">ユーザー</label>
+            <select class="form-control" id="reservationUserId">
+              <option value="">選択してください</option>
+            </select>
+          </div>
+          <input type="hidden" id="reservationStartTime">
+          <input type="hidden" id="reservationId">
+          <button type="submit" class="btn btn-primary">保存</button>
+          <button type="button" id="deleteReservationBtn" class="btn btn-danger ms-2 d-none">削除</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const calendarEl = document.getElementById('calendar');
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: window.innerWidth < 768 ? "timeGridDay" : "timeGridWeek",
+      locale: 'ja',
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'timeGridWeek,timeGridDay'
+      },
+      slotMinTime: "10:00:00",
+      slotMaxTime: "20:30:00",
+      slotDuration: "00:10:00",
+      scrollTime: "10:00:00",
+      height: "auto",
+      events: "/admin/reservations.json",
+      dateClick: function(info) {
+        document.getElementById('reservationId').value = "";
+        document.getElementById('reservationName').value = "";
+        document.getElementById('reservationCourse').value = "60分";
+        document.getElementById('reservationUserId').value = "";
+        document.getElementById('reservationStartTime').value = info.dateStr;
+        document.getElementById('deleteReservationBtn').classList.add('d-none');
+        new bootstrap.Modal(document.getElementById('reservationModal')).show();
+      },
+      eventClick: function(info) {
+        if (!info.event.id.match(/^[0-9]+$/)) return;
+
+        document.getElementById('reservationId').value = info.event.id;
+        document.getElementById('reservationName').value = info.event.title;
+        document.getElementById('reservationCourse').value = info.event.extendedProps.description;
+        document.getElementById('reservationUserId').value = info.event.extendedProps.user_id || "";
+        document.getElementById('reservationStartTime').value = info.event.start.toISOString();
+        document.getElementById('deleteReservationBtn').classList.remove('d-none');
+        new bootstrap.Modal(document.getElementById('reservationModal')).show();
+      }
+    });
+
+    calendar.render();
+
+    fetch('/admin/users.json')
+      .then(response => response.json())
+      .then(data => {
+        const select = document.getElementById('reservationUserId');
+        data.forEach(user => {
+          const option = document.createElement('option');
+          option.value = user.id;
+          option.textContent = user.name;
+          select.appendChild(option);
+        });
+      });
+
+    function refetchWithDelay() {
+      setTimeout(() => {
+        calendar.refetchEvents();
+      }, 300);
+    }
+
+    document.getElementById('reservationForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const id = document.getElementById('reservationId').value;
+      const name = document.getElementById('reservationName').value;
+      const course = document.getElementById('reservationCourse').value;
+      const userId = document.getElementById('reservationUserId').value;
+      const startTime = document.getElementById('reservationStartTime').value;
+
+      let duration = 60;
+      if (course === '40分') duration = 40;
+      else if (course === '80分') duration = 80;
+
+      const endTime = new Date(new Date(startTime).getTime() + duration * 60000).toISOString();
+
+      const url = id ? `/admin/reservations/${id}` : '/admin/reservations';
+      const method = id ? 'PATCH' : 'POST';
+
+      if (method === 'PATCH' && !id.match(/^\d+$/)) {
+        alert("予約IDが不正です。");
+        return;
+      }
+
+      fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({
+          reservation: {
+            name: name,
+            start_time: startTime,
+            end_time: endTime,
+            course: course,
+            user_id: userId
+          }
+        })
+      }).then(response => {
+        const modalEl = document.getElementById('reservationModal');
+        if (response.ok) {
+          bootstrap.Modal.getInstance(modalEl).hide();
+          refetchWithDelay();
+        } else {
+          alert("保存に失敗しました。");
+        }
+      });
+    });
+
+    document.getElementById('deleteReservationBtn').addEventListener('click', function () {
+      const id = document.getElementById('reservationId').value;
+      if (!id.match(/^\d+$/)) {
+        alert("不正な予約IDです。");
+        return;
+      }
+
+      if (confirm("本当に削除しますか？")) {
+        fetch(`/admin/reservations/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+          }
+        }).then(response => {
+          const modalEl = document.getElementById('reservationModal');
+          if (response.ok) {
+            const event = calendar.getEventById(id);
+            if (event) event.remove();
+            bootstrap.Modal.getInstance(modalEl).hide();
+            refetchWithDelay();
+          } else {
+            alert("削除に失敗しました。");
+          }
+        }).catch(error => {
+          console.error("削除中にエラー:", error);
+          alert("エラーが発生しました。");
+        });
+      }
+    });
+  });
+</script>

@@ -7,7 +7,7 @@
         <small class="text-muted">会員番号：<%= @user.id %></small>
       </div>
       <div class="text-end mt-2 mt-md-0">
-        <small class="text-muted">売上登録日：<%= Date.today.strftime("%Y-%m-%d") %></small>
+        <small class="text-muted">売上登録日：<%= Time.zone.today.strftime("%Y-%m-%d") %></small>
       </div>
     </div>
   </div>

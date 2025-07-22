@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: MyString
+  date: 2025-07-11
+  time: 2025-07-11 00:43:23
+  course: MyString
+  note: MyText
+
+two:
+  name: MyString
+  date: 2025-07-11
+  time: 2025-07-11 00:43:23
+  course: MyString
+  note: MyText

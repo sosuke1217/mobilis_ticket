@@ -1,0 +1,59 @@
+<!-- 👇 コントローラ追加 -->
+<div class="container my-4" data-controller="reservation-form">
+  <div class="card shadow-sm">
+    <div class="card-header bg-dark text-white">
+      <h2 class="mb-0">ご予約フォーム（管理者）</h2>
+    </div>
+
+    <div class="card-body">
+      <% if @reservation.errors.any? %>
+        <div class="alert alert-danger">
+          <strong>入力に誤りがあります：</strong>
+          <ul class="mb-0">
+            <% @reservation.errors.full_messages.each do |msg| %>
+              <li><%= msg %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <%= form_with model: @reservation, url: admin_reservations_path, local: true do |f| %>
+        <div class="mb-3">
+          <%= f.label :name, "お名前", class: "form-label" %>
+          <%= f.text_field :name, class: "form-control" %>
+        </div>
+
+        <!-- 日付ピッカー -->
+        <div class="mb-3">
+          <label for="date-picker" class="form-label">予約日</label>
+          <input type="date" id="date-picker" class="form-control" />
+        </div>
+
+        <!-- 空き時間セレクト + hidden field -->
+        <div class="mb-3">
+          <label class="form-label">空き時間</label>
+          <div id="available-times">
+            <select class="form-select" disabled>
+              <option>日付を選択してください</option>
+            </select>
+          </div>
+          <%= f.hidden_field :start_time, id: "reservation_start_time" %>
+        </div>
+
+        <div class="mb-3">
+          <%= f.label :course, "コース", class: "form-label" %>
+          <%= f.select :course, ["40分", "60分", "80分"], { prompt: "選択してください" }, class: "form-select" %>
+        </div>
+
+        <div class="mb-3">
+          <%= f.label :note, "メモ（任意）", class: "form-label" %>
+          <%= f.text_area :note, class: "form-control", rows: 3 %>
+        </div>
+
+        <div class="text-end">
+          <%= f.submit "予約する", class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

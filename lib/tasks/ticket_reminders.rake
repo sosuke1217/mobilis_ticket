@@ -4,7 +4,7 @@ require_relative '../../app/services/line_notifier'
 namespace :ticket do
   desc "Send LINE reminders for tickets nearing expiration"
   task send_expiry_reminders: :environment do
-    today = Date.today
+    today = Time.zone.today
 
     [30, 7, 0].each do |days_before|
       target_date = today + days_before

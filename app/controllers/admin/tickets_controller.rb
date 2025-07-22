@@ -96,8 +96,8 @@ class Admin::TicketsController < ApplicationController
       title: template.name,
       total_count: template.total_count,
       remaining_count: template.total_count,
-      purchase_date: Date.today,
-      expiry_date: Date.today + template.expiry_days.days,
+      purchase_date: Time.zone.today,
+      expiry_date: Time.zone.today + template.expiry_days.days,
       ticket_template_id: template.id
     )
   

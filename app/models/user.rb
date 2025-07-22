@@ -1,6 +1,6 @@
 class User < ApplicationRecord
   has_many :tickets, dependent: :destroy
-  has_many :ticket_usages
+  has_many :ticket_usages, through: :tickets
   has_one :notification_preference, dependent: :destroy
   after_create :build_default_notification_preference
   

@@ -54,7 +54,7 @@ class Ticket < ApplicationRecord
 
   def unit_price
     return nil unless ticket_template&.price && ticket_template&.total_count.to_i > 0
-    ticket_template.price / ticket_template.total_count
+    ticket_template.price.to_f / ticket_template.total_count
   end
 
   scope :active, -> {
