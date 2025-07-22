@@ -17,7 +17,8 @@ class Admin::ReservationsController < ApplicationController
             start: r.start_time,
             end: r.end_time,
             description: r.course,
-            color: color_for_course(r.course)
+            color: color_for_course(r.course),
+            user_id: r.user_id  # ← これを追加
           }
         }
       end
@@ -49,7 +50,7 @@ class Admin::ReservationsController < ApplicationController
       end
     else
       respond_to do |format|
-        format.json { render json: { errors: @reservation.errors.full_messages }, status: :unprocessable_entity }
+        format.json { render json: { success: false, errors: @reservation.errors.full_messages }, status: :unprocessable_entity }
         format.html { render :new, status: :unprocessable_entity }
       end
     end
@@ -69,34 +70,63 @@ class Admin::ReservationsController < ApplicationController
   
       respond_to do |format|
         format.html { redirect_to admin_reservations_calendar_path, notice: "予約を削除しました。" }
-        format.json { head :no_content }
+        format.json { 
+          if @reservation.destroyed?
+            render json: { success: true, message: "予約を削除しました" }, status: :ok
+          else
+            render json: { success: false, errors: @reservation.errors.full_messages }, status: :unprocessable_entity
+          end
+        }
       end
     rescue ActiveRecord::RecordNotFound
       respond_to do |format|
-        format.html { redirect_to admin_reservations_calendar_path, alert: "すでに削除されています。" }
-        format.json { head :not_found }
+        format.html { redirect_to admin_reservations_calendar_path, alert: "予約が見つかりません。" }
+        format.json { render json: { success: false, error: "予約が見つかりません" }, status: :not_found }
+      end
+    rescue => e
+      Rails.logger.error "予約削除エラー: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      respond_to do |format|
+        format.html { redirect_to admin_reservations_calendar_path, alert: "削除中にエラーが発生しました。" }
+        format.json { render json: { success: false, error: "削除中にエラーが発生しました: #{e.message}" }, status: :internal_server_error }
       end
     end
   end
   
-  # Admin::ReservationsController
   def update
     unless params[:id].to_s.match?(/^\d+$/)
       logger.warn "⚠️ 不正なIDによるPATCHリクエスト: #{params[:id]}"
-      head :not_found and return
+      respond_to do |format|
+        format.html { redirect_to admin_reservations_calendar_path, alert: "不正なIDです。" }
+        format.json { render json: { success: false, error: "不正なID" }, status: :not_found }
+      end
+      return
     end
   
-    @reservation = Reservation.find(params[:id])
+    begin
+      @reservation = Reservation.find(params[:id])
   
-    if @reservation.update(reservation_params)
-      respond_to do |format|
-        format.json { render json: { success: true } }
-        format.html { redirect_to admin_reservations_calendar_path, notice: "予約を更新しました" }
+      if @reservation.update(reservation_params)
+        respond_to do |format|
+          format.json { render json: { success: true } }
+          format.html { redirect_to admin_reservations_calendar_path, notice: "予約を更新しました" }
+        end
+      else
+        respond_to do |format|
+          format.json { render json: { success: false, errors: @reservation.errors.full_messages }, status: :unprocessable_entity }
+          format.html { render :edit, status: :unprocessable_entity }
+        end
       end
-    else
+    rescue ActiveRecord::RecordNotFound
       respond_to do |format|
-        format.json { render json: { errors: @reservation.errors.full_messages }, status: :unprocessable_entity }
-        format.html { render :edit, status: :unprocessable_entity }
+        format.html { redirect_to admin_reservations_calendar_path, alert: "予約が見つかりません。" }
+        format.json { render json: { success: false, error: "予約が見つかりません" }, status: :not_found }
+      end
+    rescue => e
+      Rails.logger.error "予約更新エラー: #{e.message}"
+      respond_to do |format|
+        format.html { redirect_to admin_reservations_calendar_path, alert: "更新中にエラーが発生しました。" }
+        format.json { render json: { success: false, error: "更新中にエラーが発生しました" }, status: :internal_server_error }
       end
     end
   end

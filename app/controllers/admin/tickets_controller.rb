@@ -1,5 +1,7 @@
 class Admin::TicketsController < ApplicationController
   before_action :authenticate_admin_user!
+  # create_from_template アクションの上に追加
+  skip_before_action :verify_authenticity_token, only: [:create_from_template]
   require 'csv'
 
   def index
@@ -33,8 +35,6 @@ class Admin::TicketsController < ApplicationController
       end
     end
   end
-  
-  
   
 
   def create
@@ -89,8 +89,17 @@ class Admin::TicketsController < ApplicationController
   end
 
   def create_from_template
+    Rails.logger.info "🎫 [TICKET] create_from_template started"
+    Rails.logger.info "🎫 [TICKET] user_id: #{params[:user_id]}, template_id: #{params[:template_id]}"
+    
     @user = User.find(params[:user_id])
     template = TicketTemplate.find(params[:template_id])
+    
+    Rails.logger.info "🎫 [TICKET] User: #{@user.name}, Template: #{template.name}"
+    
+    # 発行前のアクティブチケット数を確認
+    active_tickets_before = @user.tickets.where("remaining_count > 0").count
+    Rails.logger.info "🎫 [TICKET] Active tickets BEFORE creation: #{active_tickets_before}"
   
     @ticket = @user.tickets.build(
       title: template.name,
@@ -102,13 +111,62 @@ class Admin::TicketsController < ApplicationController
     )
   
     if @ticket.save
+      Rails.logger.info "🎫 [TICKET] Saved successfully, ID: #{@ticket.id}"
+      
+      # 発行後のアクティブチケット数を確認
+      active_tickets_after = @user.tickets.where("remaining_count > 0").order(expiry_date: :asc)
+      Rails.logger.info "🎫 [TICKET] Active tickets AFTER creation: #{active_tickets_after.count}"
+      
       respond_to do |format|
-        format.turbo_stream  # 👈 これで create_from_template.turbo_stream.erb を使う
-        format.html { redirect_to admin_user_path(@user), notice: "チケットを発行しました" }
+        format.html do
+          Rails.logger.info "🎫 [TICKET] Redirecting to user page with notice"
+          redirect_to admin_user_path(@user), notice: "チケットを発行しました"
+        end
+        format.turbo_stream do
+          Rails.logger.info "🎫 [TICKET] Responding with Turbo Stream"
+          
+          if active_tickets_before == 0
+            # 初回発行時（チケットがなかった状態から初回発行）
+            Rails.logger.info "🎫 [TICKET] First ticket ever - replacing entire section"
+            
+            render turbo_stream: turbo_stream.update("active_ticket_section", 
+              partial: "admin/tickets/partials/ticket_table", 
+              locals: { tickets: active_tickets_after }
+            )
+          else
+            # 追加発行時（既存テーブルに行を追加）
+            Rails.logger.info "🎫 [TICKET] Additional ticket - appending row to existing table"
+            Rails.logger.info "🎫 [TICKET] Looking for element: active_ticket_table_body"
+            
+            render turbo_stream: turbo_stream.append("active_ticket_table_body", 
+              partial: "admin/tickets/partials/ticket_row", 
+              locals: { ticket: @ticket }
+            )
+          end
+        end
       end
     else
+      Rails.logger.error "🎫 [TICKET] Save failed: #{@ticket.errors.full_messages.join(', ')}"
+      
       respond_to do |format|
-        format.html { redirect_to admin_user_path(@user), alert: "発行に失敗しました: #{@ticket.errors.full_messages.join(', ')}" }
+        format.turbo_stream do
+          render turbo_stream: turbo_stream.update("flash", "<div class='alert alert-danger alert-dismissible fade show'>発行に失敗しました: #{@ticket.errors.full_messages.join(', ')}</div>")
+        end
+        format.html do
+          redirect_to admin_user_path(@user), alert: "発行に失敗しました: #{@ticket.errors.full_messages.join(', ')}"
+        end
+      end
+    end
+  rescue => e
+    Rails.logger.error "🎫 [TICKET] Exception: #{e.message}"
+    Rails.logger.error e.backtrace.join("\n")
+    
+    respond_to do |format|
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.update("flash", "<div class='alert alert-danger alert-dismissible fade show'>エラーが発生しました: #{e.message}</div>")
+      end
+      format.html do
+        redirect_to admin_user_path(@user), alert: "エラーが発生しました"
       end
     end
   end

@@ -1,3 +1,7 @@
+<% content_for :head do %>
+  <meta name="turbo-visit-control" content="disable">
+<% end %>
+
 <div class="container-lg my-5">
   <h1 class="mb-4">
     <%= @user.name || @user.line_user_id %> さんの詳細
@@ -101,16 +105,22 @@
       チケットをテンプレートから発行
     </div>
     <div class="card-body">
-      <%= form_with url: admin_user_create_ticket_from_template_path(@user), method: :post, local: true do %>
+      <form action="<%= admin_user_create_ticket_from_template_path(@user) %>" method="get">
+        
         <div class="mb-3">
-          <%= label_tag :template_id, "テンプレート選択", class: "form-label" %>
-          <%= select_tag :template_id,
-                options_from_collection_for_select(@ticket_templates, :id, :name),
-                prompt: "テンプレートを選んでください",
-                class: "form-select" %>
+          <label for="template_id" class="form-label">テンプレート選択</label>
+          <select name="template_id" id="template_id" class="form-select" required>
+            <option value="">テンプレートを選んでください</option>
+            <% @ticket_templates.each do |template| %>
+              <option value="<%= template.id %>"><%= template.name %> (<%= template.total_count %>回券 / ¥<%= template.price %>)</option>
+            <% end %>
+          </select>
         </div>
-        <%= submit_tag "発行する", class: "btn btn-primary" %>
-      <% end %>
+        
+        <button type="submit" class="btn btn-primary">
+          発行する
+        </button>
+      </form>
     </div>
   </div>
 
@@ -121,64 +131,85 @@
     </div>
     <div class="card-body p-0" id="active_ticket_section">
       <% if @active_tickets.any? %>
-        <table class="table table-hover table-striped align-middle mb-0">
-          <thead class="table-light">
-            <tr>
-              <th>タイトル</th>
-              <th>残回数</th>
-              <th>購入日</th>
-              <th>有効期限</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody id="active_ticket_table_body">
-            <% @active_tickets.each do |ticket| %>
-              <tr id="ticket_<%= ticket.id %>">
-                <td><%= ticket.title %></td>
-                <td><%= ticket.remaining_count %> / <%= ticket.total_count %></td>
-                <td><%= ticket.purchase_date.strftime("%Y-%m-%d") %></td>
-                <td>
-                  <% if ticket.expiry_date < Time.zone.today %>
-                    <span class="badge bg-danger me-1">
-                      <i class="fas fa-exclamation-circle me-1"></i>期限切れ
-                    </span>
-                    <span class="text-muted"><%= ticket.expiry_date.strftime("%Y-%m-%d") %></span>
-                  <% elsif ticket.expiry_date < 1.month.from_now %>
-                    <span class="badge bg-warning text-dark me-1">
-                      <i class="fas fa-hourglass-half me-1"></i>期限間近
-                    </span>
-                    <%= ticket.expiry_date.strftime("%Y-%m-%d") %>
-                  <% else %>
-                    <%= ticket.expiry_date.strftime("%Y-%m-%d") %>
-                  <% end %>
-                </td>
-                <td>
-                    <div class="btn-group btn-group-sm" role="group">
-                    <%= button_to "使う", use_admin_ticket_path(ticket),
-                    method: :post,
-                    remote: true,
-                    form: { data: { turbo_stream: true } },
-                    class: "btn btn-success use-ticket-btn",
-                    data: { confirm_remote: "このチケットを1回分使用しますか？" } %>
-
-                    <%= button_to "削除", admin_ticket_path(ticket),
-                        method: :delete,
-                        data: { confirm: "このチケットを削除しますか？" },
-                        class: "btn btn-outline-danger" %>
-                  </div>
-                </td>
+        <!-- チケットがある場合のテーブル -->
+        <div class="table-responsive">
+          <table class="table table-hover table-striped align-middle mb-0">
+            <thead class="table-light text-center">
+              <tr>
+                <th>タイトル</th>
+                <th>残回数</th>
+                <th>購入日</th>
+                <th>有効期限</th>
+                <th>操作</th>
               </tr>
-            <% end %>
-          </tbody>
-        </table>
+            </thead>
+            <tbody id="active_ticket_table_body">
+              <% @active_tickets.each do |ticket| %>
+                <tr id="ticket_<%= ticket.id %>">
+                  <td><%= ticket.title %></td>
+                  <td><%= ticket.remaining_count %> / <%= ticket.total_count %></td>
+                  <td><%= ticket.purchase_date.strftime("%Y-%m-%d") %></td>
+                  <td>
+                    <% if ticket.expiry_date < Time.zone.today %>
+                      <span class="badge bg-danger me-1">
+                        <i class="fas fa-exclamation-circle me-1"></i>期限切れ
+                      </span>
+                      <span class="text-muted"><%= ticket.expiry_date.strftime("%Y-%m-%d") %></span>
+                    <% elsif ticket.expiry_date < 1.month.from_now %>
+                      <span class="badge bg-warning text-dark me-1">
+                        <i class="fas fa-hourglass-half me-1"></i>期限間近
+                      </span>
+                      <%= ticket.expiry_date.strftime("%Y-%m-%d") %>
+                    <% else %>
+                      <%= ticket.expiry_date.strftime("%Y-%m-%d") %>
+                    <% end %>
+                  </td>
+                  <td>
+                      <div class="btn-group btn-group-sm" role="group">
+                      <%= button_to "使う", use_admin_ticket_path(ticket),
+                      method: :post,
+                      remote: true,
+                      form: { data: { turbo_stream: true } },
+                      class: "btn btn-success use-ticket-btn",
+                      data: { confirm_remote: "このチケットを1回分使用しますか？" } %>
+
+                      <%= button_to "削除", admin_ticket_path(ticket),
+                          method: :delete,
+                          data: { confirm: "このチケットを削除しますか？" },
+                          class: "btn btn-outline-danger" %>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
       <% else %>
-        <div class="p-3">
+        <!-- チケットがない場合の表示 -->
+        <div class="p-3" id="no_tickets_message">
           <p class="text-muted">使用可能なチケットはありません。</p>
+        </div>
+        <!-- 隠しテーブル構造（Turbo Stream用） -->
+        <div class="table-responsive" style="display: none;" id="hidden_ticket_table">
+          <table class="table table-hover table-striped align-middle mb-0">
+            <thead class="table-light text-center">
+              <tr>
+                <th>タイトル</th>
+                <th>残回数</th>
+                <th>購入日</th>
+                <th>有効期限</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="active_ticket_table_body">
+              <!-- チケット行がここに追加される -->
+            </tbody>
+          </table>
         </div>
       <% end %>
     </div>
   </div>
-
+  
   <!-- 🕒 最近の使用履歴 -->
   <div class="card mb-5 shadow-sm">
     <div class="card-header bg-primary text-white fw-bold">
@@ -262,3 +293,23 @@
     </div>
   </div>
 </div>
+
+<!-- ページの最下部に追加 -->
+<script>
+console.log('🔧 Simple JavaScript test loaded');
+alert('JavaScript is working!');
+
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🔧 DOM loaded');
+  
+  // チケット発行フォームを見つける
+  const form = document.querySelector('form[action*="create_from_template"]');
+  if (form) {
+    console.log('🔧 Form found:', form);
+    alert('Form found! ID: ' + form.id);
+  } else {
+    console.log('🔧 Form NOT found');
+    alert('Form NOT found');
+  }
+});
+</script>

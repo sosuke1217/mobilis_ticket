@@ -1,0 +1,16 @@
+<table class="table table-hover table-striped align-middle mb-0">
+  <thead class="table-light">
+    <tr>
+      <th>タイトル</th>
+      <th>残回数</th>
+      <th>購入日</th>
+      <th>有効期限</th>
+      <th>操作</th>
+    </tr>
+  </thead>
+  <tbody id="active_ticket_table_body">
+    <% active_tickets.each do |ticket| %>
+      <%= render partial: "admin/users/ticket_row", locals: { ticket: ticket } %>
+    <% end %>
+  </tbody>
+</table>

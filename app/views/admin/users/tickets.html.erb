@@ -16,7 +16,7 @@
   <div class="card mb-4 shadow-sm">
     <div class="card-header bg-dark text-white fw-bold">🎫 チケット発行</div>
     <div class="card-body">
-      <%= form_with url: admin_user_create_ticket_from_template_path(@user), method: :post do %>
+      <%= form_with url: admin_user_create_ticket_from_template_path(@user), method: :post, local: false, data: { turbo_stream: true } do %>
         <div class="row g-3 align-items-end">
           <div class="col-md-6">
             <%= label_tag :template_id, "購入回数券選択", class: "form-label" %>

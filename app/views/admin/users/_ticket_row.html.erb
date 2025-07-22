@@ -1,0 +1,36 @@
+<!-- app/views/admin/users/_ticket_row.html.erb -->
+<tr id="ticket_<%= ticket.id %>">
+  <td><%= ticket.title %></td>
+  <td><%= ticket.remaining_count %> / <%= ticket.total_count %></td>
+  <td><%= ticket.purchase_date.strftime("%Y-%m-%d") %></td>
+  <td>
+    <% if ticket.expiry_date < Time.zone.today %>
+      <span class="badge bg-danger me-1">
+        <i class="fas fa-exclamation-circle me-1"></i>期限切れ
+      </span>
+      <span class="text-muted"><%= ticket.expiry_date.strftime("%Y-%m-%d") %></span>
+    <% elsif ticket.expiry_date < 1.month.from_now %>
+      <span class="badge bg-warning text-dark me-1">
+        <i class="fas fa-hourglass-half me-1"></i>期限間近
+      </span>
+      <%= ticket.expiry_date.strftime("%Y-%m-%d") %>
+    <% else %>
+      <%= ticket.expiry_date.strftime("%Y-%m-%d") %>
+    <% end %>
+  </td>
+  <td>
+    <div class="btn-group btn-group-sm" role="group">
+      <%= button_to "使う", use_admin_ticket_path(ticket),
+          method: :post,
+          remote: true,
+          form: { data: { turbo_stream: true } },
+          class: "btn btn-success use-ticket-btn",
+          data: { confirm_remote: "このチケットを1回分使用しますか？" } %>
+
+      <%= button_to "削除", admin_ticket_path(ticket),
+          method: :delete,
+          data: { confirm: "このチケットを削除しますか？" },
+          class: "btn btn-outline-danger" %>
+    </div>
+  </td>
+</tr>
