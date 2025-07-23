@@ -1,0 +1,122 @@
+<!-- app/views/reservation_mailer/reminder.html.erb -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>予約リマインダー</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      line-height: 1.6; 
+      color: #333; 
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header { 
+      background: #28a745; 
+      color: white; 
+      padding: 20px; 
+      text-align: center; 
+      border-radius: 8px 8px 0 0;
+    }
+    .content { 
+      padding: 20px; 
+      background: #f8f9fa; 
+      border-radius: 0 0 8px 8px;
+    }
+    .reservation-details { 
+      background: white; 
+      padding: 20px; 
+      border-radius: 8px; 
+      margin: 15px 0;
+      border-left: 4px solid #28a745;
+    }
+    .urgent {
+      background: #fff3cd;
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 4px solid #ffc107;
+      margin: 15px 0;
+    }
+    .footer { 
+      padding: 20px; 
+      text-align: center; 
+      color: #666; 
+      font-size: 14px;
+      background: #e9ecef;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🔔 <%= @salon_name %></h1>
+    <h2>明日のご予約リマインダー</h2>
+  </div>
+  
+  <div class="content">
+    <p><strong><%= @user.name %></strong> 様</p>
+    
+    <p>いつもありがとうございます。<br>
+    明日のご予約についてお知らせいたします。</p>
+    
+    <div class="urgent">
+      <h3>⏰ 明日のご予約</h3>
+      <p style="font-size: 18px; margin: 0;"><strong><%= @reservation.start_time.strftime('%m月%d日（%a） %H:%M') %> ～ <%= @reservation.end_time.strftime('%H:%M') %></strong></p>
+    </div>
+    
+    <div class="reservation-details">
+      <h3>📅 予約詳細</h3>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 8px 0; font-weight: bold; width: 120px;">予約日時:</td>
+          <td style="padding: 8px 0;"><%= @reservation.start_time.strftime('%Y年%m月%d日 %H:%M') %> ～ <%= @reservation.end_time.strftime('%H:%M') %></td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; font-weight: bold;">コース:</td>
+          <td style="padding: 8px 0;"><%= @reservation.course %></td>
+        </tr>
+        <% if @reservation.note.present? %>
+        <tr>
+          <td style="padding: 8px 0; font-weight: bold;">備考:</td>
+          <td style="padding: 8px 0;"><%= @reservation.note %></td>
+        </tr>
+        <% end %>
+      </table>
+    </div>
+    
+    <div style="background: white; padding: 15px; border-radius: 8px; margin: 15px 0;">
+      <h4>📍 店舗情報</h4>
+      <p><strong>Mobilis Stretch</strong><br>
+      〒150-0000 東京都渋谷区○○○○<br>
+      TEL: 03-1234-5678</p>
+      
+      <h4 style="margin-top: 15px;">🚶‍♂️ ご来店について</h4>
+      <ul style="margin: 5px 0; padding-left: 20px;">
+        <li><strong>ご予約時間の5分前</strong>にお越しください</li>
+        <li>動きやすい服装でお越しください</li>
+        <li>体調がすぐれない場合は事前にご連絡ください</li>
+      </ul>
+    </div>
+    
+    <div style="background: #d1ecf1; padding: 15px; border-radius: 8px; border-left: 4px solid #17a2b8;">
+      <h4>📞 キャンセル・変更について</h4>
+      <p>やむを得ずキャンセルや時間変更が必要な場合は、<br>
+      <strong>できるだけ早めに</strong>お電話にてご連絡ください。</p>
+      <p style="margin: 0;"><strong>TEL: 03-1234-5678</strong></p>
+    </div>
+    
+    <p>お忙しい中恐れ入りますが、ご確認のほどよろしくお願いいたします。<br>
+    明日お会いできることを楽しみにしております。</p>
+  </div>
+  
+  <div class="footer">
+    <p><strong><%= @salon_name %></strong><br>
+    TEL: 03-1234-5678<br>
+    Email: info@mobilis-stretch.com<br>
+    営業時間: 10:00 - 20:00（最終受付 19:00）</p>
+  </div>
+</body>
+</html>

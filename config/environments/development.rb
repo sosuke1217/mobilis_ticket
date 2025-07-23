@@ -83,5 +83,37 @@ Rails.application.configure do
   # デバッグモードを有効
   config.assets.debug = true    # これがtrueであることを確認
 
+  # メール配信設定
+  config.action_mailer.perform_deliveries = true
+  config.action_mailer.raise_delivery_errors = true
+  config.action_mailer.perform_caching = false
+
+  # 開発環境でのメール配信方法を選択
+  # オプション1: コンソールに出力（テスト用）
+  config.action_mailer.delivery_method = :smtp
+
+  config.action_mailer.smtp_settings = {
+    address: 'smtp.gmail.com',
+    port: 587,
+    domain: 'gmail.com',
+    user_name: ENV['mobilis.stretch@gmail.com'],
+    password: ENV['ddhyrcurchunvsds'],
+    authentication: 'plain',
+    enable_starttls_auto: true,
+    open_timeout: 10,
+    read_timeout: 10
+  }
+
+  config.action_mailer.default_url_options = { 
+    host: ENV.fetch('APP_HOST', 'localhost:3000'),
+    protocol: 'http'
+  }
+
+  # URLオプション（メール内のリンク用）
+  config.action_mailer.default_url_options = { 
+    host: 'localhost', 
+    port: 3000 
+  }
+
   config.hosts.clear
 end

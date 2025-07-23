@@ -1,6 +1,8 @@
+# app/models/reservation.rb の修正版
+
 class Reservation < ApplicationRecord
-  # ステータス定義
-  enum status: {
+  # ステータス定義（Rails 8対応）
+  enum :status, {
     confirmed: 0,    # 確定
     tentative: 1,    # 仮予約
     cancelled: 2,    # キャンセル
@@ -8,11 +10,11 @@ class Reservation < ApplicationRecord
     no_show: 4       # 無断キャンセル
   }
   
-  # 繰り返しタイプ定義
-  enum recurring_type: {
+  # 繰り返しタイプ定義（Rails 8対応）
+  enum :recurring_type, {
     weekly: 'weekly',
     monthly: 'monthly'
-  }, _prefix: true
+  }, prefix: true
   
   validates :name, :start_time, :end_time, :course, presence: true
   validate :no_time_overlap, unless: :cancelled?

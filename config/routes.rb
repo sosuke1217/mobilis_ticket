@@ -1,3 +1,5 @@
+# config/routes.rb の完全版
+
 Rails.application.routes.draw do
   get "reservations/new"
   get "reservations/create"
@@ -11,32 +13,57 @@ Rails.application.routes.draw do
   root to: "admin/dashboard#index"
 
   namespace :admin do
-    get "notification_logs/index"
-    get 'reservations/calendar', to: 'reservations#calendar'
     root to: "dashboard#index"
-  
+    
+    # 通知ログ
+    resources :notification_logs, only: [:index, :destroy]
+    
+    # チケット関連
     resources :tickets, only: [:index, :create, :destroy] do
       post :use, on: :member
     end
-  
+    
     resources :ticket_templates, except: [:show]
     resources :ticket_usages, only: [:index, :new, :create, :edit, :update]
-  
-    resources :users, only: [:index, :new, :create, :edit, :update, :show, :destroy] do  # new, createを追加
+    
+    # ユーザー管理
+    resources :users, only: [:index, :new, :create, :edit, :update, :show, :destroy] do
       resources :tickets, only: [:new, :create]
       get 'ticket_management', to: 'users#tickets', as: 'ticket_management'
       post 'create_ticket_from_template', to: 'tickets#create_from_template', as: 'create_ticket_from_template'
       get 'ticket_usages', to: 'users#ticket_usages'
     end
 
-    resources :notification_logs, only: [:index, :destroy]
+    # 予約管理（強化版）
+    # カレンダーのルートを最初に定義
+    get 'reservations/calendar', to: 'reservations#calendar', as: 'reservations_calendar'
+    
     resources :reservations do
+      member do
+        # ステータス管理
+        patch :cancel                    # 予約キャンセル
+        patch :change_status            # ステータス変更
+        
+        # 繰り返し予約管理
+        post :create_recurring          # 繰り返し予約作成
+        patch :cancel_recurring         # 繰り返し予約停止
+        get :child_reservations         # 子予約一覧取得
+        
+        # メール送信
+        post :send_email               # メール送信（確認・リマインダー）
+      end
+      
       collection do
-        get :available_slots
+        # 空き時間取得
+        get :available_slots           # 空き時間取得
+        
+        # 一括操作
+        patch :bulk_status_change      # 一括ステータス変更
       end
     end
   end
   
+  # 一般ユーザー用ルート
   resources :users, only: [:edit, :update]
   resources :reservations, only: [:new, :create]
 end

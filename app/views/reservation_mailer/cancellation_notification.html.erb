@@ -1,0 +1,112 @@
+<!-- app/views/reservation_mailer/cancellation_notification.html.erb -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>予約キャンセル</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      line-height: 1.6; 
+      color: #333; 
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header { 
+      background: #dc3545; 
+      color: white; 
+      padding: 20px; 
+      text-align: center; 
+      border-radius: 8px 8px 0 0;
+    }
+    .content { 
+      padding: 20px; 
+      background: #f8f9fa; 
+      border-radius: 0 0 8px 8px;
+    }
+    .cancellation-details { 
+      background: white; 
+      padding: 20px; 
+      border-radius: 8px; 
+      margin: 15px 0;
+      border-left: 4px solid #dc3545;
+    }
+    .footer { 
+      padding: 20px; 
+      text-align: center; 
+      color: #666; 
+      font-size: 14px;
+      background: #e9ecef;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+    .rebooking {
+      background: #d4edda;
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 4px solid #28a745;
+      margin: 15px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1><%= @salon_name %></h1>
+    <h2>❌ 予約キャンセルのお知らせ</h2>
+  </div>
+  
+  <div class="content">
+    <p><strong><%= @user.name %></strong> 様</p>
+    
+    <p>以下のご予約がキャンセルされました。</p>
+    
+    <div class="cancellation-details">
+      <h3>🗑️ キャンセルされた予約</h3>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 8px 0; font-weight: bold; width: 120px;">予約日時:</td>
+          <td style="padding: 8px 0;"><%= @reservation.start_time.strftime('%Y年%m月%d日 %H:%M') %> ～ <%= @reservation.end_time.strftime('%H:%M') %></td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; font-weight: bold;">コース:</td>
+          <td style="padding: 8px 0;"><%= @reservation.course %></td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; font-weight: bold;">キャンセル日時:</td>
+          <td style="padding: 8px 0;"><%= @reservation.cancelled_at&.strftime('%Y年%m月%d日 %H:%M') %></td>
+        </tr>
+        <% if @reservation.cancellation_reason.present? %>
+        <tr>
+          <td style="padding: 8px 0; font-weight: bold;">キャンセル理由:</td>
+          <td style="padding: 8px 0;"><%= @reservation.cancellation_reason %></td>
+        </tr>
+        <% end %>
+      </table>
+    </div>
+    
+    <div class="rebooking">
+      <h4>📅 再予約について</h4>
+      <p>またのご利用をお待ちしております。<br>
+      再予約をご希望の場合は、以下までお気軽にお電話ください。</p>
+      <p style="font-size: 16px; margin: 0;"><strong>📞 TEL: 03-1234-5678</strong></p>
+    </div>
+    
+    <div style="background: white; padding: 15px; border-radius: 8px; margin: 15px 0;">
+      <h4>💳 料金について</h4>
+      <p>前払いでお支払いいただいている場合は、別途ご連絡いたします。<br>
+      ご不明な点がございましたら、お気軽にお問い合わせください。</p>
+    </div>
+    
+    <p>ご迷惑をおかけして申し訳ございません。<br>
+    今後ともよろしくお願いいたします。</p>
+  </div>
+  
+  <div class="footer">
+    <p><strong><%= @salon_name %></strong><br>
+    TEL: 03-1234-5678<br>
+    Email: info@mobilis-stretch.com<br>
+    営業時間: 10:00 - 20:00（最終受付 19:00）</p>
+  </div>
+</body>
+</html>
