@@ -16,17 +16,21 @@ class Reservation < ApplicationRecord
     monthly: 'monthly'
   }, prefix: true
   
-  validates :name, :start_time, :end_time, :course, presence: true
+  validates :start_time, :end_time, :course, presence: true
   validate :no_time_overlap, unless: :cancelled?
-  validate :start_and_end_must_be_on_10_minute_interval
+  validate :start_and_end_must_be_on_10_minute_interval, unless: :skip_time_validation
   validate :end_time_after_start_time
   validate :cancellation_reason_presence, if: :cancelled?
+  
+  # 一時的にバリデーションをスキップするためのアクセサー
+  attr_accessor :skip_time_validation
   
   belongs_to :ticket, optional: true
   belongs_to :user, optional: true
   belongs_to :parent_reservation, class_name: 'Reservation', optional: true
   has_many :child_reservations, class_name: 'Reservation', foreign_key: 'parent_reservation_id', dependent: :destroy
   
+  before_validation :set_name_from_user, if: -> { name.blank? && user.present? }
   before_validation :set_end_time, if: -> { start_time.present? && course.present? && end_time.blank? }
   after_create :schedule_confirmation_email
   after_update :handle_status_change
@@ -40,7 +44,9 @@ class Reservation < ApplicationRecord
   def start_and_end_must_be_on_10_minute_interval
     return unless start_time && end_time
     
+    # 分が10分刻みでない場合のみエラー（秒は無視）
     if start_time.min % 10 != 0 || end_time.min % 10 != 0
+      Rails.logger.warn "⚠️ Time validation failed: start=#{start_time}, end=#{end_time}"
       errors.add(:base, "開始時間と終了時間は10分刻みで入力してください")
     end
   end
@@ -48,7 +54,11 @@ class Reservation < ApplicationRecord
   def end_time_after_start_time
     return unless start_time && end_time
     
+    Rails.logger.info "⏰ Validating times: start=#{start_time} (#{start_time.class}), end=#{end_time} (#{end_time.class})"
+    Rails.logger.info "⏰ Time difference: #{(end_time - start_time)} seconds"
+    
     if end_time <= start_time
+      Rails.logger.error "❌ End time validation failed: end_time (#{end_time}) <= start_time (#{start_time})"
       errors.add(:end_time, "は開始時間より後に設定してください")
     end
   end
@@ -164,6 +174,14 @@ class Reservation < ApplicationRecord
 
     if overlapping.exists?
       errors.add(:base, "この時間帯にはすでに予約が入っています。")
+    end
+  end
+
+  def set_name_from_user
+    if user.present? && user.name.present?
+      self.name = user.name
+    elsif name.blank?
+      self.name = "予約者未設定"
     end
   end
 

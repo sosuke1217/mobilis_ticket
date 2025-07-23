@@ -1,4 +1,4 @@
-<!-- app/views/admin/reservations/calendar.html.erb の強化版 -->
+<!-- app/views/admin/reservations/calendar.html.erb の修正版 -->
 <div class="container my-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>予約カレンダー</h2>
@@ -15,6 +15,9 @@
       </ul>
     </div>
   </div>
+
+  <!-- フラッシュメッセージエリア -->
+  <div id="flash"></div>
 
   <!-- ステータス凡例 -->
   <div class="card mb-3">
@@ -39,7 +42,7 @@
   </div>
 </div>
 
-<!-- 予約詳細・編集モーダル（強化版） -->
+<!-- 予約詳細・編集モーダル（修正版） -->
 <div class="modal fade" id="reservationModal" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
@@ -48,259 +51,131 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
       </div>
       <div class="modal-body">
-        <!-- タブナビゲーション -->
-        <ul class="nav nav-tabs" id="reservationTabs" role="tablist">
-          <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="basic-tab" data-bs-toggle="tab" data-bs-target="#basic" type="button" role="tab">
-              基本情報
-            </button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="status-tab" data-bs-toggle="tab" data-bs-target="#status" type="button" role="tab">
-              ステータス管理
-            </button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="recurring-tab" data-bs-toggle="tab" data-bs-target="#recurring" type="button" role="tab">
-              繰り返し予約
-            </button>
-          </li>
-        </ul>
-
-        <!-- タブコンテンツ -->
-        <div class="tab-content" id="reservationTabContent">
-          <!-- 基本情報タブ -->
-          <div class="tab-pane fade show active" id="basic" role="tabpanel">
-            <form id="reservationForm" class="mt-3">
-              <!-- 既存の基本情報フォーム -->
-              <div class="card mb-3">
-                <div class="card-header">
-                  <div class="d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0">予約者選択</h6>
-                    <div class="form-check form-switch">
-                      <input class="form-check-input" type="checkbox" id="newUserToggle">
-                      <label class="form-check-label" for="newUserToggle">
-                        新規ユーザーを作成
-                      </label>
-                    </div>
-                  </div>
-                </div>
-                <div class="card-body">
-                  <!-- 既存ユーザー選択 -->
-                  <div id="existingUserSection">
-                    <label for="reservationUserId" class="form-label">既存ユーザーを選択</label>
-                    <select class="form-control" id="reservationUserId">
-                      <option value="">ユーザーを選択してください</option>
-                    </select>
-                  </div>
-
-                  <!-- 新規ユーザー作成フォーム -->
-                  <div id="newUserSection" style="display: none;">
-                    <div class="row">
-                      <div class="col-md-6">
-                        <label for="newUserName" class="form-label">氏名 <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="newUserName" placeholder="例: 山田太郎">
-                      </div>
-                      <div class="col-md-6">
-                        <label for="newUserPhone" class="form-label">電話番号</label>
-                        <input type="tel" class="form-control" id="newUserPhone" placeholder="例: 090-1234-5678">
-                      </div>
-                    </div>
-                    <div class="row mt-2">
-                      <div class="col-md-6">
-                        <label for="newUserEmail" class="form-label">メールアドレス</label>
-                        <input type="email" class="form-control" id="newUserEmail" placeholder="例: example@email.com">
-                      </div>
-                      <div class="col-md-6">
-                        <label for="newUserBirthDate" class="form-label">生年月日</label>
-                        <input type="date" class="form-control" id="newUserBirthDate">
-                      </div>
-                    </div>
-                    <div class="mt-2">
-                      <label for="newUserAddress" class="form-label">住所</label>
-                      <input type="text" class="form-control" id="newUserAddress" placeholder="例: 東京都渋谷区...">
-                    </div>
-                    <div class="mt-2">
-                      <label for="newUserMemo" class="form-label">管理者メモ</label>
-                      <textarea class="form-control" id="newUserMemo" rows="2" placeholder="初回来店、アレルギー情報など"></textarea>
-                    </div>
-                  </div>
+        <form id="reservationForm">
+          <!-- 隠しフィールド -->
+          <input type="hidden" id="reservationId">
+          
+          <!-- 基本情報セクション -->
+          <div class="card mb-3">
+            <div class="card-header">
+              <div class="d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">予約者選択</h6>
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="newUserToggle">
+                  <label class="form-check-label" for="newUserToggle">
+                    新規ユーザーを作成
+                  </label>
                 </div>
               </div>
-
-              <!-- 予約詳細セクション -->
-              <div class="card mb-3">
-                <div class="card-header">
-                  <h6 class="mb-0">予約詳細</h6>
-                </div>
-                <div class="card-body">
-                  <div class="row">
-                    <div class="col-md-6">
-                      <label for="reservationDate" class="form-label">予約日</label>
-                      <input type="date" class="form-control" id="reservationDate" required>
-                    </div>
-                    <div class="col-md-6">
-                      <label for="reservationTime" class="form-label">開始時間</label>
-                      <select class="form-control" id="reservationTime" required>
-                        <option value="">時間を選択してください</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div class="row mt-2">
-                    <div class="col-md-6">
-                      <label for="reservationCourse" class="form-label">コース</label>
-                      <select class="form-control" id="reservationCourse">
-                        <option value="40分">40分コース</option>
-                        <option value="60分" selected>60分コース</option>
-                        <option value="80分">80分コース</option>
-                      </select>
-                    </div>
-                    <div class="col-md-6">
-                      <label class="form-label">終了予定時間</label>
-                      <div id="endTimeDisplay" class="form-control-plaintext text-muted">時間とコースを選択してください</div>
-                    </div>
-                  </div>
-
-                  <div class="mt-2">
-                    <label for="reservationNote" class="form-label">備考</label>
-                    <textarea class="form-control" id="reservationNote" rows="2" placeholder="特別な要望や注意事項など"></textarea>
-                  </div>
-                </div>
+            </div>
+            <div class="card-body">
+              <!-- 既存ユーザー選択 -->
+              <div id="existingUserSection">
+                <label for="reservationUserId" class="form-label">既存ユーザーを選択</label>
+                <select class="form-control" id="reservationUserId">
+                  <option value="">ユーザーを選択してください</option>
+                </select>
               </div>
 
-              <!-- 隠しフィールド -->
-              <input type="hidden" id="reservationStartTime">
-              <input type="hidden" id="reservationId">
-              <input type="hidden" id="reservationName">
-            </form>
-          </div>
-
-          <!-- ステータス管理タブ -->
-          <div class="tab-pane fade" id="status" role="tabpanel">
-            <div class="mt-3">
-              <div class="card">
-                <div class="card-header">
-                  <h6 class="mb-0">予約ステータス管理</h6>
-                </div>
-                <div class="card-body">
-                  <div class="row">
-                    <div class="col-md-6">
-                      <label for="reservationStatus" class="form-label">現在のステータス</label>
-                      <select class="form-control" id="reservationStatus">
-                        <option value="confirmed">確定</option>
-                        <option value="tentative">仮予約</option>
-                        <option value="cancelled">キャンセル</option>
-                        <option value="completed">完了</option>
-                        <option value="no_show">無断キャンセル</option>
-                      </select>
-                    </div>
-                    <div class="col-md-6">
-                      <label class="form-label">最終変更日時</label>
-                      <div id="lastUpdated" class="form-control-plaintext text-muted">-</div>
-                    </div>
+              <!-- 新規ユーザー作成フォーム -->
+              <div id="newUserSection" style="display: none;">
+                <div class="row">
+                  <div class="col-md-6">
+                    <label for="newUserName" class="form-label">氏名 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="newUserName" placeholder="例: 山田太郎">
                   </div>
-
-                  <!-- キャンセル理由入力エリア -->
-                  <div id="cancellationReasonArea" style="display: none;" class="mt-3">
-                    <label for="cancellationReason" class="form-label">キャンセル理由 <span class="text-danger">*</span></label>
-                    <textarea class="form-control" id="cancellationReason" rows="3" placeholder="キャンセルの理由を入力してください"></textarea>
-                  </div>
-
-                  <div class="mt-3">
-                    <button type="button" class="btn btn-primary" id="updateStatusBtn">ステータスを更新</button>
+                  <div class="col-md-6">
+                    <label for="newUserPhone" class="form-label">電話番号</label>
+                    <input type="tel" class="form-control" id="newUserPhone" placeholder="例: 090-1234-5678">
                   </div>
                 </div>
-              </div>
-
-              <!-- メール送信セクション -->
-              <div class="card mt-3">
-                <div class="card-header">
-                  <h6 class="mb-0">メール送信</h6>
+                <div class="row mt-2">
+                  <div class="col-md-6">
+                    <label for="newUserEmail" class="form-label">メールアドレス</label>
+                    <input type="email" class="form-control" id="newUserEmail" placeholder="例: example@email.com">
+                  </div>
+                  <div class="col-md-6">
+                    <label for="newUserBirthDate" class="form-label">生年月日</label>
+                    <input type="date" class="form-control" id="newUserBirthDate">
+                  </div>
                 </div>
-                <div class="card-body">
-                  <div class="row">
-                    <div class="col-md-6">
-                      <div class="d-grid">
-                        <button type="button" class="btn btn-outline-primary" id="sendConfirmationBtn">
-                          <i class="fas fa-envelope me-1"></i>確認メール再送信
-                        </button>
-                      </div>
-                    </div>
-                    <div class="col-md-6">
-                      <div class="d-grid">
-                        <button type="button" class="btn btn-outline-info" id="sendReminderBtn">
-                          <i class="fas fa-bell me-1"></i>リマインダー送信
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="mt-2">
-                    <small class="text-muted">
-                      確認メール送信: <span id="confirmationSentAt">未送信</span><br>
-                      リマインダー送信: <span id="reminderSentAt">未送信</span>
-                    </small>
-                  </div>
+                <div class="mt-2">
+                  <label for="newUserAddress" class="form-label">住所</label>
+                  <input type="text" class="form-control" id="newUserAddress" placeholder="例: 東京都渋谷区...">
+                </div>
+                <div class="mt-2">
+                  <label for="newUserMemo" class="form-label">管理者メモ</label>
+                  <textarea class="form-control" id="newUserMemo" rows="2" placeholder="初回来店、アレルギー情報など"></textarea>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- 繰り返し予約タブ -->
-          <div class="tab-pane fade" id="recurring" role="tabpanel">
-            <div class="mt-3">
-              <div class="card">
-                <div class="card-header">
-                  <h6 class="mb-0">繰り返し予約設定</h6>
+          <!-- 予約詳細セクション -->
+          <div class="card mb-3">
+            <div class="card-header">
+              <h6 class="mb-0">予約詳細</h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <label for="reservationDate" class="form-label">予約日</label>
+                  <input type="date" class="form-control" id="reservationDate" required>
                 </div>
-                <div class="card-body">
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="isRecurring">
-                    <label class="form-check-label" for="isRecurring">
-                      この予約を繰り返し予約にする
-                    </label>
-                  </div>
-
-                  <div id="recurringSettings" style="display: none;" class="mt-3">
-                    <div class="row">
-                      <div class="col-md-6">
-                        <label for="recurringType" class="form-label">繰り返しパターン</label>
-                        <select class="form-control" id="recurringType">
-                          <option value="weekly">毎週</option>
-                          <option value="monthly">毎月</option>
-                        </select>
-                      </div>
-                      <div class="col-md-6">
-                        <label for="recurringUntil" class="form-label">終了日</label>
-                        <input type="date" class="form-control" id="recurringUntil">
-                      </div>
-                    </div>
-
-                    <div class="mt-3">
-                      <button type="button" class="btn btn-success" id="createRecurringBtn">
-                        <i class="fas fa-repeat me-1"></i>繰り返し予約を作成
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- 既存の繰り返し予約情報 -->
-                  <div id="existingRecurring" style="display: none;" class="mt-3">
-                    <div class="alert alert-info">
-                      <h6><i class="fas fa-info-circle me-1"></i>この予約は繰り返し予約です</h6>
-                      <p class="mb-0">
-                        パターン: <span id="currentRecurringType">-</span><br>
-                        終了日: <span id="currentRecurringUntil">-</span><br>
-                        子予約数: <span id="childReservationsCount">-</span>件
-                      </p>
-                    </div>
-                  </div>
+                <div class="col-md-6">
+                  <label for="reservationTime" class="form-label">開始時間</label>
+                  <select class="form-control" id="reservationTime" required>
+                    <option value="">時間を選択してください</option>
+                  </select>
                 </div>
+              </div>
+
+              <div class="row mt-2">
+                <div class="col-md-6">
+                  <label for="reservationCourse" class="form-label">コース</label>
+                  <select class="form-control" id="reservationCourse">
+                    <option value="40分">40分コース</option>
+                    <option value="60分" selected>60分コース</option>
+                    <option value="80分">80分コース</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">終了予定時間</label>
+                  <div id="endTimeDisplay" class="form-control-plaintext text-muted">時間とコースを選択してください</div>
+                </div>
+              </div>
+
+              <div class="row mt-2">
+                <div class="col-md-6">
+                  <label for="reservationStatus" class="form-label">ステータス</label>
+                  <select class="form-control" id="reservationStatus">
+                    <option value="confirmed">確定</option>
+                    <option value="tentative">仮予約</option>
+                    <option value="cancelled">キャンセル</option>
+                    <option value="completed">完了</option>
+                    <option value="no_show">無断キャンセル</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <!-- 空きスペース -->
+                </div>
+              </div>
+
+              <div class="mt-2">
+                <label for="reservationNote" class="form-label">備考</label>
+                <textarea class="form-control" id="reservationNote" rows="2" placeholder="特別な要望や注意事項など"></textarea>
+              </div>
+
+              <!-- キャンセル理由入力エリア -->
+              <div id="cancellationReasonArea" style="display: none;" class="mt-3">
+                <label for="cancellationReason" class="form-label">キャンセル理由 <span class="text-danger">*</span></label>
+                <textarea class="form-control" id="cancellationReason" rows="3" placeholder="キャンセルの理由を入力してください"></textarea>
               </div>
             </div>
           </div>
-        </div>
+        </form>
 
-        <!-- ボタンエリア -->
+        <!-- アクションボタンエリア -->
         <div class="d-flex justify-content-between mt-4">
           <div>
             <button type="button" id="deleteReservationBtn" class="btn btn-danger d-none">
@@ -312,7 +187,7 @@
           </div>
           <div>
             <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">閉じる</button>
-            <button type="submit" form="reservationForm" class="btn btn-primary">
+            <button type="button" id="saveReservationBtn" class="btn btn-primary">
               <i class="fas fa-save me-1"></i>保存
             </button>
           </div>
@@ -323,16 +198,21 @@
 </div>
 
 <script>
-// JavaScript for enhanced calendar functionality
+// カレンダー機能のJavaScript（修正版）
 (function() {
   'use strict';
   
   let pageCalendar = null;
+  let currentUsers = [];
   
-  function createEnhancedCalendar() {
+  // 初期化関数
+  function initializeCalendar() {
+    console.log('📅 Calendar initialization started');
+    
     const calendarEl = document.getElementById('calendar');
     if (!calendarEl || typeof FullCalendar === 'undefined') {
-      setTimeout(createEnhancedCalendar, 500);
+      console.log('Calendar element or FullCalendar not found, retrying...');
+      setTimeout(initializeCalendar, 500);
       return;
     }
     
@@ -407,10 +287,12 @@
       },
       
       dateClick: function(info) {
+        console.log('📅 Date clicked:', info.dateStr);
         openReservationModal(null, info.dateStr);
       },
       
       eventClick: function(info) {
+        console.log('📅 Event clicked:', info.event.title);
         openReservationModal(info.event);
       },
       
@@ -425,6 +307,41 @@
     
     pageCalendar.render();
     window.pageCalendar = pageCalendar;
+    console.log('✅ Calendar initialized successfully');
+  }
+  
+  // ユーザー一覧を取得
+  function loadUsers() {
+    fetch('/admin/users.json')
+      .then(response => response.json())
+      .then(users => {
+        currentUsers = users;
+        updateUserSelect();
+      })
+      .catch(error => {
+        console.error('ユーザー取得エラー:', error);
+      });
+  }
+  
+  // ユーザー選択セレクトボックスを更新
+  function updateUserSelect() {
+    const userSelect = document.getElementById('reservationUserId');
+    if (!userSelect) return;
+    
+    // 既存のオプションをクリア（デフォルトオプションは残す）
+    const defaultOption = userSelect.querySelector('option[value=""]');
+    userSelect.innerHTML = '';
+    if (defaultOption) {
+      userSelect.appendChild(defaultOption);
+    }
+    
+    // ユーザーオプションを追加
+    currentUsers.forEach(user => {
+      const option = document.createElement('option');
+      option.value = user.id;
+      option.textContent = user.name || `ID: ${user.id}`;
+      userSelect.appendChild(option);
+    });
   }
   
   // 予約時間を更新する関数
@@ -455,334 +372,621 @@
     .then(response => response.json())
     .then(data => {
       if (data.success !== false) {
-        showSuccessMessage(`予約「${event.title}」の時間を変更しました`);
+        showMessage(`予約「${event.title}」の時間を変更しました`, 'success');
       } else {
         revertFunc();
-        showErrorMessage(data.errors ? data.errors.join(', ') : '時間の変更に失敗しました');
+        showMessage(data.errors ? data.errors.join(', ') : '時間の変更に失敗しました', 'danger');
       }
     })
     .catch(error => {
       console.error('Update failed:', error);
       revertFunc();
-      showErrorMessage(`時間の変更に失敗しました: ${error.message}`);
+      showMessage(`時間の変更に失敗しました: ${error.message}`, 'danger');
     });
   }
   
-  // 強化されたモーダル開く関数
+  // モーダルを開く関数
   function openReservationModal(event = null, dateStr = null) {
-    const modal = document.getElementById('reservationModal');
-    if (!modal) return;
+    console.log('🔧 Opening modal:', { event, dateStr });
     
-    // タブを基本情報にリセット
-    const basicTab = document.getElementById('basic-tab');
-    if (basicTab) {
-      basicTab.click();
+    const modal = document.getElementById('reservationModal');
+    if (!modal) {
+      console.error('Modal not found');
+      return;
     }
+    
+    // フォームをリセット
+    resetForm();
     
     if (event) {
       // 既存予約の編集
-      document.getElementById('reservationId').value = event.id || '';
-      document.getElementById('reservationUserId').value = event.extendedProps?.user_id || '';
-      document.getElementById('reservationName').value = event.title || '';
-      
-      // ステータス情報を設定
-      const statusSelect = document.getElementById('reservationStatus');
-      if (statusSelect) {
-        statusSelect.value = event.extendedProps?.status || 'confirmed';
-      }
-      
-      // キャンセル・削除ボタンの表示制御
-      const deleteBtn = document.getElementById('deleteReservationBtn');
-      const cancelBtn = document.getElementById('cancelReservationBtn');
-      
-      if (deleteBtn) deleteBtn.classList.remove('d-none');
-      
-      if (cancelBtn) {
-        if (event.extendedProps?.status === 'cancelled') {
-          cancelBtn.classList.add('d-none');
-        } else {
-          cancelBtn.classList.remove('d-none');
-        }
-      }
-      
-      // 繰り返し予約情報の表示
-      if (event.extendedProps?.recurring) {
-        document.getElementById('existingRecurring').style.display = 'block';
-        document.getElementById('currentRecurringType').textContent = 
-          event.extendedProps.recurring_type === 'weekly' ? '毎週' : '毎月';
-        document.getElementById('currentRecurringUntil').textContent = 
-          event.extendedProps.recurring_until || '-';
-      } else {
-        document.getElementById('existingRecurring').style.display = 'none';
-      }
-      
-    } else {
+      console.log('✏️ Editing existing reservation');
+      populateFormWithEvent(event);
+    } else if (dateStr) {
       // 新規予約
-      document.getElementById('reservationId').value = '';
-      document.getElementById('deleteReservationBtn').classList.add('d-none');
-      document.getElementById('cancelReservationBtn').classList.add('d-none');
-      document.getElementById('existingRecurring').style.display = 'none';
+      console.log('➕ Creating new reservation');
+      populateFormWithDate(dateStr);
     }
     
     // モーダルを表示
-    new bootstrap.Modal(modal).show();
+    try {
+      new bootstrap.Modal(modal).show();
+    } catch (error) {
+      console.error('Error showing modal:', error);
+    }
   }
   
-  // ステータス更新機能
-  function initializeStatusManagement() {
-    const statusSelect = document.getElementById('reservationStatus');
-    const cancellationArea = document.getElementById('cancellationReasonArea');
-    const updateBtn = document.getElementById('updateStatusBtn');
+  // フォームをリセット
+  function resetForm() {
+    console.log('🔄 Resetting form');
     
-    if (statusSelect && cancellationArea) {
-      statusSelect.addEventListener('change', function() {
-        if (this.value === 'cancelled') {
-          cancellationArea.style.display = 'block';
-          document.getElementById('cancellationReason').required = true;
+    const form = document.getElementById('reservationForm');
+    if (form) form.reset();
+    
+    document.getElementById('reservationId').value = '';
+    
+    const deleteBtn = document.getElementById('deleteReservationBtn');
+    const cancelBtn = document.getElementById('cancelReservationBtn');
+    
+    if (deleteBtn) {
+      deleteBtn.classList.add('d-none');
+      deleteBtn.removeAttribute('data-reservation-id');
+      deleteBtn.disabled = false;
+      deleteBtn.innerHTML = '<i class="fas fa-trash me-1"></i>削除';
+    }
+    
+    if (cancelBtn) {
+      cancelBtn.classList.add('d-none');
+      cancelBtn.removeAttribute('data-reservation-id');
+      cancelBtn.disabled = false;
+      cancelBtn.innerHTML = '<i class="fas fa-times me-1"></i>キャンセル';
+    }
+    
+    document.getElementById('cancellationReasonArea').style.display = 'none';
+    document.getElementById('newUserSection').style.display = 'none';
+    document.getElementById('existingUserSection').style.display = 'block';
+    document.getElementById('newUserToggle').checked = false;
+  }
+  
+  // 既存イベントでフォームを埋める
+  function populateFormWithEvent(event) {
+    console.log('📝 Populating form with event:', event);
+    
+    document.getElementById('reservationId').value = event.id || '';
+    document.getElementById('reservationUserId').value = event.extendedProps?.user_id || '';
+    
+    // 日付と時間を設定
+    if (event.start) {
+      const startDate = new Date(event.start);
+      document.getElementById('reservationDate').value = startDate.toISOString().split('T')[0];
+      
+      // 時間を10分刻みに丸めてセレクトボックスに設定
+      const hours = startDate.getHours();
+      const minutes = Math.round(startDate.getMinutes() / 10) * 10;
+      
+      // 営業時間内の時間に調整
+      let timeValue;
+      if (hours >= 10 && hours < 19) {
+        timeValue = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+      } else if (hours === 19 && minutes <= 50) {
+        timeValue = `19:${minutes.toString().padStart(2, '0')}`;
+      } else {
+        // 営業時間外の場合は最も近い営業時間内の時間に設定
+        if (hours < 10) {
+          timeValue = '10:00';
         } else {
-          cancellationArea.style.display = 'none';
-          document.getElementById('cancellationReason').required = false;
+          timeValue = '19:50';
         }
-      });
+      }
+      
+      document.getElementById('reservationTime').value = timeValue;
     }
     
-    if (updateBtn) {
-      updateBtn.addEventListener('click', function() {
-        const reservationId = document.getElementById('reservationId').value;
-        const newStatus = statusSelect.value;
-        const cancellationReason = document.getElementById('cancellationReason').value;
-        
-        if (newStatus === 'cancelled' && !cancellationReason.trim()) {
-          alert('キャンセル理由を入力してください');
-          return;
-        }
-        
-        updateReservationStatus(reservationId, newStatus, cancellationReason);
+    document.getElementById('reservationCourse').value = event.extendedProps?.description || event.extendedProps?.course || '60分';
+    document.getElementById('reservationStatus').value = event.extendedProps?.status || 'confirmed';
+    document.getElementById('reservationNote').value = event.extendedProps?.note || '';
+    
+    // 終了時間表示を更新
+    updateEndTimeDisplay();
+    
+    // ボタンの表示制御
+    const deleteBtn = document.getElementById('deleteReservationBtn');
+    const cancelBtn = document.getElementById('cancelReservationBtn');
+    
+    if (deleteBtn) {
+      deleteBtn.classList.remove('d-none');
+      deleteBtn.setAttribute('data-reservation-id', event.id);
+    }
+    
+    if (cancelBtn && event.extendedProps?.status !== 'cancelled') {
+      cancelBtn.classList.remove('d-none');
+      cancelBtn.setAttribute('data-reservation-id', event.id);
+    }
+    
+    console.log('✅ Form populated successfully, reservation ID:', event.id);
+  }
+  
+  // 終了時間表示を更新する関数
+  function updateEndTimeDisplay() {
+    const courseSelect = document.getElementById('reservationCourse');
+    const dateInput = document.getElementById('reservationDate');
+    const timeInput = document.getElementById('reservationTime');
+    
+    const course = courseSelect?.value;
+    const date = dateInput?.value;
+    const time = timeInput?.value;
+    
+    if (course && date && time) {
+      const duration = getDurationFromCourse(course);
+      const adjustedTime = adjustTimeToTenMinutes(time);
+      
+      // 日本時間で計算
+      const startDateTime = new Date(`${date}T${adjustedTime}:00+09:00`);
+      const endDateTime = new Date(startDateTime.getTime() + (duration * 60000));
+      
+      const endTimeDisplay = document.getElementById('endTimeDisplay');
+      if (endTimeDisplay) {
+        // 日本時間での表示
+        const endHours = endDateTime.getHours();
+        const endMinutes = endDateTime.getMinutes();
+        endTimeDisplay.textContent = `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')} 終了予定`;
+      }
+      
+      console.log('🕐 End time display update:', {
+        course,
+        duration,
+        adjustedTime,
+        startDateTime: startDateTime.toString(),
+        endDateTime: endDateTime.toString()
       });
     }
   }
   
-  // 予約ステータス更新
-  function updateReservationStatus(reservationId, status, cancellationReason = '') {
-    const url = status === 'cancelled' 
-      ? `/admin/reservations/${reservationId}/cancel`
-      : `/admin/reservations/${reservationId}/change_status`;
+  // 新規予約で日付を設定
+  function populateFormWithDate(dateStr) {
+    try {
+      const date = new Date(dateStr);
+      document.getElementById('reservationDate').value = date.toISOString().split('T')[0];
+      
+      // デフォルトの時間として、クリックした時間を10分刻みに丸める
+      const hours = date.getHours();
+      const minutes = Math.round(date.getMinutes() / 10) * 10;
+      
+      // 営業時間内かチェック（10:00-19:50）
+      let timeValue;
+      if (hours >= 10 && hours < 19) {
+        timeValue = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+      } else if (hours === 19 && minutes <= 50) {
+        timeValue = `19:${minutes.toString().padStart(2, '0')}`;
+      } else {
+        // 営業時間外の場合はデフォルトで10:00を設定
+        timeValue = '10:00';
+      }
+      
+      document.getElementById('reservationTime').value = timeValue;
+      
+      // 終了時間表示を更新
+      updateEndTimeDisplay();
+    } catch (error) {
+      console.error('日付解析エラー:', error);
+      // フォールバック: デフォルト時間を設定
+      document.getElementById('reservationTime').value = '10:00';
+      updateEndTimeDisplay();
+    }
+  }
+  
+  // 予約を保存
+  function saveReservation() {
+    console.log('💾 Saving reservation...');
     
-    const body = status === 'cancelled'
-      ? { cancellation_reason: cancellationReason }
-      : { status: status };
+    const reservationId = document.getElementById('reservationId').value;
+    const isNewUser = document.getElementById('newUserToggle').checked;
+    
+    // バリデーション
+    if (!validateReservationForm()) {
+      return;
+    }
+    
+    let data;
+    
+    if (isNewUser) {
+      // 新規ユーザーと予約を作成
+      const newUserData = getNewUserData();
+      const reservationData = getReservationData();
+      
+      console.log('📝 New user data:', newUserData);
+      console.log('📝 Reservation data:', reservationData);
+      
+      data = {
+        new_user: newUserData,
+        reservation: reservationData
+      };
+    } else {
+      // 既存ユーザーで予約を作成/更新
+      data = {
+        reservation: getReservationData()
+      };
+      
+      console.log('📝 Reservation data:', data.reservation);
+    }
+    
+    const url = reservationId ? `/admin/reservations/${reservationId}` : '/admin/reservations';
+    const method = reservationId ? 'PATCH' : 'POST';
+    
+    console.log(`🔄 ${method} request to ${url}`);
+    console.log('📤 Request data:', data);
+    
+    // ボタンを無効化
+    const saveBtn = document.getElementById('saveReservationBtn');
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>保存中...';
+    }
     
     fetch(url, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || '',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
+    .then(response => {
+      console.log('🔄 Response status:', response.status);
+      return response.json().then(data => ({ status: response.status, data }));
+    })
+    .then(({ status, data }) => {
+      console.log('📥 Response data:', data);
+      
+      if (status === 200 || status === 201 || data.success !== false) {
+        showMessage(reservationId ? '予約を更新しました' : '予約を作成しました', 'success');
+        closeModal();
+        refreshCalendar();
+      } else {
+        console.error('❌ Validation errors:', data.errors);
+        let errorMessage = '保存に失敗しました';
+        if (data.errors && Array.isArray(data.errors)) {
+          errorMessage += ':\n' + data.errors.join('\n');
+        } else if (data.error) {
+          errorMessage += ': ' + data.error;
+        }
+        showMessage(errorMessage, 'danger');
+      }
+    })
+    .catch(error => {
+      console.error('❌ Save failed:', error);
+      showMessage('保存中にエラーが発生しました: ' + error.message, 'danger');
+    })
+    .finally(() => {
+      // ボタンを元に戻す
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="fas fa-save me-1"></i>保存';
+      }
+    });
+  }
+  
+  // フォームバリデーション
+  function validateReservationForm() {
+    const isNewUser = document.getElementById('newUserToggle').checked;
+    const errors = [];
+    
+    // 新規ユーザーの場合
+    if (isNewUser) {
+      const newUserName = document.getElementById('newUserName').value.trim();
+      if (!newUserName) {
+        errors.push('ユーザー名を入力してください');
+      }
+    } else {
+      // 既存ユーザーの場合
+      const userId = document.getElementById('reservationUserId').value;
+      if (!userId) {
+        errors.push('ユーザーを選択してください');
+      }
+    }
+    
+    // 予約詳細
+    const date = document.getElementById('reservationDate').value;
+    const time = document.getElementById('reservationTime').value;
+    const course = document.getElementById('reservationCourse').value;
+    
+    if (!date) {
+      errors.push('予約日を選択してください');
+    }
+    
+    if (!time) {
+      errors.push('開始時間を選択してください');
+    }
+    
+    if (!course) {
+      errors.push('コースを選択してください');
+    }
+    
+    // 時間が営業時間内かチェック
+    if (time) {
+      const [hours, minutes] = time.split(':').map(Number);
+      if (hours < 10 || (hours === 20 && minutes > 0) || hours > 20) {
+        errors.push('営業時間内（10:00-20:00）の時間を選択してください');
+      }
+    }
+    
+    // キャンセル理由
+    const status = document.getElementById('reservationStatus').value;
+    if (status === 'cancelled') {
+      const reason = document.getElementById('cancellationReason').value.trim();
+      if (!reason) {
+        errors.push('キャンセル理由を入力してください');
+      }
+    }
+    
+    if (errors.length > 0) {
+      showMessage('入力エラー:\n' + errors.join('\n'), 'danger');
+      return false;
+    }
+    
+    return true;
+  }
+  
+  // 新規ユーザーデータを取得
+  function getNewUserData() {
+    return {
+      name: document.getElementById('newUserName').value,
+      phone_number: document.getElementById('newUserPhone').value,
+      email: document.getElementById('newUserEmail').value,
+      birth_date: document.getElementById('newUserBirthDate').value || null,
+      address: document.getElementById('newUserAddress').value,
+      admin_memo: document.getElementById('newUserMemo').value
+    };
+  }
+  
+  // 予約データを取得
+  function getReservationData() {
+    const date = document.getElementById('reservationDate').value;
+    const time = document.getElementById('reservationTime').value;
+    const course = document.getElementById('reservationCourse').value;
+    
+    // 既に10分刻みの時間が選択されているので調整不要
+    const startDateTime = new Date(`${date}T${time}:00+09:00`);
+    
+    // 終了時間を計算
+    const duration = getDurationFromCourse(course);
+    const endDateTime = new Date(startDateTime.getTime() + (duration * 60000));
+    
+    // ISO文字列として送信（サーバー側でタイムゾーン処理）
+    const startTime = startDateTime.toISOString();
+    const endTime = endDateTime.toISOString();
+    
+    console.log('🕐 Start time calculation:', {
+      date,
+      time,
+      course,
+      duration,
+      startDateTime: startDateTime.toString(),
+      endDateTime: endDateTime.toString(),
+      startTime,
+      endTime
+    });
+    
+    const data = {
+      user_id: document.getElementById('reservationUserId').value || null,
+      start_time: startTime,
+      end_time: endTime,
+      course: course,
+      status: document.getElementById('reservationStatus').value,
+      note: document.getElementById('reservationNote').value
+    };
+    
+    // キャンセル理由が必要な場合
+    if (data.status === 'cancelled') {
+      data.cancellation_reason = document.getElementById('cancellationReason').value;
+    }
+    
+    console.log('📝 Final reservation data:', data);
+    
+    return data;
+  }
+  
+  // 10分刻みの時間オプションを生成
+  function generateTimeOptions() {
+    const timeSelect = document.getElementById('reservationTime');
+    if (!timeSelect) return;
+    
+    // 既存のオプションをクリア（デフォルトオプション以外）
+    const defaultOption = timeSelect.querySelector('option[value=""]');
+    timeSelect.innerHTML = '';
+    if (defaultOption) {
+      timeSelect.appendChild(defaultOption);
+    }
+    
+    // 10:00から19:50まで10分刻みで生成（20:00開始は60分コースだと21:00終了になるため除外）
+    for (let hour = 10; hour < 20; hour++) {
+      for (let minute = 0; minute < 60; minute += 10) {
+        // 19:50以降は除外（最長80分コースを考慮）
+        if (hour === 19 && minute > 50) break;
+        
+        const timeValue = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        const option = document.createElement('option');
+        option.value = timeValue;
+        option.textContent = timeValue;
+        timeSelect.appendChild(option);
+      }
+    }
+    
+    console.log('⏰ Generated time options for 10-minute intervals (10:00-19:50)');
+  }
+  
+  // 予約を削除
+  function deleteReservation() {
+    console.log('🗑️ Delete reservation called');
+    
+    // 複数の方法でIDを取得
+    let reservationId = document.getElementById('reservationId').value;
+    
+    if (!reservationId) {
+      const deleteBtn = document.getElementById('deleteReservationBtn');
+      reservationId = deleteBtn?.getAttribute('data-reservation-id');
+    }
+    
+    console.log('🔍 Reservation ID:', reservationId);
+    
+    if (!reservationId) {
+      console.error('❌ No reservation ID found');
+      showMessage('予約IDが見つかりません', 'danger');
+      return;
+    }
+    
+    if (!confirm('この予約を削除しますか？')) {
+      return;
+    }
+    
+    console.log(`🗑️ Deleting reservation ${reservationId}`);
+    
+    // ボタンを無効化
+    const deleteBtn = document.getElementById('deleteReservationBtn');
+    if (deleteBtn) {
+      deleteBtn.disabled = true;
+      deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>削除中...';
+    }
+    
+    fetch(`/admin/reservations/${reservationId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || '',
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => {
+      console.log('🔄 Delete response status:', response.status);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('✅ Delete response:', data);
+      if (data.success !== false) {
+        showMessage('予約を削除しました', 'success');
+        closeModal();
+        refreshCalendar();
+      } else {
+        showMessage(data.error || '削除に失敗しました', 'danger');
+      }
+    })
+    .catch(error => {
+      console.error('❌ Delete failed:', error);
+      showMessage(`削除中にエラーが発生しました: ${error.message}`, 'danger');
+    })
+    .finally(() => {
+      // ボタンを元に戻す
+      if (deleteBtn) {
+        deleteBtn.disabled = false;
+        deleteBtn.innerHTML = '<i class="fas fa-trash me-1"></i>削除';
+      }
+    });
+  }
+  
+  // 予約をキャンセル
+  function cancelReservation() {
+    console.log('❌ Cancel reservation called');
+    
+    // 複数の方法でIDを取得
+    let reservationId = document.getElementById('reservationId').value;
+    
+    if (!reservationId) {
+      const cancelBtn = document.getElementById('cancelReservationBtn');
+      reservationId = cancelBtn?.getAttribute('data-reservation-id');
+    }
+    
+    console.log('🔍 Reservation ID for cancel:', reservationId);
+    
+    if (!reservationId) {
+      console.error('❌ No reservation ID found for cancel');
+      showMessage('予約IDが見つかりません', 'danger');
+      return;
+    }
+    
+    const reason = prompt('キャンセル理由を入力してください:');
+    if (!reason || reason.trim() === '') {
+      return;
+    }
+    
+    console.log(`❌ Cancelling reservation ${reservationId} with reason: ${reason}`);
+    
+    // ボタンを無効化
+    const cancelBtn = document.getElementById('cancelReservationBtn');
+    if (cancelBtn) {
+      cancelBtn.disabled = true;
+      cancelBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>キャンセル中...';
+    }
+    
+    fetch(`/admin/reservations/${reservationId}/cancel`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''
-      },
-      body: JSON.stringify(body)
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        showSuccessMessage(data.message);
-        if (pageCalendar) {
-          pageCalendar.refetchEvents();
-        }
-        // モーダルを閉じる
-        const modal = bootstrap.Modal.getInstance(document.getElementById('reservationModal'));
-        if (modal) modal.hide();
-      } else {
-        showErrorMessage(data.error || 'ステータス更新に失敗しました');
-      }
-    })
-    .catch(error => {
-      console.error('Status update failed:', error);
-      showErrorMessage('ステータス更新中にエラーが発生しました');
-    });
-  }
-  
-  // 繰り返し予約機能
-  function initializeRecurringReservations() {
-    const isRecurringCheck = document.getElementById('isRecurring');
-    const recurringSettings = document.getElementById('recurringSettings');
-    const createBtn = document.getElementById('createRecurringBtn');
-    
-    if (isRecurringCheck && recurringSettings) {
-      isRecurringCheck.addEventListener('change', function() {
-        recurringSettings.style.display = this.checked ? 'block' : 'none';
-      });
-    }
-    
-    if (createBtn) {
-      createBtn.addEventListener('click', function() {
-        const reservationId = document.getElementById('reservationId').value;
-        const recurringType = document.getElementById('recurringType').value;
-        const recurringUntil = document.getElementById('recurringUntil').value;
-        
-        if (!reservationId) {
-          alert('予約を先に保存してから繰り返し設定を行ってください');
-          return;
-        }
-        
-        if (!recurringUntil) {
-          alert('終了日を選択してください');
-          return;
-        }
-        
-        createRecurringReservations(reservationId, recurringType, recurringUntil);
-      });
-    }
-  }
-  
-  // 繰り返し予約作成
-  function createRecurringReservations(reservationId, recurringType, recurringUntil) {
-    fetch(`/admin/reservations/${reservationId}/create_recurring`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || '',
+        'Accept': 'application/json'
       },
       body: JSON.stringify({
-        recurring_type: recurringType,
-        recurring_until: recurringUntil
+        cancellation_reason: reason.trim()
       })
     })
-    .then(response => response.json())
+    .then(response => {
+      console.log('🔄 Cancel response status:', response.status);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    })
     .then(data => {
+      console.log('✅ Cancel response:', data);
       if (data.success) {
-        showSuccessMessage(data.message);
-        if (pageCalendar) {
-          pageCalendar.refetchEvents();
-        }
-        // モーダルを閉じる
-        const modal = bootstrap.Modal.getInstance(document.getElementById('reservationModal'));
-        if (modal) modal.hide();
+        showMessage(data.message || '予約をキャンセルしました', 'success');
+        closeModal();
+        refreshCalendar();
       } else {
-        showErrorMessage(data.error || '繰り返し予約の作成に失敗しました');
+        showMessage(data.error || 'キャンセルに失敗しました', 'danger');
       }
     })
     .catch(error => {
-      console.error('Recurring reservation creation failed:', error);
-      showErrorMessage('繰り返し予約作成中にエラーが発生しました');
-    });
-  }
-  
-  // メール送信機能
-  function initializeEmailFunctions() {
-    const confirmationBtn = document.getElementById('sendConfirmationBtn');
-    const reminderBtn = document.getElementById('sendReminderBtn');
-    
-    if (confirmationBtn) {
-      confirmationBtn.addEventListener('click', function() {
-        const reservationId = document.getElementById('reservationId').value;
-        if (reservationId) {
-          sendEmail(reservationId, 'confirmation');
-        }
-      });
-    }
-    
-    if (reminderBtn) {
-      reminderBtn.addEventListener('click', function() {
-        const reservationId = document.getElementById('reservationId').value;
-        if (reservationId) {
-          sendEmail(reservationId, 'reminder');
-        }
-      });
-    }
-  }
-  
-  // メール送信
-  function sendEmail(reservationId, type) {
-    fetch(`/admin/reservations/${reservationId}/send_email`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''
-      },
-      body: JSON.stringify({ email_type: type })
+      console.error('❌ Cancel failed:', error);
+      showMessage(`キャンセル中にエラーが発生しました: ${error.message}`, 'danger');
     })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        showSuccessMessage(`${type === 'confirmation' ? '確認' : 'リマインダー'}メールを送信しました`);
-      } else {
-        showErrorMessage(data.error || 'メール送信に失敗しました');
-      }
-    })
-    .catch(error => {
-      console.error('Email sending failed:', error);
-      showErrorMessage('メール送信中にエラーが発生しました');
-    });
-  }
-  
-  // フィルタリング機能
-  function initializeFiltering() {
-    const filterButtons = [
-      'showAllReservations',
-      'showConfirmedOnly', 
-      'showTentativeOnly',
-      'showRecurringOnly'
-    ];
-    
-    filterButtons.forEach(buttonId => {
-      const button = document.getElementById(buttonId);
-      if (button) {
-        button.addEventListener('click', function(e) {
-          e.preventDefault();
-          applyFilter(buttonId);
-        });
+    .finally(() => {
+      // ボタンを元に戻す
+      if (cancelBtn) {
+        cancelBtn.disabled = false;
+        cancelBtn.innerHTML = '<i class="fas fa-times me-1"></i>キャンセル';
       }
     });
   }
   
-  // フィルター適用
-  function applyFilter(filterType) {
-    if (!pageCalendar) return;
-    
-    let filterFunction;
-    
-    switch(filterType) {
-      case 'showConfirmedOnly':
-        filterFunction = (event) => event.extendedProps?.status === 'confirmed';
-        break;
-      case 'showTentativeOnly':
-        filterFunction = (event) => event.extendedProps?.status === 'tentative';
-        break;
-      case 'showRecurringOnly':
-        filterFunction = (event) => event.extendedProps?.recurring === true;
-        break;
-      default:
-        filterFunction = () => true; // 全て表示
+  // カレンダーを更新
+  function refreshCalendar() {
+    if (pageCalendar) {
+      pageCalendar.refetchEvents();
     }
-    
-    // フィルターを適用してイベントを再描画
-    const allEvents = pageCalendar.getEvents();
-    allEvents.forEach(event => {
-      if (filterFunction(event)) {
-        event.setProp('display', 'auto');
-      } else {
-        event.setProp('display', 'none');
-      }
-    });
   }
   
-  // 成功・エラーメッセージ表示
-  function showSuccessMessage(message) {
-    showMessage(message, 'success');
+  // モーダルを閉じる
+  function closeModal() {
+    const modal = bootstrap.Modal.getInstance(document.getElementById('reservationModal'));
+    if (modal) modal.hide();
   }
   
-  function showErrorMessage(message) {
-    showMessage(message, 'danger');
-  }
-  
+  // メッセージを表示
   function showMessage(message, type) {
     const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
     alertDiv.innerHTML = `
       ${message}
       <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
-    document.body.appendChild(alertDiv);
+    
+    const flashContainer = document.getElementById('flash');
+    flashContainer.innerHTML = '';
+    flashContainer.appendChild(alertDiv);
     
     setTimeout(() => {
       if (alertDiv.parentNode) {
@@ -791,19 +995,105 @@
     }, 5000);
   }
   
+  // コースから分数を取得
+  function getDurationFromCourse(course) {
+    switch(course) {
+      case '40分': return 40;
+      case '60分': return 60;
+      case '80分': return 80;
+      default: return 60;
+    }
+  }
+  
+  // イベントリスナーを設定
+  function setupEventListeners() {
+    // 新規ユーザートグル
+    const newUserToggle = document.getElementById('newUserToggle');
+    if (newUserToggle) {
+      newUserToggle.addEventListener('change', function() {
+        const newUserSection = document.getElementById('newUserSection');
+        const existingUserSection = document.getElementById('existingUserSection');
+        
+        if (this.checked) {
+          newUserSection.style.display = 'block';
+          existingUserSection.style.display = 'none';
+        } else {
+          newUserSection.style.display = 'none';
+          existingUserSection.style.display = 'block';
+        }
+      });
+    }
+    
+    // ステータス変更時のキャンセル理由表示
+    const statusSelect = document.getElementById('reservationStatus');
+    if (statusSelect) {
+      statusSelect.addEventListener('change', function() {
+        const cancellationArea = document.getElementById('cancellationReasonArea');
+        if (this.value === 'cancelled') {
+          cancellationArea.style.display = 'block';
+        } else {
+          cancellationArea.style.display = 'none';
+        }
+      });
+    }
+    
+    // コース、日付、時間変更時の終了時間自動更新
+    const courseSelect = document.getElementById('reservationCourse');
+    const dateInput = document.getElementById('reservationDate');
+    const timeInput = document.getElementById('reservationTime');
+    
+    if (courseSelect) {
+      courseSelect.addEventListener('change', updateEndTimeDisplay);
+    }
+    
+    if (dateInput) {
+      dateInput.addEventListener('change', updateEndTimeDisplay);
+    }
+    
+    if (timeInput) {
+      timeInput.addEventListener('change', updateEndTimeDisplay);
+    }
+    
+    // 保存ボタン
+    const saveBtn = document.getElementById('saveReservationBtn');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', saveReservation);
+    }
+    
+    // 削除ボタン
+    const deleteBtn = document.getElementById('deleteReservationBtn');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', deleteReservation);
+    }
+    
+    // キャンセルボタン
+    const cancelBtn = document.getElementById('cancelReservationBtn');
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', cancelReservation);
+    }
+  }
+  
   // 初期化
   function initialize() {
-    createEnhancedCalendar();
-    initializeStatusManagement();
-    initializeRecurringReservations();
-    initializeEmailFunctions();
-    initializeFiltering();
+    console.log('🚀 Initializing calendar application');
+    
+    // 関数の存在確認
+    console.log('📋 Function checks:', {
+      generateTimeOptions: typeof generateTimeOptions,
+      updateEndTimeDisplay: typeof updateEndTimeDisplay,
+      getDurationFromCourse: typeof getDurationFromCourse,
+      openReservationModal: typeof openReservationModal
+    });
+    
+    initializeCalendar();
+    loadUsers();
+    generateTimeOptions(); // 時間オプションを生成
+    setupEventListeners();
   }
   
   // グローバル関数として公開
   window.openReservationModal = openReservationModal;
-  window.updateReservationStatus = updateReservationStatus;
-  window.createRecurringReservations = createRecurringReservations;
+  window.refreshCalendar = refreshCalendar;
   
   // イベントリスナー
   if (document.readyState === 'loading') {

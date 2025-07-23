@@ -1,4 +1,4 @@
-# config/routes.rb の完全版
+# config/routes.rb の修正版
 
 Rails.application.routes.draw do
   get "reservations/new"
@@ -34,8 +34,8 @@ Rails.application.routes.draw do
       get 'ticket_usages', to: 'users#ticket_usages'
     end
 
-    # 予約管理（強化版）
-    # カレンダーのルートを最初に定義
+    # 予約管理（修正版）
+    # カレンダーのルートを最初に独立して定義
     get 'reservations/calendar', to: 'reservations#calendar', as: 'reservations_calendar'
     
     resources :reservations do

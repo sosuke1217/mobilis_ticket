@@ -96,13 +96,13 @@ Rails.application.configure do
     address: 'smtp.gmail.com',
     port: 587,
     domain: 'gmail.com',
-    user_name: ENV['mobilis.stretch@gmail.com'],
-    password: ENV['ddhyrcurchunvsds'],
+    user_name: ENV['GMAIL_USERNAME'],
+    password: ENV['GMAIL_APP_PASSWORD'],
     authentication: 'plain',
     enable_starttls_auto: true,
     open_timeout: 10,
     read_timeout: 10
-  }
+  }  
 
   config.action_mailer.default_url_options = { 
     host: ENV.fetch('APP_HOST', 'localhost:3000'),

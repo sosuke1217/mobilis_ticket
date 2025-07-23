@@ -7,7 +7,7 @@ class Admin::UsersController < ApplicationController
     @users = @q.result(distinct: true).order(created_at: :desc).page(params[:page]).per(20)
   
     respond_to do |format|
-      format.html # HTML表示用（テーブルなど）
+      format.html
       format.json { render json: @users.limit(1000).map { |u| { id: u.id, name: u.name } } }
     end
   end
