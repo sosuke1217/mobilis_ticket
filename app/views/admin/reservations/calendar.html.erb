@@ -21,6 +21,21 @@
               <option value="">ユーザーを選択してください</option>
             </select>
           </div>
+          
+          <!-- 日付選択 -->
+          <div class="mb-3">
+            <label for="reservationDate" class="form-label">予約日</label>
+            <input type="date" class="form-control" id="reservationDate" required>
+          </div>
+          
+          <!-- 時間選択 -->
+          <div class="mb-3">
+            <label for="reservationTime" class="form-label">開始時間</label>
+            <select class="form-control" id="reservationTime" required>
+              <option value="">時間を選択してください</option>
+            </select>
+          </div>
+          
           <div class="mb-3">
             <label for="reservationCourse" class="form-label">コース</label>
             <select class="form-control" id="reservationCourse">
@@ -29,6 +44,13 @@
               <option value="80分">80分</option>
             </select>
           </div>
+          
+          <!-- 終了時間表示 -->
+          <div class="mb-3">
+            <label class="form-label">終了予定時間</label>
+            <div id="endTimeDisplay" class="form-control-plaintext text-muted">時間とコースを選択してください</div>
+          </div>
+          
           <input type="hidden" id="reservationStartTime">
           <input type="hidden" id="reservationId">
           <input type="hidden" id="reservationName">
@@ -40,78 +62,333 @@
   </div>
 </div>
 
+<!-- 確実に動作するスクリプト -->
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    // 重複実行を防ぐフラグ
-    if (window.calendarInitialized) {
-      console.log('Calendar already initialized, skipping...');
-      return;
-    }
-    window.calendarInitialized = true;
-
+(function() {
+  'use strict';
+  
+  console.log("🚀 Calendar page script loaded");
+  
+  let pageCalendar = null;
+  
+  function createCalendar() {
+    console.log("📅 Creating calendar function called");
+    
     const calendarEl = document.getElementById('calendar');
     if (!calendarEl) {
-      console.log('Calendar element not found');
+      console.log("❌ Calendar element not found");
+      return;
+    }
+    
+    if (typeof FullCalendar === 'undefined') {
+      console.log("❌ FullCalendar not available, retrying in 1000ms");
+      setTimeout(createCalendar, 1000);
+      return;
+    }
+    
+    // 既存のカレンダーを破棄
+    if (pageCalendar) {
+      try {
+        pageCalendar.destroy();
+      } catch (error) {
+        console.warn("Error destroying calendar:", error);
+      }
+      pageCalendar = null;
+    }
+    
+    console.log("✅ Creating FullCalendar instance");
+    
+    try {
+      calendarEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">カレンダーを初期化中...</div>';
+      
+      pageCalendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: window.innerWidth < 768 ? "timeGridDay" : "timeGridWeek",
+        locale: 'ja',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'timeGridWeek,timeGridDay'
+        },
+        slotMinTime: "10:00:00",
+        slotMaxTime: "20:30:00",
+        slotDuration: "00:10:00",
+        scrollTime: "10:00:00",
+        height: "auto",
+        events: {
+          url: "/admin/reservations.json",
+          failure: function() {
+            console.error("Failed to fetch events from /admin/reservations.json");
+          }
+        },
+        
+        dateClick: function(info) {
+          console.log('📅 Date clicked:', info.dateStr);
+          openReservationModal(null, info.dateStr);
+        },
+        
+        eventClick: function(info) {
+          console.log('📅 Event clicked:', info.event.title);
+          openReservationModal(info.event);
+        },
+        
+        loading: function(isLoading) {
+          if (isLoading) {
+            console.log("📡 Loading events...");
+          } else {
+            console.log("✅ Events loaded");
+          }
+        }
+      });
+      
+      pageCalendar.render();
+      
+      // グローバルに保存
+      window.pageCalendar = pageCalendar;
+      
+      console.log("✅ Calendar rendered successfully");
+      
+      // 成功確認
+      setTimeout(() => {
+        if (calendarEl.querySelector('.fc-toolbar')) {
+          console.log("🎉 Calendar confirmed working!");
+        } else {
+          console.error("❌ Calendar render failed");
+        }
+      }, 500);
+      
+    } catch (error) {
+      console.error("❌ Calendar creation error:", error);
+      calendarEl.innerHTML = '<div style="padding: 20px; color: red; background: #ffe6e6;">エラー: ' + error.message + '</div>';
+    }
+  }
+  
+  function openReservationModal(event = null, dateStr = null) {
+    const modal = document.getElementById('reservationModal');
+    const form = document.getElementById('reservationForm');
+    
+    if (!modal || !form) {
+      console.error('Modal or form not found');
+      alert('モーダルが見つかりません');
       return;
     }
 
-    const calendar = new FullCalendar.Calendar(calendarEl, {
-      initialView: window.innerWidth < 768 ? "timeGridDay" : "timeGridWeek",
-      locale: 'ja',
-      headerToolbar: {
-        left: 'prev,next today',
-        center: 'title',
-        right: 'timeGridWeek,timeGridDay'
-      },
-      slotMinTime: "10:00:00",
-      slotMaxTime: "20:30:00",
-      slotDuration: "00:10:00",
-      scrollTime: "10:00:00",
-      height: "auto",
-      events: "/admin/reservations.json",
-      dateClick: function(info) {
-        console.log('Date clicked:', info.dateStr);
-        document.getElementById('reservationId').value = "";
-        document.getElementById('reservationUserId').value = "";
-        document.getElementById('reservationName').value = "";
-        document.getElementById('reservationCourse').value = "60分";
-        document.getElementById('reservationStartTime').value = info.dateStr;
-        document.getElementById('deleteReservationBtn').classList.add('d-none');
-        new bootstrap.Modal(document.getElementById('reservationModal')).show();
-      },
-      eventClick: function(info) {
-        console.log('Event clicked:', info.event);
-        const eventId = info.event.id;
+    // フォームをリセット
+    form.reset();
+    
+    // 時間選択肢を生成
+    generateTimeOptions();
+    
+    if (event) {
+      // 既存イベントの編集
+      const startDate = new Date(event.start);
+      const dateStr = startDate.toISOString().split('T')[0]; // YYYY-MM-DD形式
+      const timeStr = startDate.toTimeString().substr(0, 5); // HH:MM形式
+      
+      document.getElementById('reservationId').value = event.id || '';
+      document.getElementById('reservationUserId').value = event.extendedProps?.user_id || '';
+      document.getElementById('reservationName').value = event.title || '';
+      document.getElementById('reservationCourse').value = event.extendedProps?.description || '60分';
+      document.getElementById('reservationDate').value = dateStr;
+      document.getElementById('reservationTime').value = timeStr;
+      document.getElementById('reservationStartTime').value = event.start?.toISOString() || '';
+      document.getElementById('deleteReservationBtn').classList.remove('d-none');
+      
+      console.log('Editing event:', { dateStr, timeStr, course: event.extendedProps?.description });
+    } else {
+      // 新規予約
+      const clickedDate = dateStr ? new Date(dateStr) : new Date();
+      const formattedDate = clickedDate.toISOString().split('T')[0];
+      const defaultTime = dateStr ? new Date(dateStr).toTimeString().substr(0, 5) : '10:00';
+      
+      document.getElementById('reservationId').value = '';
+      document.getElementById('reservationUserId').value = '';
+      document.getElementById('reservationName').value = '';
+      document.getElementById('reservationCourse').value = '60分';
+      document.getElementById('reservationDate').value = formattedDate;
+      document.getElementById('reservationTime').value = defaultTime;
+      document.getElementById('reservationStartTime').value = dateStr || '';
+      document.getElementById('deleteReservationBtn').classList.add('d-none');
+      
+      console.log('New reservation:', { formattedDate, defaultTime });
+    }
+    
+    // 終了時間を更新
+    updateEndTimeDisplay();
+    
+    // モーダルを表示
+    try {
+      if (typeof bootstrap !== 'undefined') {
+        new bootstrap.Modal(modal).show();
+      } else {
+        alert('Bootstrap not available. Form data: ' + JSON.stringify({
+          dateStr: dateStr,
+          eventTitle: event?.title
+        }));
+      }
+    } catch (error) {
+      console.error('Error showing modal:', error);
+      alert('Modal error: ' + error.message);
+    }
+  }
+  
+  // 時間選択肢を生成する関数
+  function generateTimeOptions() {
+    const timeSelect = document.getElementById('reservationTime');
+    if (!timeSelect) return;
+    
+    // 既存のオプションをクリア（最初のオプション以外）
+    while (timeSelect.children.length > 1) {
+      timeSelect.removeChild(timeSelect.lastChild);
+    }
+    
+    // 10:00から20:00まで10分刻みで生成
+    for (let hour = 10; hour <= 19; hour++) {
+      for (let minute = 0; minute < 60; minute += 10) {
+        const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        const option = document.createElement('option');
+        option.value = timeStr;
+        option.textContent = timeStr;
+        timeSelect.appendChild(option);
+      }
+    }
+    
+    // 20:00も追加
+    const option = document.createElement('option');
+    option.value = '20:00';
+    option.textContent = '20:00';
+    timeSelect.appendChild(option);
+  }
+  
+  // 終了時間表示を更新する関数
+  function updateEndTimeDisplay() {
+    const timeSelect = document.getElementById('reservationTime');
+    const courseSelect = document.getElementById('reservationCourse');
+    const endTimeDisplay = document.getElementById('endTimeDisplay');
+    
+    if (!timeSelect || !courseSelect || !endTimeDisplay) return;
+    
+    const selectedTime = timeSelect.value;
+    const selectedCourse = courseSelect.value;
+    
+    if (!selectedTime || !selectedCourse) {
+      endTimeDisplay.textContent = '時間とコースを選択してください';
+      return;
+    }
+    
+    // 開始時間をパース
+    const [hours, minutes] = selectedTime.split(':').map(Number);
+    const startDate = new Date();
+    startDate.setHours(hours, minutes, 0, 0);
+    
+    // コースに応じた終了時間を計算
+    let duration = 60;
+    if (selectedCourse === '40分') duration = 40;
+    else if (selectedCourse === '80分') duration = 80;
+    
+    const endDate = new Date(startDate.getTime() + duration * 60000);
+    const endTimeStr = endDate.toTimeString().substr(0, 5);
+    
+    endTimeDisplay.textContent = `${endTimeStr} (${selectedCourse}コース)`;
+  }
+  
+  // ユーザーリスト初期化関数
+  function initializeUserList() {
+    console.log("🔧 Initializing user list");
+    
+    const select = document.getElementById('reservationUserId');
+    if (!select) {
+      console.error('User select element not found');
+      return;
+    }
+    
+    console.log("📡 Fetching users from API");
+    
+    fetch('/admin/users.json')
+      .then(response => {
+        console.log("Users API response:", response.status);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log("✅ Users data received:", data.length, "users");
         
-        if (!eventId || !eventId.toString().match(/^[0-9]+$/)) {
-          console.error('Invalid event ID:', eventId);
-          alert('不正なイベントIDです');
+        // 既存のオプションをクリア（最初のオプション以外）
+        while (select.children.length > 1) {
+          select.removeChild(select.lastChild);
+        }
+        
+        if (data.length === 0) {
+          console.warn("No users found in API response");
+          const option = document.createElement('option');
+          option.value = '';
+          option.textContent = 'ユーザーが見つかりません';
+          select.appendChild(option);
           return;
         }
-
-        document.getElementById('reservationId').value = eventId;
-        document.getElementById('reservationUserId').value = info.event.extendedProps.user_id || "";
-        document.getElementById('reservationName').value = info.event.title;
-        document.getElementById('reservationCourse').value = info.event.extendedProps.description || "60分";
-        document.getElementById('reservationStartTime').value = info.event.start.toISOString();
-        document.getElementById('deleteReservationBtn').classList.remove('d-none');
-        new bootstrap.Modal(document.getElementById('reservationModal')).show();
-      }
-    });
-
-    calendar.render();
-
-    // モーダルのアクセシビリティ改善
+        
+        data.forEach((user, index) => {
+          const option = document.createElement('option');
+          option.value = user.id;
+          option.textContent = user.name || `ユーザー${user.id}`;
+          option.setAttribute('data-name', user.name || `ユーザー${user.id}`);
+          select.appendChild(option);
+          
+          if (index < 3) {
+            console.log(`Added user: ${user.id} - ${user.name || 'No name'}`);
+          }
+        });
+        
+        console.log("✅ User options added successfully");
+        console.log("Total options:", select.options.length);
+        
+        // ユーザー選択時に名前を自動設定
+        select.addEventListener('change', function() {
+          const selectedOption = this.options[this.selectedIndex];
+          const nameField = document.getElementById('reservationName');
+          if (nameField && selectedOption.value) {
+            nameField.value = selectedOption.getAttribute('data-name');
+            console.log("Name field updated:", selectedOption.getAttribute('data-name'));
+          } else if (nameField) {
+            nameField.value = '';
+          }
+        });
+        
+        // 読み込み済みマークを設定
+        select.setAttribute('data-loaded', 'true');
+        
+      })
+      .catch(error => {
+        console.error('❌ Error loading users:', error);
+        
+        // エラー時のフォールバック
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'ユーザー読み込みエラー';
+        select.appendChild(option);
+      });
+  }
+  
+  // モーダルイベント初期化
+  function initializeModalEvents() {
+    console.log("🔧 Initializing modal events");
+    
     const modalEl = document.getElementById('reservationModal');
+    if (!modalEl) {
+      console.error('Reservation modal not found');
+      return;
+    }
+    
+    // モーダル表示・非表示イベント
     modalEl.addEventListener('hidden.bs.modal', function () {
-      // モーダルが閉じられた後、フォーカスをカレンダーに戻す
+      const calendarEl = document.getElementById('calendar');
       if (calendarEl) {
         calendarEl.focus();
       }
     });
 
     modalEl.addEventListener('show.bs.modal', function () {
-      // モーダルが表示される際に、最初のフィールドにフォーカス
       setTimeout(() => {
         const firstInput = modalEl.querySelector('select, input[type="text"]:not([type="hidden"])');
         if (firstInput) {
@@ -119,56 +396,101 @@
         }
       }, 150);
     });
-
-    // ユーザーリストの取得
-    fetch('/admin/users.json')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('ユーザーリストの取得に失敗しました');
-        }
-        return response.json();
-      })
-      .then(data => {
-        const select = document.getElementById('reservationUserId');
-        data.forEach(user => {
-          const option = document.createElement('option');
-          option.value = user.id;
-          option.textContent = user.name || `ユーザー${user.id}`;
-          option.setAttribute('data-name', user.name || `ユーザー${user.id}`);
-          select.appendChild(option);
-        });
-
-        // ユーザー選択時に名前を自動設定
-        select.addEventListener('change', function() {
-          const selectedOption = this.options[this.selectedIndex];
-          const nameField = document.getElementById('reservationName');
-          if (selectedOption.value) {
-            nameField.value = selectedOption.getAttribute('data-name');
-          } else {
-            nameField.value = '';
-          }
-        });
-      })
-      .catch(error => {
-        console.error('Error loading users:', error);
+    
+    // 時間・コース変更時の終了時間表示更新
+    const timeSelect = document.getElementById('reservationTime');
+    const courseSelect = document.getElementById('reservationCourse');
+    const dateInput = document.getElementById('reservationDate');
+    
+    if (timeSelect) {
+      timeSelect.addEventListener('change', function() {
+        updateEndTimeDisplay();
+        updateHiddenStartTime();
       });
-
-    function refetchWithDelay() {
-      console.log('Refetching events...');
-      calendar.refetchEvents();
+    }
+    
+    if (courseSelect) {
+      courseSelect.addEventListener('change', function() {
+        updateEndTimeDisplay();
+      });
+    }
+    
+    if (dateInput) {
+      dateInput.addEventListener('change', function() {
+        updateHiddenStartTime();
+      });
+    }
+    
+    console.log("✅ Modal events initialized");
+  }
+  
+  // 隠しフィールドの開始時間を更新
+  function updateHiddenStartTime() {
+    const dateInput = document.getElementById('reservationDate');
+    const timeSelect = document.getElementById('reservationTime');
+    const hiddenStartTime = document.getElementById('reservationStartTime');
+    
+    if (!dateInput || !timeSelect || !hiddenStartTime) return;
+    
+    const selectedDate = dateInput.value;
+    const selectedTime = timeSelect.value;
+    
+    if (selectedDate && selectedTime) {
+      const dateTimeStr = `${selectedDate}T${selectedTime}:00`;
+      const dateTime = new Date(dateTimeStr);
+      hiddenStartTime.value = dateTime.toISOString();
+      
+      console.log('Hidden start time updated:', hiddenStartTime.value);
+    }
+  }
+  
+  // ページ初期化時にユーザーリストとモーダルを初期化
+  function initializePageFeatures() {
+    console.log("🚀 Initializing page features");
+    
+    const calendarEl = document.getElementById('calendar');
+    if (!calendarEl) {
+      console.log("Not a calendar page, skipping user list initialization");
+      return;
+    }
+    
+    const userSelect = document.getElementById('reservationUserId');
+    if (userSelect && !userSelect.hasAttribute('data-loaded')) {
+      initializeUserList();
+      initializeModalEvents();
+      initializeFormSubmission(); // フォーム送信機能を追加
+      initializeDeleteButton(); // 削除ボタン機能を追加
+    } else if (userSelect) {
+      console.log("User list already loaded");
+    } else {
+      console.error("User select element not found");
+    }
+  }
+  
+  // フォーム送信機能
+  function initializeFormSubmission() {
+    console.log("🔧 Initializing form submission");
+    
+    const form = document.getElementById('reservationForm');
+    if (!form) {
+      console.error('Reservation form not found');
+      return;
     }
 
-    // 予約の作成・更新フォーム
-    document.getElementById('reservationForm').addEventListener('submit', function (e) {
+    form.addEventListener('submit', function (e) {
       e.preventDefault();
-      console.log('Form submitted');
+      console.log('📝 Form submitted');
 
-      const id = document.getElementById('reservationId').value;
-      const userId = document.getElementById('reservationUserId').value;
-      const name = document.getElementById('reservationName').value;
-      const course = document.getElementById('reservationCourse').value;
-      const startTime = document.getElementById('reservationStartTime').value;
+      const id = document.getElementById('reservationId')?.value || '';
+      const userId = document.getElementById('reservationUserId')?.value || '';
+      const name = document.getElementById('reservationName')?.value || '';
+      const course = document.getElementById('reservationCourse')?.value || '60分';
+      const date = document.getElementById('reservationDate')?.value || '';
+      const time = document.getElementById('reservationTime')?.value || '';
 
+      console.log('Form data:', { id, userId, name, course, date, time });
+
+      // バリデーション
       if (!userId) {
         alert('ユーザーを選択してください');
         return;
@@ -179,6 +501,19 @@
         return;
       }
 
+      if (!date) {
+        alert('予約日を選択してください');
+        return;
+      }
+
+      if (!time) {
+        alert('開始時間を選択してください');
+        return;
+      }
+
+      // 開始時間と終了時間を計算
+      const startTime = new Date(`${date}T${time}:00`).toISOString();
+      
       let duration = 60;
       if (course === '40分') duration = 40;
       else if (course === '80分') duration = 80;
@@ -194,17 +529,22 @@
       }
 
       console.log(`${method} request to ${url}`);
+      console.log('Request data:', {
+        name: name,
+        start_time: startTime,
+        end_time: endTime,
+        course: course,
+        user_id: userId
+      });
 
-      // UIを先に更新（楽観的更新）
-      const modalEl = document.getElementById('reservationModal');
-      
-      // フォーカスをモーダル外に移動してからモーダルを閉じる
-      document.body.focus();
-      
       // モーダルを先に閉じる
-      const modalInstance = bootstrap.Modal.getInstance(modalEl);
-      if (modalInstance) {
-        modalInstance.hide();
+      const modalEl = document.getElementById('reservationModal');
+      if (modalEl) {
+        document.body.focus();
+        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+        if (modalInstance) {
+          modalInstance.hide();
+        }
       }
 
       // 非同期でサーバーに送信
@@ -212,7 +552,7 @@
         method: method,
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''
         },
         body: JSON.stringify({
           reservation: {
@@ -239,132 +579,156 @@
       })
       .then(result => {
         if (result.ok && result.data.success !== false) {
-          console.log('Success:', result.data);
-          // 成功時はカレンダーを更新
-          refetchWithDelay();
+          console.log('✅ Success:', result.data);
+          alert('予約が保存されました！');
+          
+          // カレンダーのイベントを更新
+          if (window.pageCalendar) {
+            window.pageCalendar.refetchEvents();
+          }
         } else {
-          console.error('Error:', result.data);
+          console.error('❌ Save failed:', result.data);
           const errorMessage = result.data.errors ? result.data.errors.join(', ') : '保存に失敗しました';
-          alert(errorMessage);
-          // エラー時もカレンダーを更新（状態を同期）
-          refetchWithDelay();
+          alert('保存エラー: ' + errorMessage);
         }
       })
       .catch(error => {
-        console.error('Network error:', error);
-        alert("ネットワークエラーが発生しました。");
-        // エラー時もカレンダーを更新
-        refetchWithDelay();
+        console.error('❌ Network error:', error);
+        alert("ネットワークエラーが発生しました: " + error.message);
       });
     });
+    
+    console.log("✅ Form submission initialized");
+  }
 
-    // 予約の削除（重複実行を防ぐ + パフォーマンス改善）
+  // 削除ボタン機能
+  function initializeDeleteButton() {
+    console.log("🔧 Initializing delete button");
+    
     const deleteBtn = document.getElementById('deleteReservationBtn');
+    if (!deleteBtn) {
+      console.error('Delete button not found');
+      return;
+    }
     
     // 既存のイベントリスナーを削除
     deleteBtn.replaceWith(deleteBtn.cloneNode(true));
     
     // 新しいイベントリスナーを追加
-    document.getElementById('deleteReservationBtn').addEventListener('click', function (e) {
-      // 重複実行を防ぐ
-      if (this.disabled) return;
-      this.disabled = true;
-      
-      const id = document.getElementById('reservationId').value;
-      console.log('Delete button clicked, ID:', id);
-      
-      if (!id || !id.toString().match(/^\d+$/)) {
-        console.error("Invalid reservation ID:", id);
-        alert("不正な予約IDです。");
-        this.disabled = false;
-        return;
-      }
-
-      if (confirm("本当に削除しますか？")) {
-        console.log(`Deleting reservation ${id}...`);
+    const newDeleteBtn = document.getElementById('deleteReservationBtn');
+    if (newDeleteBtn) {
+      newDeleteBtn.addEventListener('click', function (e) {
+        if (this.disabled) return;
+        this.disabled = true;
         
-        // === 楽観的更新: UIを即座に更新 ===
-        const deleteModalEl = document.getElementById('reservationModal');
-        const calendarEvent = calendar.getEventById(id);
+        const idField = document.getElementById('reservationId');
+        const id = idField ? idField.value : '';
+        console.log('Delete button clicked, ID:', id);
         
-        console.log('OPTIMISTIC UPDATE: Closing modal and removing event immediately');
-        
-        // 1. モーダルを先に閉じる
-        document.body.focus();
-        const deleteModalInstance = bootstrap.Modal.getInstance(deleteModalEl);
-        if (deleteModalInstance) {
-          deleteModalInstance.hide();
-        }
-        
-        // 2. カレンダーからイベントを即座に削除
-        if (calendarEvent) {
-          console.log('OPTIMISTIC: Removing event from calendar');
-          calendarEvent.remove();
-        }
-        
-        // === サーバーに削除リクエスト（バックグラウンド） ===
-        
-        // UIを即座に更新（楽観的更新）
-        const modalEl = document.getElementById('reservationModal');
-        const event = calendar.getEventById(id);
-        
-        // モーダルを先に閉じる
-        document.body.focus();
-        const modalInstance = bootstrap.Modal.getInstance(modalEl);
-        if (modalInstance) {
-          modalInstance.hide();
-        }
-        
-        // カレンダーからイベントを即座に削除（楽観的）
-        if (event) {
-          console.log('Optimistically removing event from calendar');
-          event.remove();
-        }
-        
-        // 絶対URLを使用
-        const deleteUrl = `${window.location.origin}/admin/reservations/${id}`;
-        console.log('Delete URL:', deleteUrl);
-        
-        // 非同期でサーバーに削除リクエスト
-        fetch(deleteUrl, {
-          method: 'DELETE',
-          headers: {
-            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }
-        })
-        .then(response => {
-          console.log('Delete response:', response.status, response.url);
-          
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-          }
-          
-          // 成功時は何もしない（既にUIは更新済み）
-          console.log('Delete confirmed by server');
-        })
-        .catch(error => {
-          console.error("削除中にエラー:", error);
-          
-          // エラー時は元に戻すため、カレンダーを再読み込み
-          console.log('Rolling back due to error, refetching events');
-          calendar.refetchEvents();
-          
-          alert("削除に失敗しました。表示を更新します。");
-        })
-        .finally(() => {
-          // ボタンを再度有効化
+        if (!id || !id.toString().match(/^\d+$/)) {
+          console.error("Invalid reservation ID:", id);
+          alert("不正な予約IDです。");
           this.disabled = false;
-        });
-      } else {
-        this.disabled = false;
-      }
-    });
-  });
+          return;
+        }
 
-  // ページ離脱時にフラグをリセット
-  window.addEventListener('beforeunload', function() {
-    window.calendarInitialized = false;
+        if (confirm("本当に削除しますか？")) {
+          // モーダルを先に閉じる
+          const deleteModalEl = document.getElementById('reservationModal');
+          if (deleteModalEl) {
+            document.body.focus();
+            const deleteModalInstance = bootstrap.Modal.getInstance(deleteModalEl);
+            if (deleteModalInstance) {
+              deleteModalInstance.hide();
+            }
+          }
+          
+          const deleteUrl = `${window.location.origin}/admin/reservations/${id}`;
+          console.log('Delete URL:', deleteUrl);
+          
+          fetch(deleteUrl, {
+            method: 'DELETE',
+            headers: {
+              'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || '',
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            }
+          })
+          .then(response => {
+            console.log('Delete response:', response.status, response.url);
+            
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}`);
+            }
+            
+            console.log('✅ Delete confirmed by server');
+            alert('予約を削除しました！');
+            
+            // カレンダーのイベントを更新
+            if (window.pageCalendar) {
+              window.pageCalendar.refetchEvents();
+            }
+          })
+          .catch(error => {
+            console.error("❌ 削除中にエラー:", error);
+            alert("削除に失敗しました: " + error.message);
+          })
+          .finally(() => {
+            this.disabled = false;
+          });
+        } else {
+          this.disabled = false;
+        }
+      });
+    }
+    
+    console.log("✅ Delete button initialized");
+  }
+  
+  // グローバル関数として公開
+  window.openReservationModal = openReservationModal;
+  window.createCalendar = createCalendar;
+  window.initializeUserList = initializeUserList;
+  window.initializePageFeatures = initializePageFeatures;
+  
+  // 複数のタイミングで初期化を試行
+  function initializeCalendar() {
+    console.log("🎯 Initialize calendar called");
+    setTimeout(createCalendar, 100);
+    setTimeout(initializePageFeatures, 200); // ユーザーリスト初期化を追加
+  }
+  
+  // DOMContentLoaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeCalendar);
+  } else {
+    initializeCalendar();
+  }
+  
+  // Turbo events
+  document.addEventListener('turbo:load', initializeCalendar);
+  
+  // Cleanup
+  document.addEventListener('turbo:before-cache', function() {
+    if (pageCalendar) {
+      try {
+        pageCalendar.destroy();
+        pageCalendar = null;
+        window.pageCalendar = null;
+      } catch (error) {
+        console.warn("Cleanup error:", error);
+      }
+    }
   });
+  
+  // フォールバック
+  setTimeout(function() {
+    if (!pageCalendar && document.getElementById('calendar')) {
+      console.log("⏰ Fallback initialization");
+      createCalendar();
+    }
+  }, 3000);
+  
+  console.log("📝 Calendar script setup complete");
+})();
 </script>
