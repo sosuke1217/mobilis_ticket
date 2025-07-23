@@ -1,10 +1,114 @@
-<% if @active_tickets_before == 0 %>
+<% active_tickets_count = @user.tickets.where("remaining_count > 0").count %>
+
+<% if active_tickets_count == 1 %>
+  <!-- 初回発行時（チケットがなかった状態から初回発行） -->
   <%= turbo_stream.update "active_ticket_section" do %>
-    <%= render partial: "admin/tickets/partials/ticket_table", locals: { tickets: [@ticket] } %>
+    <div class="table-responsive">
+      <table class="table table-hover table-striped align-middle mb-0">
+        <thead class="table-light text-center">
+          <tr>
+            <th>チケット名</th>
+            <th>購入日</th>
+            <th>有効期限</th>
+            <th>消化済</th>
+            <th>残数</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="active_ticket_table_body">
+          <tr id="ticket_<%= @ticket.id %>">
+            <td class="text-center"><%= @ticket.title %></td>
+            <td class="text-nowrap text-center"><%= @ticket.purchase_date.strftime("%Y-%m-%d") %></td>
+            <td class="text-nowrap text-center"><%= @ticket.expiry_date.strftime("%Y-%m-%d") %></td>
+            <td class="text-center"><%= @ticket.total_count - @ticket.remaining_count %> 回</td>
+            <td class="text-center fw-bold"><%= @ticket.remaining_count %> 回</td>
+            <td class="text-center">
+              <div class="btn-group btn-group-sm" role="group">
+                <%= button_to "消化", use_admin_ticket_path(@ticket),
+                    method: :post,
+                    remote: true,
+                    form: { 
+                      data: { 
+                        turbo_stream: true,
+                        turbo_frame: "_top"
+                      } 
+                    },
+                    class: "btn btn-outline-success",
+                    data: { 
+                      confirm: "このチケットを1回分使用しますか？",
+                      turbo_stream: true
+                    } %>
+                <%= button_to "削除", admin_ticket_path(@ticket),
+                    method: :delete,
+                    remote: true,
+                    form: { 
+                      data: { 
+                        turbo_stream: true,
+                        turbo_frame: "_top"
+                      } 
+                    },
+                    class: "btn btn-outline-danger",
+                    data: { 
+                      confirm: "このチケットを削除しますか？",
+                      turbo_stream: true
+                    } %>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   <% end %>
 <% else %>
+  <!-- 追加発行時（既存テーブルに行を追加） -->
   <%= turbo_stream.remove "ticket_#{@ticket.id}" %>
   <%= turbo_stream.append "active_ticket_table_body" do %>
-    <%= render partial: "admin/tickets/partials/ticket_row", locals: { ticket: @ticket } %>
+    <tr id="ticket_<%= @ticket.id %>">
+      <td class="text-center"><%= @ticket.title %></td>
+      <td class="text-nowrap text-center"><%= @ticket.purchase_date.strftime("%Y-%m-%d") %></td>
+      <td class="text-nowrap text-center"><%= @ticket.expiry_date.strftime("%Y-%m-%d") %></td>
+      <td class="text-center"><%= @ticket.total_count - @ticket.remaining_count %> 回</td>
+      <td class="text-center fw-bold"><%= @ticket.remaining_count %> 回</td>
+      <td class="text-center">
+        <div class="btn-group btn-group-sm" role="group">
+          <%= button_to "消化", use_admin_ticket_path(@ticket),
+              method: :post,
+              remote: true,
+              form: { 
+                data: { 
+                  turbo_stream: true,
+                  turbo_frame: "_top"
+                } 
+              },
+              class: "btn btn-outline-success",
+              data: { 
+                confirm: "このチケットを1回分使用しますか？",
+                turbo_stream: true
+              } %>
+          <%= button_to "削除", admin_ticket_path(@ticket),
+              method: :delete,
+              remote: true,
+              form: { 
+                data: { 
+                  turbo_stream: true,
+                  turbo_frame: "_top"
+                } 
+              },
+              class: "btn btn-outline-danger",
+              data: { 
+                confirm: "このチケットを削除しますか？",
+                turbo_stream: true
+              } %>
+        </div>
+      </td>
+    </tr>
   <% end %>
+<% end %>
+
+<!-- 成功メッセージを表示 -->
+<%= turbo_stream.update "flash" do %>
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <%= @ticket.title %>を発行しました。
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
 <% end %>

@@ -19,8 +19,18 @@
   <!-- 🧑‍💼 顧客情報セクション -->
   <div class="card mb-5 shadow-sm">
     <div class="card-header bg-secondary text-white fw-bold d-flex justify-content-between align-items-center">
-      顧客情報
-      <%= link_to "編集", edit_admin_user_path(@user), class: "btn btn-sm btn-light" %>
+      <div>顧客情報</div>
+      <div class="btn-group">
+        <%= link_to "編集", edit_admin_user_path(@user), class: "btn btn-sm btn-light" %>
+        <button type="button" class="btn btn-sm btn-danger ms-2" id="deleteUserBtn" 
+                data-user-id="<%= @user.id %>"
+                data-user-name="<%= @user.name.presence || @user.line_user_id || "ID:#{@user.id}" %>"
+                data-active-tickets="<%= @active_tickets.count %>"
+                data-total-usages="<%= @total_usages %>"
+                data-remaining-value="<%= number_to_currency(@user.remaining_ticket_value, unit: "¥", precision: 0) %>">
+          削除
+        </button>
+      </div>
     </div>
     <div class="card-body p-0">
       <table class="table table-bordered table-striped mb-0">
@@ -57,6 +67,183 @@
       </table>
     </div>
   </div>
+
+  <!-- 削除確認モーダル -->
+  <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title" id="deleteUserModalLabel">
+            <i class="fas fa-exclamation-triangle me-2"></i>ユーザー削除の確認
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-danger">
+            <h6><i class="fas fa-warning me-2"></i>重要：この操作は取り消せません</h6>
+            <p class="mb-0">以下のユーザーとすべての関連データが完全に削除されます。</p>
+          </div>
+
+          <div class="card mb-3">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">削除対象ユーザー</h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-sm-4"><strong>氏名:</strong></div>
+                <div class="col-sm-8" id="deleteUserName"></div>
+              </div>
+              <div class="row">
+                <div class="col-sm-4"><strong>会員番号:</strong></div>
+                <div class="col-sm-8" id="deleteUserId"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mb-3">
+            <div class="card-header bg-warning text-dark">
+              <h6 class="mb-0">同時に削除される関連データ</h6>
+            </div>
+            <div class="card-body">
+              <ul class="list-unstyled mb-0">
+                <li><i class="fas fa-ticket-alt text-primary me-2"></i>アクティブチケット: <span id="deleteActiveTickets"></span>枚</li>
+                <li><i class="fas fa-history text-info me-2"></i>使用履歴: <span id="deleteTotalUsages"></span>件</li>
+                <li><i class="fas fa-yen-sign text-success me-2"></i>残額: <span id="deleteRemainingValue"></span></li>
+                <li><i class="fas fa-calendar text-warning me-2"></i>予約データ（user_idのみnullに変更）</li>
+                <li><i class="fas fa-bell text-secondary me-2"></i>通知設定・ログ</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="confirmDeletionCheck">
+            <label class="form-check-label" for="confirmDeletionCheck">
+              <strong>上記の内容を理解し、削除を実行することに同意します</strong>
+            </label>
+          </div>
+
+          <div class="mb-3">
+            <label for="confirmationText" class="form-label">
+              確認のため、ユーザー名「<span id="confirmUserName"></span>」を入力してください：
+            </label>
+            <input type="text" class="form-control" id="confirmationText" placeholder="ユーザー名を正確に入力">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteBtn" disabled>
+            <i class="fas fa-trash me-1"></i>削除を実行
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const deleteBtn = document.getElementById('deleteUserBtn');
+    const modal = document.getElementById('deleteUserModal');
+    const confirmCheck = document.getElementById('confirmDeletionCheck');
+    const confirmationText = document.getElementById('confirmationText');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    
+    if (!deleteBtn || !modal) return;
+    
+    let currentUserId = null;
+    let currentUserName = null;
+    
+    // 削除ボタンクリック時
+    deleteBtn.addEventListener('click', function() {
+      currentUserId = this.getAttribute('data-user-id');
+      currentUserName = this.getAttribute('data-user-name');
+      const activeTickets = this.getAttribute('data-active-tickets');
+      const totalUsages = this.getAttribute('data-total-usages');
+      const remainingValue = this.getAttribute('data-remaining-value');
+      
+      // モーダルにデータを設定
+      document.getElementById('deleteUserName').textContent = currentUserName;
+      document.getElementById('deleteUserId').textContent = currentUserId;
+      document.getElementById('deleteActiveTickets').textContent = activeTickets;
+      document.getElementById('deleteTotalUsages').textContent = totalUsages;
+      document.getElementById('deleteRemainingValue').textContent = remainingValue;
+      document.getElementById('confirmUserName').textContent = currentUserName;
+      
+      // フォームをリセット
+      confirmCheck.checked = false;
+      confirmationText.value = '';
+      confirmDeleteBtn.disabled = true;
+      
+      // モーダルを表示
+      new bootstrap.Modal(modal).show();
+    });
+    
+    // バリデーション関数
+    function validateForm() {
+      const isChecked = confirmCheck.checked;
+      const textMatches = confirmationText.value.trim() === currentUserName;
+      
+      confirmDeleteBtn.disabled = !(isChecked && textMatches);
+      
+      // 入力テキストの色を変更
+      if (confirmationText.value.trim() === '') {
+        confirmationText.className = 'form-control';
+      } else if (textMatches) {
+        confirmationText.className = 'form-control is-valid';
+      } else {
+        confirmationText.className = 'form-control is-invalid';
+      }
+    }
+    
+    // バリデーション実行
+    confirmCheck.addEventListener('change', validateForm);
+    confirmationText.addEventListener('input', validateForm);
+    
+    // 最終削除実行
+    confirmDeleteBtn.addEventListener('click', function() {
+      if (this.disabled) return;
+      
+      this.disabled = true;
+      this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>削除中...';
+      
+      // CSRF トークンを取得
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      
+      // 削除リクエストを送信
+      fetch(`/admin/users/${currentUserId}`, {
+        method: 'DELETE',
+        headers: {
+          'X-CSRF-Token': csrfToken,
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => {
+        if (response.redirected) {
+          // 成功時はリダイレクトされる
+          window.location.href = response.url;
+        } else if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+      })
+      .catch(error => {
+        console.error('削除エラー:', error);
+        alert('削除中にエラーが発生しました: ' + error.message);
+        
+        // ボタンを元に戻す
+        this.disabled = false;
+        this.innerHTML = '<i class="fas fa-trash me-1"></i>削除を実行';
+      });
+    });
+    
+    // モーダルが閉じられたときのクリーンアップ
+    modal.addEventListener('hidden.bs.modal', function() {
+      confirmCheck.checked = false;
+      confirmationText.value = '';
+      confirmationText.className = 'form-control';
+      confirmDeleteBtn.disabled = true;
+      confirmDeleteBtn.innerHTML = '<i class="fas fa-trash me-1"></i>削除を実行';
+    });
+  });
+  </script>
   
   <div class="card mb-4 shadow-sm">
     <div class="card-header bg-warning text-dark fw-bold">管理者メモ</div>
@@ -99,39 +286,59 @@
     </div>
   </div>
 
-  <!-- 🔧 チケット発行 -->
+  <!-- 🎫 チケット管理へのリンク -->
   <div class="card mb-5 shadow-sm">
     <div class="card-header bg-dark text-white fw-bold">
-      チケットをテンプレートから発行
+      チケット管理
     </div>
-    <div class="card-body">
-      <form action="<%= admin_user_create_ticket_from_template_path(@user) %>" method="get">
-        
-        <div class="mb-3">
-          <label for="template_id" class="form-label">テンプレート選択</label>
-          <select name="template_id" id="template_id" class="form-select" required>
-            <option value="">テンプレートを選んでください</option>
-            <% @ticket_templates.each do |template| %>
-              <option value="<%= template.id %>"><%= template.name %> (<%= template.total_count %>回券 / ¥<%= template.price %>)</option>
-            <% end %>
-          </select>
-        </div>
-        
-        <button type="submit" class="btn btn-primary">
-          発行する
-        </button>
-      </form>
+    <div class="card-body text-center">
+      <p class="mb-3">チケットの発行・消化・削除を行うには、専用のチケット管理ページをご利用ください。</p>
+      <%= link_to "チケット管理ページへ", admin_user_ticket_management_path(@user), 
+          class: "btn btn-primary btn-lg" %>
     </div>
   </div>
 
-  <!-- 🎫 所持チケット一覧 -->
+  <!-- 🎫 所持チケット一覧（表示のみ） -->
   <div class="card mb-5 shadow-sm">
     <div class="card-header bg-success text-white fw-bold">
-      所持チケット一覧
+      所持チケット一覧（表示のみ）
     </div>
-    <div class="card-body p-0" id="active_ticket_section">
+    <div class="card-body p-0">
       <% if @active_tickets.any? %>
-        <%= render partial: "admin/tickets/partials/ticket_table", locals: { tickets: @active_tickets } %>
+        <div class="table-responsive">
+          <table class="table table-hover table-striped align-middle mb-0">
+            <thead class="table-light text-center">
+              <tr>
+                <th>タイトル</th>
+                <th>購入日</th>
+                <th>有効期限</th>
+                <th>消化済</th>
+                <th>残数</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @active_tickets.each do |ticket| %>
+                <tr>
+                  <td class="text-center"><%= ticket.title %></td>
+                  <td class="text-nowrap text-center"><%= ticket.purchase_date.strftime("%Y-%m-%d") %></td>
+                  <td class="text-nowrap text-center">
+                    <% if ticket.expiry_date < Time.zone.today %>
+                      <span class="badge bg-danger me-1">期限切れ</span>
+                      <span class="text-muted"><%= ticket.expiry_date.strftime("%Y-%m-%d") %></span>
+                    <% elsif ticket.expiry_date < 1.month.from_now %>
+                      <span class="badge bg-warning text-dark me-1">期限間近</span>
+                      <%= ticket.expiry_date.strftime("%Y-%m-%d") %>
+                    <% else %>
+                      <%= ticket.expiry_date.strftime("%Y-%m-%d") %>
+                    <% end %>
+                  </td>
+                  <td class="text-center"><%= ticket.total_count - ticket.remaining_count %> 回</td>
+                  <td class="text-center fw-bold"><%= ticket.remaining_count %> 回</td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
       <% else %>
         <div class="p-3">
           <p class="text-muted">使用可能なチケットはありません。</p>
@@ -181,6 +388,7 @@
       </p>
     </div>
   </div>
+  
   <!-- 🗂 使用済みチケット一覧 -->
   <div class="card shadow-sm">
     <div class="card-header bg-secondary text-white fw-bold">
@@ -195,22 +403,15 @@
               <th>残回数</th>
               <th>購入日</th>
               <th>有効期限</th>
-              <th>操作</th>
             </tr>
           </thead>
-          <tbody id="used_ticket_table_body">
+          <tbody>
             <% @used_up_tickets.each do |ticket| %>
               <tr>
                 <td><%= ticket.title %></td>
                 <td>0 / <%= ticket.total_count %></td>
                 <td><%= ticket.purchase_date.strftime("%Y-%m-%d") %></td>
                 <td><%= ticket.expiry_date.strftime("%Y-%m-%d") %></td>
-                <td>
-                  <%= button_to "削除", admin_ticket_path(ticket),
-                      method: :delete,
-                      data: { confirm: "このチケットを削除しますか？" },
-                      class: "btn btn-sm btn-outline-danger" %>
-                </td>
               </tr>
             <% end %>
           </tbody>
@@ -223,23 +424,3 @@
     </div>
   </div>
 </div>
-
-<!-- ページの最下部に追加 -->
-<script>
-console.log('🔧 Simple JavaScript test loaded');
-alert('JavaScript is working!');
-
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('🔧 DOM loaded');
-  
-  // チケット発行フォームを見つける
-  const form = document.querySelector('form[action*="create_from_template"]');
-  if (form) {
-    console.log('🔧 Form found:', form);
-    alert('Form found! ID: ' + form.id);
-  } else {
-    console.log('🔧 Form NOT found');
-    alert('Form NOT found');
-  }
-});
-</script>

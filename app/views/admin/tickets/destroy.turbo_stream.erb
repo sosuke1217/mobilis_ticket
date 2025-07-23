@@ -1,8 +1,19 @@
+<!-- チケットの行を削除 -->
 <%= turbo_stream.remove "ticket_#{@ticket_id}" %>
+
+<!-- アクティブチケットがなくなった場合の表示 -->
 <% if @user.tickets.where("remaining_count > 0").none? %>
   <%= turbo_stream.update "active_ticket_section" do %>
     <div class="p-3">
-      <p class="text-muted">使用可能なチケットはありません。</p>
+      <p class="text-muted mb-0">まだチケットが発行されていません。</p>
     </div>
   <% end %>
+<% end %>
+
+<!-- 成功メッセージを表示 -->
+<%= turbo_stream.update "flash" do %>
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    チケットを削除しました。
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
 <% end %>

@@ -9,15 +9,31 @@
       <%= button_to "消化", use_admin_ticket_path(ticket),
           method: :post,
           remote: true,
-          form: { data: { turbo_stream: true } },
+          form: { 
+            data: { 
+              turbo_stream: true,
+              turbo_frame: "_top"
+            } 
+          },
           class: "btn btn-outline-success",
-          data: { confirm_remote: "このチケットを1回分使用しますか？" } %>
+          data: { 
+            confirm: "このチケットを1回分使用しますか？",
+            turbo_stream: true
+          } %>
       <%= button_to "削除", admin_ticket_path(ticket),
           method: :delete,
           remote: true,
-          form: { data: { turbo_stream: true } },
+          form: { 
+            data: { 
+              turbo_stream: true,
+              turbo_frame: "_top"
+            } 
+          },
           class: "btn btn-outline-danger",
-          data: { confirm: "このチケットを削除しますか？" } %>
+          data: { 
+            confirm: "このチケットを削除しますか？",
+            turbo_stream: true
+          } %>
     </div>
   </td>
 </tr>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_07_22_102410) do
+ActiveRecord::Schema[7.2].define(version: 2025_07_23_105033) do
   create_table "admin_users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -55,6 +55,18 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_22_102410) do
     t.datetime "end_time"
     t.integer "user_id"
     t.integer "ticket_id"
+    t.integer "status", default: 0, null: false
+    t.datetime "cancelled_at"
+    t.text "cancellation_reason"
+    t.boolean "recurring", default: false
+    t.string "recurring_type"
+    t.date "recurring_until"
+    t.integer "parent_reservation_id"
+    t.datetime "confirmation_sent_at"
+    t.datetime "reminder_sent_at"
+    t.index ["parent_reservation_id"], name: "index_reservations_on_parent_reservation_id"
+    t.index ["start_time"], name: "index_reservations_on_start_time"
+    t.index ["status"], name: "index_reservations_on_status"
   end
 
   create_table "ticket_templates", force: :cascade do |t|

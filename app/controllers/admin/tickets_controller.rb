@@ -36,7 +36,6 @@ class Admin::TicketsController < ApplicationController
     end
   end
   
-
   def create
     @ticket = Ticket.new(ticket_params)
     @ticket.remaining_count = @ticket.total_count
@@ -55,6 +54,7 @@ class Admin::TicketsController < ApplicationController
 
   def use
     @ticket = Ticket.find(params[:id])
+    @user = @ticket.user
   
     if @ticket.use_one
       TicketUsage.create!(
@@ -64,14 +64,31 @@ class Admin::TicketsController < ApplicationController
       )
   
       respond_to do |format|
-        format.turbo_stream
-        format.html { redirect_to admin_user_path(@ticket.user), notice: "チケットを使用しました。" }
+        format.turbo_stream # これで use.turbo_stream.erb を探す
         format.json { render json: { remaining_count: @ticket.remaining_count } }
+        format.html do
+          # リファラーを確認してリダイレクト先を決定
+          if request.referer&.include?('ticket_management')
+            redirect_to admin_user_ticket_management_path(@user), notice: "チケットを使用しました。"
+          else
+            redirect_to admin_user_path(@user), notice: "チケットを使用しました。"
+          end
+        end
       end
     else
       respond_to do |format|
-        format.html { redirect_to admin_user_path(@ticket.user), alert: "残回数がありません。" }
+        format.turbo_stream do
+          render turbo_stream: turbo_stream.update("flash", 
+            content_tag(:div, "残回数がありません。", class: "alert alert-danger alert-dismissible fade show"))
+        end
         format.json { render json: { error: "残回数がありません" }, status: :unprocessable_entity }
+        format.html do
+          if request.referer&.include?('ticket_management')
+            redirect_to admin_user_ticket_management_path(@user), alert: "残回数がありません。"
+          else
+            redirect_to admin_user_path(@user), alert: "残回数がありません。"
+          end
+        end
       end
     end
   end
@@ -83,23 +100,24 @@ class Admin::TicketsController < ApplicationController
     @ticket.destroy
   
     respond_to do |format|
-      format.turbo_stream # ← これで destroy.turbo_stream.erb を探しに行く
-      format.html { redirect_to admin_user_path(@user), notice: "チケットを削除しました" }
+      format.turbo_stream # これで destroy.turbo_stream.erb を探す
+      format.html do
+        # リファラーを確認してリダイレクト先を決定
+        if request.referer&.include?('ticket_management')
+          redirect_to admin_user_ticket_management_path(@user), notice: "チケットを削除しました"
+        else
+          redirect_to admin_user_path(@user), notice: "チケットを削除しました"
+        end
+      end
     end
   end
 
   def create_from_template
-    Rails.logger.info "🎫 [TICKET] create_from_template started"
-    Rails.logger.info "🎫 [TICKET] user_id: #{params[:user_id]}, template_id: #{params[:template_id]}"
-    
     @user = User.find(params[:user_id])
     template = TicketTemplate.find(params[:template_id])
     
-    Rails.logger.info "🎫 [TICKET] User: #{@user.name}, Template: #{template.name}"
-    
     # 発行前のアクティブチケット数を確認
     active_tickets_before = @user.tickets.where("remaining_count > 0").count
-    Rails.logger.info "🎫 [TICKET] Active tickets BEFORE creation: #{active_tickets_before}"
   
     @ticket = @user.tickets.build(
       title: template.name,
@@ -111,33 +129,19 @@ class Admin::TicketsController < ApplicationController
     )
   
     if @ticket.save
-      Rails.logger.info "🎫 [TICKET] Saved successfully, ID: #{@ticket.id}"
-      
       # 発行後のアクティブチケット数を確認
       active_tickets_after = @user.tickets.where("remaining_count > 0").order(expiry_date: :asc)
-      Rails.logger.info "🎫 [TICKET] Active tickets AFTER creation: #{active_tickets_after.count}"
       
       respond_to do |format|
-        format.html do
-          Rails.logger.info "🎫 [TICKET] Redirecting to user page with notice"
-          redirect_to admin_user_path(@user), notice: "チケットを発行しました"
-        end
         format.turbo_stream do
-          Rails.logger.info "🎫 [TICKET] Responding with Turbo Stream"
-          
           if active_tickets_before == 0
             # 初回発行時（チケットがなかった状態から初回発行）
-            Rails.logger.info "🎫 [TICKET] First ticket ever - replacing entire section"
-            
             render turbo_stream: turbo_stream.update("active_ticket_section", 
               partial: "admin/tickets/partials/ticket_table", 
               locals: { tickets: active_tickets_after }
             )
           else
             # 追加発行時（既存テーブルに行を追加）
-            Rails.logger.info "🎫 [TICKET] Additional ticket - appending row to existing table"
-            Rails.logger.info "🎫 [TICKET] Looking for element: active_ticket_table_body"
-            
             render turbo_stream: [
               turbo_stream.remove("ticket_#{@ticket.id}"),
               turbo_stream.append("active_ticket_table_body", 
@@ -147,33 +151,49 @@ class Admin::TicketsController < ApplicationController
             ]
           end
         end
+        format.html do
+          # リファラーを確認してリダイレクト先を決定
+          if request.referer&.include?('ticket_management')
+            redirect_to admin_user_ticket_management_path(@user), notice: "チケットを発行しました"
+          else
+            redirect_to admin_user_path(@user), notice: "チケットを発行しました"
+          end
+        end
       end
     else
-      Rails.logger.error "🎫 [TICKET] Save failed: #{@ticket.errors.full_messages.join(', ')}"
-      
       respond_to do |format|
         format.turbo_stream do
-          render turbo_stream: turbo_stream.update("flash", "<div class='alert alert-danger alert-dismissible fade show'>発行に失敗しました: #{@ticket.errors.full_messages.join(', ')}</div>")
+          render turbo_stream: turbo_stream.update("flash", 
+            content_tag(:div, "発行に失敗しました: #{@ticket.errors.full_messages.join(', ')}", 
+                       class: "alert alert-danger alert-dismissible fade show"))
         end
         format.html do
-          redirect_to admin_user_path(@user), alert: "発行に失敗しました: #{@ticket.errors.full_messages.join(', ')}"
+          if request.referer&.include?('ticket_management')
+            redirect_to admin_user_ticket_management_path(@user), alert: "発行に失敗しました: #{@ticket.errors.full_messages.join(', ')}"
+          else
+            redirect_to admin_user_path(@user), alert: "発行に失敗しました: #{@ticket.errors.full_messages.join(', ')}"
+          end
         end
       end
     end
   rescue => e
     Rails.logger.error "🎫 [TICKET] Exception: #{e.message}"
-    Rails.logger.error e.backtrace.join("\n")
     
     respond_to do |format|
       format.turbo_stream do
-        render turbo_stream: turbo_stream.update("flash", "<div class='alert alert-danger alert-dismissible fade show'>エラーが発生しました: #{e.message}</div>")
+        render turbo_stream: turbo_stream.update("flash", 
+          content_tag(:div, "エラーが発生しました: #{e.message}", 
+                     class: "alert alert-danger alert-dismissible fade show"))
       end
       format.html do
-        redirect_to admin_user_path(@user), alert: "エラーが発生しました"
+        if request.referer&.include?('ticket_management')
+          redirect_to admin_user_ticket_management_path(@user), alert: "エラーが発生しました"
+        else
+          redirect_to admin_user_path(@user), alert: "エラーが発生しました"
+        end
       end
     end
   end
-  
   
   private
 

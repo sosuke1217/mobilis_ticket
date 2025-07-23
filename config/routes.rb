@@ -22,11 +22,10 @@ Rails.application.routes.draw do
     resources :ticket_templates, except: [:show]
     resources :ticket_usages, only: [:index, :new, :create, :edit, :update]
   
-    resources :users, only: [:index, :edit, :update, :show] do
+    resources :users, only: [:index, :new, :create, :edit, :update, :show, :destroy] do  # new, createを追加
       resources :tickets, only: [:new, :create]
       get 'ticket_management', to: 'users#tickets', as: 'ticket_management'
-      post 'tickets/create_from_template', to: 'tickets#create_from_template', as: 'create_ticket_from_template'
-      get 'tickets/create_from_template', to: 'tickets#create_from_template'  # この行を追加
+      post 'create_ticket_from_template', to: 'tickets#create_from_template', as: 'create_ticket_from_template'
       get 'ticket_usages', to: 'users#ticket_usages'
     end
 

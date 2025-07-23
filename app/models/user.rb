@@ -1,9 +1,14 @@
 class User < ApplicationRecord
   has_many :tickets, dependent: :destroy
-  has_many :ticket_usages, through: :tickets
+  has_many :ticket_usages, through: :tickets, dependent: :destroy
+  has_many :reservations, dependent: :nullify  # 予約は削除せずuser_idをnullに
   has_one :notification_preference, dependent: :destroy
+  has_many :notification_logs, dependent: :destroy
+  
   after_create :build_default_notification_preference
   
+  # 削除前のバリデーション（必要に応じて）
+  before_destroy :check_if_deletable
 
   def build_default_notification_preference
     create_notification_preference!(enabled: true)
@@ -36,6 +41,22 @@ class User < ApplicationRecord
     tickets.includes(:ticket_template).sum do |ticket|
       next 0 unless ticket.unit_price && ticket.remaining_count
       ticket.unit_price * ticket.remaining_count
+    end
+  end
+
+  private
+
+  def check_if_deletable
+    # 特別な条件があれば削除を阻止
+    # 例：管理者ユーザーの削除を防ぐ
+    if admin?
+      errors.add(:base, "管理者ユーザーは削除できません")
+      throw(:abort)
+    end
+    
+    # 例：アクティブなチケットがある場合の警告（削除は可能）
+    if active_ticket_count > 0
+      Rails.logger.warn "⚠️ Deleting user with active tickets: #{name} (#{active_ticket_count} tickets)"
     end
   end
 end

@@ -1,17 +1,64 @@
 <% if @ticket.remaining_count == 0 %>
+  <!-- チケットが使い切られた場合、テーブルから削除 -->
   <%= turbo_stream.remove "ticket_#{@ticket.id}" %>
-
-  <%= turbo_stream.append "used_ticket_table_body" do %>
-    <%= render partial: "admin/tickets/partials/used_ticket_row", locals: { ticket: @ticket } %>
-  <% end %>
-
-  <% if @ticket.user.tickets.where("remaining_count > 0").none? %>
+  
+  <!-- アクティブチケットがなくなった場合の表示 -->
+  <% if @user.tickets.where("remaining_count > 0").none? %>
     <%= turbo_stream.update "active_ticket_section" do %>
-      <div class="p-3"><p class="text-muted">使用可能なチケットはありません。</p></div>
+      <div class="p-3">
+        <p class="text-muted mb-0">まだチケットが発行されていません。</p>
+      </div>
     <% end %>
   <% end %>
 <% else %>
+  <!-- まだ残回数がある場合、行を更新 -->
   <%= turbo_stream.replace "ticket_#{@ticket.id}" do %>
-    <%= render partial: "admin/tickets/partials/ticket_row", locals: { ticket: @ticket } %>
+    <tr id="ticket_<%= @ticket.id %>">
+      <td class="text-center"><%= @ticket.title %></td>
+      <td class="text-nowrap text-center"><%= @ticket.purchase_date.strftime("%Y-%m-%d") %></td>
+      <td class="text-nowrap text-center"><%= @ticket.expiry_date.strftime("%Y-%m-%d") %></td>
+      <td class="text-center"><%= @ticket.total_count - @ticket.remaining_count %> 回</td>
+      <td class="text-center fw-bold"><%= @ticket.remaining_count %> 回</td>
+      <td class="text-center">
+        <div class="btn-group btn-group-sm" role="group">
+          <%= button_to "消化", use_admin_ticket_path(@ticket),
+              method: :post,
+              remote: true,
+              form: { 
+                data: { 
+                  turbo_stream: true,
+                  turbo_frame: "_top"
+                } 
+              },
+              class: "btn btn-outline-success",
+              data: { 
+                confirm: "このチケットを1回分使用しますか？",
+                turbo_stream: true
+              } %>
+          <%= button_to "削除", admin_ticket_path(@ticket),
+              method: :delete,
+              remote: true,
+              form: { 
+                data: { 
+                  turbo_stream: true,
+                  turbo_frame: "_top"
+                } 
+              },
+              class: "btn btn-outline-danger",
+              data: { 
+                confirm: "このチケットを削除しますか？",
+                turbo_stream: true
+              } %>
+        </div>
+      </td>
+    </tr>
   <% end %>
+<% end %>
+
+<!-- 成功メッセージを表示 -->
+<%= turbo_stream.update "flash" do %>
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    チケットを1回分使用しました。残り<%= @ticket.remaining_count %>回です。
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
 <% end %>
