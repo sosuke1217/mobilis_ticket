@@ -2,6 +2,7 @@ class Ticket < ApplicationRecord
   belongs_to :user
   belongs_to :ticket_template
   has_many :ticket_usages, dependent: :destroy
+  has_many :reservations, dependent: :nullify
 
   validates :ticket_template_id, presence: true
   validates :total_count, presence: true, numericality: { only_integer: true, greater_than: 0 }

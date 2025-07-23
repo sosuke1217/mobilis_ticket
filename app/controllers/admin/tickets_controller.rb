@@ -138,10 +138,13 @@ class Admin::TicketsController < ApplicationController
             Rails.logger.info "🎫 [TICKET] Additional ticket - appending row to existing table"
             Rails.logger.info "🎫 [TICKET] Looking for element: active_ticket_table_body"
             
-            render turbo_stream: turbo_stream.append("active_ticket_table_body", 
-              partial: "admin/tickets/partials/ticket_row", 
-              locals: { ticket: @ticket }
-            )
+            render turbo_stream: [
+              turbo_stream.remove("ticket_#{@ticket.id}"),
+              turbo_stream.append("active_ticket_table_body", 
+                partial: "admin/tickets/partials/ticket_row", 
+                locals: { ticket: @ticket }
+              )
+            ]
           end
         end
       end

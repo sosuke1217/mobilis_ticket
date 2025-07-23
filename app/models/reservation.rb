@@ -1,7 +1,7 @@
 class Reservation < ApplicationRecord
   validates :name, :start_time, :end_time, :course, presence: true
   validate :no_time_overlap
-
+  belongs_to :ticket, optional: true
   before_validation :set_end_time, if: -> { start_time.present? && course.present? && end_time.blank? }
   validate :start_and_end_must_be_on_10_minute_interval
 
