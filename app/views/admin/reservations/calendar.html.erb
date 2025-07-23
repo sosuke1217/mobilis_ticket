@@ -197,13 +197,66 @@
   </div>
 </div>
 
+<!-- app/views/admin/reservations/calendar.html.erb の修正版（scriptセクションのみ） -->
+
 <script>
-// カレンダー機能のJavaScript（修正版）
+// カレンダー機能のJavaScript（完全修正版）
 (function() {
   'use strict';
   
   let pageCalendar = null;
   let currentUsers = [];
+  
+  // ===== ヘルパー関数群 =====
+  
+  /**
+   * 時間を10分刻みに調整する関数
+   */
+  function adjustTimeToTenMinutes(timeString) {
+    if (!timeString) return "10:00";
+    
+    try {
+      const [hours, minutes] = timeString.split(':').map(Number);
+      
+      // 営業時間チェック（10:00-19:50）
+      if (hours < 10) {
+        return "10:00";
+      } else if (hours > 19 || (hours === 19 && minutes > 50)) {
+        return "19:50";
+      }
+      
+      // 10分刻みに調整
+      const adjustedMinutes = Math.round(minutes / 10) * 10;
+      
+      // 60分を超えた場合の処理
+      if (adjustedMinutes >= 60) {
+        const newHours = hours + 1;
+        if (newHours > 19) {
+          return "19:50";
+        }
+        return `${newHours.toString().padStart(2, '0')}:00`;
+      }
+      
+      return `${hours.toString().padStart(2, '0')}:${adjustedMinutes.toString().padStart(2, '0')}`;
+    } catch (error) {
+      console.error('Time adjustment error:', error);
+      return "10:00";
+    }
+  }
+  
+  /**
+   * コースから分数を取得する関数
+   */
+  function getDurationFromCourse(course) {
+    switch(course) {
+      case '40分': return 40;
+      case '60分': return 60;
+      case '80分': return 80;
+      default: return 60;
+    }
+  }
+  
+  // ===== メイン機能 =====
   
   // 初期化関数
   function initializeCalendar() {
@@ -995,16 +1048,6 @@
     }, 5000);
   }
   
-  // コースから分数を取得
-  function getDurationFromCourse(course) {
-    switch(course) {
-      case '40分': return 40;
-      case '60分': return 60;
-      case '80分': return 80;
-      default: return 60;
-    }
-  }
-  
   // イベントリスナーを設定
   function setupEventListeners() {
     // 新規ユーザートグル
@@ -1082,6 +1125,7 @@
       generateTimeOptions: typeof generateTimeOptions,
       updateEndTimeDisplay: typeof updateEndTimeDisplay,
       getDurationFromCourse: typeof getDurationFromCourse,
+      adjustTimeToTenMinutes: typeof adjustTimeToTenMinutes,
       openReservationModal: typeof openReservationModal
     });
     
