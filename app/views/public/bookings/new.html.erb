@@ -1,0 +1,343 @@
+<!-- app/views/public/bookings/new.html.erb -->
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white text-center">
+          <h2 class="mb-0">
+            <i class="fas fa-calendar-plus me-2"></i>
+            出張ストレッチ予約フォーム
+          </h2>
+          <p class="mb-0 mt-2">広尾エリア専門</p>
+        </div>
+        
+        <div class="card-body p-4">
+          <%= form_with model: @reservation, url: public_bookings_path, 
+                        local: true, html: { id: 'booking-form' } do |f| %>
+            
+            <!-- Step 1: コース選択 -->
+            <div class="step-section mb-4">
+              <h4 class="step-title">
+                <span class="step-number">1</span>コース選択
+              </h4>
+              
+              <div class="row">
+                <% @courses.each_with_index do |course, index| %>
+                  <div class="col-md-4 mb-3">
+                    <div class="course-card" data-course="<%= course[:name] %>" data-duration="<%= course[:duration] %>">
+                      <input type="radio" name="booking[course]" 
+                             value="<%= course[:name] %>" 
+                             id="course_<%= index %>"
+                             data-duration="<%= course[:duration] %>"
+                             <%= 'checked' if index == 1 %> hidden>
+                      <div class="card h-100">
+                        <div class="card-body text-center">
+                          <h5 class="card-title"><%= course[:name] %></h5>
+                          <p class="price-display">
+                            ¥<%= number_with_delimiter(course[:price]) %>
+                          </p>
+                          <small class="text-muted"><%= course[:duration] %>分</small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+            
+            <!-- Step 2: 希望日時選択 -->
+            <div class="step-section mb-4">
+              <h4 class="step-title">
+                <span class="step-number">2</span>希望日時選択
+              </h4>
+              
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <%= label_tag 'preferred_date', '希望日', class: 'form-label required' %>
+                  <%= date_field_tag 'preferred_date', '', 
+                        { class: 'form-control', required: true, id: 'preferred-date',
+                          min: Date.current + 1.day, max: Date.current + 30.days } %>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                  <%= label_tag 'booking[selected_datetime]', '空き時間', class: 'form-label required' %>
+                  <select name="booking[selected_datetime]" id="available-times-select" class="form-select" required>
+                    <option value="">まず日付とコースを選択してください</option>
+                  </select>
+                  <div id="loading-times" class="form-text text-primary" style="display: none;">
+                    <i class="fas fa-spinner fa-spin me-1"></i>空き時間を検索中...
+                  </div>
+                </div>
+              </div>
+              
+              <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>リアルタイム空き時間表示</strong><br>
+                選択した日付とコースに応じて、実際に予約可能な時間のみが表示されます。
+              </div>
+            </div>
+            
+            <!-- Step 3: お客様情報 -->
+            <div class="step-section mb-4">
+              <h4 class="step-title">
+                <span class="step-number">3</span>お客様情報
+              </h4>
+              
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <%= label_tag 'booking[name]', 'お名前', class: 'form-label required' %>
+                  <%= text_field_tag 'booking[name]', '', 
+                        { class: 'form-control', required: true, placeholder: '山田太郎' } %>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                  <%= label_tag 'booking[phone_number]', 'お電話番号', class: 'form-label required' %>
+                  <%= telephone_field_tag 'booking[phone_number]', '', 
+                        { class: 'form-control', required: true, placeholder: '090-1234-5678' } %>
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <%= label_tag 'booking[email]', 'メールアドレス', class: 'form-label' %>
+                <%= email_field_tag 'booking[email]', '', 
+                      { class: 'form-control', placeholder: 'example@email.com' } %>
+                <div class="form-text">ご連絡用（任意）</div>
+              </div>
+              
+              <div class="mb-3">
+                <%= label_tag 'booking[address]', 'ご住所', class: 'form-label required' %>
+                <%= text_area_tag 'booking[address]', '', 
+                      { class: 'form-control', rows: 2, required: true,
+                        placeholder: '港区南麻布○-○-○　○○マンション○○号室' } %>
+              </div>
+              
+              <div class="mb-3">
+                <%= label_tag 'booking[access_notes]', 'アクセス・入館方法', class: 'form-label' %>
+                <%= text_area_tag 'booking[access_notes]', '', 
+                      { class: 'form-control', rows: 2,
+                        placeholder: 'オートロック番号、最寄り駅、目印となる建物など' } %>
+              </div>
+            </div>
+            
+            <!-- Step 4: ご要望・その他 -->
+            <div class="step-section mb-4">
+              <h4 class="step-title">
+                <span class="step-number">4</span>ご要望・その他
+              </h4>
+              
+              <div class="mb-3">
+                <%= label_tag 'booking[notes]', 'ご要望・気になる箇所など', class: 'form-label' %>
+                <%= text_area_tag 'booking[notes]', '', 
+                      { class: 'form-control', rows: 3,
+                        placeholder: '肩こりがひどい、腰痛が気になる、初回で不安など' } %>
+              </div>
+            </div>
+            
+            <!-- 確認事項 -->
+            <div class="alert alert-warning">
+              <h6><i class="fas fa-exclamation-triangle me-2"></i>ご確認ください</h6>
+              <ul class="mb-0">
+                <li>選択された時間で<strong>仮予約</strong>いたします</li>
+                <li>確認のご連絡後、正式な予約確定となります</li>
+                <li>キャンセルは前日までにご連絡ください</li>
+                <li>出張費は料金に含まれています</li>
+              </ul>
+            </div>
+            
+            <!-- 送信ボタン -->
+            <div class="text-center mt-4">
+              <button type="submit" class="btn btn-primary btn-lg px-5" id="submit-btn" disabled>
+                <i class="fas fa-paper-plane me-2"></i>
+                予約リクエストを送信
+              </button>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 🆕 JavaScript for 空き時間取得 -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const courseCards = document.querySelectorAll('.course-card');
+  const dateInput = document.getElementById('preferred-date');
+  const timesSelect = document.getElementById('available-times-select');
+  const loadingIndicator = document.getElementById('loading-times');
+  const submitBtn = document.getElementById('submit-btn');
+  
+  // コース選択処理
+  courseCards.forEach(card => {
+    card.addEventListener('click', function() {
+      // 他のカードの選択解除
+      courseCards.forEach(c => {
+        c.querySelector('input').checked = false;
+        c.querySelector('.card').classList.remove('selected');
+      });
+      
+      // このカードを選択
+      const radio = this.querySelector('input');
+      radio.checked = true;
+      this.querySelector('.card').classList.add('selected');
+      
+      // 空き時間を更新
+      updateAvailableTimes();
+    });
+  });
+  
+  // 日付変更時の処理
+  dateInput.addEventListener('change', updateAvailableTimes);
+  
+  // 時間選択時の処理
+  timesSelect.addEventListener('change', validateForm);
+  
+  // 初期選択状態の設定
+  const checkedCourse = document.querySelector('input[name="booking[course]"]:checked');
+  if (checkedCourse) {
+    checkedCourse.closest('.course-card').querySelector('.card').classList.add('selected');
+  }
+  
+  // 🆕 空き時間を取得する関数
+  function updateAvailableTimes() {
+    const selectedCourse = document.querySelector('input[name="booking[course]"]:checked');
+    const selectedDate = dateInput.value;
+    
+    if (!selectedCourse || !selectedDate) {
+      timesSelect.innerHTML = '<option value="">コースと日付を選択してください</option>';
+      timesSelect.disabled = true;
+      return;
+    }
+    
+    const duration = selectedCourse.dataset.duration;
+    
+    // ローディング表示
+    timesSelect.disabled = true;
+    timesSelect.innerHTML = '<option value="">検索中...</option>';
+    loadingIndicator.style.display = 'block';
+    
+    // 空き時間をAPIから取得
+    fetch(`/public/bookings/available_times?date=${selectedDate}&duration=${duration}`)
+      .then(response => response.json())
+      .then(data => {
+        loadingIndicator.style.display = 'none';
+        
+        if (data.success) {
+          timesSelect.innerHTML = '<option value="">時間を選択してください</option>';
+          
+          if (data.slots.length === 0) {
+            timesSelect.innerHTML = '<option value="" disabled>この日は空きがありません</option>';
+            timesSelect.disabled = true;
+          } else {
+            data.slots.forEach(slot => {
+              const option = document.createElement('option');
+              option.value = slot.start_datetime;
+              option.textContent = slot.display;
+              timesSelect.appendChild(option);
+            });
+            timesSelect.disabled = false;
+          }
+        } else {
+          timesSelect.innerHTML = '<option value="" disabled>エラーが発生しました</option>';
+          console.error('API Error:', data.error);
+        }
+        
+        validateForm();
+      })
+      .catch(error => {
+        loadingIndicator.style.display = 'none';
+        timesSelect.innerHTML = '<option value="" disabled>通信エラーが発生しました</option>';
+        console.error('Fetch Error:', error);
+        validateForm();
+      });
+  }
+  
+  // フォームバリデーション
+  function validateForm() {
+    const requiredFields = document.querySelectorAll('[required]');
+    let allValid = true;
+    
+    requiredFields.forEach(field => {
+      if (!field.value.trim()) {
+        allValid = false;
+      }
+    });
+    
+    submitBtn.disabled = !allValid;
+  }
+  
+  // 入力項目の変更監視
+  document.getElementById('booking-form').addEventListener('input', validateForm);
+  document.getElementById('booking-form').addEventListener('change', validateForm);
+});
+</script>
+
+<style>
+.step-section {
+  border-left: 4px solid #e3f2fd;
+  padding-left: 20px;
+  margin-bottom: 2rem;
+}
+
+.step-title {
+  color: #1976d2;
+  margin-bottom: 1rem;
+}
+
+.step-number {
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  background: #1976d2;
+  color: white;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 30px;
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.course-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.course-card .card {
+  border: 2px solid #e0e0e0;
+  transition: all 0.3s ease;
+}
+
+.course-card:hover .card,
+.course-card input:checked + .card,
+.course-card .card.selected {
+  border-color: #1976d2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.2);
+}
+
+.price-display {
+  font-size: 1.5rem;
+  color: #1976d2;
+  font-weight: bold;
+  margin: 0;
+}
+
+.required::after {
+  content: " *";
+  color: #d32f2f;
+}
+
+.form-control:focus {
+  border-color: #1976d2;
+  box-shadow: 0 0 0 0.2rem rgba(25, 118, 210, 0.25);
+}
+
+#available-times-select:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+#loading-times {
+  font-size: 0.875rem;
+}
+</style>

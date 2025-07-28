@@ -1,6 +1,11 @@
 # config/routes.rb の正しい修正方法
 
 Rails.application.routes.draw do
+  namespace :public do
+    get "bookings/new"
+    get "bookings/create"
+    get "bookings/show"
+  end
   get "reservations/new"
   get "reservations/create"
   devise_for :admin_users
@@ -68,4 +73,16 @@ Rails.application.routes.draw do
   # 一般ユーザー用ルート
   resources :users, only: [:edit, :update]
   resources :reservations, only: [:new, :create]
+
+  namespace :public do
+    resources :bookings, only: [:new, :create, :show] do
+      collection do
+        get :available_times  # 🆕 空き時間取得API
+      end
+      
+      member do
+        patch :cancel
+      end
+    end
+  end
 end

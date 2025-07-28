@@ -40,6 +40,13 @@ class Reservation < ApplicationRecord
   scope :upcoming, -> { where('start_time > ?', Time.current) }
   scope :today, -> { where(start_time: Time.current.beginning_of_day..Time.current.end_of_day) }
   scope :this_week, -> { where(start_time: Time.current.beginning_of_week..Time.current.end_of_week) }
+  # アクティブな予約（キャンセル以外）
+  scope :active, -> { where.not(status: :cancelled) }
+  
+  # 特定の時間帯と重複する予約を検索
+  scope :overlapping, ->(start_time, end_time) {
+    where('start_time < ? AND end_time > ?', end_time, start_time)
+  }
 
   def start_and_end_must_be_on_10_minute_interval
     return unless start_time && end_time
