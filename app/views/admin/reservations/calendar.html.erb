@@ -3,6 +3,11 @@
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>予約カレンダー</h2>
     <div class="btn-group">
+     <!-- 新規追加: 一括作成ボタン -->
+      <%= link_to "/admin/reservations/bulk_new", class: "btn btn-success" do %>
+        <i class="fas fa-calendar-plus me-2"></i>定期予約 一括作成
+      <% end %>
+
       <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
         表示オプション
       </button>

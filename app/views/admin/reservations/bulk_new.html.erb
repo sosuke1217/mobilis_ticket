@@ -1,0 +1,720 @@
+<!-- app/views/admin/reservations/bulk_new.html.erb -->
+
+<div class="container my-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-calendar-plus me-2"></i>定期予約 一括作成</h2>
+    <%= link_to "← カレンダーに戻る", admin_reservations_calendar_path, class: "btn btn-outline-secondary" %>
+  </div>
+
+  <!-- フラッシュメッセージエリア -->
+  <div id="flash"></div>
+
+  <form id="bulkReservationForm">
+    <!-- 基本情報セクション -->
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="fas fa-user me-2"></i>基本情報</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <label for="userId" class="form-label">予約者 <span class="text-danger">*</span></label>
+            <select class="form-select" id="userId" required>
+              <option value="">ユーザーを選択してください</option>
+              <!-- ユーザーオプションはJavaScriptで動的に追加 -->
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label for="course" class="form-label">コース <span class="text-danger">*</span></label>
+            <select class="form-select" id="course" required>
+              <option value="40分">40分コース</option>
+              <option value="60分" selected>60分コース</option>
+              <option value="80分">80分コース</option>
+            </select>
+          </div>
+        </div>
+        <div class="row mt-3">
+          <div class="col-md-6">
+            <label for="startTime" class="form-label">開始時間 <span class="text-danger">*</span></label>
+            <select class="form-select" id="startTime" required>
+              <option value="">時間を選択してください</option>
+              <!-- 時間オプションはJavaScriptで動的に追加 -->
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label for="status" class="form-label">ステータス</label>
+            <select class="form-select" id="status">
+              <option value="confirmed">確定</option>
+              <option value="tentative">仮予約</option>
+            </select>
+          </div>
+        </div>
+        <div class="row mt-3">
+          <div class="col-12">
+            <label for="note" class="form-label">備考</label>
+            <textarea class="form-control" id="note" rows="2" placeholder="特別な要望や注意事項など"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- スケジュールパターンセクション -->
+    <div class="card mb-4">
+      <div class="card-header bg-success text-white">
+        <h5 class="mb-0"><i class="fas fa-calendar-week me-2"></i>スケジュールパターン</h5>
+      </div>
+      <div class="card-body">
+        <!-- パターン選択 -->
+        <div class="mb-3">
+          <label class="form-label">繰り返しパターン <span class="text-danger">*</span></label>
+          <div class="row">
+            <div class="col-md-4">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="pattern" id="weeklyPattern" value="weekly" checked>
+                <label class="form-check-label" for="weeklyPattern">
+                  <i class="fas fa-calendar-week me-1"></i>毎週
+                </label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="pattern" id="monthlyPattern" value="monthly">
+                <label class="form-check-label" for="monthlyPattern">
+                  <i class="fas fa-calendar-alt me-1"></i>毎月
+                </label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="pattern" id="customPattern" value="custom">
+                <label class="form-check-label" for="customPattern">
+                  <i class="fas fa-calendar-day me-1"></i>カスタム
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 期間設定 -->
+        <div class="row mb-3" id="dateRangeSection">
+          <div class="col-md-6">
+            <label for="startDate" class="form-label">開始日 <span class="text-danger">*</span></label>
+            <input type="date" class="form-control" id="startDate" required>
+          </div>
+          <div class="col-md-6">
+            <label for="endDate" class="form-label">終了日 <span class="text-danger">*</span></label>
+            <input type="date" class="form-control" id="endDate" required>
+          </div>
+        </div>
+
+        <!-- 毎週パターン設定 -->
+        <div id="weeklySettings">
+          <label class="form-label">曜日選択 <span class="text-danger">*</span></label>
+          <div class="row">
+            <div class="col-md-12">
+              <div class="btn-group-toggle d-flex flex-wrap gap-2" data-toggle="buttons">
+                <label class="btn btn-outline-primary" data-day="1">
+                  <input type="checkbox" value="1"> 月
+                </label>
+                <label class="btn btn-outline-primary" data-day="2">
+                  <input type="checkbox" value="2"> 火
+                </label>
+                <label class="btn btn-outline-primary" data-day="3">
+                  <input type="checkbox" value="3"> 水
+                </label>
+                <label class="btn btn-outline-primary" data-day="4">
+                  <input type="checkbox" value="4"> 木
+                </label>
+                <label class="btn btn-outline-primary" data-day="5">
+                  <input type="checkbox" value="5"> 金
+                </label>
+                <label class="btn btn-outline-primary" data-day="6">
+                  <input type="checkbox" value="6"> 土
+                </label>
+                <label class="btn btn-outline-primary" data-day="0">
+                  <input type="checkbox" value="0"> 日
+                </label>
+              </div>
+              <div class="form-text">複数選択可能</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 毎月パターン設定 -->
+        <div id="monthlySettings" style="display: none;">
+          <div class="row">
+            <div class="col-md-6">
+              <label for="monthlyDay" class="form-label">毎月の日付 <span class="text-danger">*</span></label>
+              <select class="form-select" id="monthlyDay">
+                <% (1..31).each do |day| %>
+                  <option value="<%= day %>"><%= day %>日</option>
+                <% end %>
+              </select>
+              <div class="form-text">存在しない日付（2月30日など）は自動的にスキップされます</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- カスタムパターン設定 -->
+        <div id="customSettings" style="display: none;">
+          <label for="customDates" class="form-label">カスタム日付 <span class="text-danger">*</span></label>
+          <textarea class="form-control" id="customDates" rows="4" 
+                    placeholder="日付を1行ずつ入力してください（例：&#10;2025-01-15&#10;2025-01-22&#10;2025-01-29"></textarea>
+          <div class="form-text">YYYY-MM-DD形式で1行ずつ入力してください</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- プレビューセクション -->
+    <div class="card mb-4">
+      <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="fas fa-eye me-2"></i>作成予定の予約 プレビュー</h5>
+      </div>
+      <div class="card-body">
+        <div id="previewSection">
+          <p class="text-muted">上記の設定を完了すると、作成予定の予約一覧が表示されます。</p>
+        </div>
+        <div class="mt-3">
+          <button type="button" class="btn btn-outline-info" id="generatePreviewBtn">
+            <i class="fas fa-refresh me-1"></i>プレビュー更新
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 作成ボタン -->
+    <div class="text-center">
+      <button type="submit" class="btn btn-success btn-lg" id="createBulkBtn">
+        <i class="fas fa-calendar-plus me-2"></i>一括作成実行
+      </button>
+      <button type="button" class="btn btn-secondary btn-lg ms-3" onclick="window.history.back()">
+        <i class="fas fa-times me-2"></i>キャンセル
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  initializeBulkReservation();
+});
+
+function initializeBulkReservation() {
+  console.log('🚀 Initializing bulk reservation form');
+  
+  // ユーザーと時間オプションを読み込み
+  loadUsers();
+  generateTimeOptions();
+  
+  // イベントリスナーを設定
+  setupEventListeners();
+  
+  // デフォルト日付を設定
+  setDefaultDates();
+}
+
+function loadUsers() {
+  fetch('/admin/users.json')
+    .then(response => response.json())
+    .then(users => {
+      const userSelect = document.getElementById('userId');
+      users.forEach(user => {
+        const option = document.createElement('option');
+        option.value = user.id;
+        option.textContent = user.name || `ID: ${user.id}`;
+        userSelect.appendChild(option);
+      });
+    })
+    .catch(error => {
+      console.error('ユーザー取得エラー:', error);
+    });
+}
+
+function generateTimeOptions() {
+  const timeSelect = document.getElementById('startTime');
+  
+  // 10:00から19:50まで10分刻みで生成
+  for (let hour = 10; hour < 20; hour++) {
+    for (let minute = 0; minute < 60; minute += 10) {
+      if (hour === 19 && minute > 50) break;
+      
+      const timeValue = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+      const option = document.createElement('option');
+      option.value = timeValue;
+      option.textContent = timeValue;
+      timeSelect.appendChild(option);
+    }
+  }
+}
+
+function setDefaultDates() {
+  const today = new Date();
+  const nextWeek = new Date(today);
+  nextWeek.setDate(today.getDate() + 7);
+  
+  const threeMonthsLater = new Date(today);
+  threeMonthsLater.setMonth(today.getMonth() + 3);
+  
+  document.getElementById('startDate').value = nextWeek.toISOString().split('T')[0];
+  document.getElementById('endDate').value = threeMonthsLater.toISOString().split('T')[0];
+}
+
+function setupEventListeners() {
+  // パターン変更時の設定表示切り替え
+  document.querySelectorAll('input[name="pattern"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      const weeklySettings = document.getElementById('weeklySettings');
+      const monthlySettings = document.getElementById('monthlySettings');
+      const customSettings = document.getElementById('customSettings');
+      const dateRangeSection = document.getElementById('dateRangeSection');
+      
+      // 全て非表示
+      weeklySettings.style.display = 'none';
+      monthlySettings.style.display = 'none';
+      customSettings.style.display = 'none';
+      
+      // 選択されたパターンに応じて表示
+      switch(this.value) {
+        case 'weekly':
+          weeklySettings.style.display = 'block';
+          dateRangeSection.style.display = 'block';
+          break;
+        case 'monthly':
+          monthlySettings.style.display = 'block';
+          dateRangeSection.style.display = 'block';
+          break;
+        case 'custom':
+          customSettings.style.display = 'block';
+          dateRangeSection.style.display = 'none';
+          break;
+      }
+    });
+  });
+  
+  // 曜日ボタンの切り替え
+  document.querySelectorAll('.btn-group-toggle label').forEach(label => {
+    label.addEventListener('click', function() {
+      const checkbox = this.querySelector('input[type="checkbox"]');
+      
+      setTimeout(() => {
+        if (checkbox.checked) {
+          this.classList.add('active');
+          this.classList.remove('btn-outline-primary');
+          this.classList.add('btn-primary');
+        } else {
+          this.classList.remove('active');
+          this.classList.remove('btn-primary');
+          this.classList.add('btn-outline-primary');
+        }
+      }, 10);
+    });
+  });
+  
+  // プレビュー更新ボタン
+  document.getElementById('generatePreviewBtn').addEventListener('click', generatePreview);
+  
+  // フォーム送信
+  document.getElementById('bulkReservationForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    submitBulkReservation();
+  });
+}
+
+function generatePreview() {
+  console.log('🔍 Generating preview...');
+  
+  const pattern = document.querySelector('input[name="pattern"]:checked').value;
+  const startDate = document.getElementById('startDate').value;
+  const endDate = document.getElementById('endDate').value;
+  const startTime = document.getElementById('startTime').value;
+  
+  if (!startTime) {
+    alert('開始時間を選択してください');
+    return;
+  }
+  
+  let dates = [];
+  
+  try {
+    switch(pattern) {
+      case 'weekly':
+        dates = generateWeeklyDates(startDate, endDate);
+        break;
+      case 'monthly':
+        dates = generateMonthlyDates(startDate, endDate);
+        break;
+      case 'custom':
+        dates = generateCustomDates();
+        break;
+    }
+    
+    displayPreview(dates, startTime);
+    
+  } catch (error) {
+    console.error('Preview generation error:', error);
+    alert('プレビュー生成中にエラーが発生しました: ' + error.message);
+  }
+}
+
+function generateWeeklyDates(startDate, endDate) {
+  const selectedWeekdays = Array.from(document.querySelectorAll('.btn-group-toggle input:checked'))
+    .map(input => parseInt(input.value));
+  
+  if (selectedWeekdays.length === 0) {
+    throw new Error('曜日を選択してください');
+  }
+  
+  const dates = [];
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  let current = new Date(start);
+  
+  while (current <= end) {
+    if (selectedWeekdays.includes(current.getDay())) {
+      dates.push(new Date(current));
+    }
+    current.setDate(current.getDate() + 1);
+  }
+  
+  return dates;
+}
+
+function generateMonthlyDates(startDate, endDate) {
+  const monthlyDay = parseInt(document.getElementById('monthlyDay').value);
+  const dates = [];
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  
+  let current = new Date(start.getFullYear(), start.getMonth(), 1);
+  
+  while (current <= end) {
+    try {
+      const targetDate = new Date(current.getFullYear(), current.getMonth(), monthlyDay);
+      if (targetDate >= start && targetDate <= end) {
+        dates.push(targetDate);
+      }
+    } catch (error) {
+      // 存在しない日付はスキップ
+    }
+    current.setMonth(current.getMonth() + 1);
+  }
+  
+  return dates;
+}
+
+function generateCustomDates() {
+  const customDatesText = document.getElementById('customDates').value.trim();
+  if (!customDatesText) {
+    throw new Error('カスタム日付を入力してください');
+  }
+  
+  const dates = [];
+  const lines = customDatesText.split('\n');
+  
+  lines.forEach(line => {
+    const dateStr = line.trim();
+    if (dateStr) {
+      try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) {
+          throw new Error(`無効な日付形式: ${dateStr}`);
+        }
+        dates.push(date);
+      } catch (error) {
+        throw new Error(`日付解析エラー: ${dateStr}`);
+      }
+    }
+  });
+  
+  return dates.sort((a, b) => a - b);
+}
+
+function displayPreview(dates, startTime) {
+  const previewSection = document.getElementById('previewSection');
+  const course = document.getElementById('course').value;
+  const duration = getDurationFromCourse(course);
+  
+  if (dates.length === 0) {
+    previewSection.innerHTML = '<p class="text-warning">作成される予約がありません。設定を確認してください。</p>';
+    return;
+  }
+  
+  if (dates.length > 50) {
+    previewSection.innerHTML = `<p class="text-danger">作成予定の予約が${dates.length}件と多すぎます。期間を短縮してください。</p>`;
+    return;
+  }
+  
+  let html = `
+    <div class="alert alert-info">
+      <strong>作成予定: ${dates.length}件の予約</strong>
+    </div>
+    <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+      <table class="table table-sm table-striped">
+        <thead class="table-dark sticky-top">
+          <tr>
+            <th>日付</th>
+            <th>曜日</th>
+            <th>時間</th>
+            <th>コース</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+  
+  dates.forEach(date => {
+    const dateStr = date.toLocaleDateString('ja-JP');
+    const dayOfWeek = date.toLocaleDateString('ja-JP', { weekday: 'short' });
+    const endTime = calculateEndTime(startTime, duration);
+    
+    html += `
+      <tr>
+        <td>${dateStr}</td>
+        <td>${dayOfWeek}</td>
+        <td>${startTime} - ${endTime}</td>
+        <td>${course}</td>
+      </tr>
+    `;
+  });
+  
+  html += `
+        </tbody>
+      </table>
+    </div>
+  `;
+  
+  previewSection.innerHTML = html;
+}
+
+function getDurationFromCourse(course) {
+  switch(course) {
+    case '40分': return 40;
+    case '60分': return 60;
+    case '80分': return 80;
+    default: return 60;
+  }
+}
+
+function calculateEndTime(startTime, duration) {
+  const [hours, minutes] = startTime.split(':').map(Number);
+  const start = new Date();
+  start.setHours(hours, minutes, 0, 0);
+  
+  const end = new Date(start.getTime() + duration * 60000);
+  return `${end.getHours().toString().padStart(2, '0')}:${end.getMinutes().toString().padStart(2, '0')}`;
+}
+
+function submitBulkReservation() {
+  console.log('📤 Submitting bulk reservation...');
+  
+  // バリデーション
+  if (!validateForm()) {
+    return;
+  }
+  
+  const formData = collectFormData();
+  
+  // ボタンを無効化
+  const submitBtn = document.getElementById('createBulkBtn');
+  const originalText = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>作成中...';
+  
+  fetch('/admin/reservations/bulk_create', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || '',
+      'Accept': 'application/json'
+    },
+    body: JSON.stringify(formData)
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      showMessage(data.message, 'success');
+      setTimeout(() => {
+        window.location.href = '/admin/reservations/calendar';
+      }, 2000);
+    } else {
+      showMessage(data.error || '一括作成に失敗しました', 'danger');
+    }
+  })
+  .catch(error => {
+    console.error('Bulk creation error:', error);
+    showMessage('一括作成中にエラーが発生しました: ' + error.message, 'danger');
+  })
+  .finally(() => {
+    // ボタンを元に戻す
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalText;
+  });
+}
+
+function validateForm() {
+  const errors = [];
+  
+  // 基本情報のバリデーション
+  if (!document.getElementById('userId').value) {
+    errors.push('予約者を選択してください');
+  }
+  
+  if (!document.getElementById('startTime').value) {
+    errors.push('開始時間を選択してください');
+  }
+  
+  const pattern = document.querySelector('input[name="pattern"]:checked').value;
+  
+  // パターン別バリデーション
+  switch(pattern) {
+    case 'weekly':
+      if (!document.getElementById('startDate').value || !document.getElementById('endDate').value) {
+        errors.push('開始日と終了日を選択してください');
+      }
+      
+      const selectedWeekdays = document.querySelectorAll('.btn-group-toggle input:checked');
+      if (selectedWeekdays.length === 0) {
+        errors.push('曜日を選択してください');
+      }
+      break;
+      
+    case 'monthly':
+      if (!document.getElementById('startDate').value || !document.getElementById('endDate').value) {
+        errors.push('開始日と終了日を選択してください');
+      }
+      break;
+      
+    case 'custom':
+      if (!document.getElementById('customDates').value.trim()) {
+        errors.push('カスタム日付を入力してください');
+      }
+      break;
+  }
+  
+  // 日付の整合性チェック
+  if (pattern !== 'custom') {
+    const startDate = new Date(document.getElementById('startDate').value);
+    const endDate = new Date(document.getElementById('endDate').value);
+    
+    if (startDate >= endDate) {
+      errors.push('終了日は開始日より後の日付を選択してください');
+    }
+    
+    if (startDate < new Date()) {
+      errors.push('開始日は今日以降の日付を選択してください');
+    }
+  }
+  
+  if (errors.length > 0) {
+    showMessage('入力エラー:\n' + errors.join('\n'), 'danger');
+    return false;
+  }
+  
+  return true;
+}
+
+function collectFormData() {
+  const pattern = document.querySelector('input[name="pattern"]:checked').value;
+  
+  const formData = {
+    bulk_reservation: {
+      base_reservation: {
+        user_id: document.getElementById('userId').value,
+        course: document.getElementById('course').value,
+        note: document.getElementById('note').value,
+        status: document.getElementById('status').value
+      },
+      schedule: {
+        pattern: pattern,
+        start_time: document.getElementById('startTime').value
+      }
+    }
+  };
+  
+  // パターン別の設定を追加
+  switch(pattern) {
+    case 'weekly':
+      formData.bulk_reservation.schedule.start_date = document.getElementById('startDate').value;
+      formData.bulk_reservation.schedule.end_date = document.getElementById('endDate').value;
+      formData.bulk_reservation.schedule.weekdays = Array.from(
+        document.querySelectorAll('.btn-group-toggle input:checked')
+      ).map(input => input.value);
+      break;
+      
+    case 'monthly':
+      formData.bulk_reservation.schedule.start_date = document.getElementById('startDate').value;
+      formData.bulk_reservation.schedule.end_date = document.getElementById('endDate').value;
+      formData.bulk_reservation.schedule.monthly_day = document.getElementById('monthlyDay').value;
+      break;
+      
+    case 'custom':
+      const customDates = document.getElementById('customDates').value
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line);
+      formData.bulk_reservation.schedule.custom_dates = customDates;
+      break;
+  }
+  
+  return formData;
+}
+
+function showMessage(message, type) {
+  const alertDiv = document.createElement('div');
+  alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+  alertDiv.innerHTML = `
+    ${message}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  `;
+  
+  const flashContainer = document.getElementById('flash');
+  flashContainer.innerHTML = '';
+  flashContainer.appendChild(alertDiv);
+  
+  // 自動的にメッセージを消去
+  setTimeout(() => {
+    if (alertDiv.parentNode) {
+      alertDiv.parentNode.removeChild(alertDiv);
+    }
+  }, 5000);
+}
+</script>
+
+<style>
+.btn-group-toggle label {
+  transition: all 0.2s ease;
+}
+
+.btn-group-toggle label:hover {
+  transform: translateY(-1px);
+}
+
+.card-header {
+  position: sticky;
+  top: 0;
+  z-index: 1020;
+}
+
+.table-responsive {
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+}
+
+.sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 1010;
+}
+
+#previewSection {
+  min-height: 100px;
+}
+
+.alert {
+  margin-bottom: 1rem;
+}
+
+.btn-lg {
+  padding: 0.75rem 2rem;
+  font-size: 1.1rem;
+}
+</style>

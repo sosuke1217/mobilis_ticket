@@ -1,4 +1,4 @@
-# config/routes.rb の修正版
+# config/routes.rb の正しい修正方法
 
 Rails.application.routes.draw do
   get "reservations/new"
@@ -39,6 +39,16 @@ Rails.application.routes.draw do
     get 'reservations/calendar', to: 'reservations#calendar', as: 'reservations_calendar'
     
     resources :reservations do
+      collection do
+        # 🆕 一括作成機能を追加
+        get :bulk_new              # 一括作成フォーム表示
+        post :bulk_create          # 一括作成実行
+        
+        # 既存の機能
+        get :available_slots       # 空き時間取得
+        patch :bulk_status_change  # 一括ステータス変更
+      end
+      
       member do
         # ステータス管理
         patch :cancel                    # 予約キャンセル
@@ -51,14 +61,6 @@ Rails.application.routes.draw do
         
         # メール送信
         post :send_email               # メール送信（確認・リマインダー）
-      end
-      
-      collection do
-        # 空き時間取得
-        get :available_slots           # 空き時間取得
-        
-        # 一括操作
-        patch :bulk_status_change      # 一括ステータス変更
       end
     end
   end

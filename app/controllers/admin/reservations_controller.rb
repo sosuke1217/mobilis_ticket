@@ -240,6 +240,119 @@ class Admin::ReservationsController < ApplicationController
     end
   end
 
+  def bulk_create
+    Rails.logger.info "🔄 Bulk reservation creation started"
+    
+    begin
+      ActiveRecord::Base.transaction do
+        # パラメータの取得
+        bulk_params = params.require(:bulk_reservation)
+        base_reservation_params = bulk_params.require(:base_reservation)
+        schedule_params = bulk_params.require(:schedule)
+        
+        Rails.logger.info "📝 Bulk params: #{bulk_params.inspect}"
+        
+        # 基本予約情報
+        user_id = base_reservation_params[:user_id]
+        course = base_reservation_params[:course]
+        note = base_reservation_params[:note]
+        status = base_reservation_params[:status] || 'confirmed'
+        
+        # スケジュール情報
+        pattern = schedule_params[:pattern] # 'weekly' or 'monthly'
+        start_date = Date.parse(schedule_params[:start_date])
+        end_date = Date.parse(schedule_params[:end_date])
+        start_time = schedule_params[:start_time] # "14:00"
+        weekdays = schedule_params[:weekdays]&.map(&:to_i) || [] # [1, 3, 5] (月水金)
+        monthly_day = schedule_params[:monthly_day]&.to_i # 毎月15日など
+        
+        user = User.find(user_id)
+        created_reservations = []
+        
+        case pattern
+        when 'weekly'
+          created_reservations = create_weekly_reservations(
+            user: user,
+            course: course,
+            note: note,
+            status: status,
+            start_date: start_date,
+            end_date: end_date,
+            start_time: start_time,
+            weekdays: weekdays
+          )
+          
+        when 'monthly'
+          created_reservations = create_monthly_reservations(
+            user: user,
+            course: course,
+            note: note,
+            status: status,
+            start_date: start_date,
+            end_date: end_date,
+            start_time: start_time,
+            monthly_day: monthly_day
+          )
+          
+        when 'custom'
+          # カスタム日付リスト
+          custom_dates = schedule_params[:custom_dates] || []
+          created_reservations = create_custom_reservations(
+            user: user,
+            course: course,
+            note: note,
+            status: status,
+            start_time: start_time,
+            custom_dates: custom_dates
+          )
+        end
+        
+        Rails.logger.info "✅ Created #{created_reservations.length} reservations"
+        
+        respond_to do |format|
+          format.json { 
+            render json: { 
+              success: true, 
+              message: "#{created_reservations.length}件の予約を作成しました",
+              reservations: created_reservations.map { |r| {
+                id: r.id,
+                start_time: r.start_time,
+                end_time: r.end_time,
+                status: r.status
+              }}
+            }, status: :created 
+          }
+          format.html { 
+            redirect_to admin_reservations_calendar_path, 
+            notice: "#{created_reservations.length}件の予約を作成しました" 
+          }
+        end
+      end
+      
+    rescue => e
+      Rails.logger.error "❌ Bulk creation failed: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      
+      respond_to do |format|
+        format.json { 
+          render json: { 
+            success: false, 
+            error: "一括作成中にエラーが発生しました: #{e.message}" 
+          }, status: :unprocessable_entity 
+        }
+        format.html { 
+          redirect_to admin_reservations_calendar_path, 
+          alert: "一括作成中にエラーが発生しました: #{e.message}" 
+        }
+      end
+    end
+  end
+
+  def bulk_new
+    # 一括作成フォーム表示用
+    Rails.logger.info "📝 Displaying bulk reservation form"
+  end
+
   private
 
   def reservation_params
@@ -423,6 +536,138 @@ class Admin::ReservationsController < ApplicationController
       '#000000'  # 黄色背景には黒文字
     else
       '#FFFFFF'  # その他は白文字
+    end
+  end
+
+  def create_weekly_reservations(user:, course:, note:, status:, start_date:, end_date:, start_time:, weekdays:)
+    reservations = []
+    current_date = start_date
+    
+    while current_date <= end_date
+      # 指定された曜日かチェック（0=日曜日, 1=月曜日, ...）
+      if weekdays.include?(current_date.wday)
+        reservation_datetime = Time.zone.parse("#{current_date} #{start_time}")
+        
+        # 重複チェック
+        unless reservation_exists?(user, reservation_datetime)
+          duration = get_duration_from_course(course)
+          end_datetime = reservation_datetime + duration.minutes
+          
+          reservation = Reservation.create!(
+            user: user,
+            name: user.name,
+            start_time: reservation_datetime,
+            end_time: end_datetime,
+            course: course,
+            note: note,
+            status: status
+          )
+          
+          reservations << reservation
+          Rails.logger.info "📅 Created reservation: #{reservation_datetime}"
+        else
+          Rails.logger.warn "⚠️ Skipped duplicate: #{reservation_datetime}"
+        end
+      end
+      
+      current_date += 1.day
+    end
+    
+    reservations
+  end
+  
+  def create_monthly_reservations(user:, course:, note:, status:, start_date:, end_date:, start_time:, monthly_day:)
+    reservations = []
+    current_month = start_date.beginning_of_month
+    
+    while current_month <= end_date
+      # その月の指定日を計算
+      begin
+        target_date = Date.new(current_month.year, current_month.month, monthly_day)
+        
+        # 日付が範囲内かチェック
+        if target_date >= start_date && target_date <= end_date
+          reservation_datetime = Time.zone.parse("#{target_date} #{start_time}")
+          
+          # 重複チェック
+          unless reservation_exists?(user, reservation_datetime)
+            duration = get_duration_from_course(course)
+            end_datetime = reservation_datetime + duration.minutes
+            
+            reservation = Reservation.create!(
+              user: user,
+              name: user.name,
+              start_time: reservation_datetime,
+              end_time: end_datetime,
+              course: course,
+              note: note,
+              status: status
+            )
+            
+            reservations << reservation
+            Rails.logger.info "📅 Created monthly reservation: #{reservation_datetime}"
+          end
+        end
+        
+      rescue ArgumentError => e
+        # 存在しない日付（例：2月30日）はスキップ
+        Rails.logger.warn "⚠️ Invalid date skipped: #{current_month.year}/#{current_month.month}/#{monthly_day}"
+      end
+      
+      current_month = current_month.next_month
+    end
+    
+    reservations
+  end
+  
+  def create_custom_reservations(user:, course:, note:, status:, start_time:, custom_dates:)
+    reservations = []
+    
+    custom_dates.each do |date_str|
+      begin
+        target_date = Date.parse(date_str)
+        reservation_datetime = Time.zone.parse("#{target_date} #{start_time}")
+        
+        # 重複チェック
+        unless reservation_exists?(user, reservation_datetime)
+          duration = get_duration_from_course(course)
+          end_datetime = reservation_datetime + duration.minutes
+          
+          reservation = Reservation.create!(
+            user: user,
+            name: user.name,
+            start_time: reservation_datetime,
+            end_time: end_datetime,
+            course: course,
+            note: note,
+            status: status
+          )
+          
+          reservations << reservation
+          Rails.logger.info "📅 Created custom reservation: #{reservation_datetime}"
+        end
+        
+      rescue ArgumentError => e
+        Rails.logger.warn "⚠️ Invalid date format skipped: #{date_str}"
+      end
+    end
+    
+    reservations
+  end
+  
+  def reservation_exists?(user, datetime)
+    Reservation.where(
+      user: user,
+      start_time: datetime.beginning_of_hour..datetime.end_of_hour
+    ).exists?
+  end
+  
+  def get_duration_from_course(course)
+    case course
+    when "40分" then 40
+    when "60分" then 60
+    when "80分" then 80
+    else 60
     end
   end
 
