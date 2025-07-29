@@ -49,7 +49,7 @@ class Admin::DashboardController < ApplicationController
     end_date = @selected_month.end_of_month
     
     @monthly_issued_tickets = Ticket
-      .includes(:ticket_template)
+      .includes(:ticket_template, :user)
       .where(created_at: start_date..end_date)
 
     @total_sales_amount = @monthly_issued_tickets.sum do |ticket|

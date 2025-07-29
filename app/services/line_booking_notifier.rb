@@ -6,16 +6,35 @@ class LineBookingNotifier
       config.channel_secret = ENV['LINE_CHANNEL_SECRET']
       config.channel_token = ENV['LINE_CHANNEL_TOKEN']
     end
-
+  
     user = reservation.user
     return unless user.line_user_id
-
-    message = build_booking_request_message(reservation)
-    
-    response = client.push_message(user.line_user_id, message)
-    Rails.logger.info "[LINE BOOKING] 予約リクエスト通知送信: #{response.code}"
-    
-    create_notification_log(user, reservation, 'booking_request')
+  
+    retries = 0
+    max_retries = 3
+  
+    begin
+      message = build_booking_request_message(reservation)
+      response = client.push_message(user.line_user_id, message)
+      
+      Rails.logger.info "[LINE BOOKING] 予約リクエスト通知送信: #{response.code}"
+      create_notification_log(user, reservation, 'booking_request')
+      
+    rescue Net::TimeoutError, Net::ReadTimeout => e
+      retries += 1
+      if retries <= max_retries
+        Rails.logger.warn "LINE API timeout (#{retries}/#{max_retries}): #{e.message}"
+        sleep(2 * retries)
+        retry
+      else
+        Rails.logger.error "LINE API failed after #{max_retries} retries: #{e.message}"
+        # メールでフォールバック
+        send_email_fallback(reservation) if user.email.present?
+      end
+    rescue => e
+      Rails.logger.error "LINE notification failed: #{e.message}"
+      send_email_fallback(reservation) if user.email.present?
+    end
   end
 
   def self.booking_confirmed(reservation)
@@ -438,4 +457,10 @@ class LineBookingNotifier
   rescue => e
     Rails.logger.error "通知ログ作成エラー: #{e.message}"
   end
+
+  def self.send_email_fallback(reservation)
+    ReservationMailer.confirmation(reservation).deliver_later
+    Rails.logger.info "Sent email fallback for reservation #{reservation.id}"
+  end
+  
 end

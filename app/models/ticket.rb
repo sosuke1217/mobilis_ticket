@@ -21,7 +21,9 @@ class Ticket < ApplicationRecord
     with_lock do
       if usable?
         self.remaining_count -= 1
-        save
+        result = save
+        user.clear_ticket_cache if result  # ← 追加
+        result
       else
         false
       end

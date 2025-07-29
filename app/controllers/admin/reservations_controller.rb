@@ -1,6 +1,7 @@
 # app/controllers/admin/reservations_controller.rb の修正版（主要メソッドのみ）
 
 class Admin::ReservationsController < ApplicationController
+  include ErrorHandling
   before_action :authenticate_admin_user!
 
   def calendar

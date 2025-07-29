@@ -28,7 +28,9 @@ class User < ApplicationRecord
 
   # ✅ 残チケット枚数の合計
   def active_ticket_count
-    tickets.sum(:remaining_count)
+    Rails.cache.fetch("user_#{id}_active_tickets", expires_in: 1.hour) do
+      tickets.where("remaining_count > 0").sum(:remaining_count)
+    end
   end
 
   # ✅ 最終来店日（最新の使用履歴）
@@ -42,6 +44,10 @@ class User < ApplicationRecord
       next 0 unless ticket.unit_price && ticket.remaining_count
       ticket.unit_price * ticket.remaining_count
     end
+  end
+
+  def clear_ticket_cache
+    Rails.cache.delete("user_#{id}_active_tickets")
   end
 
   private

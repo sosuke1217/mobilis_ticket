@@ -1,4 +1,4 @@
-# app/services/error_handling_service.rb
+# app/services/error_handling_service.rb の修正版（完全版）
 
 class ErrorHandlingService
   include Singleton
@@ -89,7 +89,7 @@ class ErrorHandlingService
     
     # メール通知
     if ENV['ADMIN_EMAIL']
-      AdminMailer.critical_error_notification(message).deliver_now rescue nil
+      # AdminMailer.critical_error_notification(message).deliver_now rescue nil
     end
     
     Rails.logger.error "🚨 [CRITICAL] #{message}"
@@ -135,4 +135,13 @@ class ErrorHandlingService
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
     
-    request = Net::HTTP::Post.new
+    request = Net::HTTP::Post.new(uri)
+    request['Content-Type'] = 'application/json'
+    request.body = payload.to_json
+    
+    response = http.request(request)
+    Rails.logger.info "Slack notification sent: #{response.code}"
+  rescue => e
+    Rails.logger.error "Failed to send Slack notification: #{e.message}"
+  end
+end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_07_23_105033) do
+ActiveRecord::Schema[7.2].define(version: 2025_07_29_082803) do
   create_table "admin_users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -32,6 +32,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_23_105033) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["ticket_id"], name: "index_notification_logs_on_ticket_id"
+    t.index ["user_id", "sent_at"], name: "index_notification_logs_on_user_id_and_sent_at"
     t.index ["user_id"], name: "index_notification_logs_on_user_id"
   end
 
@@ -66,7 +67,9 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_23_105033) do
     t.datetime "reminder_sent_at"
     t.index ["parent_reservation_id"], name: "index_reservations_on_parent_reservation_id"
     t.index ["start_time"], name: "index_reservations_on_start_time"
+    t.index ["status", "start_time"], name: "index_reservations_on_status_and_start_time"
     t.index ["status"], name: "index_reservations_on_status"
+    t.index ["user_id", "start_time"], name: "index_reservations_on_user_id_and_start_time"
   end
 
   create_table "ticket_templates", force: :cascade do |t|
@@ -86,6 +89,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_23_105033) do
     t.datetime "updated_at", null: false
     t.text "note"
     t.index ["ticket_id"], name: "index_ticket_usages_on_ticket_id"
+    t.index ["user_id", "used_at"], name: "index_ticket_usages_on_user_id_and_used_at"
     t.index ["user_id"], name: "index_ticket_usages_on_user_id"
   end
 
@@ -100,6 +104,8 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_23_105033) do
     t.string "title"
     t.integer "ticket_template_id"
     t.index ["ticket_template_id"], name: "index_tickets_on_ticket_template_id"
+    t.index ["user_id", "expiry_date"], name: "index_tickets_on_user_id_and_expiry_date"
+    t.index ["user_id", "remaining_count"], name: "index_tickets_on_user_id_and_remaining_count"
     t.index ["user_id"], name: "index_tickets_on_user_id"
   end
 

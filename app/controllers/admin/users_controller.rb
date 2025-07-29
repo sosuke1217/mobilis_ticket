@@ -4,7 +4,10 @@ class Admin::UsersController < ApplicationController
 
   def index
     @q = User.ransack(params[:q])
-    @users = @q.result(distinct: true).order(created_at: :desc).page(params[:page]).per(20)
+    @users = @q.result(distinct: true)
+            .includes(:tickets, :ticket_usages, :reservations)
+            .order(created_at: :desc)
+            .page(params[:page]).per(20)
   
     respond_to do |format|
       format.html

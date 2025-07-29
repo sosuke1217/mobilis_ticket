@@ -364,13 +364,18 @@ class Reservation < ApplicationRecord
 
   def no_time_overlap
     return if start_time.blank? || end_time.blank?
-
-    overlapping = Reservation.active
-      .where.not(id: id)
-      .overlapping(start_time, end_time)
-
-    if overlapping.exists?
-      errors.add(:base, "この時間帯にはすでに予約が入っています。")
+  
+    # トランザクション内でロックをかけて重複チェック
+    Reservation.transaction do
+      overlapping = Reservation.active
+        .where.not(id: id)
+        .where('start_time < ? AND end_time > ?', end_time, start_time)
+        .lock  # ← 追加: 悲観的ロック
+  
+      if overlapping.exists?
+        overlapping_reservation = overlapping.first
+        errors.add(:base, "#{overlapping_reservation.start_time.strftime('%H:%M')}〜#{overlapping_reservation.end_time.strftime('%H:%M')}に既に予約が入っています。")
+      end
     end
   end
 
