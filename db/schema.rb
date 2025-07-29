@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_07_29_082803) do
+ActiveRecord::Schema[7.2].define(version: 2025_07_29_145903) do
   create_table "admin_users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -21,6 +21,19 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_29_082803) do
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_admin_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_admin_users_on_reset_password_token", unique: true
+  end
+
+  create_table "application_settings", force: :cascade do |t|
+    t.integer "reservation_interval_minutes", default: 15, null: false
+    t.integer "business_hours_start", default: 10, null: false
+    t.integer "business_hours_end", default: 20, null: false
+    t.integer "slot_interval_minutes", default: 30, null: false
+    t.integer "max_advance_booking_days", default: 30, null: false
+    t.integer "min_advance_booking_hours", default: 24, null: false
+    t.boolean "sunday_closed", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_at"], name: "index_application_settings_on_created_at"
   end
 
   create_table "notification_logs", force: :cascade do |t|

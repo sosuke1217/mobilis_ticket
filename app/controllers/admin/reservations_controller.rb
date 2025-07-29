@@ -8,34 +8,19 @@ class Admin::ReservationsController < ApplicationController
   end
   
   def index
-    @reservations = Reservation.includes(:user, :ticket).order(start_time: :asc)
-  
-    respond_to do |format|
-      format.html
-      format.json do
-        render json: @reservations.map { |r|
-          {
-            id: r.id,
-            title: r.name,
-            start: r.start_time,
-            end: r.end_time,
-            description: r.course,
-            color: r.status_color,
-            textColor: text_color_for_status(r.status),
-            user_id: r.user_id,
-            status: r.status,
-            course: r.course,
-            note: r.note,
-            recurring: r.recurring,
-            recurring_type: r.recurring_type,
-            recurring_until: r.recurring_until,
-            confirmation_sent_at: r.confirmation_sent_at,
-            reminder_sent_at: r.reminder_sent_at,
-            cancelled_at: r.cancelled_at,
-            cancellation_reason: r.cancellation_reason
-          }
-        }
+    begin
+      @reservations = Reservation.includes(:user, :ticket).order(start_time: :asc)
+    
+      respond_to do |format|
+        format.html
+        format.json do
+          reservations_data = @reservations.map { |r| reservation_to_json(r) }
+          render json: reservations_data
+        end
       end
+      
+    rescue => e
+      handle_calendar_error(e)
     end
   end
 
@@ -87,69 +72,57 @@ class Admin::ReservationsController < ApplicationController
     begin
       @reservation = Reservation.find(params[:id])
       
-      # ドラッグ&ドロップからのリクエスト（時間のみ更新）の場合
-      if drag_drop_request?
-        # start_timeとend_timeのみを更新
-        update_params = drag_drop_params
-        
-        # コースに基づいた終了時間の自動計算をスキップ
-        # 手動でend_timeが指定されている場合はそれを使用
-        if update_params[:end_time].blank? && update_params[:start_time].present?
-          # end_timeが指定されていない場合は、既存のコースから計算
-          start_time = Time.zone.parse(update_params[:start_time])
-          duration = case @reservation.course
-                     when "40分" then 40
-                     when "60分" then 60
-                     when "80分" then 80
-                     else 60
-                     end
-          update_params[:end_time] = (start_time + duration.minutes).iso8601
-        end
-        
-        # 時間の重複チェック
-        if time_conflict_exists?(update_params, @reservation.id)
-          respond_to do |format|
-            format.json { render json: { success: false, errors: ["この時間帯には既に別の予約が入っています"] }, status: :unprocessable_entity }
-          end
-          return
-        end
-        
-        Rails.logger.info "🕐 ドラッグ&ドロップによる時間更新: #{@reservation.name} -> #{update_params[:start_time]}"
-        
-        if @reservation.update(update_params)
-          respond_to do |format|
-            format.json { render json: { success: true, message: "予約時間を更新しました" } }
-          end
-        else
-          respond_to do |format|
-            format.json { render json: { success: false, errors: @reservation.errors.full_messages }, status: :unprocessable_entity }
-          end
+      # 管理者による更新の場合、制限を解除
+      update_params = reservation_params
+      
+      # 管理者用の制限なし更新を使用
+      if @reservation.update_as_admin!(update_params)
+        Rails.logger.info "✅ Reservation updated successfully by admin"
+        respond_to do |format|
+          format.json { 
+            render json: { 
+              success: true, 
+              message: "予約を更新しました",
+              reservation: {
+                id: @reservation.id,
+                start_time: @reservation.start_time,
+                end_time: @reservation.end_time,
+                status: @reservation.status
+              }
+            }
+          }
+          format.html { 
+            redirect_to admin_reservations_calendar_path, 
+            notice: "予約を更新しました" 
+          }
         end
       else
-        # 通常のフォームからの更新
-        if @reservation.update(reservation_params)
-          respond_to do |format|
-            format.json { render json: { success: true, message: "予約を更新しました" } }
-            format.html { redirect_to admin_reservations_calendar_path, notice: "予約を更新しました" }
-          end
-        else
-          respond_to do |format|
-            format.json { render json: { success: false, errors: @reservation.errors.full_messages }, status: :unprocessable_entity }
-            format.html { render :edit, status: :unprocessable_entity }
-          end
+        Rails.logger.error "❌ Reservation update failed: #{@reservation.errors.full_messages}"
+        respond_to do |format|
+          format.json { 
+            render json: { 
+              success: false, 
+              error: @reservation.errors.full_messages.join(', ') 
+            }, status: :unprocessable_entity 
+          }
+          format.html { 
+            redirect_to admin_reservations_calendar_path, 
+            alert: "予約の更新に失敗しました: #{@reservation.errors.full_messages.join(', ')}" 
+          }
         end
       end
+
     rescue ActiveRecord::RecordNotFound
+      Rails.logger.error "❌ Reservation not found: ID #{params[:id]}"
       respond_to do |format|
-        format.html { redirect_to admin_reservations_calendar_path, alert: "予約が見つかりません。" }
-        format.json { render json: { success: false, error: "予約が見つかりません" }, status: :not_found }
-      end
-    rescue => e
-      Rails.logger.error "予約更新エラー: #{e.message}"
-      Rails.logger.error e.backtrace.join("\n")
-      respond_to do |format|
-        format.html { redirect_to admin_reservations_calendar_path, alert: "更新中にエラーが発生しました。" }
-        format.json { render json: { success: false, error: "更新中にエラーが発生しました: #{e.message}" }, status: :internal_server_error }
+        format.json { 
+          render json: { success: false, error: "予約が見つかりません" }, 
+          status: :not_found 
+        }
+        format.html { 
+          redirect_to admin_reservations_calendar_path, 
+          alert: "予約が見つかりません" 
+        }
       end
     end
   end
@@ -384,146 +357,137 @@ class Admin::ReservationsController < ApplicationController
     
     return false unless end_time
     
-    Reservation.where.not(id: current_reservation_id)
-               .where('start_time < ? AND end_time > ?', end_time, start_time)
-               .exists?
+    interval_minutes = Reservation.interval_minutes
+    
+    Reservation.active
+      .where.not(id: current_reservation_id)
+      .where(
+        '(start_time - INTERVAL ? MINUTE) < ? AND (end_time + INTERVAL ? MINUTE) > ?',
+        interval_minutes, end_time, interval_minutes, start_time
+      )
+      .exists?
   end
 
   def create_reservation_with_new_user
-    Rails.logger.info "🆕 Creating reservation with new user"
+    Rails.logger.info "📝 Creating reservation with new user"
     
-    begin
-      ActiveRecord::Base.transaction do
-        # 新規ユーザーを作成
-        @user = User.new(new_user_params)
-        
-        unless @user.save
-          Rails.logger.error "❌ User creation failed: #{@user.errors.full_messages}"
-          respond_to do |format|
-            format.json { render json: { success: false, errors: @user.errors.full_messages }, status: :unprocessable_entity }
-            format.html { redirect_to admin_reservations_calendar_path, alert: "ユーザー作成に失敗しました: #{@user.errors.full_messages.join(', ')}" }
-          end
-          return
-        end
-        
-        Rails.logger.info "✅ New user created: #{@user.name} (ID: #{@user.id})"
-        
-        # 予約を作成（ユーザーIDを設定）
-        @reservation = Reservation.new(reservation_params)
-        @reservation.user_id = @user.id
-        @reservation.name = @user.name  # ユーザー名を予約名に設定
-        
-        # 明示的に終了時間が渡されていない場合のみ自動計算
-        if @reservation.end_time.blank? && @reservation.start_time.present? && @reservation.course.present?
-          duration = case @reservation.course
-                     when "40分" then 40
-                     when "60分" then 60 
-                     when "80分" then 80
-                     else 60
-                     end
-          @reservation.end_time = @reservation.start_time + duration.minutes
-        elsif @reservation.start_time.present? && @reservation.end_time.present?
-          # 既に終了時間が設定されている場合は、時間が正しいかチェック
-          Rails.logger.info "⏰ Using provided times: start=#{@reservation.start_time}, end=#{@reservation.end_time}"
-          
-          # 終了時間が開始時間より前の場合は自動修正
-          if @reservation.end_time <= @reservation.start_time
-            Rails.logger.warn "⚠️ End time is before start time, auto-correcting..."
-            duration = case @reservation.course
-                       when "40分" then 40
-                       when "60分" then 60 
-                       when "80分" then 80
-                       else 60
-                       end
-            @reservation.end_time = @reservation.start_time + duration.minutes
-            Rails.logger.info "⏰ Corrected end_time: #{@reservation.end_time}"
-          end
-        end
-        
-        unless @reservation.save
-          Rails.logger.error "❌ Reservation creation failed: #{@reservation.errors.full_messages}"
-          raise ActiveRecord::Rollback
-        end
-        
-        Rails.logger.info "✅ New reservation created: #{@reservation.name} for #{@user.name}"
-        
-        respond_to do |format|
-          format.json { render json: { success: true, message: "新規ユーザーと予約を作成しました", user_id: @user.id, reservation_id: @reservation.id }, status: :created }
-          format.html { redirect_to admin_reservations_calendar_path, notice: "新規ユーザー「#{@user.name}」と予約を作成しました" }
-        end
-      end
-      
-    rescue => e
-      Rails.logger.error "❌ Transaction failed: #{e.message}"
-      Rails.logger.error e.backtrace.join("\n")
-      
-      respond_to do |format|
-        format.json { render json: { success: false, errors: ["予約作成中にエラーが発生しました: #{e.message}"] }, status: :internal_server_error }
-        format.html { redirect_to admin_reservations_calendar_path, alert: "予約作成中にエラーが発生しました" }
-      end
+    new_user_name = params[:new_user][:name]
+    new_user_phone = params[:new_user][:phone_number]
+    new_user_email = params[:new_user][:email]
+    
+    # 新規ユーザー作成
+    user = User.create!(
+      name: new_user_name,
+      phone_number: new_user_phone,
+      email: new_user_email
+    )
+    
+    Rails.logger.info "👤 New user created: #{user.name} (ID: #{user.id})"
+    
+    reservation_attrs = reservation_params.merge(
+      name: user.name,
+      user: user
+    )
+    
+    # 管理者用の制限なし作成を使用
+    @reservation = Reservation.create_as_admin!(reservation_attrs)
+    
+    Rails.logger.info "✅ Reservation created successfully with new user by admin: ID=#{@reservation.id}"
+    
+    respond_to do |format|
+      format.json { 
+        render json: { 
+          success: true, 
+          message: "新規ユーザーと予約を作成しました",
+          reservation: {
+            id: @reservation.id,
+            title: @reservation.name,
+            start: @reservation.start_time.iso8601,
+            end: @reservation.end_time.iso8601,
+            description: @reservation.course,
+            status: @reservation.status
+          }
+        }, status: :created 
+      }
+      format.html { 
+        redirect_to admin_reservations_calendar_path, 
+        notice: "新規ユーザーと予約を作成しました" 
+      }
+    end
+    
+  rescue ActiveRecord::RecordInvalid => e
+    Rails.logger.error "❌ User or reservation creation failed: #{e.record.errors.full_messages}"
+    
+    respond_to do |format|
+      format.json { 
+        render json: { 
+          success: false, 
+          errors: e.record.errors.full_messages,
+          error: e.record.errors.full_messages.join(', ')
+        }, status: :unprocessable_entity 
+      }
+      format.html { 
+        redirect_to admin_reservations_calendar_path, 
+        alert: "ユーザー・予約作成に失敗しました: #{e.record.errors.full_messages.join(', ')}" 
+      }
     end
   end
   
   def create_reservation_with_existing_user
     Rails.logger.info "📝 Creating reservation with existing user"
-    Rails.logger.info "📥 Reservation params: #{reservation_params.inspect}"
     
-    @reservation = Reservation.new(reservation_params)
+    user_id = params[:reservation][:user_id]
+    user = User.find(user_id)
+    Rails.logger.info "👤 User found: #{user.name} (ID: #{user.id})"
     
-    # ユーザーIDが指定されている場合、ユーザー名を予約名に設定
-    if @reservation.user_id.present?
-      user = User.find_by(id: @reservation.user_id)
-      @reservation.name = user&.name || "ユーザー不明"
-      Rails.logger.info "👤 User found: #{user&.name} (ID: #{user&.id})"
-    else
-      Rails.logger.warn "⚠️ No user_id provided"
+    reservation_attrs = reservation_params.merge(
+      name: user.name,
+      user: user
+    )
+    
+    Rails.logger.info "📝 Final reservation attributes: #{reservation_attrs.inspect}"
+    
+    # 管理者用の制限なし作成を使用
+    @reservation = Reservation.create_as_admin!(reservation_attrs)
+    
+    Rails.logger.info "✅ Reservation created successfully by admin: ID=#{@reservation.id}"
+    
+    respond_to do |format|
+      format.json { 
+        render json: { 
+          success: true, 
+          message: "予約を作成しました",
+          reservation: {
+            id: @reservation.id,
+            title: @reservation.name,
+            start: @reservation.start_time.iso8601,
+            end: @reservation.end_time.iso8601,
+            description: @reservation.course,
+            status: @reservation.status
+          }
+        }, status: :created 
+      }
+      format.html { 
+        redirect_to admin_reservations_calendar_path, 
+        notice: "予約を作成しました" 
+      }
     end
     
-    # 明示的に終了時間が渡されていない場合のみ自動計算
-    if @reservation.end_time.blank? && @reservation.start_time.present? && @reservation.course.present?
-      duration = case @reservation.course
-                 when "40分" then 40
-                 when "60分" then 60
-                 when "80分" then 80
-                 else 60
-                 end
-      @reservation.end_time = @reservation.start_time + duration.minutes
-      Rails.logger.info "⏰ Auto-calculated end_time: #{@reservation.end_time}"
-    elsif @reservation.start_time.present? && @reservation.end_time.present?
-      # 既に終了時間が設定されている場合は、時間が正しいかチェック
-      Rails.logger.info "⏰ Using provided times: start=#{@reservation.start_time}, end=#{@reservation.end_time}"
-      Rails.logger.info "⏰ Time difference: #{(@reservation.end_time - @reservation.start_time) / 60} minutes"
-      
-      # 終了時間が開始時間より前の場合は自動修正
-      if @reservation.end_time <= @reservation.start_time
-        Rails.logger.warn "⚠️ End time is before start time, auto-correcting..."
-        duration = case @reservation.course
-                   when "40分" then 40
-                   when "60分" then 60
-                   when "80分" then 80
-                   else 60
-                   end
-        @reservation.end_time = @reservation.start_time + duration.minutes
-        Rails.logger.info "⏰ Corrected end_time: #{@reservation.end_time}"
-      end
-    end
-
-    Rails.logger.info "📝 Final reservation attributes: #{@reservation.attributes.inspect}"
-
-    if @reservation.save
-      Rails.logger.info "✅ Reservation created: #{@reservation.name} (ID: #{@reservation.id})"
-      
-      respond_to do |format|
-        format.json { render json: { success: true, message: "予約を作成しました", reservation_id: @reservation.id }, status: :created }
-        format.html { redirect_to admin_reservations_calendar_path, notice: "予約が完了しました" }
-      end
-    else
-      Rails.logger.error "❌ Reservation creation failed: #{@reservation.errors.full_messages}"
-      
-      respond_to do |format|
-        format.json { render json: { success: false, errors: @reservation.errors.full_messages }, status: :unprocessable_entity }
-        format.html { render :new, status: :unprocessable_entity }
-      end
+  rescue ActiveRecord::RecordInvalid => e
+    Rails.logger.error "❌ Reservation creation failed: #{e.record.errors.full_messages}"
+    
+    respond_to do |format|
+      format.json { 
+        render json: { 
+          success: false, 
+          errors: e.record.errors.full_messages,
+          error: e.record.errors.full_messages.join(', ')
+        }, status: :unprocessable_entity 
+      }
+      format.html { 
+        redirect_to admin_reservations_calendar_path, 
+        alert: "予約作成に失敗しました: #{e.record.errors.full_messages.join(', ')}" 
+      }
     end
   end
   
@@ -532,12 +496,62 @@ class Admin::ReservationsController < ApplicationController
   end
 
   def text_color_for_status(status)
-    case status
+    case status.to_s
     when 'tentative'
       '#000000'  # 黄色背景には黒文字
+    when 'cancelled'
+      '#FFFFFF'  # 赤背景には白文字
+    when 'confirmed'
+      '#FFFFFF'  # 緑背景には白文字
+    when 'completed'
+      '#FFFFFF'  # グレー背景には白文字
+    when 'no_show'
+      '#FFFFFF'  # オレンジ背景には白文字
     else
-      '#FFFFFF'  # その他は白文字
+      '#FFFFFF'  # デフォルトは白文字
     end
+  end
+
+  def handle_calendar_error(error)
+    Rails.logger.error "❌ Calendar error: #{error.message}"
+    Rails.logger.error error.backtrace.join("\n")
+    
+    respond_to do |format|
+      format.json { 
+        render json: { 
+          success: false, 
+          error: "カレンダーデータの取得に失敗しました",
+          details: Rails.env.development? ? error.message : nil
+        }, status: :internal_server_error 
+      }
+      format.html { 
+        flash[:alert] = "カレンダーの読み込みに失敗しました"
+        redirect_to admin_root_path 
+      }
+    end
+  end
+
+  def reservation_to_json(reservation)
+    {
+      id: reservation.id,
+      title: reservation.name || "無名",
+      start: reservation.start_time&.iso8601,
+      end: reservation.end_time&.iso8601,
+      description: reservation.course || "",
+      color: reservation.status_color,
+      textColor: text_color_for_status(reservation.status),
+      user_id: reservation.user_id,
+      status: reservation.status,
+      course: reservation.course,
+      note: reservation.note,
+      recurring: reservation.recurring || false,
+      recurring_type: reservation.recurring_type,
+      recurring_until: reservation.recurring_until,
+      confirmation_sent_at: reservation.confirmation_sent_at,
+      reminder_sent_at: reservation.reminder_sent_at,
+      cancelled_at: reservation.cancelled_at,
+      cancellation_reason: reservation.cancellation_reason
+    }
   end
 
   def create_weekly_reservations(user:, course:, note:, status:, start_date:, end_date:, start_time:, weekdays:)

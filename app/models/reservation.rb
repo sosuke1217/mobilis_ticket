@@ -1,4 +1,4 @@
-# app/models/reservation.rb の強化版
+# app/models/reservation.rb の修正
 
 class Reservation < ApplicationRecord
   # ステータス定義（Rails 8対応）
@@ -17,16 +17,17 @@ class Reservation < ApplicationRecord
   }, prefix: true
   
   validates :start_time, :end_time, :course, presence: true
-  validate :no_time_overlap, unless: :cancelled?
+  validate :no_time_overlap_with_buffer, unless: :cancelled?
   validate :start_and_end_must_be_on_10_minute_interval, unless: :skip_time_validation
   validate :end_time_after_start_time
   validate :cancellation_reason_presence, if: :cancelled?
-  validate :booking_within_business_hours
-  validate :booking_not_too_far_in_advance
-  validate :booking_minimum_advance_notice
+  validate :booking_within_business_hours, unless: :skip_business_hours_validation
+  validate :booking_not_too_far_in_advance, unless: :skip_advance_booking_validation
+  validate :booking_minimum_advance_notice, unless: :skip_advance_notice_validation
   
-  # 一時的にバリデーションをスキップするためのアクセサー
-  attr_accessor :skip_time_validation
+  # 管理者用のバリデーションスキップフラグ
+  attr_accessor :skip_time_validation, :skip_business_hours_validation, 
+                :skip_advance_booking_validation, :skip_advance_notice_validation
   
   belongs_to :ticket, optional: true
   belongs_to :user, optional: true
@@ -58,39 +59,175 @@ class Reservation < ApplicationRecord
     where('start_time < ? AND end_time > ?', end_time, start_time)
   }
 
-  # 🆕 営業時間チェック
-  def booking_within_business_hours
-    return unless start_time && end_time
+  # 管理者用の制限なし予約作成メソッド
+  def self.create_as_admin!(attributes)
+    reservation = new(attributes)
+    reservation.skip_business_hours_validation = true
+    reservation.skip_advance_booking_validation = true
+    reservation.skip_advance_notice_validation = true
+    reservation.save!
+    reservation
+  end
+
+  # 管理者用の制限なし予約更新メソッド
+  def update_as_admin!(attributes)
+    self.skip_business_hours_validation = true
+    self.skip_advance_booking_validation = true
+    self.skip_advance_notice_validation = true
+    self.skip_time_validation = true
+    update!(attributes)
+  end
+
+  # キャンセル可能かチェック
+  def cancellable?
+    confirmed? || tentative?
+  end
+
+  # 編集可能かチェック
+  def editable?
+    !cancelled? && start_time > Time.current
+  end
+
+  # コースの分数を取得
+  def get_duration_minutes
+    case course
+    when "40分", "40分コース" then 40
+    when "60分", "60分コース" then 60
+    when "80分", "80分コース" then 80
+    else 60
+    end
+  end
+
+  # 料金を取得
+  def get_price
+    case course
+    when "40分", "40分コース" then 8000
+    when "60分", "60分コース" then 12000
+    when "80分", "80分コース" then 16000
+    else 12000
+    end
+  end
+
+  # 予約の説明文
+  def description
+    "#{course} - #{start_time.strftime('%m/%d %H:%M')}〜#{end_time.strftime('%H:%M')}"
+  end
+
+  def status_text
+    case status
+    when 'confirmed' then '確定'
+    when 'tentative' then '仮予約'
+    when 'cancelled' then 'キャンセル'
+    when 'completed' then '完了'
+    when 'no_show' then '無断キャンセル'
+    else status
+    end
+  end
+
+  # ステータス色（カレンダー表示用）
+  def status_color
+    case status
+    when 'confirmed' then '#28a745'  # 緑
+    when 'tentative' then '#ffc107'  # 黄
+    when 'cancelled' then '#dc3545'  # 赤
+    when 'completed' then '#6c757d'  # グレー
+    when 'no_show' then '#fd7e14'    # オレンジ
+    else '#007bff'                   # 青（デフォルト）
+    end
+  end
+
+  # キャンセル処理
+  def cancel!(reason)
+    update!(
+      status: :cancelled,
+      cancelled_at: Time.current,
+      cancellation_reason: reason
+    )
     
+    # 子予約（繰り返し予約）もキャンセル
+    if recurring?
+      child_reservations.active.each do |child|
+        child.cancel!("親予約のキャンセルに伴う自動キャンセル")
+      end
+    end
+    
+    # キャンセル通知送信
+    send_cancellation_notifications
+  end
+
+  def self.interval_minutes
+    ENV.fetch('RESERVATION_INTERVAL_MINUTES', 15).to_i
+  end
+
+  # インターバルを含む実際の終了時間
+  def end_time_with_interval
+    end_time + self.class.interval_minutes.minutes
+  end
+
+  # インターバルを含む実際の開始時間
+  def start_time_with_interval
+    start_time - self.class.interval_minutes.minutes
+  end
+
+  scope :overlapping_with_interval, ->(start_time, end_time) {
+    interval_min = interval_minutes
+    where(
+      '(start_time - INTERVAL ? MINUTE) < ? AND (end_time + INTERVAL ? MINUTE) > ?',
+      interval_min, end_time, interval_min, start_time
+    )
+  }
+
+  # 空き時間を取得（インターバル考慮版）
+  def self.available_slots_for_with_interval(date, duration_minutes = 60)
     business_start = ENV.fetch('BUSINESS_HOURS_START', '10:00')
     business_end = ENV.fetch('BUSINESS_HOURS_END', '20:00')
+    slot_interval = ENV.fetch('BOOKING_SLOT_INTERVAL', 30).to_i
     
-    start_hour_min = start_time.strftime('%H:%M')
-    end_hour_min = end_time.strftime('%H:%M')
+    opening_time = Time.zone.parse("#{date} #{business_start}")
+    closing_time = Time.zone.parse("#{date} #{business_end}")
     
-    if start_hour_min < business_start || end_hour_min > business_end
-      errors.add(:start_time, "営業時間内（#{business_start}-#{business_end}）でご予約ください")
+    slots = []
+    current_time = opening_time
+    
+    while current_time + duration_minutes.minutes <= closing_time
+      end_time = current_time + duration_minutes.minutes
+      
+      # インターバルを考慮した重複チェック
+      unless active.overlapping_with_interval(current_time, end_time).exists?
+        slots << {
+          start_time: current_time,
+          end_time: end_time,
+          available: true
+        }
+      end
+      
+      current_time += slot_interval.minutes
     end
+    
+    slots
   end
 
-  # 🆕 予約可能期間チェック
-  def booking_not_too_far_in_advance
-    return unless start_time
-    
-    max_days = ENV.fetch('MAX_ADVANCE_BOOKING_DAYS', 30).to_i
-    if start_time > max_days.days.from_now
-      errors.add(:start_time, "#{max_days}日以内でご予約ください")
-    end
-  end
+  private
 
-  # 🆕 最低予約時間チェック
-  def booking_minimum_advance_notice
-    return unless start_time
-    return if persisted? # 既存予約の更新時はスキップ
-    
-    min_hours = ENV.fetch('MIN_ADVANCE_BOOKING_HOURS', 24).to_i
-    if start_time < min_hours.hours.from_now
-      errors.add(:start_time, "#{min_hours}時間前までにご予約ください")
+  def no_time_overlap_with_buffer
+    return if start_time.blank? || end_time.blank?
+  
+    buffer_minutes = 15 # 15分のバッファ
+  
+    Reservation.transaction do
+      # SQLite対応版 - Rubyの日時演算を使用
+      buffer_start = start_time - buffer_minutes.minutes
+      buffer_end = end_time + buffer_minutes.minutes
+      
+      overlapping = Reservation.active
+        .where.not(id: id)
+        .where('start_time < ? AND end_time > ?', buffer_end, buffer_start)
+        .lock
+  
+      if overlapping.exists?
+        overlapping_reservation = overlapping.first
+        errors.add(:base, "#{overlapping_reservation.start_time.strftime('%H:%M')}〜#{overlapping_reservation.end_time.strftime('%H:%M')}に既に予約が入っています。（#{buffer_minutes}分のバッファを含む）")
+      end
     end
   end
 
@@ -117,343 +254,133 @@ class Reservation < ApplicationRecord
     end
   end
 
-  # 🆕 キャンセル可能期間チェック
-  def cancellable_until
-    # 開始時間の24時間前まで
-    start_time - 24.hours
-  end
-
-  def can_cancel_online?
-    return false unless cancellable?
-    Time.current < cancellable_until
-  end
-
-  # 予約をキャンセル
-  def cancel!(reason)
-    update!(
-      status: :cancelled,
-      cancelled_at: Time.current,
-      cancellation_reason: reason
-    )
+  # 営業時間チェック（管理者の場合はスキップ可能）
+  def booking_within_business_hours
+    return unless start_time && end_time
     
-    # 子予約（繰り返し予約）もキャンセル
-    if recurring?
-      child_reservations.active.each do |child|
-        child.cancel!("親予約のキャンセルに伴う自動キャンセル")
-      end
-    end
-    
-    # キャンセル通知送信
-    send_cancellation_notifications
-  end
-
-  # 🆕 キャンセル通知送信
-  def send_cancellation_notifications
-    # メール通知
-    if user&.email.present?
-      ReservationMailer.cancellation_notification(self).deliver_later
-    end
-    
-    # LINE通知
-    if user&.line_user_id.present?
-      LineBookingNotifier.send_cancellation_notification(self)
-    end
-  end
-
-  # 予約確定
-  def confirm!
-    update!(status: :confirmed)
-    send_confirmation_notifications
-  end
-
-  # 🆕 確定通知送信
-  def send_confirmation_notifications
-    # メール通知
-    if user&.email.present?
-      ReservationMailer.confirmation(self).deliver_later
-    end
-    
-    # LINE通知
-    if user&.line_user_id.present?
-      LineBookingNotifier.booking_confirmed(self)
-    end
-  end
-
-  # 予約完了
-  def complete!
-    update!(status: :completed)
-    
-    # 完了通知送信
-    if user&.email.present?
-      ReservationMailer.completion_notification(self).deliver_later
-    end
-  end
-
-  # 無断キャンセル
-  def mark_no_show!
-    update!(status: :no_show)
-  end
-
-  # 🆕 予約時間の変更
-  def reschedule!(new_start_time, new_end_time = nil)
-    # 新しい終了時間が指定されていない場合は、コースから計算
-    unless new_end_time
-      duration = get_duration_minutes
-      new_end_time = new_start_time + duration.minutes
-    end
-    
-    # 重複チェック
-    overlapping = Reservation.active
-      .where.not(id: id)
-      .overlapping(new_start_time, new_end_time)
-    
-    if overlapping.exists?
-      errors.add(:base, "指定された時間には既に予約が入っています")
-      return false
-    end
-    
-    update!(
-      start_time: new_start_time,
-      end_time: new_end_time
-    )
-    
-    # 変更通知送信
-    send_reschedule_notifications
-    true
-  end
-
-  # 🆕 時間変更通知
-  def send_reschedule_notifications
-    # TODO: 予約変更通知メールの実装
-    Rails.logger.info "予約時間変更: #{name}様 - #{start_time.strftime('%m/%d %H:%M')}"
-  end
-
-  # 繰り返し予約作成
-  def create_recurring_reservations!
-    return unless recurring? && recurring_until.present?
-    
-    case recurring_type
-    when 'weekly'
-      create_weekly_reservations
-    when 'monthly'
-      create_monthly_reservations
-    end
-  end
-
-  # ステータス表示用
-  def status_text
-    case status
-    when 'confirmed' then '確定'
-    when 'tentative' then '仮予約'
-    when 'cancelled' then 'キャンセル'
-    when 'completed' then '完了'
-    when 'no_show' then '無断キャンセル'
-    else status
-    end
-  end
-
-  # ステータス色
-  def status_color
-    case status
-    when 'confirmed' then '#28a745'  # 緑
-    when 'tentative' then '#ffc107'  # 黄
-    when 'cancelled' then '#dc3545'  # 赤
-    when 'completed' then '#6c757d'  # グレー
-    when 'no_show' then '#fd7e14'    # オレンジ
-    else '#007bff'                   # 青
-    end
-  end
-
-  # キャンセル可能かチェック
-  def cancellable?
-    confirmed? || tentative?
-  end
-
-  # 編集可能かチェック
-  def editable?
-    !cancelled? && start_time > Time.current
-  end
-
-  # 🆕 コースの分数を取得
-  def get_duration_minutes
-    case course
-    when "40分", "40分コース" then 40
-    when "60分", "60分コース" then 60
-    when "80分", "80分コース" then 80
-    else 60
-    end
-  end
-
-  # 🆕 料金を取得
-  def get_price
-    case course
-    when "40分", "40分コース" then 8000
-    when "60分", "60分コース" then 12000
-    when "80分", "80分コース" then 16000
-    else 12000
-    end
-  end
-
-  # 🆕 予約の説明文
-  def description
-    "#{course} - #{start_time.strftime('%m/%d %H:%M')}〜#{end_time.strftime('%H:%M')}"
-  end
-
-  # 🆕 Google Calendar用の説明
-  def google_calendar_description
-    desc = "【Mobilis Stretch 予約】\n\n"
-    desc += "コース: #{course}\n"
-    desc += "お客様: #{name}\n"
-    desc += "住所: #{user&.address}\n" if user&.address.present?
-    desc += "電話: #{user&.phone_number}\n" if user&.phone_number.present?
-    desc += "メモ: #{note}\n" if note.present?
-    desc += "\nステータス: #{status_text}"
-    desc
-  end
-
-  # 🆕 空き時間を取得（クラスメソッド）
-  def self.available_slots_for(date, duration_minutes = 60)
     business_start = ENV.fetch('BUSINESS_HOURS_START', '10:00')
     business_end = ENV.fetch('BUSINESS_HOURS_END', '20:00')
-    slot_interval = ENV.fetch('BOOKING_SLOT_INTERVAL', 30).to_i
     
-    opening_time = Time.zone.parse("#{date} #{business_start}")
-    closing_time = Time.zone.parse("#{date} #{business_end}")
+    start_hour_min = start_time.strftime('%H:%M')
+    end_hour_min = end_time.strftime('%H:%M')
     
-    slots = []
-    current_time = opening_time
-    
-    while current_time + duration_minutes.minutes <= closing_time
-      end_time = current_time + duration_minutes.minutes
-      
-      # アクティブな予約との重複チェック
-      unless active.overlapping(current_time, end_time).exists?
-        slots << {
-          start_time: current_time,
-          end_time: end_time,
-          available: true
-        }
-      end
-      
-      current_time += slot_interval.minutes
+    if start_hour_min < business_start || end_hour_min > business_end
+      errors.add(:start_time, "営業時間内（#{business_start}-#{business_end}）でご予約ください")
     end
-    
-    slots
   end
 
-  # 🆕 日別の空き状況を取得
-  def self.availability_for_date_range(start_date, end_date, duration_minutes = 60)
-    availability = {}
+  # 予約可能期間チェック（管理者の場合はスキップ可能）
+  def booking_not_too_far_in_advance
+    return unless start_time
     
-    (start_date..end_date).each do |date|
-      # 日曜日は休業日と仮定
-      next if date.sunday?
-      
-      slots = available_slots_for(date, duration_minutes)
-      availability[date] = {
-        total_slots: slots.count,
-        available_slots: slots.select { |slot| slot[:available] }.count,
-        utilization_rate: slots.any? ? (slots.reject { |slot| slot[:available] }.count.to_f / slots.count * 100).round(1) : 0
-      }
+    max_days = ENV.fetch('MAX_ADVANCE_BOOKING_DAYS', 30).to_i
+    if start_time > max_days.days.from_now
+      errors.add(:start_time, "#{max_days}日以内でご予約ください")
     end
-    
-    availability
   end
 
-  private
-
-  def no_time_overlap
-    return if start_time.blank? || end_time.blank?
-  
-    # トランザクション内でロックをかけて重複チェック
-    Reservation.transaction do
-      overlapping = Reservation.active
-        .where.not(id: id)
-        .where('start_time < ? AND end_time > ?', end_time, start_time)
-        .lock  # ← 追加: 悲観的ロック
-  
-      if overlapping.exists?
-        overlapping_reservation = overlapping.first
-        errors.add(:base, "#{overlapping_reservation.start_time.strftime('%H:%M')}〜#{overlapping_reservation.end_time.strftime('%H:%M')}に既に予約が入っています。")
-      end
+  # 最低予約時間チェック（管理者の場合はスキップ可能）
+  def booking_minimum_advance_notice
+    return unless start_time
+    return if persisted? # 既存予約の更新時はスキップ
+    
+    min_hours = ENV.fetch('MIN_ADVANCE_BOOKING_HOURS', 24).to_i
+    if start_time < min_hours.hours.from_now
+      errors.add(:start_time, "#{min_hours}時間前までにご予約ください")
     end
   end
 
   def set_name_from_user
-    if user.present? && user.name.present?
-      self.name = user.name
-    elsif name.blank?
-      self.name = "予約者未設定"
-    end
+    self.name = user.name if user
   end
 
   def set_end_time
-    return if skip_time_validation
-    
-    self.end_time ||= start_time + get_duration_minutes.minutes
+    duration = get_duration_minutes
+    self.end_time = start_time + duration.minutes
   end
 
   def schedule_confirmation_email
-    return unless user&.email.present?
+    return unless user && user.email.present?
     
-    ReservationMailer.confirmation(self).deliver_later
-    update_column(:confirmation_sent_at, Time.current)
+    begin
+      ReservationMailer.confirmation(self).deliver_later(wait: 5.minutes)
+      Rails.logger.info "📧 Confirmation email scheduled for: #{user.email}"
+    rescue => e
+      Rails.logger.error "確認メール送信エラー: #{e.message}"
+    end
   end
 
   def handle_status_change
     if saved_change_to_status?
       case status
-      when 'cancelled'
-        # キャンセル通知は cancel! メソッドで送信済み
       when 'confirmed'
         send_confirmation_notifications
-      when 'completed'
-        # 完了メール送信済み
+      when 'cancelled'
+        send_cancellation_notifications
+      end
+    end
+  end
+
+  def handle_status_change
+    if saved_change_to_status?
+      case status
+      when 'confirmed'
+        send_confirmation_notifications
+      when 'cancelled'
+        send_cancellation_notifications
+      end
+    end
+  end
+
+  def send_confirmation_notifications
+    # メール通知
+    if user&.email.present?
+      begin
+        ReservationMailer.confirmation(self).deliver_later
+        Rails.logger.info "📧 Confirmation notification sent to: #{user.email}"
+      rescue => e
+        Rails.logger.error "確認通知送信エラー: #{e.message}"
+      end
+    end
+    
+    # LINE通知
+    if user&.line_user_id.present?
+      begin
+        # LineBookingNotifier.booking_confirmed(self)
+        Rails.logger.info "📱 LINE confirmation notification sent to: #{user.line_user_id}"
+      rescue => e
+        Rails.logger.error "LINE確認通知送信エラー: #{e.message}"
+      end
+    end
+  end
+
+  def send_cancellation_notifications
+    # メール通知
+    if user&.email.present?
+      begin
+        ReservationMailer.cancellation_notification(self).deliver_later
+        Rails.logger.info "📧 Cancellation notification sent to: #{user.email}"
+      rescue => e
+        Rails.logger.error "キャンセル通知送信エラー: #{e.message}"
+      end
+    end
+    
+    # LINE通知
+    if user&.line_user_id.present?
+      begin
+        # LineBookingNotifier.send_cancellation_notification(self)
+        Rails.logger.info "📱 LINE cancellation notification sent to: #{user.line_user_id}"
+      rescue => e
+        Rails.logger.error "LINEキャンセル通知送信エラー: #{e.message}"
       end
     end
   end
 
   def log_reservation_created
-    Rails.logger.info "📅 新規予約作成: #{name} - #{start_time.strftime('%m/%d %H:%M')} (#{status})"
+    Rails.logger.info "✅ 新規予約作成: ID=#{id}, #{name}様, #{start_time&.strftime('%m/%d %H:%M')}, #{course}"
   end
 
   def log_reservation_updated
-    Rails.logger.info "📅 予約ステータス更新: #{name} - #{status_was} → #{status}"
-  end
-
-  def create_weekly_reservations
-    current_date = start_time + 1.week
-    
-    while current_date.to_date <= recurring_until
-      child_reservations.create!(
-        name: name,
-        start_time: current_date,
-        end_time: current_date + (end_time - start_time),
-        course: course,
-        note: note,
-        user: user,
-        ticket: ticket,
-        status: status
-      )
-      current_date += 1.week
-    end
-  end
-
-  def create_monthly_reservations
-    current_date = start_time + 1.month
-    
-    while current_date.to_date <= recurring_until
-      child_reservations.create!(
-        name: name,
-        start_time: current_date,
-        end_time: current_date + (end_time - start_time),
-        course: course,
-        note: note,
-        user: user,
-        ticket: ticket,
-        status: status
-      )
-      current_date += 1.month
-    end
+    Rails.logger.info "📝 予約ステータス変更: ID=#{id}, #{name}様, #{status}"
   end
 end

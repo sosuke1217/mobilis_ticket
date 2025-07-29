@@ -1,6 +1,7 @@
 # app/controllers/linebot_controller.rb の改善版
 
 class LinebotController < ApplicationController
+  skip_before_action :verify_authenticity_token
   require 'line/bot'
   protect_from_forgery with: :null_session
 
@@ -106,6 +107,23 @@ class LinebotController < ApplicationController
         text: "⭐️ ご感想はこちら：https://mobilis-stretch.com/reviews"
       })
 
+    when /^select_time_period_(.+)_(.+)_(.+)$/
+      course = $1
+      date = $2
+      period = $3
+      handle_time_period_selection(user, reply_token, course, date, period)
+
+    when /^select_date_(.+)_(.+)$/
+      course = $1
+      date = $2
+      send_available_times(user, reply_token, course, date)
+  
+    when /^confirm_booking_(.+)_(.+)_(.+)$/
+      course = $1
+      date = $2
+      time = $3
+      create_booking(user, reply_token, course, date, time)  
+
     when /^book_(\d+)min$/
       course = "#{$1}分コース"
       start_booking_flow(user, reply_token, course)
@@ -128,6 +146,14 @@ class LinebotController < ApplicationController
     when /^cancel_confirmed_booking_(\d+)$/
       reservation_id = $1.to_i
       handle_booking_cancellation(user, reply_token, reservation_id, "お客様都合によるキャンセル")
+
+    when /^cancel_with_reason_(\d+)_(.+)$/
+      reservation_id = $1.to_i
+      reason = $2
+      handle_booking_cancellation(user, reply_token, reservation_id, reason)
+    
+    when "check_tickets"
+      send_ticket_status(user, reply_token)
 
     when /^urgent_cancel_(\d+)$/
       reservation_id = $1.to_i
@@ -331,24 +357,94 @@ class LinebotController < ApplicationController
     send_reply(reply_token, message)
   end
 
+  def get_available_time_slots(date, duration)
+    business_hours = {
+      start: 10, # 10:00
+      end: 20    # 20:00
+    }
+    
+    interval_minutes = Reservation.interval_minutes
+    slots = []
+    current_time = Time.zone.parse("#{date} #{business_hours[:start]}:00")
+    end_time = Time.zone.parse("#{date} #{business_hours[:end]}:00")
+    
+    while current_time + duration.minutes <= end_time
+      slot_end = current_time + duration.minutes
+      
+      # インターバルを考慮した重複チェック
+      conflicting = Reservation.active.where(
+        '(start_time - INTERVAL ? MINUTE) < ? AND (end_time + INTERVAL ? MINUTE) > ?',
+        interval_minutes, slot_end, interval_minutes, current_time
+      ).exists?
+      
+      unless conflicting
+        slots << {
+          start_time: current_time,
+          end_time: slot_end
+        }
+      end
+      
+      current_time += 30.minutes # 30分間隔
+    end
+    
+    slots
+  end
+
   # 🆕 利用可能な時間を送信
   def send_available_times(user, reply_token, course, date_str)
-    date = Date.parse(date_str)
-    duration = get_duration_from_course(course)
-    
-    available_slots = get_available_time_slots(date, duration)
-    
-    if available_slots.empty?
+    begin
+      date = Date.parse(date_str)
+      duration = get_duration_from_course(course)
+      
+      available_slots = get_available_time_slots(date, duration)
+      
+      if available_slots.empty?
+        send_reply(reply_token, {
+          type: "text",
+          text: "申し訳ございません。#{date.strftime('%m/%d')}（#{course}）は空きがございません。\n別の日時をお選びください。"
+        })
+        return
+      end
+  
+      # 利用可能スロットが多い場合は複数のメッセージに分割
+      if available_slots.length > 10
+        send_paginated_time_slots(user, reply_token, course, date_str, available_slots)
+      else
+        send_single_time_slots_message(user, reply_token, course, date_str, available_slots)
+      end
+      
+    rescue Date::Error
       send_reply(reply_token, {
         type: "text",
-        text: "申し訳ございません。#{date.strftime('%m/%d')}は空きがございません。\n別の日程をお選びください。"
+        text: "日付の形式が正しくありません。もう一度お試しください。"
       })
-      return
+    rescue => e
+      Rails.logger.error "send_available_times error: #{e.message}"
+      send_reply(reply_token, {
+        type: "text",
+        text: "申し訳ございません。システムエラーが発生しました。しばらく後にお試しください。"
+      })
     end
+  end
 
+  def send_single_time_slots_message(user, reply_token, course, date_str, available_slots)
+    date = Date.parse(date_str)
+    
+    time_buttons = available_slots.map do |slot|
+      {
+        type: "button",
+        style: "secondary",
+        action: {
+          type: "postback",
+          label: "#{slot[:start_time].strftime('%H:%M')} - #{slot[:end_time].strftime('%H:%M')}",
+          data: "confirm_booking_#{course}_#{date_str}_#{slot[:start_time].strftime('%H:%M')}"
+        }
+      }
+    end
+  
     message = {
       type: "flex",
-      altText: "時間選択 - #{date.strftime('%m/%d')}",
+      altText: "利用可能時間 - #{date.strftime('%m/%d')}",
       contents: {
         type: "bubble",
         header: {
@@ -357,7 +453,7 @@ class LinebotController < ApplicationController
           contents: [
             {
               type: "text",
-              text: "⏰ 時間選択",
+              text: "🕐 利用可能時間",
               weight: "bold",
               size: "lg"
             },
@@ -372,23 +468,49 @@ class LinebotController < ApplicationController
         body: {
           type: "box",
           layout: "vertical",
-          contents: available_slots.map { |slot|
-            {
-              type: "button",
-              style: "secondary",
-              action: {
-                type: "postback",
-                label: "#{slot[:start_time].strftime('%H:%M')} - #{slot[:end_time].strftime('%H:%M')}",
-                data: "confirm_booking_#{course}_#{date_str}_#{slot[:start_time].strftime('%H:%M')}"
-              }
-            }
-          },
+          contents: time_buttons,
           spacing: "sm"
+        },
+        footer: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "ご希望の時間をお選びください",
+              size: "xs",
+              color: "#666666",
+              align: "center"
+            }
+          ]
         }
       }
     }
-
+  
     send_reply(reply_token, message)
+  end
+
+  # 時間スロットが多い場合（11個以上）はページネーション
+  def send_paginated_time_slots(user, reply_token, course, date_str, available_slots)
+    date = Date.parse(date_str)
+    
+    # 午前（10:00-12:30）、午後（13:00-17:30）、夕方（18:00-20:00）に分割
+    morning_slots = available_slots.select { |slot| slot[:start_time].hour < 13 }
+    afternoon_slots = available_slots.select { |slot| slot[:start_time].hour >= 13 && slot[:start_time].hour < 18 }
+    evening_slots = available_slots.select { |slot| slot[:start_time].hour >= 18 }
+    
+    periods = []
+    periods << { name: "🌅 午前", slots: morning_slots, emoji: "🌅" } if morning_slots.any?
+    periods << { name: "☀️ 午後", slots: afternoon_slots, emoji: "☀️" } if afternoon_slots.any?
+    periods << { name: "🌆 夕方", slots: evening_slots, emoji: "🌆" } if evening_slots.any?
+    
+    if periods.length == 1
+      # すべて同じ時間帯の場合は通常表示
+      send_single_time_slots_message(user, reply_token, course, date_str, available_slots)
+    else
+      # 時間帯選択メッセージを送信
+      send_time_period_selection(user, reply_token, course, date_str, periods)
+    end
   end
 
   # 🆕 予約を作成
@@ -483,6 +605,184 @@ class LinebotController < ApplicationController
         text: "申し訳ございません。予約処理中にエラーが発生いたしました。\nお電話でお問い合わせください: 03-1234-5678"
       })
     end
+  end
+
+  # 時間帯選択メッセージ
+  def send_time_period_selection(user, reply_token, course, date_str, periods)
+    date = Date.parse(date_str)
+    
+    period_buttons = periods.map do |period|
+      {
+        type: "button",
+        style: "primary",
+        action: {
+          type: "postback",
+          label: "#{period[:emoji]} #{period[:name]} (#{period[:slots].length}件)",
+          data: "select_time_period_#{course}_#{date_str}_#{period[:name].gsub(/[🌅☀️🌆\s]/, '')}"
+        }
+      }
+    end
+
+    message = {
+      type: "flex",
+      altText: "時間帯選択 - #{date.strftime('%m/%d')}",
+      contents: {
+        type: "bubble",
+        header: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "⏰ 時間帯選択",
+              weight: "bold",
+              size: "lg"
+            },
+            {
+              type: "text",
+              text: "#{date.strftime('%m/%d (%a)')} - #{course}",
+              size: "sm",
+              color: "#1976d2"
+            },
+            {
+              type: "text",
+              text: "利用可能: #{periods.sum { |p| p[:slots].length }}件",
+              size: "xs",
+              color: "#28a745",
+              margin: "sm"
+            }
+          ]
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "ご希望の時間帯をお選びください",
+              wrap: true,
+              margin: "md"
+            }
+          ] + period_buttons,
+          spacing: "md"
+        },
+        footer: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "button",
+              style: "secondary",
+              action: {
+                type: "postback",
+                label: "🔙 日程選択に戻る",
+                data: "book_#{course.gsub('分コース', 'min')}"
+              }
+            }
+          ]
+        }
+      }
+    }
+
+    send_reply(reply_token, message)
+  end
+
+  # 時間帯が選択された場合の処理
+  def handle_time_period_selection(user, reply_token, course, date_str, period_name)
+    date = Date.parse(date_str)
+    duration = get_duration_from_course(course)
+    available_slots = get_available_time_slots(date, duration)
+    
+    # 選択された時間帯でフィルタリング
+    filtered_slots = case period_name
+    when '午前'
+      available_slots.select { |slot| slot[:start_time].hour < 13 }
+    when '午後'
+      available_slots.select { |slot| slot[:start_time].hour >= 13 && slot[:start_time].hour < 18 }
+    when '夕方'
+      available_slots.select { |slot| slot[:start_time].hour >= 18 }
+    else
+      available_slots
+    end
+    
+    if filtered_slots.empty?
+      send_reply(reply_token, {
+        type: "text",
+        text: "申し訳ございません。選択された時間帯には空きがございません。"
+      })
+      return
+    end
+    
+    # 最大12個まで表示
+    display_slots = filtered_slots.first(12)
+    
+    time_buttons = display_slots.map do |slot|
+      {
+        type: "button",
+        style: "secondary",
+        action: {
+          type: "postback",
+          label: "#{slot[:start_time].strftime('%H:%M')} - #{slot[:end_time].strftime('%H:%M')}",
+          data: "confirm_booking_#{course}_#{date_str}_#{slot[:start_time].strftime('%H:%M')}"
+        }
+      }
+    end
+
+    period_emoji = case period_name
+    when '午前' then '🌅'
+    when '午後' then '☀️'
+    when '夕方' then '🌆'
+    else '🕐'
+    end
+
+    message = {
+      type: "flex",
+      altText: "#{period_name}の利用可能時間",
+      contents: {
+        type: "bubble",
+        header: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "#{period_emoji} #{period_name}の空き時間",
+              weight: "bold",
+              size: "lg"
+            },
+            {
+              type: "text",
+              text: "#{date.strftime('%m/%d (%a)')} - #{course}",
+              size: "sm",
+              color: "#1976d2"
+            }
+          ]
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: time_buttons,
+          spacing: "sm"
+        },
+        footer: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "button",
+              style: "secondary",
+              action: {
+                type: "postback",
+                label: "🔙 時間帯選択に戻る",
+                data: "select_date_#{course}_#{date_str}"
+              }
+            }
+          ]
+        }
+      }
+    }
+
+    send_reply(reply_token, message)
   end
 
   # 🆕 予約キャンセル処理
@@ -831,9 +1131,9 @@ class LinebotController < ApplicationController
   end
 
   def get_available_time_slots(date, duration)
-    # Public::BookingsControllerと同じロジックを使用
+    # 営業時間を統一（10:00-20:00、19:30最終受付想定）
     opening_time = Time.zone.parse("#{date} 10:00")
-    closing_time = Time.zone.parse("#{date} 21:00")
+    closing_time = Time.zone.parse("#{date} 20:00")  # 20:00に統一
     slot_interval = 30.minutes
     available_slots = []
     

@@ -33,6 +33,14 @@ Rails.application.routes.draw do
     resources :ticket_templates, except: [:show]
     resources :ticket_usages, only: [:index, :new, :create, :edit, :update]
     
+    resource :settings, only: [:index, :update] do
+      collection do
+        get :index  # GET /admin/settings
+        patch :update  # PATCH /admin/settings
+        put :update   # PUT /admin/settings
+      end
+    end
+    
     # ユーザー管理
     resources :users, only: [:index, :new, :create, :edit, :update, :show, :destroy] do
       resources :tickets, only: [:new, :create]

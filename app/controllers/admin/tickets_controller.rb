@@ -1,7 +1,6 @@
 class Admin::TicketsController < ApplicationController
   before_action :authenticate_admin_user!
   # create_from_template アクションの上に追加
-  skip_before_action :verify_authenticity_token, only: [:create_from_template]
   require 'csv'
 
   def index

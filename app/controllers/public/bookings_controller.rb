@@ -97,9 +97,12 @@ class Public::BookingsController < ApplicationController
 
   # 空き時間スロットを取得
   def get_available_time_slots(date, duration)
-    # 営業時間の設定（10:00-19:00、最終受付考慮）
+    # 営業時間の設定
     opening_time = Time.zone.parse("#{date} 10:00")
-    closing_time = Time.zone.parse("#{date} 19:00") # 最終受付を考慮
+    closing_time = Time.zone.parse("#{date} 19:00")
+    
+    # インターバル時間を取得
+    interval_minutes = Reservation.interval_minutes
     
     # 30分刻みでスロットを生成
     slot_interval = 30.minutes
@@ -109,11 +112,12 @@ class Public::BookingsController < ApplicationController
     while current_time + duration.minutes <= closing_time
       end_time = current_time + duration.minutes
       
-      # この時間帯が空いているかチェック
-      if time_slot_available?(current_time, end_time)
+      # インターバルを考慮した空きチェック
+      if time_slot_available_with_interval?(current_time, end_time)
         available_slots << {
           start_time: current_time,
-          end_time: end_time
+          end_time: end_time,
+          interval_info: interval_minutes > 0 ? "（準備時間#{interval_minutes}分含む）" : ""
         }
       end
       
@@ -121,6 +125,18 @@ class Public::BookingsController < ApplicationController
     end
     
     available_slots
+  end
+
+  def time_slot_available_with_interval?(start_time, end_time)
+    interval_minutes = Reservation.interval_minutes
+    
+    # インターバルを考慮した重複チェック
+    overlapping_reservations = Reservation.active.where(
+      '(start_time - INTERVAL ? MINUTE) < ? AND (end_time + INTERVAL ? MINUTE) > ?',
+      interval_minutes, end_time, interval_minutes, start_time
+    )
+    
+    overlapping_reservations.empty?
   end
 
   # 指定時間帯が空いているかチェック
