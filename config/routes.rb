@@ -20,6 +20,8 @@ Rails.application.routes.draw do
   namespace :admin do
     root to: "dashboard#index"
     
+    # 🆕 予約分析ページ
+    get 'dashboard/reservation_analytics', to: 'dashboard#reservation_analytics'
     # 通知ログ
     resources :notification_logs, only: [:index, :destroy]
     
@@ -66,6 +68,9 @@ Rails.application.routes.draw do
         
         # メール送信
         post :send_email               # メール送信（確認・リマインダー）
+        
+        patch :cancel_via_line    # LINE経由でのキャンセル
+        post :send_reminder       # 手動リマインダー送信
       end
     end
   end

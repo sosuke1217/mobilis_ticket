@@ -1,4 +1,5 @@
-# app/controllers/public/bookings_controller.rb
+# app/controllers/public/bookings_controller.rb の修正版
+
 class Public::BookingsController < ApplicationController
   def new
     @reservation = Reservation.new
@@ -7,9 +8,22 @@ class Public::BookingsController < ApplicationController
       { name: '60分コース', duration: 60, price: 12000 },
       { name: '80分コース', duration: 80, price: 16000 }
     ]
+    
+    # 🆕 LINEユーザーの場合は情報を事前入力
+    if params[:line_user_id].present?
+      user = User.find_by(line_user_id: params[:line_user_id])
+      if user
+        @user_info = {
+          name: user.name,
+          phone_number: user.phone_number,
+          email: user.email,
+          address: user.address
+        }
+      end
+    end
   end
 
-  # 🆕 空き時間取得用のAPIエンドポイント
+  # 空き時間取得用のAPIエンドポイント
   def available_times
     date = Date.parse(params[:date])
     duration = params[:duration].to_i
@@ -36,7 +50,7 @@ class Public::BookingsController < ApplicationController
 
     @reservation = build_reservation(@user)
     
-    # 🆕 予約時間の重複チェック
+    # 予約時間の重複チェック
     if time_conflict_exists?(@reservation)
       flash[:alert] = '選択された時間は既に予約が入っています。別の時間をお選びください。'
       @courses = load_courses
@@ -44,7 +58,7 @@ class Public::BookingsController < ApplicationController
     end
     
     if @reservation.save
-      # LINE通知を送信（既存機能）
+      # LINE通知を送信
       send_booking_notification(@reservation) if @reservation.user.line_user_id
       
       # 管理者への通知
@@ -81,14 +95,11 @@ class Public::BookingsController < ApplicationController
 
   private
 
-  # 🆕 空き時間スロットを取得
+  # 空き時間スロットを取得
   def get_available_time_slots(date, duration)
-    # 営業時間の設定（ベース：10:00-21:00）
+    # 営業時間の設定（10:00-19:00、最終受付考慮）
     opening_time = Time.zone.parse("#{date} 10:00")
-    closing_time = Time.zone.parse("#{date} 21:00")
-    
-    # 特別営業時間の設定（必要に応じて調整）
-    # 例：祝日や特別な日の営業時間変更がある場合はここで設定
+    closing_time = Time.zone.parse("#{date} 19:00") # 最終受付を考慮
     
     # 30分刻みでスロットを生成
     slot_interval = 30.minutes
@@ -112,7 +123,7 @@ class Public::BookingsController < ApplicationController
     available_slots
   end
 
-  # 🆕 指定時間帯が空いているかチェック
+  # 指定時間帯が空いているかチェック
   def time_slot_available?(start_time, end_time)
     # アクティブな予約（キャンセル以外）を検索
     overlapping_reservations = Reservation.active
@@ -121,7 +132,7 @@ class Public::BookingsController < ApplicationController
     overlapping_reservations.empty?
   end
 
-  # 🆕 予約時間の重複チェック
+  # 予約時間の重複チェック
   def time_conflict_exists?(reservation)
     return false unless reservation.start_time && reservation.end_time
     
@@ -149,7 +160,7 @@ class Public::BookingsController < ApplicationController
     reservation.course = booking_params[:course]
     reservation.note = booking_params[:notes]
     
-    # 🆕 選択された時間を解析してstart_timeとend_timeを設定
+    # 選択された時間を解析してstart_timeとend_timeを設定
     if booking_params[:selected_datetime].present?
       reservation.start_time = Time.zone.parse(booking_params[:selected_datetime])
       duration = course_duration(reservation.course)

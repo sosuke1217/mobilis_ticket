@@ -1,4 +1,5 @@
-# app/services/line_booking_notifier.rb
+# app/services/line_booking_notifier.rb の強化版
+
 class LineBookingNotifier
   def self.new_booking_request(reservation)
     client = Line::Bot::Client.new do |config|
@@ -14,7 +15,6 @@ class LineBookingNotifier
     response = client.push_message(user.line_user_id, message)
     Rails.logger.info "[LINE BOOKING] 予約リクエスト通知送信: #{response.code}"
     
-    # 通知ログを記録
     create_notification_log(user, reservation, 'booking_request')
   end
 
@@ -33,6 +33,41 @@ class LineBookingNotifier
     Rails.logger.info "[LINE BOOKING] 予約確定通知送信: #{response.code}"
     
     create_notification_log(user, reservation, 'booking_confirmed')
+  end
+
+  # 🆕 予約リマインダー送信
+  def self.send_reminder(reservation)
+    client = Line::Bot::Client.new do |config|
+      config.channel_secret = ENV['LINE_CHANNEL_SECRET']
+      config.channel_token = ENV['LINE_CHANNEL_TOKEN']
+    end
+
+    user = reservation.user
+    return unless user.line_user_id
+
+    message = build_reminder_message(reservation)
+    
+    response = client.push_message(user.line_user_id, message)
+    Rails.logger.info "[LINE BOOKING] リマインダー送信: #{response.code}"
+    
+    # リマインダー送信済みフラグを更新
+    reservation.update_column(:reminder_sent_at, Time.current)
+  end
+
+  # 🆕 キャンセル通知送信
+  def self.send_cancellation_notification(reservation)
+    client = Line::Bot::Client.new do |config|
+      config.channel_secret = ENV['LINE_CHANNEL_SECRET']
+      config.channel_token = ENV['LINE_CHANNEL_TOKEN']
+    end
+
+    user = reservation.user
+    return unless user.line_user_id
+
+    message = build_cancellation_message(reservation)
+    
+    response = client.push_message(user.line_user_id, message)
+    Rails.logger.info "[LINE BOOKING] キャンセル通知送信: #{response.code}"
   end
 
   private
@@ -110,7 +145,7 @@ class LineBookingNotifier
               style: "secondary",
               action: {
                 type: "postback",
-                label: "予約をキャンセル",
+                label: "この予約をキャンセル",
                 data: "cancel_booking_#{reservation.id}"
               }
             }
@@ -177,6 +212,181 @@ class LineBookingNotifier
               color: "#666666",
               wrap: true,
               margin: "lg"
+            }
+          ]
+        },
+        footer: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "button",
+              style: "secondary",
+              action: {
+                type: "postback",
+                label: "予約をキャンセル",
+                data: "cancel_confirmed_booking_#{reservation.id}"
+              }
+            }
+          ]
+        }
+      }
+    }
+  end
+
+  # 🆕 リマインダーメッセージ
+  def self.build_reminder_message(reservation)
+    {
+      type: "flex",
+      altText: "明日のご予約リマインダー",
+      contents: {
+        type: "bubble",
+        hero: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "🔔 予約リマインダー",
+              weight: "bold",
+              size: "xl",
+              color: "#ff9800"
+            },
+            {
+              type: "text",
+              text: "明日のご予約についてお知らせします",
+              size: "sm",
+              color: "#666666"
+            }
+          ],
+          paddingAll: "20px"
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "📅 明日のご予約",
+              weight: "bold",
+              size: "md"
+            },
+            {
+              type: "separator",
+              margin: "md"
+            },
+            {
+              type: "box",
+              layout: "vertical",
+              contents: [
+                create_info_row("日時", reservation.start_time.strftime('%m/%d(%a) %H:%M〜%H:%M')),
+                create_info_row("コース", reservation.course),
+                create_info_row("場所", truncate_address(reservation.user.address))
+              ],
+              margin: "md"
+            },
+            {
+              type: "text",
+              text: "ご予約時間の5分前にお伺いいたします。",
+              size: "sm",
+              color: "#666666",
+              wrap: true,
+              margin: "lg"
+            }
+          ]
+        },
+        footer: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "button",
+              style: "secondary",
+              action: {
+                type: "postback",
+                label: "やむを得ずキャンセル",
+                data: "urgent_cancel_#{reservation.id}"
+              }
+            }
+          ]
+        }
+      }
+    }
+  end
+
+  # 🆕 キャンセル通知メッセージ
+  def self.build_cancellation_message(reservation)
+    {
+      type: "flex",
+      altText: "予約がキャンセルされました",
+      contents: {
+        type: "bubble",
+        hero: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "❌ 予約キャンセル",
+              weight: "bold",
+              size: "xl",
+              color: "#dc3545"
+            },
+            {
+              type: "text",
+              text: "ご予約がキャンセルされました",
+              size: "sm",
+              color: "#666666"
+            }
+          ],
+          paddingAll: "20px"
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "📋 キャンセルされた予約",
+              weight: "bold",
+              size: "md"
+            },
+            {
+              type: "separator",
+              margin: "md"
+            },
+            {
+              type: "box",
+              layout: "vertical",
+              contents: [
+                create_info_row("日時", reservation.start_time.strftime('%m/%d(%a) %H:%M〜')),
+                create_info_row("コース", reservation.course),
+                create_info_row("理由", reservation.cancellation_reason || "未記載")
+              ],
+              margin: "md"
+            },
+            {
+              type: "text",
+              text: "またのご利用をお待ちしております。\n再予約をご希望の場合はメニューから「予約」をお選びください。",
+              size: "sm",
+              color: "#666666",
+              wrap: true,
+              margin: "lg"
+            }
+          ]
+        },
+        footer: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "button",
+              style: "primary",
+              action: {
+                type: "postback",
+                label: "新しい予約をする",
+                data: "booking"
+              }
             }
           ]
         }
