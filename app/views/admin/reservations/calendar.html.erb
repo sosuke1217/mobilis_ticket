@@ -212,6 +212,16 @@
   let pageCalendar = null;
   let currentUsers = [];
   
+  const systemSettings = {
+    businessHoursStart: <%= ApplicationSetting.current.business_hours_start %>,
+    businessHoursEnd: <%= ApplicationSetting.current.business_hours_end %>,
+    slotIntervalMinutes: <%= ApplicationSetting.current.slot_interval_minutes %>,
+    reservationIntervalMinutes: <%= ApplicationSetting.current.reservation_interval_minutes %>,
+    sundayClosed: <%= ApplicationSetting.current.sunday_closed? %>
+  };
+
+  console.log('📊 System settings loaded:', systemSettings);
+
   // ===== ヘルパー関数群 =====
   
   /**
@@ -223,21 +233,25 @@
     try {
       const [hours, minutes] = timeString.split(':').map(Number);
       
-      // 営業時間チェック（10:00-19:50）
-      if (hours < 10) {
-        return "10:00";
-      } else if (hours > 19 || (hours === 19 && minutes > 50)) {
-        return "19:50";
+      // 営業時間チェック
+      if (hours < systemSettings.businessHoursStart) {
+        return `${systemSettings.businessHoursStart.toString().padStart(2, '0')}:00`;
+      } else if (hours >= systemSettings.businessHoursEnd) {
+        const lastSlotHour = systemSettings.businessHoursEnd - 1;
+        const lastSlotMinute = 60 - systemSettings.slotIntervalMinutes;
+        return `${lastSlotHour.toString().padStart(2, '0')}:${lastSlotMinute.toString().padStart(2, '0')}`;
       }
-      
-      // 10分刻みに調整
-      const adjustedMinutes = Math.round(minutes / 10) * 10;
+
+      // 設定されたスロット間隔に調整
+      const adjustedMinutes = Math.round(minutes / systemSettings.slotIntervalMinutes) * systemSettings.slotIntervalMinutes;
       
       // 60分を超えた場合の処理
       if (adjustedMinutes >= 60) {
         const newHours = hours + 1;
-        if (newHours > 19) {
-          return "19:50";
+        if (newHours >= systemSettings.businessHoursEnd) {
+          const lastSlotHour = systemSettings.businessHoursEnd - 1;
+          const lastSlotMinute = 60 - systemSettings.slotIntervalMinutes;
+          return `${lastSlotHour.toString().padStart(2, '0')}:${lastSlotMinute.toString().padStart(2, '0')}`;
         }
         return `${newHours.toString().padStart(2, '0')}:00`;
       }
@@ -245,7 +259,7 @@
       return `${hours.toString().padStart(2, '0')}:${adjustedMinutes.toString().padStart(2, '0')}`;
     } catch (error) {
       console.error('Time adjustment error:', error);
-      return "10:00";
+      return `${systemSettings.businessHoursStart.toString().padStart(2, '0')}:00`;
     }
   }
   
@@ -261,11 +275,17 @@
     }
   }
   
+  function getNextAvailableTime(endTime) {
+    const end = new Date(endTime);
+    const nextAvailable = new Date(end.getTime() + (systemSettings.reservationIntervalMinutes * 60000));
+    return nextAvailable;
+  }
+
   // ===== メイン機能 =====
   
   // 初期化関数
   function initializeCalendar() {
-    console.log('📅 Calendar initialization started');
+    console.log('📅 Calendar initialization started with system settings');
     
     const calendarEl = document.getElementById('calendar');
     if (!calendarEl || typeof FullCalendar === 'undefined') {
@@ -279,6 +299,9 @@
       pageCalendar = null;
     }
     
+    // 営業日を設定（日曜休業の場合は月〜土曜のみ）
+    const businessDays = systemSettings.sundayClosed ? [1, 2, 3, 4, 5, 6] : [0, 1, 2, 3, 4, 5, 6];
+    
     pageCalendar = new FullCalendar.Calendar(calendarEl, {
       initialView: window.innerWidth < 768 ? "timeGridDay" : "timeGridWeek",
       locale: 'ja',
@@ -287,18 +310,30 @@
         center: 'title',
         right: 'timeGridWeek,timeGridDay'
       },
-      slotMinTime: "10:00:00",
-      slotMaxTime: "20:30:00",
-      slotDuration: "00:10:00",
-      scrollTime: "10:00:00",
+      
+      // システム設定から営業時間を設定
+      slotMinTime: `${systemSettings.businessHoursStart.toString().padStart(2, '0')}:00:00`,
+      slotMaxTime: `${systemSettings.businessHoursEnd.toString().padStart(2, '0')}:30:00`,
+      
+      // システム設定からスロット間隔を設定
+      slotDuration: `00:${systemSettings.slotIntervalMinutes.toString().padStart(2, '0')}:00`,
+      
+      scrollTime: `${systemSettings.businessHoursStart.toString().padStart(2, '0')}:00:00`,
       height: "auto",
+      
+      // 営業時間を視覚的に表示
+      businessHours: {
+        startTime: `${systemSettings.businessHoursStart.toString().padStart(2, '0')}:00`,
+        endTime: `${systemSettings.businessHoursEnd.toString().padStart(2, '0')}:00`,
+        daysOfWeek: businessDays
+      },
       
       // ドラッグ&ドロップを有効化
       editable: true,
       droppable: true,
       eventStartEditable: true,
       eventDurationEditable: true,
-      snapDuration: '00:10:00',
+      snapDuration: `00:${systemSettings.slotIntervalMinutes.toString().padStart(2, '0')}:00`,
       
       events: {
         url: "/admin/reservations.json",
@@ -343,8 +378,15 @@
         info.el.style.backgroundColor = backgroundColor;
         info.el.style.borderColor = borderColor;
       },
-      
+
       dateClick: function(info) {
+        // 営業日チェック
+        const clickedDate = new Date(info.date);
+        if (systemSettings.sundayClosed && clickedDate.getDay() === 0) {
+          alert('日曜日は休業日です。');
+          return;
+        }
+        
         console.log('📅 Date clicked:', info.dateStr);
         openReservationModal(null, info.dateStr);
       },
@@ -355,17 +397,70 @@
       },
       
       eventDrop: function(info) {
+        // バッファ時間チェック
+        const newStart = info.event.start;
+        const newEnd = info.event.end;
+        
+        // 営業日チェック
+        if (systemSettings.sundayClosed && newStart.getDay() === 0) {
+          alert('日曜日は休業日のため、移動できません。');
+          info.revert();
+          return;
+        }
+        
+        // 営業時間チェック
+        const startHour = newStart.getHours();
+        const endHour = newEnd.getHours();
+        
+        if (startHour < systemSettings.businessHoursStart || endHour > systemSettings.businessHoursEnd) {
+          alert(`営業時間内（${systemSettings.businessHoursStart}:00-${systemSettings.businessHoursEnd}:00）に移動してください。`);
+          info.revert();
+          return;
+        }
+        
+        console.log(`📊 Buffer time: ${systemSettings.reservationIntervalMinutes} minutes`);
         updateReservationTime(info.event, info.revert);
       },
       
       eventResize: function(info) {
+        // 営業時間チェック
+        const newEnd = info.event.end;
+        const endHour = newEnd.getHours();
+        
+        if (endHour > systemSettings.businessHoursEnd) {
+          alert(`営業時間内（${systemSettings.businessHoursStart}:00-${systemSettings.businessHoursEnd}:00）でリサイズしてください。`);
+          info.revert();
+          return;
+        }
+        
         updateReservationTime(info.event, info.revert);
       }
     });
     
     pageCalendar.render();
     window.pageCalendar = pageCalendar;
-    console.log('✅ Calendar initialized successfully');
+    console.log('✅ Calendar initialized successfully with system settings');
+  }
+  
+  // 時間オプション生成（システム設定対応）
+  function generateTimeOptions() {
+    const timeSelect = document.getElementById('reservationTime');
+    if (!timeSelect) return;
+    
+    timeSelect.innerHTML = '';
+    
+    // システム設定に基づいて時間オプションを生成
+    for (let hour = systemSettings.businessHoursStart; hour < systemSettings.businessHoursEnd; hour++) {
+      for (let minute = 0; minute < 60; minute += systemSettings.slotIntervalMinutes) {
+        const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        const option = document.createElement('option');
+        option.value = timeStr;
+        option.textContent = timeStr;
+        timeSelect.appendChild(option);
+      }
+    }
+    
+    console.log(`✅ Generated time options with ${systemSettings.slotIntervalMinutes}-minute intervals`);
   }
   
   // ユーザー一覧を取得
@@ -402,45 +497,59 @@
     });
   }
   
-  // 予約時間を更新する関数
+  // 予約更新（バッファ時間対応）
   function updateReservationTime(event, revertFunc) {
-    const reservationId = event.id;
-    const newStartTime = event.start.toISOString();
-    const newEndTime = event.end ? event.end.toISOString() : null;
+    const startTime = event.start.toISOString();
+    const endTime = event.end.toISOString();
     
-    if (!confirm(`予約「${event.title}」の時間を変更しますか？`)) {
-      revertFunc();
-      return;
-    }
+    console.log(`🔄 Updating reservation ${event.id} with buffer time: ${systemSettings.reservationIntervalMinutes} minutes`);
     
-    fetch(`/admin/reservations/${reservationId}`, {
+    fetch(`/admin/reservations/${event.id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || '',
-        'Accept': 'application/json'
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
       },
       body: JSON.stringify({
         reservation: {
-          start_time: newStartTime,
-          end_time: newEndTime
+          start_time: startTime,
+          end_time: endTime
         }
       })
     })
     .then(response => response.json())
     .then(data => {
-      if (data.success !== false) {
-        showMessage(`予約「${event.title}」の時間を変更しました`, 'success');
+      if (data.success) {
+        console.log('✅ Reservation updated successfully');
+        if (systemSettings.reservationIntervalMinutes > 0) {
+          showFlashMessage('success', `予約を更新しました（${systemSettings.reservationIntervalMinutes}分のバッファ時間が適用されます）`);
+        } else {
+          showFlashMessage('success', '予約を更新しました');
+        }
       } else {
+        console.error('❌ Update failed:', data.error);
+        showFlashMessage('danger', data.error || '更新に失敗しました');
         revertFunc();
-        showMessage(data.errors ? data.errors.join(', ') : '時間の変更に失敗しました', 'danger');
       }
     })
     .catch(error => {
-      console.error('Update failed:', error);
+      console.error('❌ Update error:', error);
+      showFlashMessage('danger', '更新中にエラーが発生しました');
       revertFunc();
-      showMessage(`時間の変更に失敗しました: ${error.message}`, 'danger');
     });
+  }
+
+  // フラッシュメッセージ表示
+  function showFlashMessage(type, message) {
+    const flashContainer = document.getElementById('flash');
+    if (flashContainer) {
+      flashContainer.innerHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+          ${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      `;
+    }
   }
   
   // モーダルを開く関数
@@ -524,16 +633,17 @@
       
       // 営業時間内の時間に調整
       let timeValue;
-      if (hours >= 10 && hours < 19) {
+      if (hours >= systemSettings.businessHoursStart && hours < systemSettings.businessHoursEnd) {
         timeValue = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-      } else if (hours === 19 && minutes <= 50) {
-        timeValue = `19:${minutes.toString().padStart(2, '0')}`;
+      } else if (hours === (systemSettings.businessHoursEnd - 1) && minutes <= (60 - systemSettings.slotIntervalMinutes)) {
+        timeValue = `${(systemSettings.businessHoursEnd - 1).toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
       } else {
         // 営業時間外の場合は最も近い営業時間内の時間に設定
-        if (hours < 10) {
-          timeValue = '10:00';
+        if (hours < systemSettings.businessHoursStart) {
+          timeValue = `${systemSettings.businessHoursStart.toString().padStart(2, '0')}:00`;
         } else {
-          timeValue = '19:50';
+          const lastSlotMinute = 60 - systemSettings.slotIntervalMinutes;
+          timeValue = `${(systemSettings.businessHoursEnd - 1).toString().padStart(2, '0')}:${lastSlotMinute.toString().padStart(2, '0')}`;
         }
       }
       
@@ -610,15 +720,20 @@
       const hours = date.getHours();
       const minutes = Math.round(date.getMinutes() / 10) * 10;
       
-      // 営業時間内かチェック（10:00-19:50）
+      // 営業時間内かチェック
       let timeValue;
-      if (hours >= 10 && hours < 19) {
-        timeValue = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-      } else if (hours === 19 && minutes <= 50) {
-        timeValue = `19:${minutes.toString().padStart(2, '0')}`;
+      const lastHour = systemSettings.businessHoursEnd - 1;
+      const lastMinute = 60 - systemSettings.slotIntervalMinutes;
+
+      if (hours >= systemSettings.businessHoursStart && hours < systemSettings.businessHoursEnd) {
+        const adjustedMinutes = Math.round(minutes / systemSettings.slotIntervalMinutes) * systemSettings.slotIntervalMinutes;
+        timeValue = `${hours.toString().padStart(2, '0')}:${adjustedMinutes.toString().padStart(2, '0')}`;
+      } else if (hours === lastHour && minutes <= lastMinute) {
+        const adjustedMinutes = Math.round(minutes / systemSettings.slotIntervalMinutes) * systemSettings.slotIntervalMinutes;
+        timeValue = `${lastHour.toString().padStart(2, '0')}:${adjustedMinutes.toString().padStart(2, '0')}`;
       } else {
-        // 営業時間外の場合はデフォルトで10:00を設定
-        timeValue = '10:00';
+        // 営業時間外の場合はデフォルトで営業開始時間を設定
+        timeValue = `${systemSettings.businessHoursStart.toString().padStart(2, '0')}:00`;
       }
       
       document.getElementById('reservationTime').value = timeValue;
@@ -764,8 +879,8 @@
     // 時間が営業時間内かチェック
     if (time) {
       const [hours, minutes] = time.split(':').map(Number);
-      if (hours < 10 || (hours === 20 && minutes > 0) || hours > 20) {
-        errors.push('営業時間内（10:00-20:00）の時間を選択してください');
+      if (hours < systemSettings.businessHoursStart || hours >= systemSettings.businessHoursEnd) {
+        errors.push(`営業時間内（${systemSettings.businessHoursStart}:00-${systemSettings.businessHoursEnd}:00）の時間を選択してください`);
       }
     }
     
@@ -857,16 +972,13 @@
       timeSelect.appendChild(defaultOption);
     }
     
-    // 10:00から19:50まで10分刻みで生成（20:00開始は60分コースだと21:00終了になるため除外）
-    for (let hour = 10; hour < 20; hour++) {
-      for (let minute = 0; minute < 60; minute += 10) {
-        // 19:50以降は除外（最長80分コースを考慮）
-        if (hour === 19 && minute > 50) break;
-        
-        const timeValue = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+    // システム設定に基づいて時間オプションを生成
+    for (let hour = systemSettings.businessHoursStart; hour < systemSettings.businessHoursEnd; hour++) {
+      for (let minute = 0; minute < 60; minute += systemSettings.slotIntervalMinutes) {
+        const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
         const option = document.createElement('option');
-        option.value = timeValue;
-        option.textContent = timeValue;
+        option.value = timeStr;
+        option.textContent = timeStr;
         timeSelect.appendChild(option);
       }
     }
@@ -1123,26 +1235,19 @@
   
   // 初期化
   function initialize() {
-    console.log('🚀 Initializing calendar application');
-    
-    // 関数の存在確認
-    console.log('📋 Function checks:', {
-      generateTimeOptions: typeof generateTimeOptions,
-      updateEndTimeDisplay: typeof updateEndTimeDisplay,
-      getDurationFromCourse: typeof getDurationFromCourse,
-      adjustTimeToTenMinutes: typeof adjustTimeToTenMinutes,
-      openReservationModal: typeof openReservationModal
-    });
+    console.log('🚀 Initializing calendar application with system settings');
+    console.log('📊 Current settings:', systemSettings);
     
     initializeCalendar();
     loadUsers();
-    generateTimeOptions(); // 時間オプションを生成
+    generateTimeOptions(); // システム設定に基づく時間オプション生成
     setupEventListeners();
   }
   
   // グローバル関数として公開
   window.openReservationModal = openReservationModal;
   window.refreshCalendar = refreshCalendar;
+  window.systemSettings = systemSettings; // デバッグ用
   
   // イベントリスナー
   if (document.readyState === 'loading') {

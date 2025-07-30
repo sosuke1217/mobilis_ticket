@@ -8,19 +8,41 @@ class Admin::ReservationsController < ApplicationController
   end
   
   def index
-    begin
-      @reservations = Reservation.includes(:user, :ticket).order(start_time: :asc)
-    
-      respond_to do |format|
-        format.html
-        format.json do
-          reservations_data = @reservations.map { |r| reservation_to_json(r) }
-          render json: reservations_data
-        end
+    respond_to do |format|
+      format.html { redirect_to admin_reservations_calendar_path }
+      format.json do
+        # システム設定を取得
+        @settings = ApplicationSetting.current
+        
+        reservations = Reservation.includes(:user)
+          .where(start_time: params[:start]..params[:end])
+          .order(:start_time)
+
+        # カレンダー用データに設定情報を追加
+        render json: reservations.map { |reservation|
+          {
+            id: reservation.id,
+            title: "#{reservation.name} - #{reservation.course}",
+            start: reservation.start_time.iso8601,
+            end: reservation.end_time.iso8601,
+            backgroundColor: color_for_status(reservation.status),
+            borderColor: color_for_status(reservation.status),
+            textColor: '#fff',
+            extendedProps: {
+              name: reservation.name,
+              course: reservation.course,
+              status: reservation.status,
+              user_id: reservation.user_id,
+              note: reservation.note,
+              # システム設定情報をJavaScriptに渡す
+              buffer_minutes: @settings.reservation_interval_minutes,
+              business_hours_start: @settings.business_hours_start,
+              business_hours_end: @settings.business_hours_end,
+              slot_interval: @settings.slot_interval_minutes
+            }
+          }
+        }
       end
-      
-    rescue => e
-      handle_calendar_error(e)
     end
   end
 

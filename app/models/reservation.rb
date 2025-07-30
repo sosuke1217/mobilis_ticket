@@ -17,7 +17,7 @@ class Reservation < ApplicationRecord
   }, prefix: true
   
   validates :start_time, :end_time, :course, presence: true
-  validate :no_time_overlap_with_buffer, unless: :cancelled?
+  validate :no_time_overlap, unless: :cancelled?
   validate :start_and_end_must_be_on_10_minute_interval, unless: :skip_time_validation
   validate :end_time_after_start_time
   validate :cancellation_reason_presence, if: :cancelled?
@@ -209,24 +209,43 @@ class Reservation < ApplicationRecord
 
   private
 
-  def no_time_overlap_with_buffer
+  def no_time_overlap
     return if start_time.blank? || end_time.blank?
   
-    buffer_minutes = 15 # 15分のバッファ
+    # システム設定からバッファ時間を取得
+    begin
+      settings = ApplicationSetting.current
+      buffer_minutes = settings.reservation_interval_minutes
+    rescue => e
+      Rails.logger.warn "ApplicationSetting not available, using default buffer: #{e.message}"
+      buffer_minutes = 15 # デフォルト値
+    end
   
     Reservation.transaction do
-      # SQLite対応版 - Rubyの日時演算を使用
-      buffer_start = start_time - buffer_minutes.minutes
-      buffer_end = end_time + buffer_minutes.minutes
-      
-      overlapping = Reservation.active
-        .where.not(id: id)
-        .where('start_time < ? AND end_time > ?', buffer_end, buffer_start)
-        .lock
+      if buffer_minutes > 0
+        # バッファ時間を考慮した重複チェック
+        buffer_start = start_time - buffer_minutes.minutes
+        buffer_end = end_time + buffer_minutes.minutes
+        
+        overlapping = Reservation.active
+          .where.not(id: id)
+          .where('start_time < ? AND end_time > ?', buffer_end, buffer_start)
+          .lock
+      else
+        # バッファ時間なしの重複チェック
+        overlapping = Reservation.active
+          .where.not(id: id)
+          .where('start_time < ? AND end_time > ?', end_time, start_time)
+          .lock
+      end
   
       if overlapping.exists?
         overlapping_reservation = overlapping.first
-        errors.add(:base, "#{overlapping_reservation.start_time.strftime('%H:%M')}〜#{overlapping_reservation.end_time.strftime('%H:%M')}に既に予約が入っています。（#{buffer_minutes}分のバッファを含む）")
+        if buffer_minutes > 0
+          errors.add(:base, "#{overlapping_reservation.start_time.strftime('%H:%M')}〜#{overlapping_reservation.end_time.strftime('%H:%M')}の予約があります。（#{buffer_minutes}分のインターバルが必要）")
+        else
+          errors.add(:base, "#{overlapping_reservation.start_time.strftime('%H:%M')}〜#{overlapping_reservation.end_time.strftime('%H:%M')}に既に予約が入っています。")
+        end
       end
     end
   end
@@ -258,14 +277,16 @@ class Reservation < ApplicationRecord
   def booking_within_business_hours
     return unless start_time && end_time
     
-    business_start = ENV.fetch('BUSINESS_HOURS_START', '10:00')
-    business_end = ENV.fetch('BUSINESS_HOURS_END', '20:00')
+    # システム設定から営業時間を取得
+    settings = ApplicationSetting.current
+    business_start = settings.business_hours_start
+    business_end = settings.business_hours_end
     
-    start_hour_min = start_time.strftime('%H:%M')
-    end_hour_min = end_time.strftime('%H:%M')
+    start_hour = start_time.hour
+    end_hour = end_time.hour
     
-    if start_hour_min < business_start || end_hour_min > business_end
-      errors.add(:start_time, "営業時間内（#{business_start}-#{business_end}）でご予約ください")
+    if start_hour < business_start || end_hour > business_end
+      errors.add(:start_time, "営業時間内（#{business_start}:00-#{business_end}:00）でご予約ください")
     end
   end
 
@@ -273,7 +294,10 @@ class Reservation < ApplicationRecord
   def booking_not_too_far_in_advance
     return unless start_time
     
-    max_days = ENV.fetch('MAX_ADVANCE_BOOKING_DAYS', 30).to_i
+    # システム設定から最大予約期間を取得
+    settings = ApplicationSetting.current
+    max_days = settings.max_advance_booking_days
+    
     if start_time > max_days.days.from_now
       errors.add(:start_time, "#{max_days}日以内でご予約ください")
     end
@@ -284,10 +308,56 @@ class Reservation < ApplicationRecord
     return unless start_time
     return if persisted? # 既存予約の更新時はスキップ
     
-    min_hours = ENV.fetch('MIN_ADVANCE_BOOKING_HOURS', 24).to_i
+    # システム設定から最低予約時間を取得
+    settings = ApplicationSetting.current
+    min_hours = settings.min_advance_booking_hours
+    
     if start_time < min_hours.hours.from_now
       errors.add(:start_time, "#{min_hours}時間前までにご予約ください")
     end
+  end
+
+  def self.available_slots_for(date, duration_minutes = 60)
+    settings = ApplicationSetting.current
+    
+    # システム設定が日曜休業で、指定日が日曜日の場合は空配列を返す
+    return [] if settings.sunday_closed? && date.sunday?
+    
+    business_start = "#{settings.business_hours_start}:00"
+    business_end = "#{settings.business_hours_end}:00"
+    slot_interval = settings.slot_interval_minutes
+    buffer_minutes = settings.reservation_interval_minutes
+    
+    opening_time = Time.zone.parse("#{date} #{business_start}")
+    closing_time = Time.zone.parse("#{date} #{business_end}")
+    
+    slots = []
+    current_time = opening_time
+    
+    while current_time + duration_minutes.minutes <= closing_time
+      end_time = current_time + duration_minutes.minutes
+      
+      # バッファ時間を考慮した重複チェック
+      if buffer_minutes > 0
+        buffer_start = current_time - buffer_minutes.minutes
+        buffer_end = end_time + buffer_minutes.minutes
+        overlapping_check = active.where('start_time < ? AND end_time > ?', buffer_end, buffer_start)
+      else
+        overlapping_check = active.where('start_time < ? AND end_time > ?', end_time, current_time)
+      end
+      
+      unless overlapping_check.exists?
+        slots << {
+          start_time: current_time,
+          end_time: end_time,
+          available: true
+        }
+      end
+      
+      current_time += slot_interval.minutes
+    end
+    
+    slots
   end
 
   def set_name_from_user
