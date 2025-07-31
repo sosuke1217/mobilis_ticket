@@ -7,7 +7,7 @@ class Admin::ReservationsController < ApplicationController
 
   def calendar
   end
-  
+
   # app/controllers/admin/reservations_controller.rb の index アクション修正版
   def index
     respond_to do |format|
@@ -15,18 +15,16 @@ class Admin::ReservationsController < ApplicationController
       format.json do
         begin
           Rails.logger.info "🔍 Starting calendar data fetch"
-          
-          # Debug: Check if ApplicationSetting table exists and has data
+
           begin
             settings_count = ApplicationSetting.count
             Rails.logger.info "📊 ApplicationSetting count: #{settings_count}"
-            
+
             @settings = ApplicationSetting.current
             Rails.logger.info "✅ ApplicationSetting loaded: interval=#{@settings.reservation_interval_minutes}min"
           rescue => e
             Rails.logger.error "❌ ApplicationSetting error: #{e.message}"
             Rails.logger.error e.backtrace.join("\n")
-            # Create a fallback settings object
             @settings = OpenStruct.new(
               reservation_interval_minutes: 15,
               business_hours_start: 10,
@@ -34,33 +32,29 @@ class Admin::ReservationsController < ApplicationController
             )
             Rails.logger.info "🔧 Using fallback settings"
           end
-          
-          # Debug: Check reservations query
+
           Rails.logger.info "🔍 Querying reservations from #{params[:start]} to #{params[:end]}"
-          
+
           reservations = Reservation.includes(:user)
             .where(start_time: params[:start]..params[:end])
             .order(:start_time)
-          
+
           Rails.logger.info "📋 Found #{reservations.count} reservations"
-          
-          # Debug: Process each reservation
+
           events = []
-          
+
           reservations.each_with_index do |reservation, index|
             Rails.logger.info "🔍 Processing reservation #{index + 1}/#{reservations.count}: ID=#{reservation.id}"
-            
+
             begin
-              # Try to get calendar JSON for this reservation
               calendar_json = reservation.as_calendar_json
               events << calendar_json
               Rails.logger.info "✅ Successfully processed reservation #{reservation.id}"
-              
-              # Try to get interval data
+
               begin
                 interval_minutes = reservation.effective_interval_minutes
                 Rails.logger.info "📏 Reservation #{reservation.id} interval: #{interval_minutes}min"
-                
+
                 if interval_minutes && interval_minutes > 0
                   interval_end_after = reservation.end_time + interval_minutes.minutes
                   if interval_end_after <= Time.zone.parse(params[:end])
@@ -73,7 +67,8 @@ class Admin::ReservationsController < ApplicationController
                       borderColor: reservation.has_individual_interval? ? '#fdcb6e' : '#ced4da',
                       textColor: '#6c757d',
                       className: reservation.has_individual_interval? ? 'interval-event individual-interval' : 'interval-event system-interval',
-                      display: 'background',
+                      editable: true,
+                      durationEditable: true,
                       extendedProps: {
                         type: 'interval',
                         reservation_id: reservation.id,
@@ -90,29 +85,43 @@ class Admin::ReservationsController < ApplicationController
                 Rails.logger.error "❌ Interval processing error for reservation #{reservation.id}: #{interval_error.message}"
                 Rails.logger.error interval_error.backtrace.join("\n")
               end
-              
+
             rescue => reservation_error
               Rails.logger.error "❌ Error processing reservation #{reservation.id}: #{reservation_error.message}"
               Rails.logger.error reservation_error.backtrace.join("\n")
-              # Continue with next reservation instead of failing completely
             end
           end
-          
+
           Rails.logger.info "✅ Successfully processed #{events.count} events"
           render json: events
-          
+
         rescue => e
           Rails.logger.error "❌ Calendar data fetch error: #{e.message}"
           Rails.logger.error e.backtrace.join("\n")
-          
-          render json: { 
-            success: false, 
+
+          render json: {
+            success: false,
             error: "カレンダーデータの取得に失敗しました: #{e.message}",
             details: e.backtrace.first(5)
           }, status: :internal_server_error
         end
       end
     end
+  end
+
+  def update_interval
+    reservation = Reservation.find(params[:id])
+    new_minutes = params[:interval_minutes].to_i
+
+    if new_minutes > 0
+      reservation.update(individual_interval_minutes: new_minutes)
+      render json: { success: true, interval: new_minutes }
+    else
+      render json: { success: false, error: "無効な時間です" }, status: :unprocessable_entity
+    end
+  rescue => e
+    Rails.logger.error "❌ Interval update error: #{e.message}"
+    render json: { success: false, error: e.message }, status: :internal_server_error
   end
 
   def show

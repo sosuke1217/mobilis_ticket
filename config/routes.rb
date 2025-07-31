@@ -83,6 +83,7 @@ Rails.application.routes.draw do
         # 🆕 個別インターバル調整機能を追加
         patch :update_individual_interval    # 個別インターバル時間を更新
         patch :reset_individual_interval     # 個別インターバル設定をリセット
+        patch :update_interval
       end
     end
   end

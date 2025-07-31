@@ -141,7 +141,7 @@ class Reservation < ApplicationRecord
     else '#007bff'                   # 青（デフォルト）
     end
   end
-  
+
   def text_color_for_status(status)
     case status.to_s
     when 'tentative'
@@ -315,6 +315,32 @@ class Reservation < ApplicationRecord
     end
   end
 
+  def as_calendar_json
+    {
+      id: id,
+      title: "#{name} - #{course}",
+      start: start_time.iso8601,
+      end: end_time.iso8601,
+      backgroundColor: status_color,
+      borderColor: status_color,
+      textColor: text_color_for_status(status),
+      className: 'reservation-event',
+      extendedProps: {
+        type: 'reservation',
+        name: name,
+        course: course,
+        status: status,
+        user_id: user_id,
+        note: note,
+        individual_interval_minutes: individual_interval_minutes,
+        effective_interval_minutes: effective_interval_minutes,
+        has_individual_interval: has_individual_interval?,
+        interval_description: interval_description,
+        interval_setting_type: interval_setting_type
+      }
+    }
+  end
+
   private
 
   def no_time_overlap
@@ -331,7 +357,6 @@ class Reservation < ApplicationRecord
         # 他の予約との重複チェック
         overlapping = Reservation.active
           .where.not(id: id)
-          .includes(:application_setting) # N+1対策
           .select do |other|
             other_interval = other.effective_interval_minutes
             other_buffer_end = other.end_time + other_interval.minutes
@@ -566,32 +591,6 @@ class Reservation < ApplicationRecord
 
   def log_reservation_updated
     Rails.logger.info "📝 予約ステータス変更: ID=#{id}, #{name}様, #{status}"
-  end
-
-  def as_calendar_json
-    {
-      id: id,
-      title: "#{name} - #{course}",
-      start: start_time.iso8601,
-      end: end_time.iso8601,
-      backgroundColor: status_color,
-      borderColor: status_color,
-      textColor: text_color_for_status(status),
-      className: 'reservation-event',
-      extendedProps: {
-        type: 'reservation',
-        name: name,
-        course: course,
-        status: status,
-        user_id: user_id,
-        note: note,
-        individual_interval_minutes: individual_interval_minutes,
-        effective_interval_minutes: effective_interval_minutes,
-        has_individual_interval: has_individual_interval?,
-        interval_description: interval_description,
-        interval_setting_type: interval_setting_type
-      }
-    }
   end
 
   # スコープも個別インターバル対応
