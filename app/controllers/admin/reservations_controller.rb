@@ -14,55 +14,101 @@ class Admin::ReservationsController < ApplicationController
       format.html { redirect_to admin_reservations_calendar_path }
       format.json do
         begin
-          @settings = ApplicationSetting.current || ApplicationSetting.create_default!
+          Rails.logger.info "🔍 Starting calendar data fetch"
+          
+          # Debug: Check if ApplicationSetting table exists and has data
+          begin
+            settings_count = ApplicationSetting.count
+            Rails.logger.info "📊 ApplicationSetting count: #{settings_count}"
+            
+            @settings = ApplicationSetting.current
+            Rails.logger.info "✅ ApplicationSetting loaded: interval=#{@settings.reservation_interval_minutes}min"
+          rescue => e
+            Rails.logger.error "❌ ApplicationSetting error: #{e.message}"
+            Rails.logger.error e.backtrace.join("\n")
+            # Create a fallback settings object
+            @settings = OpenStruct.new(
+              reservation_interval_minutes: 15,
+              business_hours_start: 10,
+              business_hours_end: 20
+            )
+            Rails.logger.info "🔧 Using fallback settings"
+          end
+          
+          # Debug: Check reservations query
+          Rails.logger.info "🔍 Querying reservations from #{params[:start]} to #{params[:end]}"
           
           reservations = Reservation.includes(:user)
             .where(start_time: params[:start]..params[:end])
             .order(:start_time)
-  
-          # カレンダー用データを作成（個別インターバル対応）
+          
+          Rails.logger.info "📋 Found #{reservations.count} reservations"
+          
+          # Debug: Process each reservation
           events = []
           
-          reservations.each do |reservation|
-            # 予約イベントを追加
-            events << reservation.as_calendar_json
+          reservations.each_with_index do |reservation, index|
+            Rails.logger.info "🔍 Processing reservation #{index + 1}/#{reservations.count}: ID=#{reservation.id}"
             
-            # 個別インターバル時間を取得
-            interval_minutes = reservation.effective_interval_minutes
-            
-            # インターバルが設定されている場合、インターバルイベントも追加
-            if interval_minutes > 0
-              interval_end_after = reservation.end_time + interval_minutes.minutes
-              if interval_end_after <= Time.zone.parse(params[:end])
-                events << {
-                  id: "interval-after-#{reservation.id}",
-                  title: "整理時間 (#{interval_minutes}分#{reservation.has_individual_interval? ? ' - 個別設定' : ''})",
-                  start: reservation.end_time.iso8601,
-                  end: interval_end_after.iso8601,
-                  backgroundColor: reservation.has_individual_interval? ? '#ffeaa7' : '#e9ecef',
-                  borderColor: reservation.has_individual_interval? ? '#fdcb6e' : '#ced4da',
-                  textColor: '#6c757d',
-                  className: reservation.has_individual_interval? ? 'interval-event individual-interval' : 'interval-event system-interval',
-                  display: 'background',
-                  extendedProps: {
-                    type: 'interval',
-                    reservation_id: reservation.id,
-                    interval_type: 'after',
-                    interval_minutes: interval_minutes,
-                    is_individual: reservation.has_individual_interval?,
-                    interval_description: reservation.interval_description
-                  }
-                }
+            begin
+              # Try to get calendar JSON for this reservation
+              calendar_json = reservation.as_calendar_json
+              events << calendar_json
+              Rails.logger.info "✅ Successfully processed reservation #{reservation.id}"
+              
+              # Try to get interval data
+              begin
+                interval_minutes = reservation.effective_interval_minutes
+                Rails.logger.info "📏 Reservation #{reservation.id} interval: #{interval_minutes}min"
+                
+                if interval_minutes && interval_minutes > 0
+                  interval_end_after = reservation.end_time + interval_minutes.minutes
+                  if interval_end_after <= Time.zone.parse(params[:end])
+                    events << {
+                      id: "interval-after-#{reservation.id}",
+                      title: "整理時間 (#{interval_minutes}分#{reservation.has_individual_interval? ? ' - 個別設定' : ''})",
+                      start: reservation.end_time.iso8601,
+                      end: interval_end_after.iso8601,
+                      backgroundColor: reservation.has_individual_interval? ? '#ffeaa7' : '#e9ecef',
+                      borderColor: reservation.has_individual_interval? ? '#fdcb6e' : '#ced4da',
+                      textColor: '#6c757d',
+                      className: reservation.has_individual_interval? ? 'interval-event individual-interval' : 'interval-event system-interval',
+                      display: 'background',
+                      extendedProps: {
+                        type: 'interval',
+                        reservation_id: reservation.id,
+                        interval_type: 'after',
+                        interval_minutes: interval_minutes,
+                        is_individual: reservation.has_individual_interval?,
+                        interval_description: reservation.interval_description
+                      }
+                    }
+                    Rails.logger.info "✅ Added interval event for reservation #{reservation.id}"
+                  end
+                end
+              rescue => interval_error
+                Rails.logger.error "❌ Interval processing error for reservation #{reservation.id}: #{interval_error.message}"
+                Rails.logger.error interval_error.backtrace.join("\n")
               end
+              
+            rescue => reservation_error
+              Rails.logger.error "❌ Error processing reservation #{reservation.id}: #{reservation_error.message}"
+              Rails.logger.error reservation_error.backtrace.join("\n")
+              # Continue with next reservation instead of failing completely
             end
           end
           
+          Rails.logger.info "✅ Successfully processed #{events.count} events"
           render json: events
+          
         rescue => e
           Rails.logger.error "❌ Calendar data fetch error: #{e.message}"
+          Rails.logger.error e.backtrace.join("\n")
+          
           render json: { 
             success: false, 
-            error: "カレンダーデータの取得に失敗しました" 
+            error: "カレンダーデータの取得に失敗しました: #{e.message}",
+            details: e.backtrace.first(5)
           }, status: :internal_server_error
         end
       end
@@ -447,23 +493,6 @@ class Admin::ReservationsController < ApplicationController
       '#fd7e14'  # オレンジ（無断欠席）
     else
       '#007bff'  # 青色（デフォルト）
-    end
-  end
-
-  def text_color_for_status(status)
-    case status.to_s
-    when 'tentative'
-      '#000000'  # 黄色背景には黒文字
-    when 'cancelled'
-      '#FFFFFF'  # 赤背景には白文字
-    when 'confirmed'
-      '#FFFFFF'  # 緑背景には白文字
-    when 'completed'
-      '#FFFFFF'  # グレー背景には白文字
-    when 'no_show'
-      '#FFFFFF'  # オレンジ背景には白文字
-    else
-      '#FFFFFF'  # デフォルトは白文字
     end
   end
 

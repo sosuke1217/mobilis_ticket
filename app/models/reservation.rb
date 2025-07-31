@@ -141,6 +141,23 @@ class Reservation < ApplicationRecord
     else '#007bff'                   # 青（デフォルト）
     end
   end
+  
+  def text_color_for_status(status)
+    case status.to_s
+    when 'tentative'
+      '#000000'  # 黄色背景には黒文字
+    when 'cancelled'
+      '#FFFFFF'  # 赤背景には白文字
+    when 'confirmed'
+      '#FFFFFF'  # 緑背景には白文字
+    when 'completed'
+      '#FFFFFF'  # グレー背景には白文字
+    when 'no_show'
+      '#FFFFFF'  # オレンジ背景には白文字
+    else
+      '#FFFFFF'  # デフォルトは白文字
+    end
+  end
 
   # キャンセル処理
   def cancel!(reason)
