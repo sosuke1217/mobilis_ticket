@@ -79,6 +79,10 @@ Rails.application.routes.draw do
         
         patch :cancel_via_line    # LINE経由でのキャンセル
         post :send_reminder       # 手動リマインダー送信
+
+        # 🆕 個別インターバル調整機能を追加
+        patch :update_individual_interval    # 個別インターバル時間を更新
+        patch :reset_individual_interval     # 個別インターバル設定をリセット
       end
     end
   end

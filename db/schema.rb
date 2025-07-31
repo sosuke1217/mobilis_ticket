@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_07_29_145903) do
+ActiveRecord::Schema[7.2].define(version: 2025_07_31_053016) do
   create_table "admin_users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -78,6 +78,8 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_29_145903) do
     t.integer "parent_reservation_id"
     t.datetime "confirmation_sent_at"
     t.datetime "reminder_sent_at"
+    t.integer "individual_interval_minutes"
+    t.index ["individual_interval_minutes"], name: "index_reservations_on_individual_interval_minutes"
     t.index ["parent_reservation_id"], name: "index_reservations_on_parent_reservation_id"
     t.index ["start_time"], name: "index_reservations_on_start_time"
     t.index ["status", "start_time"], name: "index_reservations_on_status_and_start_time"

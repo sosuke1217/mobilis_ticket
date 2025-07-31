@@ -24,7 +24,13 @@ class Reservation < ApplicationRecord
   validate :booking_within_business_hours, unless: :skip_business_hours_validation
   validate :booking_not_too_far_in_advance, unless: :skip_advance_booking_validation
   validate :booking_minimum_advance_notice, unless: :skip_advance_notice_validation
-  
+  validates :individual_interval_minutes, 
+            numericality: { 
+              greater_than_or_equal_to: 0, 
+              less_than_or_equal_to: 120,
+              allow_nil: true,
+              message: "0分から120分の間で設定してください" 
+            }
   # 管理者用のバリデーションスキップフラグ
   attr_accessor :skip_time_validation, :skip_business_hours_validation, 
                 :skip_advance_booking_validation, :skip_advance_notice_validation
@@ -164,16 +170,11 @@ class Reservation < ApplicationRecord
     end_time + self.class.interval_minutes.minutes
   end
 
-  # インターバルを含む実際の開始時間
-  def start_time_with_interval
-    start_time - self.class.interval_minutes.minutes
-  end
-
   scope :overlapping_with_interval, ->(start_time, end_time) {
     interval_min = interval_minutes
     where(
-      '(start_time - INTERVAL ? MINUTE) < ? AND (end_time + INTERVAL ? MINUTE) > ?',
-      interval_min, end_time, interval_min, start_time
+      'start_time < ? AND (end_time + INTERVAL ? MINUTE) > ?',
+      end_time + interval_min.minutes, start_time
     )
   }
 
@@ -207,43 +208,140 @@ class Reservation < ApplicationRecord
     slots
   end
 
+  # この予約で使用するインターバル時間を取得
+  def effective_interval_minutes
+    individual_interval_minutes || ApplicationSetting.current.reservation_interval_minutes
+  end
+
+  # 個別設定があるかどうか
+  def has_individual_interval?
+    individual_interval_minutes.present?
+  end
+
+  # システムデフォルトを使用しているかどうか
+  def uses_system_default_interval?
+    individual_interval_minutes.nil?
+  end
+
+  # インターバル時間の説明文
+  def interval_description
+    if has_individual_interval?
+      "個別設定: #{individual_interval_minutes}分"
+    else
+      default_minutes = ApplicationSetting.current.reservation_interval_minutes
+      "システム設定: #{default_minutes}分"
+    end
+  end
+
+  # インターバル設定の種類
+  def interval_setting_type
+    has_individual_interval? ? 'individual' : 'system'
+  end
+
+  # インターバルを含む実際の終了時間（個別設定対応）
+  def end_time_with_individual_interval
+    end_time + effective_interval_minutes.minutes
+  end
+
+  # インターバル時間を個別に設定
+  def set_individual_interval!(minutes)
+    if minutes.nil? || minutes == ApplicationSetting.current.reservation_interval_minutes
+      # システムデフォルトと同じ場合、または nil の場合は個別設定を削除
+      update!(individual_interval_minutes: nil)
+    else
+      update!(individual_interval_minutes: minutes)
+    end
+  end
+
+  # インターバル設定をリセット（システムデフォルトに戻す）
+  def reset_to_system_interval!
+    update!(individual_interval_minutes: nil)
+  end
+
+  # インターバル設定の色クラス（UI用）
+  def interval_color_class
+    if has_individual_interval?
+      case individual_interval_minutes
+      when 0
+        "text-secondary"
+      when 1..10
+        "text-info"
+      when 11..20
+        "text-success"
+      when 21..30
+        "text-warning"
+      else
+        "text-danger"
+      end
+    else
+      "text-primary" # システム設定
+    end
+  end
+
+  # インターバル設定のバッジクラス
+  def interval_badge_class
+    if has_individual_interval?
+      case individual_interval_minutes
+      when 0
+        "bg-secondary"
+      when 1..10
+        "bg-info"
+      when 11..20
+        "bg-success"
+      when 21..30
+        "bg-warning"
+      else
+        "bg-danger"
+      end
+    else
+      "bg-primary" # システム設定
+    end
+  end
+
   private
 
   def no_time_overlap
     return if start_time.blank? || end_time.blank?
-  
-    # システム設定からバッファ時間を取得
-    begin
-      settings = ApplicationSetting.current
-      buffer_minutes = settings.reservation_interval_minutes
-    rescue => e
-      Rails.logger.warn "ApplicationSetting not available, using default buffer: #{e.message}"
-      buffer_minutes = 15 # デフォルト値
-    end
-  
+
     Reservation.transaction do
-      if buffer_minutes > 0
-        # バッファ時間を考慮した重複チェック
-        buffer_start = start_time - buffer_minutes.minutes
-        buffer_end = end_time + buffer_minutes.minutes
+      # この予約のインターバル時間
+      my_interval = effective_interval_minutes
+      
+      if my_interval > 0
+        # 予約後のインターバルのみ考慮（個別設定対応）
+        my_buffer_end = end_time + my_interval.minutes
         
+        # 他の予約との重複チェック
         overlapping = Reservation.active
           .where.not(id: id)
-          .where('start_time < ? AND end_time > ?', buffer_end, buffer_start)
-          .lock
+          .includes(:application_setting) # N+1対策
+          .select do |other|
+            other_interval = other.effective_interval_minutes
+            other_buffer_end = other.end_time + other_interval.minutes
+            
+            # 重複判定：
+            # 1. 基本的な時間重複
+            # 2. この予約の開始が他の予約のインターバル終了前
+            # 3. この予約のインターバル終了が他の予約の開始後
+            (start_time < other.end_time && end_time > other.start_time) ||
+            (start_time < other_buffer_end && my_buffer_end > other.start_time)
+          end
+        
+        if overlapping.any?
+          overlapping_reservation = overlapping.first
+          errors.add(:base, 
+            "#{overlapping_reservation.start_time.strftime('%H:%M')}〜#{overlapping_reservation.end_time.strftime('%H:%M')}の予約があります。" +
+            "（整理時間: この予約#{my_interval}分、既存予約#{overlapping_reservation.effective_interval_minutes}分）"
+          )
+        end
       else
-        # バッファ時間なしの重複チェック
+        # インターバルなしの場合は基本的な重複チェックのみ
         overlapping = Reservation.active
           .where.not(id: id)
           .where('start_time < ? AND end_time > ?', end_time, start_time)
-          .lock
-      end
-  
-      if overlapping.exists?
-        overlapping_reservation = overlapping.first
-        if buffer_minutes > 0
-          errors.add(:base, "#{overlapping_reservation.start_time.strftime('%H:%M')}〜#{overlapping_reservation.end_time.strftime('%H:%M')}の予約があります。（#{buffer_minutes}分のインターバルが必要）")
-        else
+        
+        if overlapping.exists?
+          overlapping_reservation = overlapping.first
           errors.add(:base, "#{overlapping_reservation.start_time.strftime('%H:%M')}〜#{overlapping_reservation.end_time.strftime('%H:%M')}に既に予約が入っています。")
         end
       end
@@ -337,11 +435,10 @@ class Reservation < ApplicationRecord
     while current_time + duration_minutes.minutes <= closing_time
       end_time = current_time + duration_minutes.minutes
       
-      # バッファ時間を考慮した重複チェック
+      # 予約後のインターバルのみ考慮した重複チェック
       if buffer_minutes > 0
-        buffer_start = current_time - buffer_minutes.minutes
         buffer_end = end_time + buffer_minutes.minutes
-        overlapping_check = active.where('start_time < ? AND end_time > ?', buffer_end, buffer_start)
+        overlapping_check = active.where('start_time < ? AND end_time > ?', buffer_end, current_time)
       else
         overlapping_check = active.where('start_time < ? AND end_time > ?', end_time, current_time)
       end
@@ -453,4 +550,44 @@ class Reservation < ApplicationRecord
   def log_reservation_updated
     Rails.logger.info "📝 予約ステータス変更: ID=#{id}, #{name}様, #{status}"
   end
+
+  def as_calendar_json
+    {
+      id: id,
+      title: "#{name} - #{course}",
+      start: start_time.iso8601,
+      end: end_time.iso8601,
+      backgroundColor: status_color,
+      borderColor: status_color,
+      textColor: text_color_for_status(status),
+      className: 'reservation-event',
+      extendedProps: {
+        type: 'reservation',
+        name: name,
+        course: course,
+        status: status,
+        user_id: user_id,
+        note: note,
+        individual_interval_minutes: individual_interval_minutes,
+        effective_interval_minutes: effective_interval_minutes,
+        has_individual_interval: has_individual_interval?,
+        interval_description: interval_description,
+        interval_setting_type: interval_setting_type
+      }
+    }
+  end
+
+  # スコープも個別インターバル対応
+  scope :with_individual_interval, -> { where.not(individual_interval_minutes: nil) }
+  scope :with_system_interval, -> { where(individual_interval_minutes: nil) }
+  
+  scope :overlapping_with_individual_interval, ->(start_time, end_time) {
+    # 複雑な重複判定のためSQL直書きは避け、Rubyで処理
+    active.select do |reservation|
+      res_interval = reservation.effective_interval_minutes
+      res_end_with_interval = reservation.end_time + res_interval.minutes
+      
+      start_time < res_end_with_interval && end_time > reservation.start_time
+    end
+  }
 end

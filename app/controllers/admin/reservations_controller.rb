@@ -1,4 +1,5 @@
-# app/controllers/admin/reservations_controller.rb の修正版（主要メソッドのみ）
+# app/controllers/admin/reservations_controller.rb
+# この内容で既存のファイルを更新してください
 
 class Admin::ReservationsController < ApplicationController
   include ErrorHandling
@@ -7,40 +8,131 @@ class Admin::ReservationsController < ApplicationController
   def calendar
   end
   
+  # app/controllers/admin/reservations_controller.rb の index アクション修正版
   def index
     respond_to do |format|
       format.html { redirect_to admin_reservations_calendar_path }
       format.json do
-        # システム設定を取得
-        @settings = ApplicationSetting.current
-        
-        reservations = Reservation.includes(:user)
-          .where(start_time: params[:start]..params[:end])
-          .order(:start_time)
+        begin
+          @settings = ApplicationSetting.current || ApplicationSetting.create_default!
+          
+          reservations = Reservation.includes(:user)
+            .where(start_time: params[:start]..params[:end])
+            .order(:start_time)
+  
+          # カレンダー用データを作成（個別インターバル対応）
+          events = []
+          
+          reservations.each do |reservation|
+            # 予約イベントを追加
+            events << reservation.as_calendar_json
+            
+            # 個別インターバル時間を取得
+            interval_minutes = reservation.effective_interval_minutes
+            
+            # インターバルが設定されている場合、インターバルイベントも追加
+            if interval_minutes > 0
+              interval_end_after = reservation.end_time + interval_minutes.minutes
+              if interval_end_after <= Time.zone.parse(params[:end])
+                events << {
+                  id: "interval-after-#{reservation.id}",
+                  title: "整理時間 (#{interval_minutes}分#{reservation.has_individual_interval? ? ' - 個別設定' : ''})",
+                  start: reservation.end_time.iso8601,
+                  end: interval_end_after.iso8601,
+                  backgroundColor: reservation.has_individual_interval? ? '#ffeaa7' : '#e9ecef',
+                  borderColor: reservation.has_individual_interval? ? '#fdcb6e' : '#ced4da',
+                  textColor: '#6c757d',
+                  className: reservation.has_individual_interval? ? 'interval-event individual-interval' : 'interval-event system-interval',
+                  display: 'background',
+                  extendedProps: {
+                    type: 'interval',
+                    reservation_id: reservation.id,
+                    interval_type: 'after',
+                    interval_minutes: interval_minutes,
+                    is_individual: reservation.has_individual_interval?,
+                    interval_description: reservation.interval_description
+                  }
+                }
+              end
+            end
+          end
+          
+          render json: events
+        rescue => e
+          Rails.logger.error "❌ Calendar data fetch error: #{e.message}"
+          render json: { 
+            success: false, 
+            error: "カレンダーデータの取得に失敗しました" 
+          }, status: :internal_server_error
+        end
+      end
+    end
+  end
 
-        # カレンダー用データに設定情報を追加
-        render json: reservations.map { |reservation|
-          {
-            id: reservation.id,
-            title: "#{reservation.name} - #{reservation.course}",
-            start: reservation.start_time.iso8601,
-            end: reservation.end_time.iso8601,
-            backgroundColor: color_for_status(reservation.status),
-            borderColor: color_for_status(reservation.status),
-            textColor: '#fff',
-            extendedProps: {
-              name: reservation.name,
-              course: reservation.course,
-              status: reservation.status,
-              user_id: reservation.user_id,
-              note: reservation.note,
-              # システム設定情報をJavaScriptに渡す
-              buffer_minutes: @settings.reservation_interval_minutes,
-              business_hours_start: @settings.business_hours_start,
-              business_hours_end: @settings.business_hours_end,
-              slot_interval: @settings.slot_interval_minutes
-            }
+  def show
+    Rails.logger.info "📋 SHOW request for reservation ID: #{params[:id]}"
+    
+    begin
+      @reservation = Reservation.includes(:user).find(params[:id])
+      Rails.logger.info "✅ Found reservation: #{@reservation.name} at #{@reservation.start_time}"
+      
+      respond_to do |format|
+        format.html { redirect_to admin_reservations_calendar_path }
+        format.json {
+          render json: {
+            success: true,
+            id: @reservation.id,
+            name: @reservation.name,
+            user_id: @reservation.user_id,
+            user_name: @reservation.user&.name,
+            course: @reservation.course,
+            status: @reservation.status,
+            note: @reservation.note,
+            start_time: @reservation.start_time.iso8601,
+            end_time: @reservation.end_time.iso8601,
+            cancellation_reason: @reservation.cancellation_reason,
+            cancelled_at: @reservation.cancelled_at&.iso8601,
+            confirmation_sent_at: @reservation.confirmation_sent_at&.iso8601,
+            reminder_sent_at: @reservation.reminder_sent_at&.iso8601,
+            recurring: @reservation.recurring || false,
+            recurring_type: @reservation.recurring_type,
+            recurring_until: @reservation.recurring_until&.iso8601,
+            created_at: @reservation.created_at.iso8601,
+            updated_at: @reservation.updated_at.iso8601
           }
+        }
+      end
+      
+    rescue ActiveRecord::RecordNotFound
+      Rails.logger.error "❌ Reservation not found: #{params[:id]}"
+      
+      respond_to do |format|
+        format.html { 
+          redirect_to admin_reservations_calendar_path, 
+          alert: "予約が見つかりません。" 
+        }
+        format.json { 
+          render json: { 
+            success: false, 
+            error: "予約が見つかりません" 
+          }, status: :not_found 
+        }
+      end
+      
+    rescue => e
+      Rails.logger.error "❌ Show action error: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      
+      respond_to do |format|
+        format.html { 
+          redirect_to admin_reservations_calendar_path, 
+          alert: "予約データの取得中にエラーが発生しました。" 
+        }
+        format.json { 
+          render json: { 
+            success: false, 
+            error: "予約データの取得中にエラーが発生しました: #{e.message}" 
+          }, status: :internal_server_error 
         }
       end
     end
@@ -236,158 +328,151 @@ class Admin::ReservationsController < ApplicationController
     end
   end
 
-  def bulk_create
-    Rails.logger.info "🔄 Bulk reservation creation started"
+  def update_individual_interval
+    Rails.logger.info "🔧 Updating individual interval for reservation ID: #{params[:id]}"
     
     begin
-      ActiveRecord::Base.transaction do
-        # パラメータの取得
-        bulk_params = params.require(:bulk_reservation)
-        base_reservation_params = bulk_params.require(:base_reservation)
-        schedule_params = bulk_params.require(:schedule)
-        
-        Rails.logger.info "📝 Bulk params: #{bulk_params.inspect}"
-        
-        # 基本予約情報
-        user_id = base_reservation_params[:user_id]
-        course = base_reservation_params[:course]
-        note = base_reservation_params[:note]
-        status = base_reservation_params[:status] || 'confirmed'
-        
-        # スケジュール情報
-        pattern = schedule_params[:pattern] # 'weekly' or 'monthly'
-        start_date = Date.parse(schedule_params[:start_date])
-        end_date = Date.parse(schedule_params[:end_date])
-        start_time = schedule_params[:start_time] # "14:00"
-        weekdays = schedule_params[:weekdays]&.map(&:to_i) || [] # [1, 3, 5] (月水金)
-        monthly_day = schedule_params[:monthly_day]&.to_i # 毎月15日など
-        
-        user = User.find(user_id)
-        created_reservations = []
-        
-        case pattern
-        when 'weekly'
-          created_reservations = create_weekly_reservations(
-            user: user,
-            course: course,
-            note: note,
-            status: status,
-            start_date: start_date,
-            end_date: end_date,
-            start_time: start_time,
-            weekdays: weekdays
-          )
-          
-        when 'monthly'
-          created_reservations = create_monthly_reservations(
-            user: user,
-            course: course,
-            note: note,
-            status: status,
-            start_date: start_date,
-            end_date: end_date,
-            start_time: start_time,
-            monthly_day: monthly_day
-          )
-          
-        when 'custom'
-          # カスタム日付リスト
-          custom_dates = schedule_params[:custom_dates] || []
-          created_reservations = create_custom_reservations(
-            user: user,
-            course: course,
-            note: note,
-            status: status,
-            start_time: start_time,
-            custom_dates: custom_dates
-          )
-        end
-        
-        Rails.logger.info "✅ Created #{created_reservations.length} reservations"
-        
-        respond_to do |format|
-          format.json { 
-            render json: { 
-              success: true, 
-              message: "#{created_reservations.length}件の予約を作成しました",
-              reservations: created_reservations.map { |r| {
-                id: r.id,
-                start_time: r.start_time,
-                end_time: r.end_time,
-                status: r.status
-              }}
-            }, status: :created 
-          }
-          format.html { 
-            redirect_to admin_reservations_calendar_path, 
-            notice: "#{created_reservations.length}件の予約を作成しました" 
-          }
-        end
+      @reservation = Reservation.find(params[:id])
+      new_interval = params[:individual_interval_minutes]&.to_i
+      
+      Rails.logger.info "📏 Current interval: #{@reservation.effective_interval_minutes}分, New interval: #{new_interval}分"
+      
+      # バリデーション
+      if new_interval && (new_interval < 0 || new_interval > 120)
+        return render json: { 
+          success: false, 
+          error: "インターバル時間は0分から120分の間で設定してください" 
+        }, status: :unprocessable_entity
       end
       
-    rescue => e
-      Rails.logger.error "❌ Bulk creation failed: #{e.message}"
-      Rails.logger.error e.backtrace.join("\n")
+      # インターバル時間を設定
+      @reservation.set_individual_interval!(new_interval)
+      
+      Rails.logger.info "✅ Individual interval updated successfully"
       
       respond_to do |format|
-        format.json { 
-          render json: { 
-            success: false, 
-            error: "一括作成中にエラーが発生しました: #{e.message}" 
-          }, status: :unprocessable_entity 
-        }
-        format.html { 
-          redirect_to admin_reservations_calendar_path, 
-          alert: "一括作成中にエラーが発生しました: #{e.message}" 
+        format.json {
+          render json: {
+            success: true,
+            message: @reservation.has_individual_interval? ? 
+              "インターバルを#{@reservation.individual_interval_minutes}分に設定しました" :
+              "システム設定（#{ApplicationSetting.current.reservation_interval_minutes}分）に戻しました",
+            reservation: {
+              id: @reservation.id,
+              individual_interval_minutes: @reservation.individual_interval_minutes,
+              effective_interval_minutes: @reservation.effective_interval_minutes,
+              has_individual_interval: @reservation.has_individual_interval?,
+              interval_description: @reservation.interval_description,
+              interval_setting_type: @reservation.interval_setting_type
+            }
+          }
         }
       end
+      
+    rescue ActiveRecord::RecordNotFound
+      Rails.logger.error "❌ Reservation not found: #{params[:id]}"
+      render json: { 
+        success: false, 
+        error: "予約が見つかりません" 
+      }, status: :not_found
+      
+    rescue ActiveRecord::RecordInvalid => e
+      Rails.logger.error "❌ Individual interval update failed: #{e.record.errors.full_messages}"
+      render json: { 
+        success: false, 
+        error: e.record.errors.full_messages.join(', ') 
+      }, status: :unprocessable_entity
+      
+    rescue => e
+      Rails.logger.error "❌ Individual interval update error: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      render json: { 
+        success: false, 
+        error: "インターバル更新中にエラーが発生しました: #{e.message}" 
+      }, status: :internal_server_error
     end
   end
 
-  def bulk_new
-    # 一括作成フォーム表示用
-    Rails.logger.info "📝 Displaying bulk reservation form"
+  # 個別インターバル設定をリセット（システムデフォルトに戻す）
+  def reset_individual_interval
+    Rails.logger.info "🔄 Resetting individual interval for reservation ID: #{params[:id]}"
+    
+    begin
+      @reservation = Reservation.find(params[:id])
+      @reservation.reset_to_system_interval!
+      
+      Rails.logger.info "✅ Individual interval reset successfully"
+      
+      render json: {
+        success: true,
+        message: "システム設定（#{ApplicationSetting.current.reservation_interval_minutes}分）に戻しました",
+        reservation: {
+          id: @reservation.id,
+          individual_interval_minutes: @reservation.individual_interval_minutes,
+          effective_interval_minutes: @reservation.effective_interval_minutes,
+          has_individual_interval: @reservation.has_individual_interval?,
+          interval_description: @reservation.interval_description
+        }
+      }
+      
+    rescue ActiveRecord::RecordNotFound
+      render json: { 
+        success: false, 
+        error: "予約が見つかりません" 
+      }, status: :not_found
+      
+    rescue => e
+      Rails.logger.error "❌ Individual interval reset error: #{e.message}"
+      render json: { 
+        success: false, 
+        error: "リセット中にエラーが発生しました" 
+      }, status: :internal_server_error
+    end
   end
 
   private
 
+  # ステータスに基づく色を返すメソッド
+  def color_for_status(status)
+    case status.to_s
+    when 'tentative'
+      '#ffc107'  # 黄色（仮予約）
+    when 'confirmed'
+      '#28a745'  # 緑色（確定）
+    when 'cancelled'
+      '#dc3545'  # 赤色（キャンセル）
+    when 'completed'
+      '#6c757d'  # グレー（完了）
+    when 'no_show'
+      '#fd7e14'  # オレンジ（無断欠席）
+    else
+      '#007bff'  # 青色（デフォルト）
+    end
+  end
+
+  def text_color_for_status(status)
+    case status.to_s
+    when 'tentative'
+      '#000000'  # 黄色背景には黒文字
+    when 'cancelled'
+      '#FFFFFF'  # 赤背景には白文字
+    when 'confirmed'
+      '#FFFFFF'  # 緑背景には白文字
+    when 'completed'
+      '#FFFFFF'  # グレー背景には白文字
+    when 'no_show'
+      '#FFFFFF'  # オレンジ背景には白文字
+    else
+      '#FFFFFF'  # デフォルトは白文字
+    end
+  end
+
   def reservation_params
     params.require(:reservation).permit(
       :name, :start_time, :end_time, :course, :note, :user_id, :status, :ticket_id,
-      :recurring, :recurring_type, :recurring_until, :cancellation_reason
+      :recurring, :recurring_type, :recurring_until, :cancellation_reason,
+      :individual_interval_minutes  # 追加
     )
-  end
-  
-  # ドラッグ&ドロップリクエストかどうかを判定
-  def drag_drop_request?
-    # JSONリクエストで、start_timeまたはend_timeのみが送信されている場合
-    request.format.json? && 
-    params[:reservation] && 
-    (params[:reservation].keys & ['start_time', 'end_time']).any? &&
-    (params[:reservation].keys & ['name', 'course', 'note']).empty?
-  end
-  
-  # ドラッグ&ドロップ用のパラメータ
-  def drag_drop_params
-    params.require(:reservation).permit(:start_time, :end_time)
-  end
-  
-  # 時間の重複チェック
-  def time_conflict_exists?(update_params, current_reservation_id)
-    start_time = Time.zone.parse(update_params[:start_time])
-    end_time = update_params[:end_time].present? ? Time.zone.parse(update_params[:end_time]) : nil
-    
-    return false unless end_time
-    
-    interval_minutes = Reservation.interval_minutes
-    
-    Reservation.active
-      .where.not(id: current_reservation_id)
-      .where(
-        '(start_time - INTERVAL ? MINUTE) < ? AND (end_time + INTERVAL ? MINUTE) > ?',
-        interval_minutes, end_time, interval_minutes, start_time
-      )
-      .exists?
   end
 
   def create_reservation_with_new_user
@@ -401,7 +486,10 @@ class Admin::ReservationsController < ApplicationController
     user = User.create!(
       name: new_user_name,
       phone_number: new_user_phone,
-      email: new_user_email
+      email: new_user_email,
+      birth_date: params[:new_user][:birth_date],
+      address: params[:new_user][:address],
+      admin_memo: params[:new_user][:admin_memo]
     )
     
     Rails.logger.info "👤 New user created: #{user.name} (ID: #{user.id})"
@@ -512,200 +600,4 @@ class Admin::ReservationsController < ApplicationController
       }
     end
   end
-  
-  def new_user_params
-    params.require(:new_user).permit(:name, :phone_number, :email, :birth_date, :address, :admin_memo, :postal_code)
-  end
-
-  def text_color_for_status(status)
-    case status.to_s
-    when 'tentative'
-      '#000000'  # 黄色背景には黒文字
-    when 'cancelled'
-      '#FFFFFF'  # 赤背景には白文字
-    when 'confirmed'
-      '#FFFFFF'  # 緑背景には白文字
-    when 'completed'
-      '#FFFFFF'  # グレー背景には白文字
-    when 'no_show'
-      '#FFFFFF'  # オレンジ背景には白文字
-    else
-      '#FFFFFF'  # デフォルトは白文字
-    end
-  end
-
-  def handle_calendar_error(error)
-    Rails.logger.error "❌ Calendar error: #{error.message}"
-    Rails.logger.error error.backtrace.join("\n")
-    
-    respond_to do |format|
-      format.json { 
-        render json: { 
-          success: false, 
-          error: "カレンダーデータの取得に失敗しました",
-          details: Rails.env.development? ? error.message : nil
-        }, status: :internal_server_error 
-      }
-      format.html { 
-        flash[:alert] = "カレンダーの読み込みに失敗しました"
-        redirect_to admin_root_path 
-      }
-    end
-  end
-
-  def reservation_to_json(reservation)
-    {
-      id: reservation.id,
-      title: reservation.name || "無名",
-      start: reservation.start_time&.iso8601,
-      end: reservation.end_time&.iso8601,
-      description: reservation.course || "",
-      color: reservation.status_color,
-      textColor: text_color_for_status(reservation.status),
-      user_id: reservation.user_id,
-      status: reservation.status,
-      course: reservation.course,
-      note: reservation.note,
-      recurring: reservation.recurring || false,
-      recurring_type: reservation.recurring_type,
-      recurring_until: reservation.recurring_until,
-      confirmation_sent_at: reservation.confirmation_sent_at,
-      reminder_sent_at: reservation.reminder_sent_at,
-      cancelled_at: reservation.cancelled_at,
-      cancellation_reason: reservation.cancellation_reason
-    }
-  end
-
-  def create_weekly_reservations(user:, course:, note:, status:, start_date:, end_date:, start_time:, weekdays:)
-    reservations = []
-    current_date = start_date
-    
-    while current_date <= end_date
-      # 指定された曜日かチェック（0=日曜日, 1=月曜日, ...）
-      if weekdays.include?(current_date.wday)
-        reservation_datetime = Time.zone.parse("#{current_date} #{start_time}")
-        
-        # 重複チェック
-        unless reservation_exists?(user, reservation_datetime)
-          duration = get_duration_from_course(course)
-          end_datetime = reservation_datetime + duration.minutes
-          
-          reservation = Reservation.create!(
-            user: user,
-            name: user.name,
-            start_time: reservation_datetime,
-            end_time: end_datetime,
-            course: course,
-            note: note,
-            status: status
-          )
-          
-          reservations << reservation
-          Rails.logger.info "📅 Created reservation: #{reservation_datetime}"
-        else
-          Rails.logger.warn "⚠️ Skipped duplicate: #{reservation_datetime}"
-        end
-      end
-      
-      current_date += 1.day
-    end
-    
-    reservations
-  end
-  
-  def create_monthly_reservations(user:, course:, note:, status:, start_date:, end_date:, start_time:, monthly_day:)
-    reservations = []
-    current_month = start_date.beginning_of_month
-    
-    while current_month <= end_date
-      # その月の指定日を計算
-      begin
-        target_date = Date.new(current_month.year, current_month.month, monthly_day)
-        
-        # 日付が範囲内かチェック
-        if target_date >= start_date && target_date <= end_date
-          reservation_datetime = Time.zone.parse("#{target_date} #{start_time}")
-          
-          # 重複チェック
-          unless reservation_exists?(user, reservation_datetime)
-            duration = get_duration_from_course(course)
-            end_datetime = reservation_datetime + duration.minutes
-            
-            reservation = Reservation.create!(
-              user: user,
-              name: user.name,
-              start_time: reservation_datetime,
-              end_time: end_datetime,
-              course: course,
-              note: note,
-              status: status
-            )
-            
-            reservations << reservation
-            Rails.logger.info "📅 Created monthly reservation: #{reservation_datetime}"
-          end
-        end
-        
-      rescue ArgumentError => e
-        # 存在しない日付（例：2月30日）はスキップ
-        Rails.logger.warn "⚠️ Invalid date skipped: #{current_month.year}/#{current_month.month}/#{monthly_day}"
-      end
-      
-      current_month = current_month.next_month
-    end
-    
-    reservations
-  end
-  
-  def create_custom_reservations(user:, course:, note:, status:, start_time:, custom_dates:)
-    reservations = []
-    
-    custom_dates.each do |date_str|
-      begin
-        target_date = Date.parse(date_str)
-        reservation_datetime = Time.zone.parse("#{target_date} #{start_time}")
-        
-        # 重複チェック
-        unless reservation_exists?(user, reservation_datetime)
-          duration = get_duration_from_course(course)
-          end_datetime = reservation_datetime + duration.minutes
-          
-          reservation = Reservation.create!(
-            user: user,
-            name: user.name,
-            start_time: reservation_datetime,
-            end_time: end_datetime,
-            course: course,
-            note: note,
-            status: status
-          )
-          
-          reservations << reservation
-          Rails.logger.info "📅 Created custom reservation: #{reservation_datetime}"
-        end
-        
-      rescue ArgumentError => e
-        Rails.logger.warn "⚠️ Invalid date format skipped: #{date_str}"
-      end
-    end
-    
-    reservations
-  end
-  
-  def reservation_exists?(user, datetime)
-    Reservation.where(
-      user: user,
-      start_time: datetime.beginning_of_hour..datetime.end_of_hour
-    ).exists?
-  end
-  
-  def get_duration_from_course(course)
-    case course
-    when "40分" then 40
-    when "60分" then 60
-    when "80分" then 80
-    else 60
-    end
-  end
-
 end
