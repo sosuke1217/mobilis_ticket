@@ -1,16 +1,110 @@
-export default function initializeCalendar() {
-  const FC = window.FullCalendar;
-  if (!FC) {
-    console.error("❌ FullCalendar is not available in global scope");
+// app/javascript/calendar/calendar_core.js
+import { showMessage } from './utils.js';
+
+// システム設定（HTMLから取得）
+const systemSettings = {
+  businessHoursStart: parseInt(document.querySelector('meta[name="business-hours-start"]')?.content || '10'),
+  businessHoursEnd: parseInt(document.querySelector('meta[name="business-hours-end"]')?.content || '20'),
+  slotIntervalMinutes: parseInt(document.querySelector('meta[name="slot-interval"]')?.content || '10'),
+  reservationIntervalMinutes: parseInt(document.querySelector('meta[name="reservation-interval"]')?.content || '15'),
+  sundayClosed: document.querySelector('meta[name="sunday-closed"]')?.content === 'true'
+};
+
+// インターバル表示用スタイル追加
+function addIntervalStyles() {
+  if (document.getElementById('interval-styles')) return;
+  
+  const style = document.createElement('style');
+  style.id = 'interval-styles';
+  style.textContent = `
+    .individual-interval .fc-event-title {
+      font-weight: bold !important;
+      font-style: italic !important;
+    }
+    
+    .individual-interval {
+      border-style: dashed !important;
+      border-width: 2px !important;
+      animation: pulse-individual 2s infinite;
+    }
+    
+    @keyframes pulse-individual {
+      0%, 100% { opacity: 0.8; }
+      50% { opacity: 0.6; }
+    }
+    
+    .system-interval {
+      border-style: dashed !important;
+      border-width: 1px !important;
+    }
+  `;
+  
+  document.head.appendChild(style);
+}
+
+// 予約時間更新
+function updateReservationTime(event, revertFunc) {
+  const reservationData = {
+    id: event.id,
+    start_time: event.start.toISOString(),
+    end_time: event.end.toISOString()
+  };
+  
+  fetch(`/admin/reservations/${event.id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+    },
+    body: JSON.stringify({ reservation: reservationData })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      console.log('✅ Reservation updated successfully');
+      showMessage('予約時間を更新しました', 'success');
+      window.pageCalendar.refetchEvents();
+    } else {
+      console.error('❌ Reservation update failed:', data.error);
+      showMessage(data.error || '予約の更新に失敗しました', 'danger');
+      revertFunc();
+    }
+  })
+  .catch(error => {
+    console.error('❌ Update request failed:', error);
+    showMessage('更新中にエラーが発生しました', 'danger');
+    revertFunc();
+  });
+}
+
+// カレンダー初期化
+export function initializeCalendar() {
+  const calendarEl = document.getElementById('calendar');
+  if (!calendarEl) {
+    console.error('❌ Calendar element not found');
     return;
   }
 
-  const calendarEl = document.getElementById('calendar');
-  if (!calendarEl) return;
-
-  const calendar = new FC.Calendar(calendarEl, {
-    plugins: [FC.TimeGridPlugin],
-    initialView: 'timeGridWeek',
+  console.log('🗓️ Initializing calendar with interval display...');
+  
+  // 既存のカレンダーインスタンスがあれば破棄
+  if (window.pageCalendar) {
+    window.pageCalendar.destroy();
+    window.pageCalendar = null;
+  }
+  
+  // インターバル表示用スタイルを動的に追加
+  addIntervalStyles();
+  
+  // FullCalendarが利用可能か確認
+  if (typeof FullCalendar === 'undefined') {
+    console.error('❌ FullCalendar not available, retrying in 500ms');
+    setTimeout(() => initializeCalendar(), 500);
+    return;
+  }
+  
+  window.pageCalendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: window.innerWidth < 768 ? 'timeGridDay' : 'timeGridWeek',
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
@@ -22,58 +116,116 @@ export default function initializeCalendar() {
     selectable: true,
     selectMirror: true,
     dayMaxEvents: true,
-    weekends: !window.systemSettings.sundayClosed,
+    weekends: !systemSettings.sundayClosed,
+    
+    // 営業時間の設定
     businessHours: {
-      daysOfWeek: window.systemSettings.sundayClosed ? [1, 2, 3, 4, 5, 6] : [0, 1, 2, 3, 4, 5, 6],
-      startTime: `${window.systemSettings.businessHoursStart.toString().padStart(2, '0')}:00`,
-      endTime: `${window.systemSettings.businessHoursEnd.toString().padStart(2, '0')}:00`,
+      daysOfWeek: systemSettings.sundayClosed ? [1, 2, 3, 4, 5, 6] : [0, 1, 2, 3, 4, 5, 6],
+      startTime: `${systemSettings.businessHoursStart.toString().padStart(2, '0')}:00`,
+      endTime: `${systemSettings.businessHoursEnd.toString().padStart(2, '0')}:00`,
     },
-    slotDuration: `00:${window.systemSettings.slotIntervalMinutes.toString().padStart(2, '0')}:00`,
-    slotMinTime: `${window.systemSettings.businessHoursStart.toString().padStart(2, '0')}:00:00`,
-    slotMaxTime: `${window.systemSettings.businessHoursEnd.toString().padStart(2, '0')}:00:00`,
+    
+    // スロット間隔の設定
+    slotDuration: `00:${systemSettings.slotIntervalMinutes.toString().padStart(2, '0')}:00`,
+    slotMinTime: `${systemSettings.businessHoursStart.toString().padStart(2, '0')}:00:00`,
+    slotMaxTime: `${systemSettings.businessHoursEnd.toString().padStart(2, '0')}:00:00`,
+    
+    // イベントソース
     events: '/admin/reservations.json',
+    
+    // 日付クリック処理
+    dateClick: function(info) {
+      console.log('📅 Date clicked:', info.dateStr);
+      if (window.openReservationModal) {
+        window.openReservationModal(null, info.dateStr);
+      }
+    },
+    
+    // イベントクリック処理
     eventClick: function(info) {
       const eventType = info.event.extendedProps.type;
+      
       if (eventType === 'interval') {
+        // インターバルイベントがクリックされた場合
         const reservationId = info.event.extendedProps.reservation_id;
+        const intervalMinutes = info.event.extendedProps.interval_minutes;
+        const isIndividual = info.event.extendedProps.is_individual;
+        
         if (reservationId) {
-          window.showMessage(`予約ID: ${reservationId} の詳細を表示します`, 'info');
-          window.openReservationModal(reservationId);
+          console.log(`🔗 Opening related reservation ${reservationId} from ${isIndividual ? 'individual' : 'system'} interval (${intervalMinutes}分)`);
+          
+          showMessage(
+            `${isIndividual ? '個別設定' : 'システム設定'}のインターバル (${intervalMinutes}分) - 予約詳細を開きます`,
+            isIndividual ? 'warning' : 'info'
+          );
+          
+          if (window.openReservationModal) {
+            window.openReservationModal(reservationId);
+          }
         }
         return;
       }
+      
       if (eventType === 'reservation' || !eventType) {
-        window.openReservationModal(info.event.id);
+        console.log('📅 Opening reservation modal for ID:', info.event.id);
+        if (window.openReservationModal) {
+          window.openReservationModal(info.event.id);
+        }
       }
     },
+    
+    // ドラッグ＆ドロップ処理
     eventDrop: function(info) {
       const eventType = info.event.extendedProps.type;
+      
       if (eventType === 'interval') {
         info.revert();
-        window.showMessage('インターバル時間は移動できません', 'warning');
+        showMessage('インターバル時間は移動できません', 'warning');
         return;
       }
-      window.updateReservationTime(info.event, info.revert);
-    },
-    eventResize: function(info) {
-      if (info.event.extendedProps.type === 'interval') {
-        info.revert();
-        window.showMessage('インターバル時間はリサイズできません', 'warning');
+      
+      if (eventType === 'reservation' || !eventType) {
+        console.log('🔄 Moving reservation:', info.event.id);
+        updateReservationTime(info.event, info.revert);
       }
     },
-    select: function(info) {
-      window.openReservationModal(null, info.startStr);
+    
+    // リサイズ処理
+    eventResize: function(info) {
+      const eventType = info.event.extendedProps.type;
+      
+      if (eventType === 'interval') {
+        info.revert();
+        showMessage('インターバル時間は変更できません', 'warning');
+        return;
+      }
+      
+      if (eventType === 'reservation' || !eventType) {
+        console.log('🔄 Resizing reservation:', info.event.id);
+        updateReservationTime(info.event, info.revert);
+      }
     },
+    
     eventDidMount: function(info) {
+      // イベント表示時の処理
       const eventType = info.event.extendedProps.type;
       if (eventType === 'interval') {
-        info.el.classList.add('interval-event');
-      } else {
-        info.el.classList.add('reservation-event');
+        info.el.style.cursor = 'pointer';
       }
     }
   });
-
-  calendar.render();
-  window.pageCalendar = calendar;
+  
+  console.log('📅 Calling calendar.render()');
+  window.pageCalendar.render();
+  
+  // レンダリング完了を確認
+  setTimeout(() => {
+    if (calendarEl.querySelector('.fc-toolbar')) {
+      console.log('✅ Calendar rendered successfully');
+    } else {
+      console.error('❌ Calendar rendering failed');
+    }
+  }, 100);
+  
+  console.log('✅ Calendar core initialized');
 }
