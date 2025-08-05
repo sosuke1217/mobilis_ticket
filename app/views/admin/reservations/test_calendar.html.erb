@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Calendar Test</title>
+  <meta name="business-hours-start" content="10">
+  <meta name="business-hours-end" content="20">
+  <meta name="slot-interval" content="30">
+  <meta name="reservation-interval" content="15">
+  <meta name="sunday-closed" content="true">
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+  <%= stylesheet_link_tag "application", media: "all" %>
+  <%= javascript_importmap_tags %>
+</head>
+<body>
+  <h1>Calendar Test Page</h1>
+  <div id="calendar"></div>
+  
+  <script>
+    console.log('🧪 Testing calendar initialization...');
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('📅 DOM loaded, checking FullCalendar...');
+      console.log('🔍 typeof FullCalendar:', typeof FullCalendar);
+      console.log('🔍 window.FullCalendar:', window.FullCalendar);
+      
+      if (typeof FullCalendar !== 'undefined') {
+        console.log('✅ FullCalendar is available');
+        
+        const calendarEl = document.getElementById('calendar');
+        if (calendarEl) {
+          console.log('✅ Calendar element found');
+          
+          const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'timeGridWeek',
+            headerToolbar: {
+              left: 'prev,next today',
+              center: 'title',
+              right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            locale: 'ja',
+            height: 'auto',
+            events: '/admin/reservations.json'
+          });
+          
+          calendar.render();
+          console.log('✅ Calendar rendered successfully');
+        } else {
+          console.error('❌ Calendar element not found');
+        }
+      } else {
+        console.error('❌ FullCalendar not available');
+      }
+    });
+  </script>
+</body>
+</html> 

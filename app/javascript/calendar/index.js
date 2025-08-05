@@ -1,6 +1,6 @@
 // app/javascript/calendar/index.js
 import { initializeCalendar } from './calendar_core.js';
-import { setupReservationModal } from './modal_controller.js';
+import { setupReservationModal } from './modal.js';
 import { setupIntervalControls } from './interval_settings.js';
 import { setupReservationForm } from './reservation_form.js';
 import { setupGlobalUtils } from './utils.js';

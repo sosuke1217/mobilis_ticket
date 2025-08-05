@@ -52,6 +52,7 @@ Rails.application.routes.draw do
     # 予約管理（修正版）
     # カレンダーのルートを最初に独立して定義
     get 'reservations/calendar', to: 'reservations#calendar', as: 'reservations_calendar'
+    get 'reservations/test_calendar', to: 'reservations#test_calendar', as: 'test_calendar'
     
     resources :reservations do
       collection do

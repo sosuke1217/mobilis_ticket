@@ -97,11 +97,29 @@ export function initializeCalendar() {
   addIntervalStyles();
   
   // FullCalendarが利用可能か確認
+  console.log('🔍 Checking FullCalendar availability...');
+  console.log('🔍 typeof FullCalendar:', typeof FullCalendar);
+  console.log('🔍 window.FullCalendar:', window.FullCalendar);
+  console.log('🔍 global FullCalendar:', typeof global !== 'undefined' ? global.FullCalendar : 'global not available');
+  
   if (typeof FullCalendar === 'undefined') {
-    console.error('❌ FullCalendar not available, retrying in 500ms');
-    setTimeout(() => initializeCalendar(), 500);
-    return;
+    console.error('❌ FullCalendar not available, checking alternatives...');
+    
+    // 代替手段を試す
+    if (window.FullCalendar) {
+      console.log('✅ Found FullCalendar on window object');
+      window.FullCalendar = window.FullCalendar;
+    } else if (typeof global !== 'undefined' && global.FullCalendar) {
+      console.log('✅ Found FullCalendar on global object');
+      window.FullCalendar = global.FullCalendar;
+    } else {
+      console.error('❌ FullCalendar not found anywhere, retrying in 1 second');
+      setTimeout(() => initializeCalendar(), 1000);
+      return;
+    }
   }
+  
+  console.log('✅ FullCalendar is available, proceeding with initialization');
   
   window.pageCalendar = new FullCalendar.Calendar(calendarEl, {
     initialView: window.innerWidth < 768 ? 'timeGridDay' : 'timeGridWeek',
