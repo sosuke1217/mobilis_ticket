@@ -1345,10 +1345,28 @@
           document.getElementById('reservationStatus').value = data.status || 'confirmed';
           document.getElementById('reservationNote').value = data.note || '';
           
-          // 少し遅延させてからupdateEndTimeを呼び出し
+          // フォームの値が確実に設定された後にupdateEndTimeを呼び出し
           setTimeout(() => {
-            updateEndTime();
-          }, 100);
+            // フォームの値が正しく設定されているか再確認
+            const timeValue = document.getElementById('reservationTime').value;
+            console.log('🔄 Checking time value after delay:', timeValue);
+            
+            if (timeValue) {
+              updateEndTime();
+            } else {
+              console.warn('⚠️ Time value still empty after delay, retrying...');
+              // もう一度遅延させて再試行
+              setTimeout(() => {
+                const retryTimeValue = document.getElementById('reservationTime').value;
+                console.log('🔄 Retry time value:', retryTimeValue);
+                if (retryTimeValue) {
+                  updateEndTime();
+                } else {
+                  console.error('❌ Time value still empty after retry');
+                }
+              }, 200);
+            }
+          }, 200);
           
                   console.log('✅ Form populated with reservation data');
         console.log('📝 Form values after population:', {
@@ -1392,6 +1410,12 @@
     const endTimeDisplay = document.getElementById('endTimeDisplay');
     
     console.log('🕐 updateEndTime called with:', { time, course });
+    
+    // 時間が空の場合は処理をスキップ
+    if (!time) {
+      console.warn('⚠️ updateEndTime: Time is empty, skipping calculation');
+      return;
+    }
     
     if (time && course) {
       const [hours, minutes] = time.split(':').map(Number);
