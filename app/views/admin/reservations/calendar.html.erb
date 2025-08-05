@@ -1341,7 +1341,32 @@
           document.getElementById('reservationUserId').value = data.user_id || '';
           document.getElementById('reservationCourse').value = data.course || '60分';
           document.getElementById('reservationDate').value = extractedDate;
-          document.getElementById('reservationTime').value = extractedTime;
+          
+          // select要素の値を正しく設定
+          const timeSelect = document.getElementById('reservationTime');
+          if (timeSelect && extractedTime) {
+            // 既存のオプションを確認
+            let found = false;
+            for (let option of timeSelect.options) {
+              if (option.value === extractedTime) {
+                option.selected = true;
+                found = true;
+                break;
+              }
+            }
+            
+            // オプションが見つからない場合は新しく作成
+            if (!found) {
+              const newOption = document.createElement('option');
+              newOption.value = extractedTime;
+              newOption.textContent = extractedTime;
+              newOption.selected = true;
+              timeSelect.appendChild(newOption);
+            }
+            
+            console.log('✅ Time select value set:', extractedTime);
+          }
+          
           document.getElementById('reservationStatus').value = data.status || 'confirmed';
           document.getElementById('reservationNote').value = data.note || '';
           
@@ -1405,7 +1430,8 @@
   }
 
   function updateEndTime() {
-    const time = document.getElementById('reservationTime').value;
+    const timeSelect = document.getElementById('reservationTime');
+    const time = timeSelect ? timeSelect.value : '';
     const course = document.getElementById('reservationCourse').value;
     const endTimeDisplay = document.getElementById('endTimeDisplay');
     
