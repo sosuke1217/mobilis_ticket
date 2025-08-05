@@ -1298,31 +1298,43 @@
           
           if (data.start_time) {
             console.log('🕐 start_time:', data.start_time);
-            const startDateTime = new Date(data.start_time);
             
-            console.log('🕐 Parsed DateTime object:', startDateTime);
-            console.log('🕐 DateTime methods:', {
-              getFullYear: startDateTime.getFullYear(),
-              getMonth: startDateTime.getMonth(),
-              getDate: startDateTime.getDate(),
-              getHours: startDateTime.getHours(),
-              getMinutes: startDateTime.getMinutes(),
-              toString: startDateTime.toString(),
-              toISOString: startDateTime.toISOString()
-            });
+            // ISO 8601形式の文字列から直接時間を抽出
+            // 例: "2025-08-06T19:30:00+09:00" から "19:30" を抽出
+            const timeMatch = data.start_time.match(/T(\d{2}):(\d{2}):\d{2}/);
             
-            // タイムゾーンを考慮して日付と時間を抽出
-            const year = startDateTime.getFullYear();
-            const month = String(startDateTime.getMonth() + 1).padStart(2, '0');
-            const day = String(startDateTime.getDate()).padStart(2, '0');
-            const hours = String(startDateTime.getHours()).padStart(2, '0');
-            const minutes = String(startDateTime.getMinutes()).padStart(2, '0');
-            
-            extractedDate = `${year}-${month}-${day}`;
-            extractedTime = `${hours}:${minutes}`;
-            
-            console.log('📅 Extracted date:', extractedDate);
-            console.log('🕐 Extracted time:', extractedTime);
+            if (timeMatch) {
+              const hours = timeMatch[1];
+              const minutes = timeMatch[2];
+              extractedTime = `${hours}:${minutes}`;
+              
+              // 日付も同様に抽出
+              const dateMatch = data.start_time.match(/^(\d{4})-(\d{2})-(\d{2})/);
+              if (dateMatch) {
+                const year = dateMatch[1];
+                const month = dateMatch[2];
+                const day = dateMatch[3];
+                extractedDate = `${year}-${month}-${day}`;
+              }
+              
+              console.log('📅 Extracted date:', extractedDate);
+              console.log('🕐 Extracted time:', extractedTime);
+            } else {
+              console.warn('⚠️ Could not parse time from:', data.start_time);
+              // フォールバック: Dateオブジェクトを使用
+              const startDateTime = new Date(data.start_time);
+              const year = startDateTime.getFullYear();
+              const month = String(startDateTime.getMonth() + 1).padStart(2, '0');
+              const day = String(startDateTime.getDate()).padStart(2, '0');
+              const hours = String(startDateTime.getHours()).padStart(2, '0');
+              const minutes = String(startDateTime.getMinutes()).padStart(2, '0');
+              
+              extractedDate = `${year}-${month}-${day}`;
+              extractedTime = `${hours}:${minutes}`;
+              
+              console.log('📅 Extracted date (fallback):', extractedDate);
+              console.log('🕐 Extracted time (fallback):', extractedTime);
+            }
           } else {
             console.warn('⚠️ No start_time in data:', data);
           }
