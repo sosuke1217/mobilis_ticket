@@ -319,8 +319,8 @@ class Reservation < ApplicationRecord
     {
       id: id,
       title: "#{name} - #{course}",
-      start: start_time.iso8601,
-      end: end_time.iso8601,
+      start: start_time.in_time_zone('Asia/Tokyo').iso8601,
+      end: end_time.in_time_zone('Asia/Tokyo').iso8601,
       backgroundColor: status_color,
       borderColor: status_color,
       textColor: text_color_for_status(status),

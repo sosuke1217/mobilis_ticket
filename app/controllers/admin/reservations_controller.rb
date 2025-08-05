@@ -69,8 +69,8 @@ class Admin::ReservationsController < ApplicationController
                     events << {
                       id: "interval-after-#{reservation.id}",
                       title: "整理時間 (#{interval_minutes}分#{reservation.has_individual_interval? ? ' - 個別設定' : ''})",
-                      start: reservation.end_time.iso8601,
-                      end: interval_end_after.iso8601,
+                      start: reservation.end_time.in_time_zone('Asia/Tokyo').iso8601,
+                      end: interval_end_after.in_time_zone('Asia/Tokyo').iso8601,
                       backgroundColor: reservation.has_individual_interval? ? '#ffeaa7' : '#e9ecef',
                       borderColor: reservation.has_individual_interval? ? '#fdcb6e' : '#ced4da',
                       textColor: '#6c757d',

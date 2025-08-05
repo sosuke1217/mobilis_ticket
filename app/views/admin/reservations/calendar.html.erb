@@ -230,10 +230,20 @@
       // Rails APIからイベントを取得
       events: '/admin/reservations.json',
       
-      // 🔧 eventDataTransformを簡素化（タイムゾーン設定があるので正規化不要）
+      // 🔧 eventDataTransformで時間を正しく処理
       eventDataTransform: function(eventData) {
         console.log('🔄 Processing Rails event (with timezone):', eventData.title);
         console.log('📅 Original times:', eventData.start, eventData.end);
+        
+        // 時間を明示的にDateオブジェクトに変換
+        if (eventData.start) {
+          eventData.start = new Date(eventData.start);
+        }
+        if (eventData.end) {
+          eventData.end = new Date(eventData.end);
+        }
+        
+        console.log('📅 Converted times:', eventData.start, eventData.end);
         return eventData;
       }
     };
