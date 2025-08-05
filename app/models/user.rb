@@ -5,6 +5,12 @@ class User < ApplicationRecord
   has_one :notification_preference, dependent: :destroy
   has_many :notification_logs, dependent: :destroy
   
+  # バリデーション
+  validates :name, presence: true, length: { maximum: 100 }
+  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
+  validates :phone_number, format: { with: /\A[\d\-\(\)\s]+\z/ }, allow_blank: true
+  validates :postal_code, format: { with: /\A\d{3}-?\d{4}\z/ }, allow_blank: true
+  
   after_create :build_default_notification_preference
   
   # 削除前のバリデーション（必要に応じて）

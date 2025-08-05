@@ -94,8 +94,8 @@ class Admin::DashboardController < ApplicationController
     @reservation_stats = {
       this_month: {
         total: Reservation.where(start_time: current_month_start..current_month_end).count,
-        confirmed: Reservation.confirmed.where(start_time: current_month_start..current_month_end).count,
-        cancelled: Reservation.cancelled.where(start_time: current_month_start..current_month_end).count,
+        confirmed: Reservation.where(status: 'confirmed', start_time: current_month_start..current_month_end).count,
+        cancelled: Reservation.where(status: 'cancelled', start_time: current_month_start..current_month_end).count,
         revenue: calculate_monthly_revenue(current_month_start, current_month_end)
       }
     }
@@ -106,8 +106,8 @@ class Admin::DashboardController < ApplicationController
     
     @reservation_stats[:last_month] = {
       total: Reservation.where(start_time: last_month_start..last_month_end).count,
-      confirmed: Reservation.confirmed.where(start_time: last_month_start..last_month_end).count,
-      cancelled: Reservation.cancelled.where(start_time: last_month_start..last_month_end).count,
+      confirmed: Reservation.where(status: 'confirmed', start_time: last_month_start..last_month_end).count,
+      cancelled: Reservation.where(status: 'cancelled', start_time: last_month_start..last_month_end).count,
       revenue: calculate_monthly_revenue(last_month_start, last_month_end)
     }
     
@@ -125,24 +125,29 @@ class Admin::DashboardController < ApplicationController
       week_end = (3-i).weeks.ago.end_of_week
       @weekly_reservations << {
         week: "#{week_start.strftime('%m/%d')} - #{week_end.strftime('%m/%d')}",
-        count: Reservation.active.where(start_time: week_start..week_end).count
+        count: Reservation.where(status: 'confirmed', start_time: week_start..week_end).count
       }
     end
   end
 
   def setup_daily_schedule
     # 今日の予約
-    @today_reservations = Reservation.active.today
+    @today_reservations = Reservation.where(status: 'confirmed')
+      .where('DATE(start_time) = ?', Date.current)
       .includes(:user)
       .order(:start_time)
     
     # 明日の予約
-    @tomorrow_reservations = Reservation.active.tomorrow
+    @tomorrow_reservations = Reservation.where(status: 'confirmed')
+      .where('DATE(start_time) = ?', Date.tomorrow)
       .includes(:user)
       .order(:start_time)
     
     # 今週の予約数
-    @this_week_count = Reservation.active.this_week.count
+    @this_week_count = Reservation.where(status: 'confirmed')
+      .where('start_time >= ?', Date.current.beginning_of_week)
+      .where('start_time <= ?', Date.current.end_of_week)
+      .count
     
     # 利用率（今日）
     total_slots_today = 20 # 10:00-20:00を30分刻み
@@ -152,30 +157,6 @@ class Admin::DashboardController < ApplicationController
 
   def setup_alerts
     @alerts = []
-    
-    # 🚨 リマインダー未送信の予約
-    pending_reminders = Reservation.needs_reminder.count
-    if pending_reminders > 0
-      @alerts << {
-        type: 'warning',
-        icon: 'fa-bell',
-        message: "明日の予約のリマインダーが#{pending_reminders}件未送信です",
-        action: 'rake reservation:send_reminders を実行してください'
-      }
-    end
-    
-    # 🚨 仮予約のまま確定していない予約
-    old_tentative = Reservation.tentative
-      .where('created_at < ?', 48.hours.ago)
-      .count
-    if old_tentative > 0
-      @alerts << {
-        type: 'info',
-        icon: 'fa-clock',
-        message: "48時間以上前の仮予約が#{old_tentative}件あります",
-        action: '確定またはキャンセルの対応をお願いします'
-      }
-    end
     
     # 🚨 期限切れチケット
     expired_tickets = Ticket.where('expiry_date < ?', Date.current)
@@ -192,7 +173,7 @@ class Admin::DashboardController < ApplicationController
     
     # 🚨 今日の予約でチケット未消化
     today_completed = @today_reservations.select do |reservation|
-      reservation.completed? && reservation.ticket_id.blank?
+      reservation.status == 'completed' && reservation.ticket_id.blank?
     end
     if today_completed.any?
       @alerts << {
@@ -211,8 +192,7 @@ class Admin::DashboardController < ApplicationController
       "80分コース" => 16000
     }
     
-    Reservation.active
-      .where(start_time: start_date..end_date)
+    Reservation.where(status: 'confirmed', start_time: start_date..end_date)
       .sum { |reservation| course_prices[reservation.course] || 12000 }
   end
 

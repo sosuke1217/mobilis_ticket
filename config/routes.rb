@@ -1,108 +1,75 @@
 # config/routes.rb の正しい修正方法
 
 Rails.application.routes.draw do
-  namespace :public do
-    get "bookings/new"
-    get "bookings/create"
-    get "bookings/show"
-  end
-  get "reservations/new"
-  get "reservations/create"
-  devise_for :admin_users
-  get "up" => "rails/health#show", as: :rails_health_check
-  get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
-  get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
-
-  post '/callback' => 'linebot#callback'
-
-  root to: "admin/dashboard#index"
-
+  # ルートページ
+  root 'admin/dashboard#index'
+  
+  # 管理者用ルート
   namespace :admin do
-    root to: "dashboard#index"
+    # ダッシュボード
+    get 'dashboard', to: 'dashboard#index'
     
-    # 🆕 予約分析ページ
-    get 'dashboard/reservation_analytics', to: 'dashboard#reservation_analytics'
-    # 通知ログ
-    resources :notification_logs, only: [:index, :destroy]
+    # 管理者ルート
+    root to: 'dashboard#index'
     
-    # チケット関連
-    resources :tickets, only: [:index, :create, :destroy] do
-      post :use, on: :member
-    end
-    
-    resources :ticket_templates, except: [:show]
-    resources :ticket_usages, only: [:index, :new, :create, :edit, :update]
-    
-    resource :settings, only: [:index, :update] do
+    # 予約管理
+    resources :reservations do
       collection do
-        get :index  # GET /admin/settings
-        patch :update  # PATCH /admin/settings
-        put :update   # PUT /admin/settings
+        get 'calendar'
       end
     end
     
     # ユーザー管理
-    resources :users, only: [:index, :new, :create, :edit, :update, :show, :destroy] do
-      resources :tickets, only: [:new, :create]
-      get 'ticket_management', to: 'users#tickets', as: 'ticket_management'
-      post 'create_ticket_from_template', to: 'tickets#create_from_template', as: 'create_ticket_from_template'
-      get 'ticket_usages', to: 'users#ticket_usages'
-    end
-
-    # 予約管理（修正版）
-    # カレンダーのルートを最初に独立して定義
-    get 'reservations/calendar', to: 'reservations#calendar', as: 'reservations_calendar'
-    get 'reservations/test_calendar', to: 'reservations#test_calendar', as: 'test_calendar'
-    get 'reservations/debug_calendar', to: 'reservations#debug_calendar', as: 'debug_calendar'
-    
-    resources :reservations do
-      collection do
-        # 🆕 一括作成機能を追加
-        get :bulk_new              # 一括作成フォーム表示
-        post :bulk_create          # 一括作成実行
-        
-        # 既存の機能
-        get :available_slots       # 空き時間取得
-        patch :bulk_status_change  # 一括ステータス変更
-      end
-      
+    resources :users do
       member do
-        # ステータス管理
-        patch :cancel                    # 予約キャンセル
-        patch :change_status            # ステータス変更
-        
-        # 繰り返し予約管理
-        post :create_recurring          # 繰り返し予約作成
-        patch :cancel_recurring         # 繰り返し予約停止
-        get :child_reservations         # 子予約一覧取得
-        
-        # メール送信
-        post :send_email               # メール送信（確認・リマインダー）
-        
-        patch :cancel_via_line    # LINE経由でのキャンセル
-        post :send_reminder       # 手動リマインダー送信
-
-        # 🆕 個別インターバル調整機能を追加
-        patch :update_individual_interval    # 個別インターバル時間を更新
-        patch :reset_individual_interval     # 個別インターバル設定をリセット
-        patch :update_interval
+        get 'tickets'
+        get 'history'
+        get 'ticket_management'
+        get 'ticket_usages'
       end
     end
+    
+    # チケット管理
+    resources :tickets do
+      member do
+        patch 'use'
+      end
+      collection do
+        post 'create_for_user'
+      end
+    end
+    resources :ticket_templates
+    resources :ticket_usages
+    
+    # 通知管理
+    resources :notification_logs, only: [:index]
+    resources :notification_preferences, only: [:index]
+    
+    # 設定
+    resources :settings, only: [:index, :show, :edit, :update]
   end
   
   # 一般ユーザー用ルート
-  resources :users, only: [:edit, :update]
-  resources :reservations, only: [:new, :create]
-
   namespace :public do
-    resources :bookings, only: [:new, :create, :show] do
-      collection do
-        get :available_times  # 🆕 空き時間取得API
-      end
-      
-      member do
-        patch :cancel
-      end
-    end
+    resources :bookings, only: [:new, :create, :show]
   end
+  
+  # 予約管理（一般）
+  resources :reservations, only: [:new, :create]
+  
+  # ユーザー管理（一般）
+  resources :users, only: [:edit, :update]
+  
+  # LINE Bot
+  post 'linebot', to: 'linebot#webhook'
+  
+  # ヘルスチェック
+  get 'health', to: 'health#check'
+  
+  # PWA
+  get 'manifest.json', to: 'pwa#manifest'
+  get 'service-worker.js', to: 'pwa#service_worker'
+  
+  # Devise
+  devise_for :admin_users
 end

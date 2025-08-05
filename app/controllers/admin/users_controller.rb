@@ -1,28 +1,32 @@
 class Admin::UsersController < ApplicationController
   before_action :authenticate_admin_user!
-  before_action :set_user, only: [:edit, :update, :show, :destroy]
+  before_action :set_user, only: [:show, :edit, :update, :destroy, :tickets, :history, :ticket_management, :ticket_usages]
 
   def index
     @q = User.ransack(params[:q])
-    @users = @q.result(distinct: true)
-            .includes(:tickets, :ticket_usages, :reservations)
-            .order(created_at: :desc)
-            .page(params[:page]).per(20)
-  
+    @users = @q.result(distinct: true).order(:name).page(params[:page]).per(20)
+    
     respond_to do |format|
       format.html
-      format.json { render json: @users.limit(1000).map { |u| { id: u.id, name: u.name } } }
+      format.json do
+        # スタッフ一覧を返す（管理者以外）
+        staff_users = User.where(admin: false).order(:name)
+        render json: staff_users.map { |user| { id: user.id, name: user.name } }
+      end
     end
   end
-  
+
   def show
-    @active_tickets = @user.tickets.where("remaining_count > 0").order(expiry_date: :asc)
-    @used_up_tickets = @user.tickets.where(remaining_count: 0).order(expiry_date: :desc)
-    @ticket_templates = TicketTemplate.all
+    @active_tickets = @user.tickets.where("remaining_count > 0")
     @total_usages = @user.ticket_usages.count
+    @recent_reservations = @user.reservations.order(start_time: :desc).limit(5)
+    @recent_usages = @user.ticket_usages.includes(:ticket, :reservation).order(created_at: :desc).limit(5)
+    
+    # 追加のインスタンス変数
     @last_used_at = @user.ticket_usages.order(used_at: :desc).limit(1).pluck(:used_at).first
     @active_ticket_types = @active_tickets.group(:title).count
     @recent_ticket_usages = @user.ticket_usages.includes(:ticket).order(used_at: :desc).limit(10)
+    @used_up_tickets = @user.tickets.where(remaining_count: 0)
   end
 
   def new
@@ -30,43 +34,32 @@ class Admin::UsersController < ApplicationController
   end
 
   def create
+    Rails.logger.info "Creating user with params: #{params[:user]}"
+    Rails.logger.info "Request format: #{request.format}"
+    Rails.logger.info "Content-Type: #{request.content_type}"
+    Rails.logger.info "Permitted params: #{user_params}"
+    
     @user = User.new(user_params)
     
-    Rails.logger.info "🆕 Creating new user: #{@user.name}"
+    respond_to do |format|
+      if @user.save
+        Rails.logger.info "User created successfully: #{@user.id}"
+        format.html { redirect_to admin_users_path, notice: 'ユーザーを作成しました' }
+        format.json { render json: { success: true, user: @user }, status: :created }
+      else
+        Rails.logger.error "User creation failed: #{@user.errors.full_messages}"
+        Rails.logger.error "User attributes: #{@user.attributes}"
+        format.html { render :new, status: :unprocessable_entity }
+        format.json { render json: { success: false, errors: @user.errors.full_messages }, status: :unprocessable_entity }
+      end
+    end
+  rescue => e
+    Rails.logger.error "Exception in create: #{e.message}"
+    Rails.logger.error e.backtrace.join("\n")
     
-    if @user.save
-      Rails.logger.info "✅ User created successfully: #{@user.name} (ID: #{@user.id})"
-      
-      respond_to do |format|
-        format.json { 
-          render json: { 
-            success: true, 
-            message: "ユーザーを作成しました",
-            user: {
-              id: @user.id,
-              name: @user.name,
-              created_at: @user.created_at
-            }
-          }, status: :created 
-        }
-        format.html { 
-          redirect_to admin_user_path(@user), notice: "ユーザー「#{@user.name}」を作成しました" 
-        }
-      end
-    else
-      Rails.logger.error "❌ User creation failed: #{@user.errors.full_messages}"
-      
-      respond_to do |format|
-        format.json { 
-          render json: { 
-            success: false, 
-            errors: @user.errors.full_messages 
-          }, status: :unprocessable_entity 
-        }
-        format.html { 
-          render :new, status: :unprocessable_entity 
-        }
-      end
+    respond_to do |format|
+      format.html { redirect_to admin_users_path, alert: "ユーザー作成中にエラーが発生しました: #{e.message}" }
+      format.json { render json: { success: false, errors: [e.message] }, status: :internal_server_error }
     end
   end
 
@@ -75,85 +68,101 @@ class Admin::UsersController < ApplicationController
 
   def update
     if @user.update(user_params)
-      redirect_to admin_user_path(@user), notice: "ユーザー情報を更新しました。"
+      redirect_to admin_users_path, notice: 'ユーザーを更新しました'
     else
       render :edit, status: :unprocessable_entity
     end
   end
 
   def destroy
-    user_name = @user.name.presence || @user.line_user_id || "ID:#{@user.id}"
-    
-    begin
-      # 削除前に関連データの数を取得（ログ用）
-      tickets_count = @user.tickets.count
-      usages_count = @user.ticket_usages.count
-      reservations_count = Reservation.where(user_id: @user.id).count
-      remaining_value = @user.remaining_ticket_value
-      
-      Rails.logger.info "🗑️ Deleting user: #{user_name}"
-      Rails.logger.info "   - Tickets: #{tickets_count}"
-      Rails.logger.info "   - Ticket usages: #{usages_count}"
-      Rails.logger.info "   - Reservations: #{reservations_count}"
-      Rails.logger.info "   - Remaining value: ¥#{remaining_value}"
-      
-      # ユーザーを削除（dependent: :destroyにより関連データも自動削除）
-      @user.destroy!
-      
-      Rails.logger.info "✅ User deleted successfully: #{user_name}"
-      
-      success_message = "ユーザー「#{user_name}」を削除しました。"
-      if tickets_count > 0 || usages_count > 0 || reservations_count > 0
-        success_message += "関連データ: チケット#{tickets_count}件、使用履歴#{usages_count}件、予約#{reservations_count}件も処理されました。"
-      end
-      
-      respond_to do |format|
-        format.html { redirect_to admin_users_path, notice: success_message }
-        format.json { render json: { success: true, message: success_message, redirect_url: admin_users_path } }
-      end
-      
-    rescue ActiveRecord::InvalidForeignKey => e
-      Rails.logger.error "❌ Foreign key constraint error: #{e.message}"
-      error_message = "このユーザーは他のデータから参照されているため削除できません。"
-      
-      respond_to do |format|
-        format.html { redirect_to admin_user_path(@user), alert: error_message }
-        format.json { render json: { success: false, error: error_message }, status: :unprocessable_entity }
-      end
-      
-    rescue ActiveRecord::RecordNotDestroyed => e
-      Rails.logger.error "❌ User deletion failed: #{e.record.errors.full_messages}"
-      error_message = "ユーザーの削除に失敗しました: #{e.record.errors.full_messages.join(', ')}"
-      
-      respond_to do |format|
-        format.html { redirect_to admin_user_path(@user), alert: error_message }
-        format.json { render json: { success: false, error: error_message }, status: :unprocessable_entity }
-      end
-      
-    rescue => e
-      Rails.logger.error "❌ Unexpected error during user deletion: #{e.message}"
-      Rails.logger.error e.backtrace.join("\n")
-      error_message = "削除中に予期しないエラーが発生しました。"
-      
-      respond_to do |format|
-        format.html { redirect_to admin_user_path(@user), alert: error_message }
-        format.json { render json: { success: false, error: error_message }, status: :internal_server_error }
+    @user.destroy
+    redirect_to admin_users_path, notice: 'ユーザーを削除しました'
+  end
+
+  # 回数券一覧API
+  def tickets
+    respond_to do |format|
+      format.json do
+        tickets = Ticket.where(user: @user).includes(:ticket_template)
+        
+        ticket_data = tickets.map do |ticket|
+          {
+            id: ticket.id,
+            name: ticket.ticket_template.name,
+            remaining: ticket.remaining_count,
+            total: ticket.ticket_template.total_count,
+            expires_at: ticket.expiry_date&.strftime('%Y-%m-%d'),
+            status: get_ticket_status(ticket),
+            price: ticket.ticket_template.price
+          }
+        end
+        
+        render json: ticket_data
       end
     end
   end
 
-  def ticket_usages
-    @user = User.find(params[:user_id])
-    @q = @user.ticket_usages.includes(:ticket).ransack(params[:q])
-    @usages = @q.result.order(used_at: :desc).page(params[:page]).per(30)
-  end
-  
-  def tickets
-    @user = User.find(params[:user_id])
-    @active_tickets = @user.tickets.active
-    @used_up_tickets = @user.tickets.used_up
+  # チケット管理ページ
+  def ticket_management
+    @tickets = @user.tickets.includes(:ticket_template)
     @ticket_templates = TicketTemplate.all
-  end  
+  end
+
+  # ユーザー固有のチケット使用履歴
+  def ticket_usages
+    @ticket_usages = @user.ticket_usages.includes(:ticket, :reservation).order(created_at: :desc).page(params[:page]).per(20)
+  end
+
+  # 顧客履歴API
+  def history
+    respond_to do |format|
+      format.json do
+        # 予約履歴
+        reservations = Reservation.where(user: @user)
+          .order(start_time: :desc)
+          .limit(20)
+        
+        # 回数券使用履歴
+        ticket_usages = TicketUsage.where(user: @user)
+          .includes(:ticket, :reservation)
+          .order(created_at: :desc)
+          .limit(20)
+        
+        history_data = []
+        
+        # 予約履歴を追加
+        reservations.each do |reservation|
+          history_data << {
+            type: 'reservation',
+            date: reservation.start_time.strftime('%Y-%m-%d'),
+            time: reservation.start_time.strftime('%H:%M'),
+            status: reservation.status,
+            course: reservation.course,
+            staff: reservation.user&.name || '未設定',
+            note: reservation.note
+          }
+        end
+        
+        # 回数券使用履歴を追加
+        ticket_usages.each do |usage|
+          history_data << {
+            type: 'ticket_usage',
+            date: usage.created_at.strftime('%Y-%m-%d'),
+            time: usage.created_at.strftime('%H:%M'),
+            status: 'completed',
+            course: usage.ticket.ticket_template.name,
+            staff: usage.reservation&.user&.name || '未設定',
+            note: usage.note
+          }
+        end
+        
+        # 日時でソート
+        history_data.sort_by! { |h| [h[:date], h[:time]] }.reverse!
+        
+        render json: history_data
+      end
+    end
+  end
 
   private
 
@@ -162,6 +171,20 @@ class Admin::UsersController < ApplicationController
   end
 
   def user_params
-    params.require(:user).permit(:name, :admin, :admin_memo, :birth_date, :postal_code, :address, :phone_number, :email)
+    params.require(:user).permit(
+      :name, :kana, :phone_number, :email, :birth_date, :postal_code, :address, :admin_memo
+    )
+  end
+
+  def get_ticket_status(ticket)
+            if ticket.expiry_date && ticket.expiry_date < Date.current
+      'expired'
+    elsif ticket.remaining_count <= 0
+      'used'
+    elsif ticket.remaining_count <= 2
+      'low'
+    else
+      'available'
+    end
   end
 end

@@ -293,7 +293,7 @@
     </div>
     <div class="card-body text-center">
       <p class="mb-3">チケットの発行・消化・削除を行うには、専用のチケット管理ページをご利用ください。</p>
-      <%= link_to "チケット管理ページへ", admin_user_ticket_management_path(@user), 
+      <%= link_to "チケット管理ページへ", ticket_management_admin_user_path(@user), 
           class: "btn btn-primary btn-lg" %>
     </div>
   </div>
@@ -384,7 +384,7 @@
         </div>
       <% end %>
       <p class="mt-3 px-3">
-        <%= link_to "全ての使用履歴を見る", admin_user_ticket_usages_path(@user), class: "btn btn-outline-secondary btn-sm" %>
+        <%= link_to "全ての使用履歴を見る", ticket_usages_admin_user_path(@user), class: "btn btn-outline-secondary btn-sm" %>
       </p>
     </div>
   </div>

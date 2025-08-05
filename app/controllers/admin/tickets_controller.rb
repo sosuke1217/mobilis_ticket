@@ -193,6 +193,36 @@ class Admin::TicketsController < ApplicationController
       end
     end
   end
+
+  # ユーザー固有のチケット発行API
+  def create_for_user
+    @user = User.find(params[:user_id])
+    @ticket_template = TicketTemplate.find(params[:ticket_template_id])
+    @count = params[:count].to_i || 1
+
+    begin
+      @count.times do
+        @user.tickets.create!(
+          ticket_template: @ticket_template,
+          total_count: @ticket_template.total_count,
+          remaining_count: @ticket_template.total_count,
+          purchase_date: Date.current,
+          expiry_date: @ticket_template.expiry_days ? Date.current + @ticket_template.expiry_days.days : nil
+        )
+      end
+
+      render json: { 
+        success: true, 
+        message: "#{@count}枚のチケットを発行しました",
+        tickets_count: @user.tickets.count
+      }
+    rescue => e
+      render json: { 
+        success: false, 
+        error: e.message 
+      }, status: :unprocessable_entity
+    end
+  end
   
   private
 

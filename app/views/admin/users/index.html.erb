@@ -22,7 +22,7 @@
           </div>
         </div>
         <div class="col-md-auto text-muted small">
-          全 <%= @users.total_count %> 件
+          全 <%= @users.count %> 件
         </div>
       <% end %>
 
@@ -59,7 +59,7 @@
                 <td><%= number_to_currency(user.remaining_ticket_value, unit: "¥", precision: 0) %></td>
                 <td>
                   <% if user.name.present? %>
-                    <%= link_to "チケット管理", admin_user_ticket_management_path(user), class: "btn btn-sm btn-outline-primary" %>
+                    <%= link_to "チケット管理", ticket_management_admin_user_path(user), class: "btn btn-sm btn-outline-primary" %>
                   <% else %>
                     <span class="text-muted fst-italic">未登録</span>
                   <% end %>
@@ -214,30 +214,54 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // CSRF トークンを取得
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    console.log('CSRF Token:', csrfToken);
+    
+    if (!csrfToken) {
+      alert('CSRFトークンが見つかりません。ページを再読み込みしてください。');
+      return;
+    }
+    
+    // リクエストデータを準備
+    const requestData = {
+      user: {
+        name: userName,
+        phone_number: userPhone,
+        email: userEmail,
+        birth_date: userBirthDate || null,
+        postal_code: userPostalCode,
+        address: userAddress,
+        admin_memo: userMemo
+      }
+    };
+    
+    console.log('Request data:', requestData);
     
     // ユーザー作成リクエストを送信
     fetch('/admin/users', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
         'X-CSRF-Token': csrfToken
       },
-      body: JSON.stringify({
-        user: {
-          name: userName,
-          phone_number: userPhone,
-          email: userEmail,
-          birth_date: userBirthDate || null,
-          postal_code: userPostalCode,
-          address: userAddress,
-          admin_memo: userMemo
-        }
-      })
+      body: JSON.stringify(requestData)
     })
     .then(response => {
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+      
       if (!response.ok) {
-        return response.json().then(data => {
-          throw new Error(data.errors ? data.errors.join(', ') : 'ユーザー作成に失敗しました');
+        // レスポンスのテキストを取得して詳細を確認
+        return response.text().then(text => {
+          console.log('Response text:', text);
+          try {
+            const data = JSON.parse(text);
+            console.log('Error response data:', data);
+            throw new Error(data.errors ? data.errors.join(', ') : 'ユーザー作成に失敗しました');
+          } catch (parseError) {
+            console.log('JSON parse error:', parseError);
+            throw new Error(`サーバーエラーが発生しました。ステータス: ${response.status}`);
+          }
         });
       }
       return response.json();
@@ -265,7 +289,21 @@ document.addEventListener('DOMContentLoaded', function() {
     })
     .catch(error => {
       console.error('❌ Error creating user:', error);
-      alert('ユーザー作成エラー: ' + error.message);
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      
+      // エラーメッセージを表示
+      let errorMessage = 'ユーザー作成エラー: ';
+      if (error.message.includes('Unexpected token')) {
+        errorMessage += 'サーバーエラーが発生しました。ページを再読み込みしてください。';
+      } else if (error.message.includes('Failed to fetch')) {
+        errorMessage += 'ネットワークエラーが発生しました。サーバーが起動しているか確認してください。';
+      } else {
+        errorMessage += error.message || '不明なエラーが発生しました';
+      }
+      
+      alert(errorMessage);
       
       // ボタンを元に戻す
       this.disabled = false;
