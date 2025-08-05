@@ -776,7 +776,18 @@
           event.setProp('editable', true);
           event.setProp('startEditable', true);
           event.setProp('durationEditable', true);
+          
+          // 🔧 追加: イベントの色も確実に設定
+          if (event.extendedProps.type === 'interval') {
+            event.setProp('backgroundColor', '#e9ecef');
+            event.setProp('borderColor', '#6c757d');
+          } else {
+            event.setProp('backgroundColor', '#28a745');
+            event.setProp('borderColor', '#28a745');
+          }
         });
+        
+        console.log('✅ All events initialized with proper settings');
       }, 1000);
       
     } catch (error) {
@@ -877,11 +888,34 @@
         event.setProp('startEditable', true);
         event.setProp('durationEditable', true);
         
-        // 🔧 重要: カレンダー全体を更新してイベントが消えないようにする
+        // 🔧 重要: より安全なカレンダー更新
         setTimeout(() => {
-          console.log('🔄 Refreshing calendar to ensure events remain visible...');
-          pageCalendar.refetchEvents();
-        }, 200);
+          console.log('🔄 Safely refreshing calendar...');
+          try {
+            // 現在のイベント数を記録
+            const currentEvents = pageCalendar.getEvents();
+            console.log(`📊 Current events before refresh: ${currentEvents.length}`);
+            
+            // イベントを再取得
+            pageCalendar.refetchEvents();
+            
+            // 更新後のイベント数を確認
+            setTimeout(() => {
+              const newEvents = pageCalendar.getEvents();
+              console.log(`📊 Events after refresh: ${newEvents.length}`);
+              
+              if (newEvents.length === 0) {
+                console.warn('⚠️ No events after refresh, reinitializing...');
+                initializeFixedCalendar();
+              } else {
+                console.log('✅ Calendar refresh successful');
+              }
+            }, 300);
+          } catch (refreshError) {
+            console.error('❌ Calendar refresh error:', refreshError);
+            initializeFixedCalendar();
+          }
+        }, 300); // 少し長めの待機時間
         
       } else {
         console.error('❌ Server reported failure:', data.error);
@@ -1003,11 +1037,34 @@
         event.setProp('startEditable', true);
         event.setProp('durationEditable', true);
         
-        // 🔧 重要: カレンダー全体を更新してイベントが消えないようにする
+        // 🔧 重要: より安全なカレンダー更新
         setTimeout(() => {
-          console.log('🔄 Refreshing calendar after interval update...');
-          pageCalendar.refetchEvents();
-        }, 200);
+          console.log('🔄 Safely refreshing calendar after interval update...');
+          try {
+            // 現在のイベント数を記録
+            const currentEvents = pageCalendar.getEvents();
+            console.log(`📊 Current events before refresh: ${currentEvents.length}`);
+            
+            // イベントを再取得
+            pageCalendar.refetchEvents();
+            
+            // 更新後のイベント数を確認
+            setTimeout(() => {
+              const newEvents = pageCalendar.getEvents();
+              console.log(`📊 Events after refresh: ${newEvents.length}`);
+              
+              if (newEvents.length === 0) {
+                console.warn('⚠️ No events after refresh, reinitializing...');
+                initializeFixedCalendar();
+              } else {
+                console.log('✅ Calendar refresh successful');
+              }
+            }, 300);
+          } catch (refreshError) {
+            console.error('❌ Calendar refresh error:', refreshError);
+            initializeFixedCalendar();
+          }
+        }, 300); // 少し長めの待機時間
         
       } else {
         console.error('❌ Interval update failed:', data.error);
