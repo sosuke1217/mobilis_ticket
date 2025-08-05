@@ -40,7 +40,7 @@
           <i class="fas fa-calendar-plus me-2"></i>
           <span id="modalTitle">予約管理</span>
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" onclick="cleanupModal()"></button>
       </div>
       
       <div class="modal-body">
@@ -118,7 +118,7 @@
           </button>
         </div>
         <div>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="cleanupModal()">閉じる</button>
           <button type="button" class="btn btn-primary" onclick="saveReservation()">
             <i class="fas fa-save me-1"></i>保存
           </button>
@@ -1062,7 +1062,32 @@
     }
     
     const bootstrapModal = new bootstrap.Modal(modal);
+    
+    // モーダルが閉じられた時のクリーンアップ処理を追加
+    modal.addEventListener('hidden.bs.modal', function() {
+      console.log('🔒 Modal hidden, cleaning up...');
+      cleanupModal();
+    });
+    
     bootstrapModal.show();
+  }
+
+  // モーダルのクリーンアップ
+  function cleanupModal() {
+    console.log('🧹 Cleaning up modal...');
+    
+    // backdropを手動で削除
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    backdrops.forEach(backdrop => {
+      backdrop.remove();
+    });
+    
+    // bodyのmodal-openクラスを削除
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+    
+    console.log('✅ Modal cleanup completed');
   }
 
   function loadReservationData(reservationId) {
@@ -1217,8 +1242,11 @@
         const message = isEdit ? '予約を更新しました' : '予約を作成しました';
         showMessage(message, 'success');
         
+        // モーダルを正しく閉じる
         const modal = bootstrap.Modal.getInstance(document.getElementById('reservationModal'));
-        modal.hide();
+        if (modal) {
+          modal.hide();
+        }
         
         refreshFixedCalendar();
         
@@ -1314,8 +1342,11 @@
           if (data.success) {
             showMessage('予約を削除しました', 'success');
             
+            // モーダルを正しく閉じる
             const modal = bootstrap.Modal.getInstance(document.getElementById('reservationModal'));
-            modal.hide();
+            if (modal) {
+              modal.hide();
+            }
             
             refreshFixedCalendar();
             
@@ -1328,8 +1359,11 @@
           console.log('⚠️ Cannot read response, assuming success');
           showMessage('予約を削除しました', 'success');
           
+          // モーダルを正しく閉じる
           const modal = bootstrap.Modal.getInstance(document.getElementById('reservationModal'));
-          modal.hide();
+          if (modal) {
+            modal.hide();
+          }
           
           refreshFixedCalendar();
           
@@ -1340,8 +1374,11 @@
         console.error('❌ Response processing error:', error);
         showMessage('予約を削除しました', 'success');
         
+        // モーダルを正しく閉じる
         const modal = bootstrap.Modal.getInstance(document.getElementById('reservationModal'));
-        modal.hide();
+        if (modal) {
+          modal.hide();
+        }
         refreshFixedCalendar();
         currentReservationId = null;
       }
@@ -1403,6 +1440,7 @@
   window.openReservationModal = openReservationModal;
   window.saveReservation = saveReservation;
   window.testPositionAlignment = testPositionAlignment;
+  window.cleanupModal = cleanupModal;
 
   // 既存の関数名も維持（互換性のため）
   window.refreshCalendar = refreshFixedCalendar;

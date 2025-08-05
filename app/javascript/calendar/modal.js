@@ -2,6 +2,7 @@
 import { showMessage } from './utils.js';
 
 let currentReservationId = null;
+let currentModal = null;
 
 // 予約モーダルを開く
 export function openReservationModal(reservationId, dateStr) {
@@ -24,8 +25,36 @@ export function openReservationModal(reservationId, dateStr) {
   }
   
   // モーダル表示
-  const bootstrapModal = new bootstrap.Modal(modal);
-  bootstrapModal.show();
+  currentModal = new bootstrap.Modal(modal);
+  
+  // モーダルが閉じられた時の処理を追加
+  modal.addEventListener('hidden.bs.modal', function() {
+    console.log('🔒 Modal hidden, cleaning up...');
+    cleanupModal();
+  });
+  
+  currentModal.show();
+}
+
+// モーダルのクリーンアップ
+function cleanupModal() {
+  console.log('🧹 Cleaning up modal...');
+  
+  // backdropを手動で削除
+  const backdrops = document.querySelectorAll('.modal-backdrop');
+  backdrops.forEach(backdrop => {
+    backdrop.remove();
+  });
+  
+  // bodyのmodal-openクラスを削除
+  document.body.classList.remove('modal-open');
+  document.body.style.overflow = '';
+  document.body.style.paddingRight = '';
+  
+  // 現在のモーダルインスタンスをクリア
+  currentModal = null;
+  
+  console.log('✅ Modal cleanup completed');
 }
 
 // モーダルフィールドのリセット
@@ -108,59 +137,82 @@ function saveReservation() {
     note: document.getElementById('reservationNote').value
   };
   
-  // バリデーション
-  if (!formData.user_id) {
-    showMessage('ユーザーを選択してください', 'warning');
+  console.log('💾 Saving reservation:', formData);
+  
+  if (!formData.user_id || !formData.date || !formData.time) {
+    showMessage('必須項目を入力してください', 'warning');
     return;
   }
   
-  if (!formData.date || !formData.time) {
-    showMessage('日付と時間を入力してください', 'warning');
-    return;
-  }
+  const startDateTime = new Date(`${formData.date}T${formData.time}:00`);
+  const courseDuration = parseInt(formData.course.replace('分', ''));
+  const endDateTime = new Date(startDateTime.getTime() + courseDuration * 60000);
   
-  const saveBtn = document.getElementById('saveReservationBtn');
+  const apiData = {
+    user_id: parseInt(formData.user_id),
+    course: formData.course,
+    start_time: startDateTime.toISOString(),
+    end_time: endDateTime.toISOString(),
+    status: formData.status,
+    note: formData.note
+  };
+  
+  console.log('💾 API data:', apiData);
+  
+  const saveBtn = document.querySelector('#reservationModal .btn-primary');
   const originalText = saveBtn.innerHTML;
   saveBtn.disabled = true;
   saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>保存中...';
   
-  const url = currentReservationId 
-    ? `/admin/reservations/${currentReservationId}`
-    : '/admin/reservations';
+  const isEdit = currentReservationId !== null;
+  const url = isEdit 
+    ? `${window.location.protocol}//${window.location.host}/admin/reservations/${currentReservationId}`
+    : `${window.location.protocol}//${window.location.host}/admin/reservations`;
+  const method = isEdit ? 'PATCH' : 'POST';
   
-  const method = currentReservationId ? 'PATCH' : 'POST';
+  console.log(`📡 ${method} request to:`, url);
   
   fetch(url, {
     method: method,
     headers: {
       'Content-Type': 'application/json',
-      'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+      'Accept': 'application/json',
+      'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content,
+      'X-Requested-With': 'XMLHttpRequest'
     },
-    body: JSON.stringify({ reservation: formData })
+    body: JSON.stringify({ reservation: apiData }),
+    credentials: 'same-origin'
   })
-  .then(response => response.json())
+  .then(response => {
+    console.log('📡 Response status:', response.status);
+    return response.json();
+  })
   .then(data => {
+    console.log('💾 Save response:', data);
+    
     if (data.success) {
-      showMessage(
-        currentReservationId ? '予約を更新しました' : '予約を作成しました',
-        'success'
-      );
+      const message = isEdit ? '予約を更新しました' : '予約を作成しました';
+      showMessage(message, 'success');
       
       // モーダルを閉じる
-      const modal = bootstrap.Modal.getInstance(document.getElementById('reservationModal'));
-      modal.hide();
+      if (currentModal) {
+        currentModal.hide();
+      }
       
       // カレンダーを更新
       if (window.pageCalendar) {
         window.pageCalendar.refetchEvents();
       }
+      
     } else {
-      showMessage(data.error || '予約の保存に失敗しました', 'danger');
+      console.error('❌ Save failed:', data.error || data.errors);
+      const errorMsg = data.error || (data.errors ? data.errors.join(', ') : '保存に失敗しました');
+      showMessage(errorMsg, 'danger');
     }
   })
   .catch(error => {
-    console.error('❌ Save failed:', error);
-    showMessage('保存中にエラーが発生しました', 'danger');
+    console.error('❌ Save request failed:', error);
+    showMessage('保存中にエラーが発生しました: ' + error.message, 'danger');
   })
   .finally(() => {
     saveBtn.disabled = false;
@@ -170,75 +222,123 @@ function saveReservation() {
 
 // 予約削除
 function deleteReservation() {
-  if (!currentReservationId) return;
+  if (!currentReservationId) {
+    console.warn('⚠️ No reservation ID for deletion');
+    showMessage('削除する予約が選択されていません', 'warning');
+    return;
+  }
   
-  if (!confirm('この予約を削除しますか？')) return;
+  console.log('🔍 Current reservation ID:', currentReservationId);
+  
+  const confirmMessage = '本当にこの予約を削除しますか？\n削除した予約は復元できません。';
+  if (!confirm(confirmMessage)) {
+    console.log('🚫 Deletion cancelled by user');
+    return;
+  }
+  
+  console.log('🗑️ Deleting reservation:', currentReservationId);
+  
+  const deleteBtn = document.getElementById('deleteReservationBtn');
+  const originalText = deleteBtn.innerHTML;
+  deleteBtn.disabled = true;
+  deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>削除中...';
+  
+  const saveBtn = document.querySelector('#reservationModal .btn-primary');
+  saveBtn.disabled = true;
   
   fetch(`/admin/reservations/${currentReservationId}`, {
     method: 'DELETE',
     headers: {
-      'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
-    }
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content,
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    credentials: 'same-origin'
   })
-  .then(response => response.json())
+  .then(response => {
+    console.log('📡 Delete response status:', response.status);
+    return response.json();
+  })
   .then(data => {
+    console.log('🗑️ Delete response:', data);
+    
     if (data.success) {
       showMessage('予約を削除しました', 'success');
       
       // モーダルを閉じる
-      const modal = bootstrap.Modal.getInstance(document.getElementById('reservationModal'));
-      modal.hide();
+      if (currentModal) {
+        currentModal.hide();
+      }
       
       // カレンダーを更新
       if (window.pageCalendar) {
         window.pageCalendar.refetchEvents();
       }
+      
+      currentReservationId = null;
     } else {
-      showMessage(data.error || '予約の削除に失敗しました', 'danger');
+      console.error('❌ Delete failed:', data.error);
+      showMessage(data.error || '削除に失敗しました', 'danger');
     }
   })
   .catch(error => {
-    console.error('❌ Delete failed:', error);
-    showMessage('削除中にエラーが発生しました', 'danger');
+    console.error('❌ Delete request failed:', error);
+    showMessage('削除中にエラーが発生しました: ' + error.message, 'danger');
+  })
+  .finally(() => {
+    deleteBtn.disabled = false;
+    deleteBtn.innerHTML = originalText;
+    saveBtn.disabled = false;
   });
 }
 
 // イベントリスナー設定
 function setupEventListeners() {
-  // 保存ボタン
-  const saveBtn = document.getElementById('saveReservationBtn');
-  if (saveBtn) {
-    saveBtn.addEventListener('click', saveReservation);
-  }
+  const timeSelect = document.getElementById('reservationTime');
+  const courseSelect = document.getElementById('reservationCourse');
   
-  // 削除ボタン
+  timeSelect?.addEventListener('change', updateEndTime);
+  courseSelect?.addEventListener('change', updateEndTime);
+  
   const deleteBtn = document.getElementById('deleteReservationBtn');
-  if (deleteBtn) {
-    deleteBtn.addEventListener('click', deleteReservation);
-  }
+  deleteBtn?.addEventListener('click', deleteReservation);
   
-  // ステータス変更時の処理
-  const statusSelect = document.getElementById('reservationStatus');
-  const cancellationArea = document.getElementById('cancellationReasonArea');
+  // 保存ボタンのイベントリスナー
+  const saveBtn = document.querySelector('#reservationModal .btn-primary');
+  saveBtn?.addEventListener('click', saveReservation);
   
-  if (statusSelect && cancellationArea) {
-    statusSelect.addEventListener('change', function() {
-      if (this.value === 'cancelled') {
-        cancellationArea.style.display = 'block';
-      } else {
-        cancellationArea.style.display = 'none';
-      }
-    });
+  console.log('✅ Event listeners setup');
+}
+
+// 終了時間の更新
+function updateEndTime() {
+  const time = document.getElementById('reservationTime').value;
+  const course = document.getElementById('reservationCourse').value;
+  const endTimeDisplay = document.getElementById('endTimeDisplay');
+  
+  if (time && course) {
+    const [hours, minutes] = time.split(':').map(Number);
+    const courseDuration = parseInt(course.replace('分', ''));
+    
+    const startDate = new Date();
+    startDate.setHours(hours, minutes, 0, 0);
+    
+    const endDate = new Date(startDate.getTime() + courseDuration * 60000);
+    const endTimeStr = `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`;
+    
+    endTimeDisplay.value = endTimeStr;
   }
 }
 
-// モーダルコントローラー初期化
+// モーダル初期化
 export function setupReservationModal() {
-  // グローバル関数として公開
-  window.openReservationModal = openReservationModal;
-  
-  // イベントリスナー設定
+  console.log('🔧 Setting up reservation modal...');
   setupEventListeners();
   
-  console.log('✅ Modal controller initialized');
+  // グローバル関数として公開
+  window.saveReservation = saveReservation;
+  window.deleteReservation = deleteReservation;
+  
+  console.log('✅ Reservation modal setup completed');
 }
