@@ -1345,7 +1345,10 @@
           document.getElementById('reservationStatus').value = data.status || 'confirmed';
           document.getElementById('reservationNote').value = data.note || '';
           
-          updateEndTime();
+          // 少し遅延させてからupdateEndTimeを呼び出し
+          setTimeout(() => {
+            updateEndTime();
+          }, 100);
           
                   console.log('✅ Form populated with reservation data');
         console.log('📝 Form values after population:', {
@@ -1388,6 +1391,8 @@
     const course = document.getElementById('reservationCourse').value;
     const endTimeDisplay = document.getElementById('endTimeDisplay');
     
+    console.log('🕐 updateEndTime called with:', { time, course });
+    
     if (time && course) {
       const [hours, minutes] = time.split(':').map(Number);
       const courseDuration = parseInt(course.replace('分', ''));
@@ -1399,6 +1404,9 @@
       const endTimeStr = `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`;
       
       endTimeDisplay.value = endTimeStr;
+      console.log('✅ End time calculated:', endTimeStr);
+    } else {
+      console.warn('⚠️ updateEndTime: Missing time or course:', { time, course });
     }
   }
 
