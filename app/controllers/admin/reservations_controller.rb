@@ -1,5 +1,4 @@
 # app/controllers/admin/reservations_controller.rb
-# この内容で既存のファイルを更新してください
 
 class Admin::ReservationsController < ApplicationController
   before_action :authenticate_admin_user!
@@ -9,45 +8,63 @@ class Admin::ReservationsController < ApplicationController
     respond_to do |format|
       format.html { redirect_to calendar_admin_reservations_path }
       format.json do
-        # JSONリクエストのみを処理
         if request.format.json?
           Rails.logger.info "🔍 JSON request received"
-          Rails.logger.info "📋 Params: #{params.inspect}"
-          Rails.logger.info "📋 Request format: #{request.format}"
-          Rails.logger.info "📋 Accept header: #{request.headers['Accept']}"
           
           begin
-            Rails.logger.info "🔍 Starting calendar data fetch"
-            
             # システム設定を取得
             @settings = ApplicationSetting.current
-            Rails.logger.info "✅ ApplicationSetting loaded: interval=#{@settings.reservation_interval_minutes}min"
+            Rails.logger.info "✅ ApplicationSetting loaded"
             
-            # 予約を取得
+            # 予約を取得（キャンセル済みは除外）
             reservations = Reservation.includes(:user)
               .where(start_time: params[:start]..params[:end])
+              .where.not(status: :cancelled)
               .order(:start_time)
             
-            Rails.logger.info "📋 Found #{reservations.count} reservations in date range"
+            Rails.logger.info "📋 Found #{reservations.count} reservations"
             
             events = []
             
-            reservations.each_with_index do |reservation, index|
-              Rails.logger.info "🔍 Processing reservation #{index + 1}/#{reservations.count}: ID=#{reservation.id}"
-              Rails.logger.info "👤 User info: #{reservation.user&.attributes&.slice('id', 'name', 'phone_number', 'email', 'birth_date')}"
+            reservations.each do |reservation|
+              Rails.logger.info "🔍 Processing reservation ID=#{reservation.id}"
               
-              # メイン予約イベント
-              # 顧客名を取得（nameフィールドまたはuser.name）
+              # 顧客名を取得
               customer_name = reservation.name.present? ? reservation.name : reservation.user&.name || '未設定'
+              
+              # 🔧 デバッグ: 時間の詳細を確認
+              Rails.logger.info "🕐 Raw DB times for reservation #{reservation.id}:"
+              Rails.logger.info "  start_time (raw): #{reservation.start_time}"
+              Rails.logger.info "  end_time (raw): #{reservation.end_time}"
+              Rails.logger.info "  start_time.class: #{reservation.start_time.class}"
+              Rails.logger.info "  Time.zone: #{Time.zone}"
+              Rails.logger.info "  Rails.application.config.time_zone: #{Rails.application.config.time_zone}"
+              
+              # JST時間として処理（複数の方法を試す）
+              start_in_jst = reservation.start_time.in_time_zone('Asia/Tokyo')
+              end_in_jst = reservation.end_time.in_time_zone('Asia/Tokyo')
+              
+              Rails.logger.info "  start_in_jst: #{start_in_jst}"
+              Rails.logger.info "  end_in_jst: #{end_in_jst}"
+              
+              # 🔧 修正: タイムゾーン情報なしのISO8601形式で送信
+              # FullCalendarがローカル時間として解釈するように
+              start_iso = start_in_jst.strftime('%Y-%m-%dT%H:%M:%S')
+              end_iso = end_in_jst.strftime('%Y-%m-%dT%H:%M:%S')
+              
+              Rails.logger.info "🕐 Sending to FullCalendar:"
+              Rails.logger.info "  start_iso: #{start_iso}"
+              Rails.logger.info "  end_iso: #{end_iso}"
               
               event = {
                 id: reservation.id,
                 title: "#{customer_name} - #{reservation.course}",
-                start: reservation.start_time.iso8601,
-                end: reservation.end_time.iso8601,
+                start: start_iso,  # タイムゾーン情報なしで送信
+                end: end_iso,      # タイムゾーン情報なしで送信
                 backgroundColor: getEventColor(reservation.status),
                 borderColor: getEventColor(reservation.status),
                 textColor: 'white',
+                className: reservation.status,  # ステータスに応じたCSSクラス
                 extendedProps: {
                   status: reservation.status,
                   course: reservation.course,
@@ -67,16 +84,20 @@ class Admin::ReservationsController < ApplicationController
               events << event
               Rails.logger.info "✅ Successfully processed reservation #{reservation.id}"
               
-              # インターバルイベントを追加
+              # インターバルイベントも同様に修正
               if @settings.reservation_interval_minutes > 0
+                interval_start_iso = end_in_jst.strftime('%Y-%m-%dT%H:%M:%S')
+                interval_end_iso = (end_in_jst + @settings.reservation_interval_minutes.minutes).strftime('%Y-%m-%dT%H:%M:%S')
+                
                 interval_event = {
                   id: "interval-after-#{reservation.id}",
                   title: "整理時間 (#{@settings.reservation_interval_minutes}分)",
-                  start: reservation.end_time.iso8601,
-                  end: (reservation.end_time + @settings.reservation_interval_minutes.minutes).iso8601,
+                  start: interval_start_iso,
+                  end: interval_end_iso,
                   backgroundColor: '#17a2b8',
                   borderColor: '#17a2b8',
                   textColor: 'white',
+                  className: 'break',  # 休憩時間のCSSクラス
                   extendedProps: {
                     status: 'break',
                     type: 'interval',
@@ -90,9 +111,8 @@ class Admin::ReservationsController < ApplicationController
             end
             
             Rails.logger.info "✅ Successfully processed #{events.length} events"
-            Rails.logger.info "📤 Sending events: #{events.map { |e| e[:id] }.join(', ')}"
+            Rails.logger.info "📤 Sample event data: #{events.first&.slice(:id, :title, :start, :end)}"
             
-            Rails.logger.info "📤 Rendering JSON response"
             render json: events, content_type: 'application/json'
             
           rescue => e
@@ -122,8 +142,8 @@ class Admin::ReservationsController < ApplicationController
         render json: {
           success: true,
           id: @reservation.id,
-          start_time: @reservation.start_time.iso8601,
-          end_time: @reservation.end_time.iso8601,
+          start_time: @reservation.start_time.in_time_zone('Asia/Tokyo').iso8601,  # JST時間で送信
+          end_time: @reservation.end_time.in_time_zone('Asia/Tokyo').iso8601,      # JST時間で送信
           course: @reservation.course,
           status: @reservation.status,
           note: @reservation.note,
@@ -146,55 +166,93 @@ class Admin::ReservationsController < ApplicationController
   end
 
   def create
-    Rails.logger.info "🆕 Create new reservation"
-    Rails.logger.info "📋 Params: #{params.inspect}"
+    Rails.logger.info "🔄 Create reservation"
+    Rails.logger.info "📝 Params: #{params.inspect}"
     
-    # 日時を組み合わせてstart_timeとend_timeを設定
-    if params[:reservation][:date].present? && params[:reservation][:time].present?
-      begin
-        date = Date.parse(params[:reservation][:date])
-        time = Time.parse(params[:reservation][:time])
-        
-        # 日本のタイムゾーンでDateTimeを作成
-        start_time = Time.zone.local(date.year, date.month, date.day, time.hour, time.min)
-        
-        # コースの長さを取得してend_timeを計算
-        duration_minutes = case params[:reservation][:course]
-                          when '60分' then 60
-                          when '80分' then 80
-                          when '90分' then 90
-                          when '120分' then 120
-                          else 60
-                          end
-        
-        end_time = start_time + duration_minutes.minutes
-        
-        Rails.logger.info "🕐 Parsed times - Date: #{date}, Time: #{time}, Start: #{start_time}, End: #{end_time}"
-        
-        # パラメータに日時を追加
-        params[:reservation][:start_time] = start_time
-        params[:reservation][:end_time] = end_time
-      rescue => e
-        Rails.logger.error "❌ Date/time parsing error: #{e.message}"
-        respond_to do |format|
-          format.json { render json: { success: false, error: '日時の形式が正しくありません' } }
-        end
-        return
+    begin
+      # パラメータの処理（時間をJST として適切に処理）
+      processed_params = reservation_params.dup
+      
+      # start_time, end_time が含まれている場合、JST として処理
+      if processed_params[:start_time].present?
+        # ISO8601形式の文字列をJST時間としてパース
+        processed_params[:start_time] = Time.zone.parse(processed_params[:start_time])
+        Rails.logger.info "🕐 Parsed start_time: #{processed_params[:start_time]} (JST)"
       end
-    end
-    
-    @reservation = Reservation.create_as_admin!(reservation_params)
-    
-    respond_to do |format|
-      Rails.logger.info "✅ Reservation created successfully"
-      format.html { redirect_to calendar_admin_reservations_path, notice: '予約を作成しました' }
-      format.json { render json: { success: true, id: @reservation.id } }
-    end
-  rescue => e
-    Rails.logger.error "❌ Create error: #{e.message}"
-    respond_to do |format|
-      format.html { render :new, status: :unprocessable_entity }
-      format.json { render json: { success: false, error: e.message } }
+      
+      if processed_params[:end_time].present?
+        processed_params[:end_time] = Time.zone.parse(processed_params[:end_time])  
+        Rails.logger.info "🕐 Parsed end_time: #{processed_params[:end_time]} (JST)"
+      end
+      
+      # date と time パラメータがある場合は統合処理
+      if processed_params[:date].present? && processed_params[:time].present?
+        start_datetime = Time.zone.parse("#{processed_params[:date]} #{processed_params[:time]}")
+        processed_params[:start_time] = start_datetime
+        
+        # コースから終了時間を計算
+        if processed_params[:course].present?
+          duration = case processed_params[:course]
+                    when '40分' then 40.minutes
+                    when '60分' then 60.minutes
+                    when '80分' then 80.minutes
+                    else 60.minutes
+                    end
+          processed_params[:end_time] = start_datetime + duration
+        end
+        
+        # date, time パラメータは削除
+        processed_params.delete(:date)
+        processed_params.delete(:time)
+      end
+      
+      # individual_interval_minutesの処理（空文字列をnullに変換）
+      if processed_params[:individual_interval_minutes].present?
+        if processed_params[:individual_interval_minutes].to_s.strip == ''
+          processed_params[:individual_interval_minutes] = nil
+        else
+          processed_params[:individual_interval_minutes] = processed_params[:individual_interval_minutes].to_i
+        end
+      end
+      
+      Rails.logger.info "🔄 Processed params: #{processed_params.inspect}"
+      Rails.logger.info "🔄 Individual interval minutes: #{processed_params[:individual_interval_minutes]}"
+      
+      @reservation = Reservation.new(processed_params)
+      
+      # キャンセルステータスで作成する場合はcancel!メソッドを使用
+      if processed_params[:status] == 'cancelled'
+        Rails.logger.info "🔄 Creating cancelled reservation"
+        if @reservation.save
+          @reservation.cancel!(processed_params[:cancellation_reason])
+          success = true
+        else
+          success = false
+        end
+      else
+        success = @reservation.save
+      end
+      
+      if success
+        Rails.logger.info "✅ Reservation created successfully"
+        respond_to do |format|
+          format.html { redirect_to calendar_admin_reservations_path, notice: '予約を作成しました' }
+          format.json { render json: { success: true, id: @reservation.id } }
+        end
+      else
+        Rails.logger.error "❌ Reservation creation failed: #{@reservation.errors.full_messages}"
+        respond_to do |format|
+          format.html { render :new, status: :unprocessable_entity }
+          format.json { render json: { success: false, error: @reservation.errors.full_messages.join(', ') } }
+        end
+      end
+    rescue => e
+      Rails.logger.error "❌ Create error: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      respond_to do |format|
+        format.html { render :new, status: :unprocessable_entity }
+        format.json { render json: { success: false, error: e.message } }
+      end
     end
   end
 
@@ -203,84 +261,90 @@ class Admin::ReservationsController < ApplicationController
 
   def update
     Rails.logger.info "🔄 Update reservation #{@reservation.id}"
-    Rails.logger.info "📋 Params: #{params.inspect}"
-    
-    # ドラッグ＆ドロップによる時間更新の場合
-    if params[:reservation][:start_time].present? && params[:reservation][:end_time].present?
-      begin
-        # ISO文字列をパースしてタイムゾーンを正しく処理
-        start_time = Time.zone.parse(params[:reservation][:start_time])
-        end_time = Time.zone.parse(params[:reservation][:end_time])
-        
-        Rails.logger.info "🕐 Drag & Drop times - Raw: #{params[:reservation][:start_time]} -> #{start_time}"
-        Rails.logger.info "🕐 Drag & Drop times - Raw: #{params[:reservation][:end_time]} -> #{end_time}"
-        
-        # 時間のみを更新（nameフィールドも保持）
-        @reservation.update_as_admin!(
-          start_time: start_time,
-          end_time: end_time,
-          name: @reservation.name # 既存の名前を保持
-        )
-        
-        Rails.logger.info "✅ Reservation time updated successfully"
-        
-        respond_to do |format|
-          format.json { render json: { success: true, id: @reservation.id } }
-        end
-        return
-      rescue => e
-        Rails.logger.error "❌ Time update error: #{e.message}"
-        respond_to do |format|
-          format.json { render json: { success: false, error: e.message } }
-        end
-        return
-      end
-    end
-    
-    # 通常の更新処理
-    if params[:reservation][:date].present? && params[:reservation][:time].present?
-      begin
-        date = Date.parse(params[:reservation][:date])
-        time = Time.parse(params[:reservation][:time])
-        
-        # 日本のタイムゾーンでDateTimeを作成
-        start_time = Time.zone.local(date.year, date.month, date.day, time.hour, time.min)
-        
-        # コースの長さを取得してend_timeを計算
-        duration_minutes = case params[:reservation][:course]
-                          when '60分' then 60
-                          when '80分' then 80
-                          when '90分' then 90
-                          when '120分' then 120
-                          else 60
-                          end
-        
-        end_time = start_time + duration_minutes.minutes
-        
-        Rails.logger.info "🕐 Parsed times - Date: #{date}, Time: #{time}, Start: #{start_time}, End: #{end_time}"
-        
-        # パラメータに日時を追加
-        params[:reservation][:start_time] = start_time
-        params[:reservation][:end_time] = end_time
-      rescue => e
-        Rails.logger.error "❌ Date/time parsing error: #{e.message}"
-        respond_to do |format|
-          format.json { render json: { success: false, error: '日時の形式が正しくありません' } }
-        end
-        return
-      end
-    end
+    Rails.logger.info "📝 Params: #{params.inspect}"
     
     begin
-      @reservation.update_as_admin!(reservation_params)
-      Rails.logger.info "✅ Reservation updated successfully"
+      # パラメータの処理（時間をJST として適切に処理）
+      processed_params = reservation_params.dup
       
-      respond_to do |format|
-        format.html { redirect_to calendar_admin_reservations_path, notice: '予約を更新しました' }
-        format.json { render json: { success: true, id: @reservation.id } }
+      # start_time, end_time が含まれている場合、JST として処理
+      if processed_params[:start_time].present?
+        # ISO8601形式の文字列をJST時間としてパース
+        processed_params[:start_time] = Time.zone.parse(processed_params[:start_time])
+        Rails.logger.info "🕐 Parsed start_time: #{processed_params[:start_time]} (JST)"
+      end
+      
+      if processed_params[:end_time].present?
+        processed_params[:end_time] = Time.zone.parse(processed_params[:end_time])  
+        Rails.logger.info "🕐 Parsed end_time: #{processed_params[:end_time]} (JST)"
+      end
+      
+      # date と time パラメータがある場合は統合処理
+      if processed_params[:date].present? && processed_params[:time].present?
+        start_datetime = Time.zone.parse("#{processed_params[:date]} #{processed_params[:time]}")
+        processed_params[:start_time] = start_datetime
+        
+        # コースから終了時間を計算
+        if processed_params[:course].present?
+          duration = case processed_params[:course]
+                    when '40分' then 40.minutes
+                    when '60分' then 60.minutes
+                    when '80分' then 80.minutes
+                    else 60.minutes
+                    end
+          processed_params[:end_time] = start_datetime + duration
+        end
+        
+        # date, time パラメータは削除
+        processed_params.delete(:date)
+        processed_params.delete(:time)
+      end
+      
+      # individual_interval_minutesの処理（空文字列をnullに変換）
+      if processed_params[:individual_interval_minutes].present?
+        if processed_params[:individual_interval_minutes].to_s.strip == ''
+          processed_params[:individual_interval_minutes] = nil
+        else
+          processed_params[:individual_interval_minutes] = processed_params[:individual_interval_minutes].to_i
+        end
+      end
+      
+      Rails.logger.info "🔄 Processed params: #{processed_params.inspect}"
+      Rails.logger.info "🔄 Individual interval minutes: #{processed_params[:individual_interval_minutes]}"
+      
+      # キャンセルステータスに変更する場合はcancel!メソッドを使用
+      if processed_params[:status] == 'cancelled' && @reservation.status != 'cancelled'
+        Rails.logger.info "🔄 Cancelling reservation #{@reservation.id}"
+        @reservation.cancel!(processed_params[:cancellation_reason])
+        success = true
+      else
+        success = @reservation.update(processed_params)
+      end
+      
+      if success
+        Rails.logger.info "✅ Reservation updated successfully"
+        
+        respond_to do |format|
+          format.html { redirect_to calendar_admin_reservations_path, notice: '予約を更新しました' }
+          format.json { 
+            render json: { 
+              success: true, 
+              id: @reservation.id,
+              start_time: @reservation.start_time.in_time_zone('Asia/Tokyo').iso8601,
+              end_time: @reservation.end_time.in_time_zone('Asia/Tokyo').iso8601
+            } 
+          }
+        end
+      else
+        Rails.logger.error "❌ Reservation update failed: #{@reservation.errors.full_messages}"
+        respond_to do |format|
+          format.html { render :edit, status: :unprocessable_entity }
+          format.json { render json: { success: false, error: @reservation.errors.full_messages.join(', ') } }
+        end
       end
     rescue => e
       Rails.logger.error "❌ Update error: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
       respond_to do |format|
         format.html { render :edit, status: :unprocessable_entity }
         format.json { render json: { success: false, error: e.message } }
@@ -297,6 +361,48 @@ class Admin::ReservationsController < ApplicationController
     end
   end
 
+  # キャンセル統計と履歴を取得
+  def cancellation_stats
+    Rails.logger.info "📊 Fetching cancellation stats"
+    
+    # 今月の統計
+    current_month = Time.current.beginning_of_month
+    this_month_reservations = Reservation.where(created_at: current_month..current_month.end_of_month)
+    this_month_cancelled = this_month_reservations.where(status: :cancelled).count
+    this_month_total = this_month_reservations.count
+    cancelled_rate = this_month_total > 0 ? (this_month_cancelled.to_f / this_month_total * 100).round(1) : 0
+
+    Rails.logger.info "📊 This month stats: total=#{this_month_total}, cancelled=#{this_month_cancelled}, rate=#{cancelled_rate}%"
+
+    # 最近のキャンセル履歴（過去30日、最新5件）
+    recent_cancelled = Reservation.includes(:user)
+      .where(status: :cancelled)
+      .where('updated_at >= ?', 30.days.ago)  # cancelled_atの代わりにupdated_atを使用
+      .order(updated_at: :desc)
+      .limit(5)
+
+    Rails.logger.info "📊 Found #{recent_cancelled.count} recent cancelled reservations"
+
+    cancelled_history = recent_cancelled.map do |reservation|
+      {
+        id: reservation.id,
+        customer_name: reservation.name || reservation.user&.name || '未設定',
+        cancelled_at: reservation.updated_at.strftime('%m/%d %H:%M'),  # updated_atを使用
+        reason: reservation.cancellation_reason,
+        course: reservation.course
+      }
+    end
+
+    Rails.logger.info "📊 Cancellation history: #{cancelled_history.inspect}"
+
+    render json: {
+      cancelled_count: this_month_cancelled,
+      cancelled_rate: cancelled_rate,
+      total_reservations: this_month_total,
+      cancelled_history: cancelled_history
+    }
+  end
+
   private
 
   def set_reservation
@@ -305,8 +411,8 @@ class Admin::ReservationsController < ApplicationController
 
   def reservation_params
     params.require(:reservation).permit(
-      :start_time, :end_time, :course, :status, :note, :user_id,
-      :name, :date, :time, :ticket_id
+      :start_time, :end_time, :course, :status, :cancellation_reason, :note, :user_id,
+      :name, :date, :time, :ticket_id, :individual_interval_minutes
     )
   end
 
@@ -314,12 +420,14 @@ class Admin::ReservationsController < ApplicationController
     case status
     when 'confirmed'
       '#28a745'  # 緑 - 確定予約
-    when 'pending'
-      '#ffc107'  # 黄 - 保留中
+    when 'tentative'
+      '#ffc107'  # 黄 - 仮予約
     when 'cancelled'
       '#dc3545'  # 赤 - キャンセル
+    when 'completed'
+      '#6c757d'  # グレー - 完了
     when 'no_show'
-      '#6c757d'  # グレー - 無断キャンセル
+      '#fd7e14'  # オレンジ - 無断キャンセル
     when 'break'
       '#17a2b8'  # 青 - 休憩
     else

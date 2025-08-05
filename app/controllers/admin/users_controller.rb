@@ -79,6 +79,36 @@ class Admin::UsersController < ApplicationController
     redirect_to admin_users_path, notice: 'ユーザーを削除しました'
   end
 
+  # 顧客検索API
+  def search
+    query = params[:query].to_s.strip
+    
+    if query.length < 2
+      render json: { users: [] }
+      return
+    end
+    
+    # 名前、電話番号、メールで検索（SQLite対応）
+    users = User.where(admin: false)
+      .where("LOWER(name) LIKE ? OR LOWER(phone_number) LIKE ? OR LOWER(email) LIKE ?", 
+             "%#{query.downcase}%", "%#{query.downcase}%", "%#{query.downcase}%")
+      .order(:name)
+      .limit(10)
+    
+    user_data = users.map do |user|
+      {
+        id: user.id,
+        name: user.name,
+        phone_number: user.phone_number,
+        email: user.email,
+        active_tickets: user.tickets.where("remaining_count > 0").count,
+        last_visit: user.reservations.order(start_time: :desc).limit(1).pluck(:start_time).first&.strftime('%Y-%m-%d')
+      }
+    end
+    
+    render json: { users: user_data }
+  end
+
   # 回数券一覧API
   def tickets
     respond_to do |format|

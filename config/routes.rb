@@ -16,11 +16,15 @@ Rails.application.routes.draw do
     resources :reservations do
       collection do
         get 'calendar'
+        get 'cancellation_stats'
       end
     end
     
     # ユーザー管理
     resources :users do
+      collection do
+        get :search
+      end
       member do
         get 'tickets'
         get 'history'

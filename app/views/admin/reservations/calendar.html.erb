@@ -21,9 +21,14 @@
         </div>
         
         <div class="calendar-actions">
-          <button id="newReservationBtn" class="btn btn-success">
-            <i class="fas fa-plus me-1"></i>新規予約
-          </button>
+          <div class="d-flex flex-column gap-2">
+            <button id="newReservationBtn" class="btn btn-success">
+              <i class="fas fa-plus me-1"></i>新規予約
+            </button>
+            <button class="btn btn-outline-danger btn-sm" onclick="openCancelledHistoryModal()">
+              <i class="fas fa-times-circle me-1"></i>キャンセル履歴
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -48,31 +53,76 @@
         <form id="reservationForm">
           <!-- 隠しフィールド -->
           <input type="hidden" id="currentReservationId" value="">
+          <input type="hidden" id="selectedUserId" value="">
           
-          <!-- 顧客情報 -->
+          <!-- 顧客選択・検索 -->
           <div class="row mb-3">
-            <div class="col-md-6">
-              <label for="customerName" class="form-label">顧客名 *</label>
-              <input type="text" class="form-control" id="customerName" required>
-            </div>
-            <div class="col-md-6">
-              <label for="customerPhone" class="form-label">電話番号</label>
-              <input type="tel" class="form-control" id="customerPhone">
+            <div class="col-12">
+              <label for="customerSearch" class="form-label">顧客検索・選択 *</label>
+              <div class="position-relative">
+                                 <input type="text" class="form-control" id="customerSearch" 
+                        placeholder="顧客名、フリガナ、電話番号で検索...">
+                <div id="customerSearchResults" class="position-absolute w-100 bg-white border rounded shadow-sm" 
+                     style="z-index: 1050; max-height: 200px; overflow-y: auto; display: none;">
+                  <!-- 検索結果がここに表示 -->
+                </div>
+              </div>
             </div>
           </div>
           
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <label for="customerKana" class="form-label">フリガナ</label>
-              <input type="text" class="form-control" id="customerKana">
-            </div>
-            <div class="col-md-6">
-              <label for="customerBirthDate" class="form-label">生年月日</label>
-              <input type="date" class="form-control" id="customerBirthDate">
+          <!-- 選択された顧客情報の表示 -->
+          <div id="selectedCustomerInfo" class="row mb-3" style="display: none;">
+            <div class="col-12">
+              <div class="alert alert-info">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <h6 class="alert-heading mb-1">
+                      <i class="fas fa-user me-1"></i>
+                      <span id="selectedCustomerName"></span>
+                    </h6>
+                    <small class="text-muted">
+                      <span id="selectedCustomerDetails"></span>
+                    </small>
+                  </div>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" id="clearCustomerBtn">
+                    <i class="fas fa-times"></i> 変更
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
           
-          <!-- 予約情報 -->
+          <!-- 新規顧客登録フォーム（既存顧客が見つからない場合） -->
+          <div id="newCustomerForm" class="row mb-3" style="display: none;">
+            <div class="col-12">
+              <div class="alert alert-warning">
+                <h6 class="alert-heading">
+                  <i class="fas fa-user-plus me-1"></i>新規顧客として登録
+                </h6>
+                <p class="mb-2">該当する顧客が見つかりませんでした。新規顧客として登録します。</p>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <label for="newCustomerName" class="form-label">顧客名 *</label>
+              <input type="text" class="form-control" id="newCustomerName" required>
+            </div>
+            <div class="col-md-6">
+              <label for="newCustomerPhone" class="form-label">電話番号</label>
+              <input type="tel" class="form-control" id="newCustomerPhone">
+            </div>
+            
+            <div class="col-md-6 mt-2">
+              <label for="newCustomerKana" class="form-label">フリガナ</label>
+              <input type="text" class="form-control" id="newCustomerKana">
+            </div>
+            <div class="col-md-6 mt-2">
+              <label for="newCustomerEmail" class="form-label">メールアドレス</label>
+              <input type="email" class="form-control" id="newCustomerEmail">
+            </div>
+          </div>
+          
+          <!-- 予約情報（既存のまま） -->
           <div class="row mb-3">
             <div class="col-md-6">
               <label for="reservationDate" class="form-label">日付 *</label>
@@ -89,18 +139,53 @@
               <label for="reservationCourse" class="form-label">コース *</label>
               <select class="form-select" id="reservationCourse" required>
                 <option value="">コースを選択</option>
-                <option value="40分コース" data-price="8000">40分コース (¥8,000)</option>
-                <option value="60分コース" data-price="12000">60分コース (¥12,000)</option>
-                <option value="80分コース" data-price="16000">80分コース (¥16,000)</option>
+                <option value="40分">40分コース (¥8,000)</option>
+                <option value="60分">60分コース (¥12,000)</option>
+                <option value="80分">80分コース (¥16,000)</option>
               </select>
             </div>
             <div class="col-md-6">
-              <label for="reservationDuration" class="form-label">所要時間</label>
-              <select class="form-select" id="reservationDuration">
-                <option value="40">40分</option>
-                <option value="60" selected>60分</option>
-                <option value="80">80分</option>
+              <label for="reservationStatus" class="form-label">ステータス</label>
+              <select class="form-select" id="reservationStatus">
+                <option value="tentative">仮予約</option>
+                <option value="confirmed" selected>確定</option>
+                <option value="cancelled">キャンセル</option>
+                <option value="completed">完了</option>
+                <option value="no_show">無断キャンセル</option>
               </select>
+            </div>
+          </div>
+          
+          <!-- インターバル設定 -->
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="reservationInterval" class="form-label">整理時間（インターバル）</label>
+              <select class="form-select" id="reservationInterval">
+                <option value="">システム設定を使用</option>
+                <option value="0">0分（整理時間なし）</option>
+                <option value="5">5分</option>
+                <option value="10">10分</option>
+                <option value="15">15分</option>
+                <option value="20">20分</option>
+                <option value="30">30分</option>
+                <option value="45">45分</option>
+                <option value="60">60分</option>
+              </select>
+              <small class="text-muted">個別に整理時間を設定できます</small>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">現在の設定</label>
+              <div id="currentIntervalInfo" class="form-control-plaintext">
+                <span class="badge bg-primary">システム設定: 15分</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- キャンセル理由（キャンセルステータスの時のみ表示） -->
+          <div class="row mb-3" id="cancellationReasonRow" style="display: none;">
+            <div class="col-12">
+              <label for="cancellationReason" class="form-label">キャンセル理由 <span class="text-danger">*</span></label>
+              <textarea class="form-control" id="cancellationReason" rows="2" placeholder="キャンセルの理由を入力してください"></textarea>
             </div>
           </div>
           
@@ -155,6 +240,59 @@
         <div id="customerHistoryContent">
           <!-- 顧客履歴がここに表示されます -->
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- キャンセル履歴モーダル -->
+<div class="modal fade" id="cancelledHistoryModal" tabindex="-1" aria-labelledby="cancelledHistoryModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="cancelledHistoryModalLabel">
+          <i class="fas fa-times-circle text-danger me-2"></i>キャンセル統計・履歴
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row mb-4">
+          <div class="col-md-4">
+            <div class="card border-danger">
+              <div class="card-body text-center">
+                <h3 class="text-danger mb-0" id="modalCancelledCount">0</h3>
+                <small class="text-muted">今月のキャンセル数</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card border-warning">
+              <div class="card-body text-center">
+                <h3 class="text-warning mb-0" id="modalCancelledRate">0%</h3>
+                <small class="text-muted">キャンセル率</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card border-info">
+              <div class="card-body text-center">
+                <h3 class="text-info mb-0" id="modalTotalReservations">0</h3>
+                <small class="text-muted">今月の総予約数</small>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="modalCancelledHistory">
+          <div class="text-muted text-center py-3">
+            <i class="fas fa-info-circle me-1"></i>
+            キャンセル履歴がありません
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times me-1"></i>閉じる
+        </button>
       </div>
     </div>
   </div>
@@ -268,7 +406,7 @@
     border-color: #28a745 !important;
   }
   
-  .fc-timegrid-event.pending {
+  .fc-timegrid-event.tentative {
     background-color: #ffc107 !important;
     border-color: #ffc107 !important;
     color: #212529 !important;
@@ -279,9 +417,21 @@
     border-color: #dc3545 !important;
   }
   
-  .fc-timegrid-event.break {
+  .fc-timegrid-event.completed {
     background-color: #6c757d !important;
     border-color: #6c757d !important;
+    color: #fff !important;
+  }
+  
+  .fc-timegrid-event.no_show {
+    background-color: #fd7e14 !important;
+    border-color: #fd7e14 !important;
+    color: #fff !important;
+  }
+  
+  .fc-timegrid-event.break {
+    background-color: #17a2b8 !important;
+    border-color: #17a2b8 !important;
   }
   
   /* レスポンシブ対応 */
@@ -309,12 +459,107 @@
 <script>
   // カレンダー初期化
   document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 DOM Content Loaded');
+    
     // FullCalendarの初期化
     const calendarEl = document.getElementById('calendar');
+    console.log('📅 Calendar element:', calendarEl);
+    
+    // キャンセル統計と履歴を取得・表示
+    function loadCancellationStats() {
+      console.log('📊 Loading cancellation stats...');
+      
+      fetch('/admin/reservations/cancellation_stats')
+        .then(response => {
+          console.log('📊 Response status:', response.status);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('📊 Received data:', data);
+          
+          // 要素の存在確認とエラーハンドリング
+          const cancelledCount = document.getElementById('cancelledCount');
+          const cancelledRate = document.getElementById('cancelledRate');
+          const historyContainer = document.getElementById('cancelledHistory');
+          
+          // キャンセル数を更新（要素が存在する場合のみ）
+          if (cancelledCount) {
+            cancelledCount.textContent = data.cancelled_count;
+          }
+          if (cancelledRate) {
+            cancelledRate.textContent = data.cancelled_rate + '%';
+          }
+          
+          // キャンセル履歴を更新（要素が存在する場合のみ）
+          if (historyContainer) {
+            if (data.cancelled_history && data.cancelled_history.length > 0) {
+              console.log('📊 Rendering history:', data.cancelled_history.length, 'items');
+              const historyHtml = data.cancelled_history.map(item => `
+                <div class="border-bottom pb-2 mb-2">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                      <div class="fw-bold text-dark">${item.customer_name}</div>
+                      <div class="small text-muted">
+                        <i class="fas fa-calendar me-1"></i>${item.cancelled_at}
+                        <span class="mx-2">|</span>
+                        <i class="fas fa-clock me-1"></i>${item.course}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="mt-1">
+                    <small class="text-danger">
+                      <i class="fas fa-times-circle me-1"></i>
+                      ${item.reason || '理由未入力'}
+                    </small>
+                  </div>
+                </div>
+              `).join('');
+              historyContainer.innerHTML = historyHtml;
+            } else {
+              console.log('📊 No cancellation history found');
+              historyContainer.innerHTML = `
+                <div class="text-muted text-center py-3">
+                  <i class="fas fa-info-circle me-1"></i>
+                  キャンセル履歴がありません
+                </div>
+              `;
+            }
+          } else {
+            console.log('📊 Cancellation history container not found, skipping update');
+          }
+        })
+        .catch(error => {
+          console.error('❌ キャンセル統計の取得に失敗:', error);
+          // エラー時もデフォルト表示
+          const cancelledCount = document.getElementById('cancelledCount');
+          const cancelledRate = document.getElementById('cancelledRate');
+          const cancelledHistory = document.getElementById('cancelledHistory');
+          
+          if (cancelledCount) cancelledCount.textContent = '0';
+          if (cancelledRate) cancelledRate.textContent = '0%';
+          if (cancelledHistory) {
+            cancelledHistory.innerHTML = `
+              <div class="text-muted text-center">
+                <i class="fas fa-exclamation-triangle me-1"></i>
+                統計の取得に失敗しました
+              </div>
+            `;
+          }
+        });
+    }
+
+    if (!calendarEl) {
+      console.error('❌ Calendar element not found');
+      return;
+    }
+    
     const calendar = new FullCalendar.Calendar(calendarEl, {
       initialView: 'timeGridWeek',
       locale: 'ja',
-      timeZone: 'Asia/Tokyo',
+      // timeZone設定を削除（デフォルトのローカルタイムゾーンを使用）
       height: 'auto',
       headerToolbar: {
         left: 'prev,next today',
@@ -324,7 +569,7 @@
       buttonText: {
         today: '今日',
         month: '月',
-        week: '週',
+        week: '週',  
         day: '日'
       },
       slotMinTime: '10:00:00',
@@ -333,103 +578,178 @@
       allDaySlot: false,
       selectable: true,
       editable: true,
-      // タイムゾーン処理の設定
-      eventTimeFormat: {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-      },
-      // ローカル時間での処理を明示的に設定
-      now: new Date(),
-      // 選択時の時間をローカル時間で取得
-      selectMirror: true,
-      eventDrop: function(info) {
-        // イベントがドラッグされた時の処理
-        console.log('🔄 Event dropped:', info.event);
-        updateReservationTime(info.event);
-      },
-      eventResize: function(info) {
-        // イベントがリサイズされた時の処理
-        console.log('📏 Event resized:', info.event);
-        updateReservationTime(info.event);
-      },
-      eventClick: function(info) {
-        openReservationModal(info.event);
-      },
-      select: function(info) {
-        openNewReservationModal(info.start, info.end);
-      },
-             events: function(info, successCallback, failureCallback) {
-         console.log('🔍 Fetching events for:', info.startStr, 'to', info.endStr);
-         
-         fetch(`/admin/reservations?start=${info.startStr}&end=${info.endStr}`, {
-           headers: {
-             'Accept': 'application/json',
-             'Content-Type': 'application/json'
-           }
-         })
-           .then(response => {
-             console.log('📡 Response status:', response.status);
-             console.log('📡 Response headers:', response.headers);
-             console.log('📡 Response URL:', response.url);
-             
-             if (!response.ok) {
-               return response.text().then(text => {
-                 console.error('❌ HTTP Error Response:', text);
-                 throw new Error(`HTTP error! status: ${response.status}, body: ${text.substring(0, 200)}`);
-               });
-             }
-             
-             return response.text().then(text => {
-               console.log('📄 Raw response:', text);
-               try {
-                 return JSON.parse(text);
-               } catch (e) {
-                 console.error('❌ JSON parse error:', e);
-                 console.error('❌ Raw text that failed to parse:', text);
-                 throw new Error('Invalid JSON response');
-               }
-             });
-           })
-           .then(data => {
-             console.log('✅ Parsed events:', data);
-             successCallback(data);
-           })
-           .catch(error => {
-             console.error('❌ Error fetching events:', error);
-             
-             // エラー時にダミーデータを表示
-             console.log('🔄 Showing fallback data due to error');
-             const fallbackEvents = [
-               {
-                 id: 'fallback-1',
-                 title: 'テスト予約 - 60分コース',
-                 start: new Date().toISOString(),
-                 end: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-                 backgroundColor: '#28a745',
-                 borderColor: '#28a745',
-                 textColor: 'white',
-                 extendedProps: {
-                   status: 'confirmed',
-                   course: '60分コース',
-                   memo: 'テスト用データ',
-                   customer: {
-                     id: null,
-                     name: 'テストユーザー',
-                     kana: null,
-                     phone: '090-1234-5678',
-                     email: 'test@example.com',
-                     birth_date: null
-                   }
-                 }
-               }
-             ];
-             successCallback(fallbackEvents);
-           });
-       }
-    });
     
+    // タイムゾーン処理の設定
+    eventTimeFormat: {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone: 'Asia/Tokyo'  // 表示時も東京時間を明示
+    },
+    
+    // イベント処理
+    eventDrop: function(info) {
+      console.log('🔄 Event dropped:', info.event);
+      updateReservationTime(info.event);
+    },
+    
+    eventResize: function(info) {
+      console.log('📏 Event resized:', info.event);
+      updateReservationTime(info.event);
+    },
+    
+    eventClick: function(info) {
+      openReservationModal(info.event);
+    },
+    
+    select: function(info) {
+      console.log('🔍 Raw select info:', info);
+      console.log('🔍 Start time details:', {
+        start: info.start,
+        hours: info.start.getHours(),
+        minutes: info.start.getMinutes(),
+        toString: info.start.toString()
+      });
+      
+      // 🔧 修正: openNewReservationModal を呼び出し
+      openNewReservationModal(info.start, info.end);
+    },
+    
+    // イベントデータの取得
+    events: function(info, successCallback, failureCallback) {
+      console.log('🔍 Fetching events for:', info.startStr, 'to', info.endStr);
+      
+      fetch('/admin/reservations.json', {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(events => {
+        console.log('✅ Events loaded:', events.length);
+        successCallback(events);
+      })
+      .catch(error => {
+        console.error('❌ Error loading events:', error);
+        failureCallback(error);
+      });
+    }
+      });
+    
+    console.log('🎨 Rendering calendar...');
     calendar.render();
+    console.log('✅ Calendar rendered successfully');
+    
+    // キャンセル履歴モーダルを開く
+    window.openCancelledHistoryModal = function() {
+      console.log('📊 Opening cancelled history modal');
+      
+      // キャンセル統計を取得してモーダルに表示
+      fetch('/admin/reservations/cancellation_stats')
+        .then(response => {
+          console.log('📊 Response status:', response.status);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('📊 Received data for modal:', data);
+          
+          // モーダルの統計を更新
+          document.getElementById('modalCancelledCount').textContent = data.cancelled_count;
+          document.getElementById('modalCancelledRate').textContent = data.cancelled_rate + '%';
+          document.getElementById('modalTotalReservations').textContent = data.total_reservations || 0;
+          
+          // モーダルの履歴を更新
+          const modalHistoryContainer = document.getElementById('modalCancelledHistory');
+          if (data.cancelled_history && data.cancelled_history.length > 0) {
+            console.log('📊 Rendering modal history:', data.cancelled_history.length, 'items');
+            const historyHtml = data.cancelled_history.map(item => `
+              <div class="border-bottom pb-3 mb-3">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div class="flex-grow-1">
+                    <div class="fw-bold text-dark fs-6">${item.customer_name}</div>
+                    <div class="small text-muted mt-1">
+                      <i class="fas fa-calendar me-1"></i>${item.cancelled_at}
+                      <span class="mx-2">|</span>
+                      <i class="fas fa-clock me-1"></i>${item.course}
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-2">
+                  <span class="badge bg-danger">
+                    <i class="fas fa-times-circle me-1"></i>
+                    ${item.reason || '理由未入力'}
+                  </span>
+                </div>
+              </div>
+            `).join('');
+            modalHistoryContainer.innerHTML = historyHtml;
+          } else {
+            console.log('📊 No cancellation history found for modal');
+            modalHistoryContainer.innerHTML = `
+              <div class="text-muted text-center py-4">
+                <i class="fas fa-info-circle me-1"></i>
+                キャンセル履歴がありません
+              </div>
+            `;
+          }
+          
+          // モーダルを表示
+          const modal = new bootstrap.Modal(document.getElementById('cancelledHistoryModal'));
+          modal.show();
+        })
+        .catch(error => {
+          console.error('❌ キャンセル統計の取得に失敗:', error);
+          // エラー時もモーダルを表示（デフォルト値）
+          const modalCancelledCount = document.getElementById('modalCancelledCount');
+          const modalCancelledRate = document.getElementById('modalCancelledRate');
+          const modalTotalReservations = document.getElementById('modalTotalReservations');
+          const modalCancelledHistory = document.getElementById('modalCancelledHistory');
+          
+          if (modalCancelledCount) modalCancelledCount.textContent = '0';
+          if (modalCancelledRate) modalCancelledRate.textContent = '0%';
+          if (modalTotalReservations) modalTotalReservations.textContent = '0';
+          if (modalCancelledHistory) {
+            modalCancelledHistory.innerHTML = `
+              <div class="text-muted text-center py-4">
+                <i class="fas fa-exclamation-triangle me-1"></i>
+                統計の取得に失敗しました
+              </div>
+            `;
+          }
+          
+          const modal = new bootstrap.Modal(document.getElementById('cancelledHistoryModal'));
+          modal.show();
+        });
+    };
+
+    // インターバル情報を更新
+    function updateIntervalInfo(extendedProps) {
+      const intervalInfo = document.getElementById('currentIntervalInfo');
+      const individualInterval = extendedProps?.individual_interval_minutes;
+      const effectiveInterval = extendedProps?.effective_interval_minutes || 15;
+      
+      if (individualInterval !== null && individualInterval !== undefined) {
+        intervalInfo.innerHTML = `<span class="badge bg-success">個別設定: ${individualInterval}分</span>`;
+      } else {
+        intervalInfo.innerHTML = `<span class="badge bg-primary">システム設定: ${effectiveInterval}分</span>`;
+      }
+    }
+
+    // 初期データ読み込み（エラーハンドリング付き）
+    try {
+      loadCancellationStats();
+    } catch (error) {
+      console.log('📊 Initial cancellation stats loading skipped:', error.message);
+    }
     
     // ナビゲーションボタン
     document.getElementById('prevBtn').addEventListener('click', () => {
@@ -453,47 +773,306 @@
     const reservationModal = new bootstrap.Modal(document.getElementById('reservationModal'));
     const customerHistoryModal = new bootstrap.Modal(document.getElementById('customerHistoryModal'));
     
+    // 顧客検索・選択機能を追加
+    // 顧客検索機能
+    let searchTimeout;
+    const customerSearch = document.getElementById('customerSearch');
+    const searchResults = document.getElementById('customerSearchResults');
+    const selectedCustomerInfo = document.getElementById('selectedCustomerInfo');
+    const newCustomerForm = document.getElementById('newCustomerForm');
+
+    customerSearch.addEventListener('input', function() {
+      const query = this.value.trim();
+      
+      clearTimeout(searchTimeout);
+      
+      if (query.length < 2) {
+        hideSearchResults();
+        return;
+      }
+      
+      searchTimeout = setTimeout(() => {
+        searchCustomers(query);
+      }, 300);
+    });
+
+    // 検索結果以外をクリックしたら結果を隠す
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('#customerSearch') && !e.target.closest('#customerSearchResults')) {
+        hideSearchResults();
+      }
+    });
+
+    // 検索結果のクリックイベントを処理
+    document.addEventListener('click', function(e) {
+      const searchResultItem = e.target.closest('.search-result-item');
+      if (searchResultItem) {
+        const userId = searchResultItem.dataset.userId;
+        const userName = searchResultItem.dataset.userName;
+        const userPhone = searchResultItem.dataset.userPhone;
+        const userEmail = searchResultItem.dataset.userEmail;
+        
+        console.log('Search result clicked:', { userId, userName, userPhone, userEmail });
+        selectCustomer(userId, userName, userPhone, userEmail);
+      }
+    });
+
+    function searchCustomers(query) {
+      fetch(`/admin/users/search?query=${encodeURIComponent(query)}`, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          if (response.status === 401) {
+            // 認証エラーの場合、ログインページにリダイレクト
+            window.location.href = '/admin_users/sign_in';
+            throw new Error('認証が必要です');
+          }
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        displaySearchResults(data.users, query);
+      })
+      .catch(error => {
+        console.error('顧客検索エラー:', error);
+        hideSearchResults();
+      });
+    }
+
+    function displaySearchResults(users, query) {
+      if (users.length === 0) {
+        // 検索結果がない場合は新規顧客登録を提案
+        searchResults.innerHTML = `
+          <div class="p-3 text-center">
+            <div class="text-muted mb-2">
+              <i class="fas fa-search me-1"></i>
+              「${query}」に該当する顧客が見つかりませんでした
+            </div>
+            <button type="button" class="btn btn-sm btn-primary" onclick="showNewCustomerForm('${query}')">
+              <i class="fas fa-user-plus me-1"></i>新規顧客として登録
+            </button>
+          </div>
+        `;
+      } else {
+        let html = '';
+        users.forEach(user => {
+          html += `
+            <div class="search-result-item p-3 border-bottom" 
+                 style="cursor: pointer; transition: background-color 0.2s;"
+                 onmouseover="this.style.backgroundColor='#f8f9fa'"
+                 onmouseout="this.style.backgroundColor='white'"
+                 data-user-id="${user.id}"
+                 data-user-name="${user.name || ''}"
+                 data-user-phone="${user.phone_number || ''}"
+                 data-user-email="${user.email || ''}">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <div class="fw-bold">${user.name || '名前未設定'}</div>
+                  <small class="text-muted">
+                    ${user.phone_number || '電話番号未登録'}
+                    ${user.email ? ` | ${user.email}` : ''}
+                  </small>
+                  ${user.last_visit ? `<br><small class="text-success">最終来店: ${user.last_visit}</small>` : ''}
+                </div>
+                <div class="text-end">
+                  <small class="badge bg-info">${user.active_tickets}枚</small>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        searchResults.innerHTML = html;
+      }
+      
+      searchResults.style.display = 'block';
+    }
+
+    function hideSearchResults() {
+      searchResults.style.display = 'none';
+    }
+
+    function selectCustomer(userId, name, phone, email) {
+      console.log('selectCustomer called with:', { userId, name, phone, email });
+      
+      // 選択された顧客情報を保存
+      document.getElementById('selectedUserId').value = userId;
+      document.getElementById('customerSearch').value = name;
+      
+      // 顧客情報を表示
+      document.getElementById('selectedCustomerName').textContent = name;
+      document.getElementById('selectedCustomerDetails').innerHTML = `
+        ${phone || '電話番号未登録'} | 
+        ${email || 'メール未登録'}
+      `;
+      
+      // UI更新
+      selectedCustomerInfo.style.display = 'block';
+      newCustomerForm.style.display = 'none';
+      hideSearchResults();
+      
+      // 検索フィールドを無効化（選択済みを示す）
+      document.getElementById('customerSearch').disabled = true;
+      document.getElementById('customerSearch').style.backgroundColor = '#e9ecef';
+      
+      // チケット情報を読み込み
+      loadCustomerTickets(userId);
+      
+      // 成功メッセージを表示
+      showMessage('顧客が選択されました', 'success');
+      
+      console.log('顧客が選択されました:', { userId, name, phone, email });
+    }
+
+    function showNewCustomerForm(initialName = '') {
+      // 新規顧客フォームを表示
+      newCustomerForm.style.display = 'block';
+      selectedCustomerInfo.style.display = 'none';
+      document.getElementById('selectedUserId').value = '';
+      
+      // 検索した名前を初期値として設定
+      if (initialName) {
+        document.getElementById('newCustomerName').value = initialName;
+      }
+      
+      hideSearchResults();
+      
+      // フォーカスを名前フィールドに
+      document.getElementById('newCustomerName').focus();
+    }
+
+    // 顧客選択をクリア
+    document.getElementById('clearCustomerBtn').addEventListener('click', function() {
+      document.getElementById('selectedUserId').value = '';
+      document.getElementById('customerSearch').value = '';
+      
+      // 検索フィールドを有効化
+      document.getElementById('customerSearch').disabled = false;
+      document.getElementById('customerSearch').style.backgroundColor = 'white';
+      
+      selectedCustomerInfo.style.display = 'none';
+      newCustomerForm.style.display = 'none';
+      document.getElementById('ticketInfo').innerHTML = `
+        <div class="text-muted">
+          <i class="fas fa-info-circle me-1"></i>
+          顧客を選択するとチケット情報が表示されます
+        </div>
+      `;
+      customerSearch.focus();
+      
+      showMessage('顧客選択をクリアしました', 'info');
+    });
+
+    function resetReservationForm() {
+      // フォームをリセット
+      document.getElementById('reservationForm').reset();
+      document.getElementById('currentReservationId').value = '';
+      document.getElementById('selectedUserId').value = '';
+      
+      // キャンセル理由フィールドをリセット
+      document.getElementById('cancellationReason').value = '';
+      document.getElementById('cancellationReasonRow').style.display = 'none';
+      
+      // 検索フィールドを有効化
+      document.getElementById('customerSearch').disabled = false;
+      document.getElementById('customerSearch').style.backgroundColor = 'white';
+      
+      // UI表示をリセット
+      selectedCustomerInfo.style.display = 'none';
+      newCustomerForm.style.display = 'none';
+      hideSearchResults();
+      
+      // チケット情報をリセット
+      document.getElementById('ticketInfo').innerHTML = `
+        <div class="text-muted">
+          <i class="fas fa-info-circle me-1"></i>
+          顧客を選択するとチケット情報が表示されます
+        </div>
+      `;
+    }
+    
+    // openReservationModal 関数を完全に置き換え（522行目付近）
     function openReservationModal(event) {
       // 既存の予約を編集モードで開く
       document.getElementById('reservationModalLabel').innerHTML = '<i class="fas fa-edit me-2"></i>予約編集';
       document.getElementById('deleteReservationBtn').style.display = 'block';
+      
+      // フォームをリセット
+      resetReservationForm();
       
       // フォームに値を設定
       if (event) {
         // 予約IDを設定
         document.getElementById('currentReservationId').value = event.id;
         
-        document.getElementById('customerName').value = event.title.split(' - ')[0] || '';
+        // 🔧 完全な修正: UTC変換を避けてローカル時間を直接取得
+        const eventStart = event.start;
         
-        // FullCalendarのイベント時間は既にローカル時間
-        const localStart = new Date(event.start);
+        // 日付の取得（ローカル時間として）
+        const year = eventStart.getFullYear();
+        const month = String(eventStart.getMonth() + 1).padStart(2, '0');
+        const day = String(eventStart.getDate()).padStart(2, '0');
+        const dateString = `${year}-${month}-${day}`;
+        
+        // 時間の取得（ローカル時間として）
+        const hours = String(eventStart.getHours()).padStart(2, '0');
+        const minutes = String(eventStart.getMinutes()).padStart(2, '0');
+        const timeString = `${hours}:${minutes}`;
         
         console.log('🕐 Edit reservation time:', {
-          original: event.start,
-          localStart: localStart,
-          isoString: localStart.toISOString(),
-          localTimeString: localStart.toLocaleTimeString('ja-JP', { 
-            hour: '2-digit', 
-            minute: '2-digit',
-            hour12: false 
-          })
+          original: eventStart,
+          dateString: dateString,
+          timeString: timeString
         });
         
-        document.getElementById('reservationDate').value = localStart.toISOString().split('T')[0];
-        document.getElementById('reservationTime').value = localStart.toLocaleTimeString('ja-JP', { 
-          hour: '2-digit', 
-          minute: '2-digit',
-          hour12: false 
-        });
+        document.getElementById('reservationDate').value = dateString;
+        document.getElementById('reservationTime').value = timeString;
         document.getElementById('reservationCourse').value = event.title.split(' - ')[1] || '';
+        document.getElementById('reservationStatus').value = event.extendedProps?.status || 'confirmed';
         document.getElementById('reservationMemo').value = event.extendedProps?.note || '';
         
-        // 顧客情報を設定
+        // インターバル設定を設定
+        const individualInterval = event.extendedProps?.individual_interval_minutes;
+        document.getElementById('reservationInterval').value = individualInterval || '';
+        
+        // 現在のインターバル情報を更新
+        updateIntervalInfo(event.extendedProps);
+        
+        // キャンセル理由を設定
+        const cancellationReason = event.extendedProps?.cancellation_reason || '';
+        document.getElementById('cancellationReason').value = cancellationReason;
+        
+        // キャンセルステータスの場合は理由フィールドを表示
+        if (event.extendedProps?.status === 'cancelled') {
+          document.getElementById('cancellationReasonRow').style.display = 'block';
+        }
+        
+        // 顧客情報を設定（新しい顧客検索機能に対応）
         if (event.extendedProps?.customer) {
           const customer = event.extendedProps.customer;
-          document.getElementById('customerPhone').value = customer.phone || '';
-          document.getElementById('customerKana').value = customer.kana || '';
-          document.getElementById('customerBirthDate').value = customer.birth_date || '';
+          
+          // 顧客選択状態を設定
+          document.getElementById('selectedUserId').value = customer.id;
+          document.getElementById('customerSearch').value = customer.name || '';
+          
+          // 顧客情報を表示
+          document.getElementById('selectedCustomerName').textContent = customer.name || '';
+          document.getElementById('selectedCustomerDetails').innerHTML = `
+            ${customer.phone || '電話番号未登録'} | 
+            ${customer.email || 'メール未登録'}
+          `;
+          
+          // UI更新
+          document.getElementById('selectedCustomerInfo').style.display = 'block';
+          document.getElementById('newCustomerForm').style.display = 'none';
+          
+          // 検索フィールドを無効化
+          document.getElementById('customerSearch').disabled = true;
+          document.getElementById('customerSearch').style.backgroundColor = '#e9ecef';
           
           // チケット情報を取得
           loadCustomerTickets(customer.id);
@@ -502,40 +1081,42 @@
       
       reservationModal.show();
     }
-    
+
+    // openNewReservationModal 関数も同様に修正（561行目付近）
     function openNewReservationModal(start, end) {
       // 新規予約モードで開く
       document.getElementById('reservationModalLabel').innerHTML = '<i class="fas fa-calendar-plus me-2"></i>新規予約';
       document.getElementById('deleteReservationBtn').style.display = 'none';
       
       // フォームをリセット
-      document.getElementById('reservationForm').reset();
+      resetReservationForm();
       
       // 予約IDをクリア
       document.getElementById('currentReservationId').value = '';
       
       // 日時を設定
       if (start) {
-        // FullCalendarの時間は既にローカル時間なので、そのまま使用
-        const localDate = new Date(start);
+        // 🔧 完全な修正: UTC変換を避けてローカル時間を直接取得
+        const eventStart = new Date(start);
+        
+        const year = eventStart.getFullYear();
+        const month = String(eventStart.getMonth() + 1).padStart(2, '0');
+        const day = String(eventStart.getDate()).padStart(2, '0');
+        const dateString = `${year}-${month}-${day}`;
+        
+        const hours = String(eventStart.getHours()).padStart(2, '0');
+        const minutes = String(eventStart.getMinutes()).padStart(2, '0');
+        const timeString = `${hours}:${minutes}`;
         
         console.log('🕐 New reservation time:', {
           original: start,
-          localDate: localDate,
-          isoString: localDate.toISOString(),
-          localTimeString: localDate.toLocaleTimeString('ja-JP', { 
-            hour: '2-digit', 
-            minute: '2-digit',
-            hour12: false 
-          })
+          eventStart: eventStart,
+          dateString: dateString,
+          timeString: timeString
         });
         
-        document.getElementById('reservationDate').value = localDate.toISOString().split('T')[0];
-        document.getElementById('reservationTime').value = localDate.toLocaleTimeString('ja-JP', { 
-          hour: '2-digit', 
-          minute: '2-digit',
-          hour12: false 
-        });
+        document.getElementById('reservationDate').value = dateString;
+        document.getElementById('reservationTime').value = timeString;
       }
       
       reservationModal.show();
@@ -556,15 +1137,31 @@
       // CSRF トークンを取得
       const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
       
-      // ローカル時間をISO文字列に変換（タイムゾーン情報付き）
-      const startISO = newStart.toISOString();
-      const endISO = newEnd.toISOString();
+      // ローカル時間を日本時間として明示的にフォーマット（UTC変換を避ける）
+      function formatAsJSTDateTime(date) {
+        if (!date) return null;
+        
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        
+        // JST（UTC+09:00）として明示的にタイムゾーンを指定
+        return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}+09:00`;
+      }
+      
+      const startISO = formatAsJSTDateTime(newStart);
+      const endISO = formatAsJSTDateTime(newEnd);
       
       console.log('🕐 Time conversion:', {
         originalStart: newStart,
         originalEnd: newEnd,
         startISO: startISO,
-        endISO: endISO
+        endISO: endISO,
+        startLocalTime: newStart.toLocaleString('ja-JP'),
+        endLocalTime: newEnd.toLocaleString('ja-JP')
       });
       
       // 時間更新APIを呼び出し
@@ -665,12 +1262,53 @@
         });
     }
     
+    // ステータス変更時の処理
+    document.getElementById('reservationStatus').addEventListener('change', function() {
+      const status = this.value;
+      console.log('📊 Status changed to:', status);
+      
+      // キャンセル理由フィールドの表示/非表示
+      const cancellationReasonRow = document.getElementById('cancellationReasonRow');
+      if (status === 'cancelled') {
+        cancellationReasonRow.style.display = 'block';
+      } else {
+        cancellationReasonRow.style.display = 'none';
+        document.getElementById('cancellationReason').value = '';
+      }
+    });
+
+    // インターバル設定変更時の処理
+    document.getElementById('reservationInterval').addEventListener('change', function() {
+      const intervalValue = this.value;
+      const intervalInfo = document.getElementById('currentIntervalInfo');
+      
+      if (intervalValue === '') {
+        intervalInfo.innerHTML = '<span class="badge bg-primary">システム設定: 15分</span>';
+      } else {
+        intervalInfo.innerHTML = `<span class="badge bg-success">個別設定: ${intervalValue}分</span>`;
+      }
+    });
+
     // 保存ボタン
     document.getElementById('saveReservationBtn').addEventListener('click', function() {
-      // フォームのバリデーション
-      const form = document.getElementById('reservationForm');
-      if (!form.checkValidity()) {
-        form.reportValidity();
+      console.log('💾 Save button clicked');
+      
+      // 顧客選択のチェック
+      const selectedUserId = document.getElementById('selectedUserId').value;
+      if (!selectedUserId) {
+        console.log('❌ No customer selected');
+        showMessage('顧客を選択してください', 'warning');
+        return;
+      }
+      
+      // 必須フィールドのチェック
+      const reservationDate = document.getElementById('reservationDate').value;
+      const reservationTime = document.getElementById('reservationTime').value;
+      const reservationCourse = document.getElementById('reservationCourse').value;
+      
+      if (!reservationDate || !reservationTime || !reservationCourse) {
+        console.log('❌ Required fields missing:', { reservationDate, reservationTime, reservationCourse });
+        showMessage('日時とコースを入力してください', 'warning');
         return;
       }
       
@@ -684,26 +1322,57 @@
       const reservationId = getCurrentReservationId();
       const isEditMode = reservationId && reservationId !== '';
       
+      // 選択された顧客IDを取得（既に宣言済み）
+      console.log('👤 Selected user ID:', selectedUserId);
+      
+      // キャンセル理由のチェック
+      const status = document.getElementById('reservationStatus').value;
+      const cancellationReason = document.getElementById('cancellationReason').value;
+      
+      if (status === 'cancelled' && !cancellationReason.trim()) {
+        console.log('❌ Cancellation reason required');
+        showMessage('キャンセル理由を入力してください', 'warning');
+        return;
+      }
+      
+      // インターバル設定を取得
+      const intervalValue = document.getElementById('reservationInterval').value;
+      let individualIntervalMinutes = null;
+      
+      if (intervalValue !== '' && !isNaN(parseInt(intervalValue))) {
+        individualIntervalMinutes = parseInt(intervalValue);
+      }
+      
+      console.log('🕐 Interval setting:', { intervalValue, individualIntervalMinutes });
+      
       // 予約データを作成
       const reservationData = {
         reservation: {
-          name: document.getElementById('customerName').value,
+          user_id: selectedUserId,
+          name: document.getElementById('customerSearch').value,
           date: document.getElementById('reservationDate').value,
           time: document.getElementById('reservationTime').value,
           course: document.getElementById('reservationCourse').value,
+          status: document.getElementById('reservationStatus').value,
+          cancellation_reason: cancellationReason,
+          individual_interval_minutes: individualIntervalMinutes,
           note: document.getElementById('reservationMemo').value
         }
       };
       
       console.log('💾 Saving reservation:', reservationData);
+      console.log('🕐 Individual interval minutes in payload:', reservationData.reservation.individual_interval_minutes);
       console.log('📝 Edit mode:', isEditMode);
       
       // CSRF トークンを取得
       const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      console.log('🔐 CSRF Token:', csrfToken);
       
       // API URLとメソッドを決定
       const url = isEditMode ? `/admin/reservations/${reservationId}` : '/admin/reservations';
       const method = isEditMode ? 'PATCH' : 'POST';
+      console.log('🌐 API URL:', url);
+      console.log('📡 Method:', method);
       
       // APIを呼び出し
       fetch(url, {
@@ -738,6 +1407,9 @@
           
           // カレンダーを更新
           calendar.refetchEvents();
+          
+          // キャンセル統計の更新は無効化（エラーの原因となるため）
+          console.log('✅ Reservation saved successfully, calendar updated');
         } else {
           throw new Error(data.error || '保存に失敗しました');
         }
