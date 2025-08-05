@@ -1,6 +1,6 @@
 // app/javascript/calendar/index.js
 import { initializeCalendar } from './calendar_core.js';
-import { setupReservationModal } from './modal.js';
+import { setupReservationModal, openReservationModal } from './modal.js';
 import { setupIntervalControls } from './interval_settings.js';
 import { setupReservationForm } from './reservation_form.js';
 import { setupGlobalUtils } from './utils.js';
@@ -11,6 +11,9 @@ console.log('📅 Calendar module loading...');
 window.pageCalendar = null;
 window.currentUsers = [];
 window.currentReservationId = null;
+
+// グローバル関数として公開
+window.openReservationModal = openReservationModal;
 
 // 初期化関数
 function initializeComplete() {

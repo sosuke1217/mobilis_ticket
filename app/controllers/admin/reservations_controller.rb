@@ -12,6 +12,10 @@ class Admin::ReservationsController < ApplicationController
     render 'test_calendar', layout: false
   end
 
+  def debug_calendar
+    render 'debug_calendar', layout: false
+  end
+
   # app/controllers/admin/reservations_controller.rb の index アクション修正版
   def index
     respond_to do |format|

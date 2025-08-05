@@ -53,6 +53,7 @@ Rails.application.routes.draw do
     # カレンダーのルートを最初に独立して定義
     get 'reservations/calendar', to: 'reservations#calendar', as: 'reservations_calendar'
     get 'reservations/test_calendar', to: 'reservations#test_calendar', as: 'test_calendar'
+    get 'reservations/debug_calendar', to: 'reservations#debug_calendar', as: 'debug_calendar'
     
     resources :reservations do
       collection do
