@@ -603,7 +603,21 @@
     // 🔧 ドラッグ&ドロップのイベントハンドラーを追加
     config.eventDrop = function(info) {
       console.log('🔄 Event dropped:', info.event.id);
+      console.log('📅 Drop details:', {
+        start: info.event.start,
+        end: info.event.end,
+        allDay: info.event.allDay,
+        type: info.event.extendedProps.type
+      });
+      
       const eventType = info.event.extendedProps.type;
+      
+      // ドロップ後のイベントが有効かチェック
+      if (!info.event.start || !info.event.end) {
+        console.error('❌ Invalid event times after drop');
+        info.revert();
+        return;
+      }
       
       if (eventType === 'interval') {
         updateIntervalTime(info.event, info.revert);
@@ -614,7 +628,20 @@
     
     config.eventResize = function(info) {
       console.log('🔄 Event resized:', info.event.id);
+      console.log('📏 Resize details:', {
+        start: info.event.start,
+        end: info.event.end,
+        type: info.event.extendedProps.type
+      });
+      
       const eventType = info.event.extendedProps.type;
+      
+      // リサイズ後のイベントが有効かチェック
+      if (!info.event.start || !info.event.end) {
+        console.error('❌ Invalid event times after resize');
+        info.revert();
+        return;
+      }
       
       if (eventType === 'interval') {
         updateIntervalTime(info.event, info.revert);
@@ -664,6 +691,8 @@
     config.eventDidMount = function(info) {
       const eventType = info.event.extendedProps.type;
       
+      console.log(`🎨 Mounting event: ${info.event.title} (type: ${eventType})`);
+      
       if (eventType === 'reservation' || !eventType) {
         info.el.classList.add('reservation-event');
         
@@ -708,6 +737,11 @@
         startLocal: startTime?.toLocaleString('ja-JP'),
         endLocal: endTime?.toLocaleString('ja-JP')
       });
+    };
+    
+    // 🔧 イベントがアンマウントされる時の処理を追加
+    config.eventDidUnmount = function(info) {
+      console.log(`🗑️ Unmounting event: ${info.event.title} (type: ${info.event.extendedProps.type})`);
     };
     
     try {
@@ -762,6 +796,7 @@
     const normalizedStart = normalizeTimeToSlot(event.start, systemSettings.slotIntervalMinutes);
     const normalizedEnd = normalizeTimeToSlot(event.end, systemSettings.slotIntervalMinutes);
     
+    // 正規化された時間をイベントに設定
     event.setStart(normalizedStart);
     event.setEnd(normalizedEnd);
     
@@ -809,11 +844,11 @@
         console.log('✅ Server confirmed update success');
         showMessage('予約時間を更新しました', 'success');
         
-        // カレンダー更新（インターバルも含めて全体を更新）
+        // 🔧 重要: カレンダー全体を更新してイベントが消えないようにする
         setTimeout(() => {
-          console.log('🔄 Refreshing calendar to update intervals...');
-          refreshFixedCalendar();
-        }, 500);
+          console.log('🔄 Refreshing calendar to ensure events remain visible...');
+          pageCalendar.refetchEvents();
+        }, 100);
         
       } else {
         console.error('❌ Server reported failure:', data.error);
@@ -845,6 +880,7 @@
     const normalizedStart = normalizeTimeToSlot(event.start, systemSettings.slotIntervalMinutes);
     const normalizedEnd = normalizeTimeToSlot(event.end, systemSettings.slotIntervalMinutes);
     
+    // 正規化された時間をイベントに設定
     event.setStart(normalizedStart);
     event.setEnd(normalizedEnd);
     
@@ -914,7 +950,13 @@
       if (data.success) {
         console.log('✅ Interval update confirmed');
         showMessage(`インターバル時間を${intervalMinutes}分に更新しました`, 'success');
-        refreshFixedCalendar();
+        
+        // 🔧 重要: カレンダー全体を更新してイベントが消えないようにする
+        setTimeout(() => {
+          console.log('🔄 Refreshing calendar after interval update...');
+          pageCalendar.refetchEvents();
+        }, 100);
+        
       } else {
         console.error('❌ Interval update failed:', data.error);
         showMessage(data.error || 'インターバルの更新に失敗しました', 'danger');
@@ -934,8 +976,27 @@
   function refreshFixedCalendar() {
     if (pageCalendar) {
       console.log('🔄 Refreshing complete fixed Rails calendar...');
+      
+      // 現在のイベント数を記録
+      const currentEvents = pageCalendar.getEvents();
+      console.log(`📊 Current events before refresh: ${currentEvents.length}`);
+      
+      // イベントを再取得
       pageCalendar.refetchEvents();
-      showMessage('カレンダーを更新しました', 'success');
+      
+      // 少し待ってからイベント数を確認
+      setTimeout(() => {
+        const newEvents = pageCalendar.getEvents();
+        console.log(`📊 Events after refresh: ${newEvents.length}`);
+        
+        if (newEvents.length === 0) {
+          console.warn('⚠️ No events after refresh, reinitializing...');
+          initializeFixedCalendar();
+        } else {
+          showMessage('カレンダーを更新しました', 'success');
+        }
+      }, 500);
+      
     } else {
       console.log('🔄 Reinitializing calendar...');
       initializeFixedCalendar();
