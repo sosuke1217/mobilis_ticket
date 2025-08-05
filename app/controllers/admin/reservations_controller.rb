@@ -237,6 +237,9 @@ class Admin::ReservationsController < ApplicationController
   end
   
   def update
+    Rails.logger.info "🔄 UPDATE request for reservation ID: #{params[:id]}"
+    Rails.logger.info "📦 Received params: #{params.inspect}"
+    
     unless params[:id].to_s.match?(/^\d+$/)
       logger.warn "⚠️ 不正なIDによるPATCHリクエスト: #{params[:id]}"
       respond_to do |format|
@@ -248,9 +251,11 @@ class Admin::ReservationsController < ApplicationController
   
     begin
       @reservation = Reservation.find(params[:id])
+      Rails.logger.info "✅ Found reservation: #{@reservation.inspect}"
       
       # 管理者による更新の場合、制限を解除
       update_params = reservation_params
+      Rails.logger.info "📝 Update params: #{update_params.inspect}"
       
       # 管理者用の制限なし更新を使用
       if @reservation.update_as_admin!(update_params)
@@ -299,6 +304,19 @@ class Admin::ReservationsController < ApplicationController
         format.html { 
           redirect_to admin_reservations_calendar_path, 
           alert: "予約が見つかりません" 
+        }
+      end
+    rescue => e
+      Rails.logger.error "❌ Unexpected error in update: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      respond_to do |format|
+        format.json { 
+          render json: { success: false, error: "更新中にエラーが発生しました: #{e.message}" }, 
+          status: :internal_server_error 
+        }
+        format.html { 
+          redirect_to admin_reservations_calendar_path, 
+          alert: "更新中にエラーが発生しました: #{e.message}" 
         }
       end
     end

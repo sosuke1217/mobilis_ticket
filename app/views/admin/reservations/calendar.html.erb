@@ -824,6 +824,8 @@
     };
     
     console.log('📡 Sending normalized update data:', updateData);
+    console.log('📡 Update URL:', updateUrl);
+    console.log('📡 Request method:', 'PATCH');
     
     showMessage('予約時間を更新中...', 'info');
     
@@ -849,9 +851,14 @@
     .then(response => {
       console.log('📡 Response received:', response);
       console.log('📡 Response status:', response.status);
+      console.log('📡 Response headers:', response.headers);
       
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        // エラーレスポンスの詳細を取得
+        return response.text().then(errorText => {
+          console.error('❌ Error response body:', errorText);
+          throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+        });
       }
       
       return response.json();
