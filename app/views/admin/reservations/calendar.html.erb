@@ -1300,8 +1300,15 @@
             console.log('🕐 start_time:', data.start_time);
             const startDateTime = new Date(data.start_time);
             
-            extractedDate = startDateTime.toISOString().split('T')[0];
-            extractedTime = startDateTime.toTimeString().split(' ')[0].substring(0, 5);
+            // タイムゾーンを考慮して日付と時間を抽出
+            const year = startDateTime.getFullYear();
+            const month = String(startDateTime.getMonth() + 1).padStart(2, '0');
+            const day = String(startDateTime.getDate()).padStart(2, '0');
+            const hours = String(startDateTime.getHours()).padStart(2, '0');
+            const minutes = String(startDateTime.getMinutes()).padStart(2, '0');
+            
+            extractedDate = `${year}-${month}-${day}`;
+            extractedTime = `${hours}:${minutes}`;
             
             console.log('📅 Extracted date:', extractedDate);
             console.log('🕐 Extracted time:', extractedTime);
@@ -1317,11 +1324,20 @@
           
           updateEndTime();
           
-          console.log('✅ Form populated with reservation data');
-        } else {
-          console.error('❌ Failed to load reservation data:', data.error);
-          showMessage('予約データの読み込みに失敗しました', 'danger');
-        }
+                  console.log('✅ Form populated with reservation data');
+        console.log('📝 Form values after population:', {
+          id: document.getElementById('reservationId').value,
+          userId: document.getElementById('reservationUserId').value,
+          course: document.getElementById('reservationCourse').value,
+          date: document.getElementById('reservationDate').value,
+          time: document.getElementById('reservationTime').value,
+          status: document.getElementById('reservationStatus').value,
+          note: document.getElementById('reservationNote').value
+        });
+      } else {
+        console.error('❌ Failed to load reservation data:', data.error);
+        showMessage('予約データの読み込みに失敗しました', 'danger');
+      }
       })
       .catch(error => {
         console.error('❌ Error loading reservation data:', error);
