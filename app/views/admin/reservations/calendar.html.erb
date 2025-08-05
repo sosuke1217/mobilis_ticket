@@ -1300,6 +1300,17 @@
             console.log('🕐 start_time:', data.start_time);
             const startDateTime = new Date(data.start_time);
             
+            console.log('🕐 Parsed DateTime object:', startDateTime);
+            console.log('🕐 DateTime methods:', {
+              getFullYear: startDateTime.getFullYear(),
+              getMonth: startDateTime.getMonth(),
+              getDate: startDateTime.getDate(),
+              getHours: startDateTime.getHours(),
+              getMinutes: startDateTime.getMinutes(),
+              toString: startDateTime.toString(),
+              toISOString: startDateTime.toISOString()
+            });
+            
             // タイムゾーンを考慮して日付と時間を抽出
             const year = startDateTime.getFullYear();
             const month = String(startDateTime.getMonth() + 1).padStart(2, '0');
@@ -1312,7 +1323,19 @@
             
             console.log('📅 Extracted date:', extractedDate);
             console.log('🕐 Extracted time:', extractedTime);
+          } else {
+            console.warn('⚠️ No start_time in data:', data);
           }
+          
+          console.log('📝 Setting form values:', {
+            id: data.id || '',
+            userId: data.user_id || '',
+            course: data.course || '60分',
+            date: extractedDate,
+            time: extractedTime,
+            status: data.status || 'confirmed',
+            note: data.note || ''
+          });
           
           document.getElementById('reservationId').value = data.id || '';
           document.getElementById('reservationUserId').value = data.user_id || '';
