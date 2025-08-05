@@ -79,6 +79,8 @@ function updateReservationTime(event, revertFunc) {
 
 // カレンダー初期化
 export function initializeCalendar() {
+  console.log('🔧 Starting calendar initialization...');
+  
   const calendarEl = document.getElementById('calendar');
   if (!calendarEl) {
     console.error('❌ Calendar element not found');
@@ -89,6 +91,7 @@ export function initializeCalendar() {
   
   // 既存のカレンダーインスタンスがあれば破棄
   if (window.pageCalendar) {
+    console.log('🧹 Destroying existing calendar instance');
     window.pageCalendar.destroy();
     window.pageCalendar = null;
   }
@@ -121,7 +124,8 @@ export function initializeCalendar() {
   
   console.log('✅ FullCalendar is available, proceeding with initialization');
   
-  window.pageCalendar = new FullCalendar.Calendar(calendarEl, {
+  // カレンダーインスタンスを作成
+  const calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: window.innerWidth < 768 ? 'timeGridDay' : 'timeGridWeek',
     headerToolbar: {
       left: 'prev,next today',
@@ -234,12 +238,18 @@ export function initializeCalendar() {
   });
   
   console.log('📅 Calling calendar.render()');
-  window.pageCalendar.render();
+  calendar.render();
+  
+  // グローバル変数として設定
+  window.pageCalendar = calendar;
+  console.log('✅ pageCalendar set as global variable:', window.pageCalendar);
   
   // レンダリング完了を確認
   setTimeout(() => {
     if (calendarEl.querySelector('.fc-toolbar')) {
       console.log('✅ Calendar rendered successfully');
+      console.log('✅ pageCalendar is now available globally');
+      console.log('✅ window.pageCalendar:', window.pageCalendar);
     } else {
       console.error('❌ Calendar rendering failed');
     }

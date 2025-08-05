@@ -575,6 +575,12 @@
       pageCalendar = null;
     }
     
+    if (window.pageCalendar) {
+      console.log('🗑️ Destroying existing global calendar');
+      window.pageCalendar.destroy();
+      window.pageCalendar = null;
+    }
+    
     addPositionAdjustmentStyles();
     
     const systemSettings = getSystemSettings();
@@ -768,6 +774,10 @@
       pageCalendar = new FullCalendar.Calendar(calendarEl, config);
       pageCalendar.render();
       
+      // グローバル変数として設定
+      window.pageCalendar = pageCalendar;
+      console.log('✅ pageCalendar set as global variable:', window.pageCalendar);
+      
       console.log('✅ Complete fixed Rails calendar initialized successfully');
       console.log('🔧 Timezone setting:', pageCalendar.getOption('timeZone'));
       showMessage('カレンダーが正常に初期化されました（完全修正版）', 'success');
@@ -798,6 +808,11 @@
         });
         
         console.log('✅ All events initialized with proper settings');
+        
+        // グローバル変数の確認
+        console.log('🔍 Global variable check:');
+        console.log('🔍 window.pageCalendar exists:', typeof window.pageCalendar !== 'undefined');
+        console.log('🔍 window.pageCalendar value:', window.pageCalendar);
       }, 1000);
       
     } catch (error) {

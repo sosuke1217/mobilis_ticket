@@ -25,7 +25,23 @@ function initializeComplete() {
     setupReservationModal();
     setupIntervalControls();
     setupReservationForm();
+    
+    console.log('🔧 Calling initializeCalendar...');
     initializeCalendar();
+    
+    // 初期化完了後の確認
+    setTimeout(() => {
+      console.log('🔍 Post-initialization check:');
+      console.log('🔍 window.pageCalendar exists:', typeof window.pageCalendar !== 'undefined');
+      console.log('🔍 window.pageCalendar value:', window.pageCalendar);
+      console.log('🔍 window.openReservationModal exists:', typeof window.openReservationModal !== 'undefined');
+      
+      if (window.pageCalendar) {
+        console.log('✅ Calendar successfully initialized and available globally');
+      } else {
+        console.error('❌ Calendar initialization failed - pageCalendar not available');
+      }
+    }, 500);
     
     console.log('✅ All modules initialized successfully');
   } catch (error) {
