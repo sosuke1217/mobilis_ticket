@@ -806,6 +806,10 @@
       end: event.end
     });
     
+    // 絶対URLを使用（最初に定義）
+    const updateUrl = `${window.location.protocol}//${window.location.host}/admin/reservations/${event.id}`;
+    console.log('📡 Absolute URL:', updateUrl);
+    
     // 時間を正規化
     const systemSettings = getSystemSettings();
     const normalizedStart = normalizeTimeToSlot(event.start, systemSettings.slotIntervalMinutes);
@@ -828,10 +832,6 @@
     console.log('📡 Request method:', 'PATCH');
     
     showMessage('予約時間を更新中...', 'info');
-    
-    // 絶対URLを使用
-    const updateUrl = `${window.location.protocol}//${window.location.host}/admin/reservations/${event.id}`;
-    console.log('📡 Absolute URL:', updateUrl);
     
     // 🔧 重要: 更新中はイベントを一時的に無効化
     event.setProp('backgroundColor', '#f8f9fa');
