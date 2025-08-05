@@ -1489,7 +1489,8 @@
       return;
     }
     
-    const startDateTime = new Date(`${formData.date}T${formData.time}:00`);
+    // 日本時間として扱う（UTC+9）
+    const startDateTime = new Date(`${formData.date}T${formData.time}:00+09:00`);
     const courseDuration = parseInt(formData.course.replace('分', ''));
     const endDateTime = new Date(startDateTime.getTime() + courseDuration * 60000);
     
