@@ -142,9 +142,9 @@
               <label for="reservationCourse" class="form-label">コース *</label>
               <select class="form-select" id="reservationCourse" required>
                 <option value="">コースを選択</option>
-                <option value="40分">40分コース (¥8,000)</option>
-                <option value="60分">60分コース (¥12,000)</option>
-                <option value="80分">80分コース (¥16,000)</option>
+                <option value="40分コース">40分コース (¥8,000)</option>
+                <option value="60分コース">60分コース (¥12,000)</option>
+                <option value="80分コース">80分コース (¥16,000)</option>
               </select>
             </div>
             <div class="col-md-6">
@@ -303,22 +303,350 @@
 
 <style>
 /* ==============================================
+   カレンダーページ全体のレイアウト
+   ============================================== */
+body {
+  background: #ffffff;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.calendar-container {
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+
+.calendar-header {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-bottom: 3px solid #e9ecef;
+  padding: 20px 0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+}
+
+.calendar-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 30px;
+}
+
+.calendar-nav {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  flex: 1;
+  margin-right: 0;
+}
+
+.calendar-nav button {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.calendar-nav button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.calendar-nav button:hover::before {
+  left: 100%;
+}
+
+.calendar-nav button:hover {
+  background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+}
+
+.calendar-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #1e293b;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  flex: 2;
+  text-align: center;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+  padding: 0;
+}
+
+.calendar-actions {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  flex: 1;
+  justify-content: flex-end;
+  margin-left: 0;
+}
+
+.btn-new-reservation {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-new-reservation::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-new-reservation:hover::before {
+  left: 100%;
+}
+
+.btn-new-reservation:hover {
+  background: linear-gradient(135deg, #20c997 0%, #1ea085 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+}
+
+.btn-today-reservations {
+  background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-today-reservations::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-today-reservations:hover::before {
+  left: 100%;
+}
+
+.btn-today-reservations:hover {
+  background: linear-gradient(135deg, #e55a00 0%, #cc4a00 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+}
+
+.btn-cancellation-stats {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-cancellation-stats::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-cancellation-stats:hover::before {
+  left: 100%;
+}
+
+.btn-cancellation-stats:hover {
+  background: linear-gradient(135deg, #c82333 0%, #b02130 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+}
+
+/* ==============================================
+   FullCalendarの基本スタイル
+   ============================================== */
+.fc {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  border: 2px solid #e2e8f0;
+  margin: 30px auto;
+  max-width: 1400px;
+  position: relative;
+  overflow: hidden;
+}
+
+.fc::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.fc-view-harness {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 18px;
+  position: relative;
+  z-index: 2;
+}
+
+.fc-toolbar {
+  padding: 25px 30px;
+  border-bottom: 2px solid #f1f5f9;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  position: relative;
+  z-index: 2;
+}
+
+.fc-toolbar::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+}
+
+.fc-toolbar-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1e293b;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.fc-button {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+  border: none !important;
+  color: white !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  padding: 12px 20px !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.fc-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.fc-button:hover::before {
+  left: 100%;
+}
+
+.fc-button:hover {
+  background: linear-gradient(135deg, #0056b3 0%, #004085 100%) !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2) !important;
+}
+
+.fc-button:focus {
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+}
+
+.fc-button-active {
+  background: linear-gradient(135deg, #0056b3 0%, #004085 100%) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+}
+
+/* ==============================================
    予約イベントの基本スタイル
    ============================================== */
 .fc-timegrid-event {
-  border-radius: 8px !important;
+  border-radius: 12px !important;
   font-size: 0.9rem !important;
   font-weight: 600 !important;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.15) !important;
-  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15) !important;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
   border: none !important;
-  margin: 2px 0 !important;
-  min-height: 25px !important;
+  margin: 3px 2px !important;
+  min-height: 30px !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.fc-timegrid-event::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+  pointer-events: none;
+  z-index: 1;
 }
 
 .fc-timegrid-event:hover {
-  box-shadow: 0 6px 16px rgba(0,0,0,0.2) !important;
-  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.25) !important;
+  transform: translateY(-3px) scale(1.02) !important;
   z-index: 1000 !important;
 }
 
@@ -326,11 +654,8 @@
    タブ形式の予約イベント
    ============================================== */
 .fc-timegrid-event.reservation-with-tabs {
-  min-height: 50px !important;
+  min-height: 40px !important;
   padding: 0 !important;
-  border-radius: 8px !important;
-  overflow: hidden !important;
-  border: none !important;
 }
 
 .fc-timegrid-event.reservation-with-tabs .fc-event-main {
@@ -350,12 +675,13 @@
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  padding: 2px 4px !important;
-  font-size: 0.8rem !important;
-  font-weight: 500 !important;
+  padding: 4px 6px !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
   text-align: center !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
   overflow: hidden !important;
+  transition: all 0.3s ease !important;
 }
 
 .fc-timegrid-event.reservation-with-tabs .event-tab:last-child {
@@ -365,22 +691,25 @@
 .fc-timegrid-event.reservation-with-tabs .event-tab.course {
   background: inherit !important;
   color: inherit !important;
+  font-weight: 700 !important;
 }
 
 .fc-timegrid-event.reservation-with-tabs .event-tab.interval {
-  background-color: #6c757d !important;
-  color: white !important;
-}
-
-.fc-timegrid-event.reservation-with-tabs .event-tab.interval.individual {
-  background-color: #fd7e14 !important;
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
   color: white !important;
   font-weight: 600 !important;
 }
 
-.fc-timegrid-event.reservation-with-tabs .event-tab.interval.system {
-  background-color: #6c757d !important;
+.fc-timegrid-event.reservation-with-tabs .event-tab.interval.individual {
+  background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%) !important;
   color: white !important;
+  font-weight: 700 !important;
+}
+
+.fc-timegrid-event.reservation-with-tabs .event-tab.interval.system {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
+  color: white !important;
+  font-weight: 600 !important;
 }
 
 /* ==============================================
@@ -388,38 +717,247 @@
    ============================================== */
 .fc-timegrid-event.confirmed {
   background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
-  border-color: #28a745 !important;
+  border: 2px solid #28a745 !important;
   color: white !important;
+  box-shadow: 0 4px 16px rgba(40, 167, 69, 0.3) !important;
 }
 
 .fc-timegrid-event.tentative {
   background: linear-gradient(135deg, #ffc107 0%, #ffb84d 100%) !important;
-  border-color: #ffc107 !important;
+  border: 2px solid #ffc107 !important;
   color: #212529 !important;
+  box-shadow: 0 4px 16px rgba(255, 193, 7, 0.3) !important;
 }
 
 .fc-timegrid-event.cancelled {
   background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
-  border-color: #dc3545 !important;
+  border: 2px solid #dc3545 !important;
   color: white !important;
+  box-shadow: 0 4px 16px rgba(220, 53, 69, 0.3) !important;
 }
 
 .fc-timegrid-event.completed {
   background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%) !important;
-  border-color: #6f42c1 !important;
+  border: 2px solid #6f42c1 !important;
   color: white !important;
+  box-shadow: 0 4px 16px rgba(111, 66, 193, 0.3) !important;
 }
 
 .fc-timegrid-event.no_show {
   background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
-  border-color: #6c757d !important;
+  border: 2px solid #6c757d !important;
   color: white !important;
+  box-shadow: 0 4px 16px rgba(108, 117, 125, 0.3) !important;
 }
 
 .fc-timegrid-event.break {
   background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
-  border-color: #17a2b8 !important;
+  border: 2px solid #17a2b8 !important;
   color: white !important;
+  box-shadow: 0 4px 16px rgba(23, 162, 184, 0.3) !important;
+}
+</style>
+
+<style>
+/* ==============================================
+   レスポンシブ対応とアニメーション
+   ============================================== */
+@media (max-width: 1024px) {
+  .calendar-toolbar {
+    gap: 20px;
+    padding: 0 20px;
+  }
+  
+  .calendar-title {
+    font-size: 1.8rem;
+  }
+  
+  .fc {
+    margin: 20px auto;
+    border-radius: 16px;
+  }
+  
+  .fc-toolbar {
+    padding: 20px 25px;
+  }
+  
+  .fc-toolbar-title {
+    font-size: 1.6rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .calendar-toolbar {
+    flex-direction: column;
+    gap: 15px;
+    padding: 0 15px;
+  }
+  
+  .calendar-nav {
+    order: 1;
+  }
+  
+  .calendar-title {
+    order: 2;
+    font-size: 1.4rem;
+  }
+  
+  .calendar-actions {
+    order: 3;
+  }
+
+  .btn-new-reservation,
+  .btn-today-reservations,
+  .btn-cancellation-stats {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+  }
+
+  .fc-timegrid-event .event-tab {
+    font-size: 0.7rem !important;
+    padding: 1px 2px !important;
+  }
+  
+  .fc-timegrid-event.reservation-with-tabs {
+    min-height: 50px !important;
+  }
+  
+  .fc {
+    margin: 15px auto;
+    border-radius: 12px;
+  }
+  
+  .fc-toolbar {
+    padding: 15px 20px;
+  }
+  
+  .fc-toolbar-title {
+    font-size: 1.4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .calendar-toolbar {
+    gap: 10px;
+    padding: 0 10px;
+  }
+  
+  .calendar-title {
+    font-size: 1.2rem;
+  }
+  
+  .btn-new-reservation,
+  .btn-today-reservations,
+  .btn-cancellation-stats {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+  
+  .fc-timegrid-event.reservation-with-tabs {
+    min-height: 45px !important;
+  }
+
+  .fc-timegrid-event .event-tabs {
+  height: 100% !important;
+  width: 100% !important;
+  }
+
+  .fc-timegrid-event .event-tab.course {
+  background-color: inherit !important;
+  color: inherit !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
+  }
+
+  .fc-timegrid-event .event-tab.interval {
+  color: white !important;
+  }
+
+  .fc-timegrid-event .event-tab.interval.individual {
+  background-color: #fd7e14 !important;
+  }
+
+  .fc-timegrid-event .event-tab.interval.system {
+  background-color: #6c757d !important;
+  }
+
+  .fc {
+    margin: 10px auto;
+    border-radius: 10px;
+  }
+  
+  .fc-toolbar {
+    padding: 12px 15px;
+  }
+  
+  .fc-toolbar-title {
+    font-size: 1.2rem;
+  }
+}
+
+/* ==============================================
+   アニメーション効果
+   ============================================== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.calendar-container {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.fc {
+  animation: slideInUp 0.8s ease-out;
+}
+
+.fc-timegrid-event {
+  animation: slideInUp 0.4s ease-out;
+}
+
+/* ==============================================
+   アクセシビリティとユーザビリティ
+   ============================================== */
+@media (prefers-contrast: high) {
+  .fc-timegrid-event {
+    border-width: 3px !important;
+  }
+  
+  .fc-button {
+    border: 2px solid currentColor !important;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .fc {
+    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%) !important;
+    border-color: #4a5568 !important;
+  }
+  
+  .fc-toolbar {
+    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%) !important;
+    border-bottom-color: #4a5568 !important;
+  }
+  
+  .fc-toolbar-title {
+    color: #e2e8f0 !important;
+  }
 }
 </style>
 
@@ -627,10 +1165,16 @@
       const event = arg.event;
       const extendedProps = event.extendedProps;
       
+      // イベントの実際の時間幅を計算
+      const eventStart = new Date(event.start);
+      const eventEnd = new Date(event.end);
+      const actualDurationMinutes = (eventEnd - eventStart) / (1000 * 60);
+      
       console.log(`🎨 Rendering event ${event.id}:`, {
         title: event.title,
         start: event.start,
         end: event.end,
+        actualDurationMinutes: Math.round(actualDurationMinutes),
         extendedProps: extendedProps
       });
       
@@ -638,7 +1182,16 @@
       if (extendedProps.has_interval && extendedProps.interval_duration > 0) {
         const courseDuration = extendedProps.course_duration; // 分単位
         const intervalDuration = extendedProps.interval_duration; // 分単位
-        const totalDuration = extendedProps.total_duration; // 分単位
+        const totalDuration = courseDuration + intervalDuration; // 手動で計算
+        
+        console.log(`🔍 Duration details for event ${event.id}:`, {
+          courseDuration,
+          intervalDuration,
+          totalDuration,
+          backendTotalDuration: extendedProps.total_duration,
+          hasInterval: extendedProps.has_interval,
+          intervalDurationFromProps: extendedProps.interval_duration
+        });
         
         // タブの高さを計算（時間の比率に基づく）
         const courseHeight = Math.round((courseDuration / totalDuration) * 100);
@@ -728,113 +1281,28 @@
         failureCallback(error);
       });
     }
-      });
+  });
+  
+  console.log('🎨 Rendering calendar...');
+  calendar.render();
+  console.log('✅ Calendar rendered successfully');
+  
+  // インターバル情報を更新
+  function updateIntervalInfo(extendedProps) {
+    const intervalInfo = document.getElementById('currentIntervalInfo');
+    const individualInterval = extendedProps?.individual_interval_minutes;
+    const effectiveInterval = extendedProps?.effective_interval_minutes || 15;
     
-    console.log('🎨 Rendering calendar...');
-    calendar.render();
-    console.log('✅ Calendar rendered successfully');
-    
-    // キャンセル履歴モーダルを開く
-    window.openCancelledHistoryModal = function() {
-      console.log('📊 Opening cancelled history modal');
-      
-      // キャンセル統計を取得してモーダルに表示
-      fetch('/admin/reservations/cancellation_stats')
-        .then(response => {
-          console.log('📊 Response status:', response.status);
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then(data => {
-          console.log('📊 Received data for modal:', data);
-          
-          // モーダルの統計を更新
-          document.getElementById('modalCancelledCount').textContent = data.cancelled_count;
-          document.getElementById('modalCancelledRate').textContent = data.cancelled_rate + '%';
-          document.getElementById('modalTotalReservations').textContent = data.total_reservations || 0;
-          
-          // モーダルの履歴を更新
-          const modalHistoryContainer = document.getElementById('modalCancelledHistory');
-          if (data.cancelled_history && data.cancelled_history.length > 0) {
-            console.log('📊 Rendering modal history:', data.cancelled_history.length, 'items');
-            const historyHtml = data.cancelled_history.map(item => `
-              <div class="border-bottom pb-3 mb-3">
-                <div class="d-flex justify-content-between align-items-start">
-                  <div class="flex-grow-1">
-                    <div class="fw-bold text-dark fs-6">${item.customer_name}</div>
-                    <div class="small text-muted mt-1">
-                      <i class="fas fa-calendar me-1"></i>${item.cancelled_at}
-                      <span class="mx-2">|</span>
-                      <i class="fas fa-clock me-1"></i>${item.course}
-                    </div>
-                  </div>
-                </div>
-                <div class="mt-2">
-                  <span class="badge bg-danger">
-                    <i class="fas fa-times-circle me-1"></i>
-                    ${item.reason || '理由未入力'}
-                  </span>
-                </div>
-              </div>
-            `).join('');
-            modalHistoryContainer.innerHTML = historyHtml;
-          } else {
-            console.log('📊 No cancellation history found for modal');
-            modalHistoryContainer.innerHTML = `
-              <div class="text-muted text-center py-4">
-                <i class="fas fa-info-circle me-1"></i>
-                キャンセル履歴がありません
-              </div>
-            `;
-          }
-          
-          // モーダルを表示
-          const modal = new bootstrap.Modal(document.getElementById('cancelledHistoryModal'));
-          modal.show();
-        })
-        .catch(error => {
-          console.error('❌ キャンセル統計の取得に失敗:', error);
-          // エラー時もモーダルを表示（デフォルト値）
-          const modalCancelledCount = document.getElementById('modalCancelledCount');
-          const modalCancelledRate = document.getElementById('modalCancelledRate');
-          const modalTotalReservations = document.getElementById('modalTotalReservations');
-          const modalCancelledHistory = document.getElementById('modalCancelledHistory');
-          
-          if (modalCancelledCount) modalCancelledCount.textContent = '0';
-          if (modalCancelledRate) modalCancelledRate.textContent = '0%';
-          if (modalTotalReservations) modalTotalReservations.textContent = '0';
-          if (modalCancelledHistory) {
-            modalCancelledHistory.innerHTML = `
-              <div class="text-muted text-center py-4">
-                <i class="fas fa-exclamation-triangle me-1"></i>
-                統計の取得に失敗しました
-              </div>
-            `;
-          }
-          
-          const modal = new bootstrap.Modal(document.getElementById('cancelledHistoryModal'));
-          modal.show();
-      });
-    };
-    
-    // インターバル情報を更新
-    function updateIntervalInfo(extendedProps) {
-      const intervalInfo = document.getElementById('currentIntervalInfo');
-      const individualInterval = extendedProps?.individual_interval_minutes;
-      const effectiveInterval = extendedProps?.effective_interval_minutes || 15;
-      
-      if (individualInterval !== null && individualInterval !== undefined) {
-        intervalInfo.innerHTML = `<span class="badge bg-success">個別設定: ${individualInterval}分</span>`;
-      } else {
-        intervalInfo.innerHTML = `<span class="badge bg-primary">システム設定: ${effectiveInterval}分</span>`;
-      }
+    if (individualInterval !== null && individualInterval !== undefined) {
+      intervalInfo.innerHTML = `<span class="badge bg-success">個別設定: ${individualInterval}分</span>`;
+    } else {
+      intervalInfo.innerHTML = `<span class="badge bg-primary">システム設定: ${effectiveInterval}分</span>`;
     }
+  }
 
-    // 初期データ読み込み（エラーハンドリング付き）
-    try {
-      loadCancellationStats();
+  // 初期データ読み込み（エラーハンドリング付き）
+  try {
+    loadCancellationStats();
     } catch (error) {
       console.log('📊 Initial cancellation stats loading skipped:', error.message);
     }
@@ -1104,6 +1572,15 @@
       `;
     }
     
+    // この関数をスクリプトの先頭（line 530付近）に追加
+    function getCourseDuration(course) {
+      switch(course) {
+        case '40分コース': return 40;
+        case '60分コース': return 60;
+        case '80分コース': return 80;
+        default: return 60;
+      }
+    }
     // openReservationModal 関数を完全に置き換え（522行目付近）
     function openReservationModal(event) {
       // 既存の予約を編集モードで開く
@@ -1446,7 +1923,7 @@
       }
       
       // コース時間とインターバル時間を考慮した営業時間チェック
-      const courseDuration = parseInt(reservationCourse.match(/(\d+)分/)?.[1] || 60);
+      const courseDuration = getCourseDuration(reservationCourse);
       const checkIntervalValue = document.getElementById('reservationInterval').value;
       const intervalDuration = checkIntervalValue ? parseInt(checkIntervalValue) : 15; // システムデフォルト
       const totalDuration = courseDuration + intervalDuration;
@@ -1684,6 +2161,91 @@
         alertDiv.remove();
       }, 3000);
     }
+    
+    // キャンセル履歴モーダルを開く
+    window.openCancelledHistoryModal = function() {
+      console.log('📊 Opening cancelled history modal');
+      
+      // キャンセル統計を取得してモーダルに表示
+      fetch('/admin/reservations/cancellation_stats')
+        .then(response => {
+          console.log('📊 Response status:', response.status);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('📊 Received data for modal:', data);
+          
+          // モーダルの統計を更新
+          document.getElementById('modalCancelledCount').textContent = data.cancelled_count;
+          document.getElementById('modalCancelledRate').textContent = data.cancelled_rate + '%';
+          document.getElementById('modalTotalReservations').textContent = data.total_reservations || 0;
+          
+          // モーダルの履歴を更新
+          const modalHistoryContainer = document.getElementById('modalCancelledHistory');
+          if (data.cancelled_history && data.cancelled_history.length > 0) {
+            console.log('📊 Rendering modal history:', data.cancelled_history.length, 'items');
+            const historyHtml = data.cancelled_history.map(item => `
+              <div class="border-bottom pb-3 mb-3">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div class="flex-grow-1">
+                    <div class="fw-bold text-dark fs-6">${item.customer_name}</div>
+                    <div class="small text-muted mt-1">
+                      <i class="fas fa-calendar me-1"></i>${item.cancelled_at}
+                      <span class="mx-2">|</span>
+                      <i class="fas fa-clock me-1"></i>${item.course}
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-2">
+                  <span class="badge bg-danger">
+                    <i class="fas fa-times-circle me-1"></i>
+                    ${item.reason || '理由未入力'}
+                  </span>
+                </div>
+              </div>
+            `).join('');
+            modalHistoryContainer.innerHTML = historyHtml;
+          } else {
+            console.log('📊 No cancellation history found for modal');
+            modalHistoryContainer.innerHTML = `
+              <div class="text-muted text-center py-4">
+                <i class="fas fa-info-circle me-1"></i>
+                キャンセル履歴がありません
+              </div>
+            `;
+          }
+          
+          // モーダルを表示
+          const modal = new bootstrap.Modal(document.getElementById('cancelledHistoryModal'));
+          modal.show();
+        })
+        .catch(error => {
+          console.error('❌ キャンセル統計の取得に失敗:', error);
+          // エラー時もモーダルを表示（デフォルト値）
+          const modalCancelledCount = document.getElementById('modalCancelledCount');
+          const modalCancelledRate = document.getElementById('modalCancelledRate');
+          const modalTotalReservations = document.getElementById('modalTotalReservations');
+          const modalCancelledHistory = document.getElementById('modalCancelledHistory');
+          
+          if (modalCancelledCount) modalCancelledCount.textContent = '0';
+          if (modalCancelledRate) modalCancelledRate.textContent = '0%';
+          if (modalTotalReservations) modalTotalReservations.textContent = '0';
+          if (modalCancelledHistory) {
+            modalCancelledHistory.innerHTML = `
+              <div class="text-muted text-center py-4">
+                <i class="fas fa-exclamation-triangle me-1"></i>
+                統計の取得に失敗しました
+              </div>
+            `;
+          }
+          
+          const modal = new bootstrap.Modal(document.getElementById('cancelledHistoryModal'));
+          modal.show();
+        });
+    };
   });
 </script>
 
