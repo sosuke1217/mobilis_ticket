@@ -309,7 +309,7 @@
           <table class="table table-hover table-striped align-middle mb-0">
             <thead class="table-light text-center">
               <tr>
-                <th>タイトル</th>
+                <th>チケット名</th>
                 <th>購入日</th>
                 <th>有効期限</th>
                 <th>消化済</th>
@@ -319,7 +319,7 @@
             <tbody>
               <% @active_tickets.each do |ticket| %>
                 <tr>
-                  <td class="text-center"><%= ticket.title %></td>
+                  <td class="text-center"><%= ticket.ticket_template.name %></td>
                   <td class="text-nowrap text-center"><%= ticket.purchase_date.strftime("%Y-%m-%d") %></td>
                   <td class="text-nowrap text-center">
                     <% if ticket.expiry_date < Time.zone.today %>
@@ -367,7 +367,7 @@
           <tbody>
             <% @recent_ticket_usages.each do |usage| %>
               <tr>
-                <td><%= usage.ticket.title %></td>
+                <td><%= usage.ticket.ticket_template.name %></td>
                 <td><%= usage.used_at.strftime('%Y-%m-%d %H:%M') %></td>
                 <td><%= usage.ticket.remaining_count %> 回</td>
                 <td><%= usage.note.present? ? truncate(usage.note, length: 30) : "—" %></td>
@@ -399,21 +399,21 @@
         <table class="table table-hover table-striped align-middle mb-0">
           <thead class="table-light">
             <tr>
-              <th>タイトル</th>
+              <th>チケット名</th>
               <th>残回数</th>
               <th>購入日</th>
               <th>有効期限</th>
             </tr>
           </thead>
           <tbody>
-            <% @used_up_tickets.each do |ticket| %>
-              <tr>
-                <td><%= ticket.title %></td>
-                <td>0 / <%= ticket.total_count %></td>
-                <td><%= ticket.purchase_date.strftime("%Y-%m-%d") %></td>
-                <td><%= ticket.expiry_date.strftime("%Y-%m-%d") %></td>
-              </tr>
-            <% end %>
+                          <% @used_up_tickets.each do |ticket| %>
+                <tr>
+                  <td><%= ticket.ticket_template.name %></td>
+                  <td>0 / <%= ticket.total_count %></td>
+                  <td><%= ticket.purchase_date.strftime("%Y-%m-%d") %></td>
+                  <td><%= ticket.expiry_date.strftime("%Y-%m-%d") %></td>
+                </tr>
+              <% end %>
           </tbody>
         </table>
       <% else %>

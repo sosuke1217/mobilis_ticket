@@ -31,7 +31,7 @@ class ApplicationSetting < ApplicationRecord
       business_hours_end: 20,
       slot_interval_minutes: 30,
       max_advance_booking_days: 30,
-      min_advance_booking_hours: 24,
+      min_advance_booking_hours: 2,
       sunday_closed: true
     )
   rescue => e
@@ -43,7 +43,7 @@ class ApplicationSetting < ApplicationRecord
       business_hours_end: 20,
       slot_interval_minutes: 30,
       max_advance_booking_days: 30,
-      min_advance_booking_hours: 24,
+      min_advance_booking_hours: 2,
       sunday_closed: true
     )
   end

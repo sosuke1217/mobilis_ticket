@@ -18,7 +18,7 @@ class Reservation < ApplicationRecord
   
   validates :start_time, :end_time, :course, presence: true
   validate :no_time_overlap, unless: :cancelled?
-  validate :start_and_end_must_be_on_10_minute_interval, unless: :skip_time_validation
+  validate :start_and_and_end_must_be_on_10_minute_interval, unless: :skip_time_validation
   validate :end_time_after_start_time
   validate :cancellation_reason_presence, if: :cancelled?
   validate :booking_within_business_hours, unless: :skip_business_hours_validation
@@ -318,6 +318,31 @@ class Reservation < ApplicationRecord
     end
   end
 
+  def extract_course_minutes(course_name)
+    # コース名から時間を抽出（例：60分、80分、60分コース、60(新価格)など）
+    if course_name =~ /(\d+)分/
+      $1.to_i
+    elsif course_name =~ /(\d+)分コース/
+      $1.to_i
+    elsif course_name =~ /(\d+)\(/
+      $1.to_i
+    else
+      # デフォルトの時間を設定（コース名から推測できない場合）
+      case course_name
+      when /60/
+        60
+      when /80/
+        80
+      when /90/
+        90
+      when /120/
+        120
+      else
+        0
+      end
+    end
+  end
+
   def as_calendar_json
     {
       id: id,
@@ -351,50 +376,24 @@ class Reservation < ApplicationRecord
     return if skip_overlap_validation
 
     Reservation.transaction do
-      # この予約のインターバル時間
-      my_interval = effective_interval_minutes
-      
-      if my_interval > 0
-        # 予約後のインターバルのみ考慮（個別設定対応）
-        my_buffer_end = end_time + my_interval.minutes
-        
-        # 他の予約との重複チェック
-        overlapping = Reservation.active
-          .where.not(id: id)
-          .select do |other|
-            other_interval = other.effective_interval_minutes
-            other_buffer_end = other.end_time + other_interval.minutes
-            
-            # 重複判定：
-            # 1. 基本的な時間重複
-            # 2. この予約の開始が他の予約のインターバル終了前
-            # 3. この予約のインターバル終了が他の予約の開始後
-            (start_time < other.end_time && end_time > other.start_time) ||
-            (start_time < other_buffer_end && my_buffer_end > other.start_time)
-          end
-        
-        if overlapping.any?
-          overlapping_reservation = overlapping.first
-          errors.add(:base, 
-            "#{overlapping_reservation.start_time.strftime('%H:%M')}〜#{overlapping_reservation.end_time.strftime('%H:%M')}の予約があります。" +
-            "（整理時間: この予約#{my_interval}分、既存予約#{overlapping_reservation.effective_interval_minutes}分）"
-          )
+      overlapping = Reservation.active
+        .where.not(id: id)
+        .select do |other|
+          # 本体同士の重複のみNG（端が一致する場合はOK）
+          times_overlap = (start_time < other.end_time && end_time > other.start_time)
+          times_overlap && !(end_time == other.start_time || start_time == other.end_time)
         end
-      else
-        # インターバルなしの場合は基本的な重複チェックのみ
-        overlapping = Reservation.active
-          .where.not(id: id)
-          .where('start_time < ? AND end_time > ?', end_time, start_time)
-        
-        if overlapping.exists?
-          overlapping_reservation = overlapping.first
-          errors.add(:base, "#{overlapping_reservation.start_time.strftime('%H:%M')}〜#{overlapping_reservation.end_time.strftime('%H:%M')}に既に予約が入っています。")
-        end
+
+      if overlapping.any?
+        overlapping_reservation = overlapping.first
+        errors.add(:base,
+          "#{overlapping_reservation.start_time.strftime('%H:%M')}〜#{overlapping_reservation.end_time.strftime('%H:%M')}の予約があります。"
+        )
       end
     end
   end
 
-  def start_and_end_must_be_on_10_minute_interval
+  def start_and_and_end_must_be_on_10_minute_interval
     return unless start_time && end_time
     
     if start_time.min % 10 != 0 || end_time.min % 10 != 0

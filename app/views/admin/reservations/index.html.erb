@@ -1,32 +1,219 @@
-<h2>予約一覧</h2>
-<p>
-  <%= link_to '＋ 新規予約を作成する', new_admin_reservation_path, class: 'btn btn-primary' %>
-</p>
-<table>
-  <thead>
-    <tr>
-      <th>お名前</th>
-      <th>日付</th>
-      <th>時間</th>
-      <th>コース</th>
-      <th>メモ</th>
-    </tr>
-  </thead>
-  <tbody>
-    <% @reservations.each do |reservation| %>
-      <tr>
-        <td><%= reservation.name %></td>
-        <td><%= reservation.date %></td>
-        <td>
-          <% if reservation.start_time && reservation.end_time %>
-            <%= reservation.start_time.strftime("%H:%M") %>〜<%= reservation.end_time.strftime("%H:%M") %>
-          <% else %>
-            未設定
-          <% end %>
-        </td>
-        <td><%= reservation.course %></td>
-        <td><%= reservation.note %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<% content_for :title, "今日の予約一覧 - Mobilis" %>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+          <i class="fas fa-calendar-day me-2"></i>今日の予約一覧
+        </h1>
+        <div class="d-flex gap-2">
+          <a href="<%= calendar_admin_reservations_path %>" class="btn btn-outline-primary">
+            <i class="fas fa-calendar-alt me-1"></i>カレンダー表示
+          </a>
+          <a href="<%= new_admin_reservation_path %>" class="btn btn-success">
+            <i class="fas fa-plus me-1"></i>新規予約
+          </a>
+        </div>
+      </div>
+
+      <!-- 今日の日付表示 -->
+      <div class="alert alert-info">
+        <i class="fas fa-calendar me-2"></i>
+        <strong><%= Date.current.strftime('%Y年%m月%d日') %></strong>
+        (<%= Date.current.strftime('%A') %>)
+      </div>
+
+      <!-- 予約一覧 -->
+      <% if @today_reservations.any? %>
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">
+              <i class="fas fa-list me-2"></i>予約一覧 (<%= @today_reservations.count %>件)
+            </h5>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>時間</th>
+                    <th>顧客名</th>
+                    <th>コース</th>
+                    <th>ステータス</th>
+                    <th>整理時間</th>
+                    <th>メモ</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% @today_reservations.each do |reservation| %>
+                    <tr class="<%= reservation.status %>-row">
+                      <td>
+                        <strong><%= reservation.start_time.strftime('%H:%M') %></strong>
+                        〜
+                        <strong><%= reservation.end_time.strftime('%H:%M') %></strong>
+                      </td>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <div class="avatar-sm me-2">
+                            <i class="fas fa-user-circle fa-lg text-primary"></i>
+                          </div>
+                          <div>
+                            <div class="fw-bold">
+                              <% if reservation.user_id.present? %>
+                                <a href="<%= admin_user_path(reservation.user_id) %>" 
+                                   class="text-decoration-none text-dark hover-primary">
+                                  <%= reservation.name.present? ? reservation.name : reservation.user&.name || '未設定' %>
+                                </a>
+                              <% else %>
+                                <%= reservation.name.present? ? reservation.name : '未設定' %>
+                              <% end %>
+                            </div>
+                            <% if reservation.user&.phone_number.present? %>
+                              <small class="text-muted">
+                                <i class="fas fa-phone me-1"></i><%= reservation.user.phone_number %>
+                              </small>
+                            <% end %>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="badge bg-primary"><%= reservation.course %></span>
+                      </td>
+                      <td>
+                        <span class="badge <%= reservation.status_color %>">
+                          <%= reservation.status_text %>
+                        </span>
+                      </td>
+                      <td>
+                        <% if reservation.effective_interval_minutes > 0 %>
+                          <span class="badge <%= reservation.interval_badge_class %>">
+                            <%= reservation.effective_interval_minutes %>分
+                            <% if reservation.has_individual_interval? %>
+                              <i class="fas fa-user-cog ms-1" title="個別設定"></i>
+                            <% end %>
+                          </span>
+                        <% else %>
+                          <span class="text-muted">-</span>
+                        <% end %>
+                      </td>
+                      <td>
+                        <% if reservation.note.present? %>
+                          <span class="text-muted" title="<%= reservation.note %>">
+                            <%= truncate(reservation.note, length: 30) %>
+                          </span>
+                        <% else %>
+                          <span class="text-muted">-</span>
+                        <% end %>
+                      </td>
+                      <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                          <a href="<%= ticket_management_admin_user_path(reservation.user_id) %>" 
+                             class="btn btn-outline-primary" title="チケット管理">
+                            <i class="fas fa-ticket-alt"></i>
+                          </a>
+                          <a href="<%= calendar_admin_reservations_path %>?edit=<%= reservation.id %>" 
+                             class="btn btn-outline-secondary" title="予約編集">
+                            <i class="fas fa-edit"></i>
+                          </a>
+                          <button type="button" class="btn btn-outline-danger" 
+                                  onclick="deleteReservation(<%= reservation.id %>)" title="予約削除">
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      <% else %>
+        <div class="text-center py-5">
+          <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+          <h4 class="text-muted">今日の予約はありません</h4>
+          <p class="text-muted">新しい予約を作成してください</p>
+          <a href="<%= new_admin_reservation_path %>" class="btn btn-success">
+            <i class="fas fa-plus me-1"></i>新規予約を作成
+          </a>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<!-- 予約編集モーダル -->
+<div class="modal fade" id="reservationModal" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="reservationModalLabel">
+          <i class="fas fa-edit me-2"></i>予約編集
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- モーダルの内容はカレンダーページと同じ -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.confirmed-row { background-color: #d4edda; }
+.tentative-row { background-color: #fff3cd; }
+.completed-row { background-color: #d1ecf1; }
+.cancelled-row { background-color: #f8d7da; }
+.no_show-row { background-color: #f8d7da; }
+
+.avatar-sm {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 123, 255, 0.1) !important;
+}
+
+.hover-primary:hover {
+  color: #007bff !important;
+  text-decoration: underline !important;
+}
+</style>
+
+<script>
+// 予約編集モーダルを開く
+function openReservationModal(reservationId) {
+  // カレンダーページのモーダル機能を再利用
+  window.location.href = '/admin/reservations/calendar?edit=' + reservationId;
+}
+
+// 予約削除
+function deleteReservation(reservationId) {
+  if (confirm('この予約を削除しますか？')) {
+    fetch(`/admin/reservations/${reservationId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => {
+      if (response.ok) {
+        location.reload();
+      } else {
+        alert('削除に失敗しました');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('削除に失敗しました');
+    });
+  }
+}
+</script>

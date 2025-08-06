@@ -2,7 +2,7 @@
 
 <div class="calendar-container">
   <div class="calendar-header">
-    <div class="container-fluid">
+<div class="container-fluid">
       <div class="calendar-toolbar">
         <div class="calendar-nav">
           <button id="prevBtn" class="btn btn-outline-primary">
@@ -18,10 +18,13 @@
         
         <div class="calendar-title">
           <i class="fas fa-calendar-alt me-2"></i>予約カレンダー
-        </div>
-        
+      </div>
+      
         <div class="calendar-actions">
           <div class="d-flex flex-column gap-2">
+            <a href="<%= admin_reservations_path %>" class="btn btn-outline-primary btn-sm">
+              <i class="fas fa-list me-1"></i>今日の予約一覧
+            </a>
             <button id="newReservationBtn" class="btn btn-success">
               <i class="fas fa-plus me-1"></i>新規予約
             </button>
@@ -30,7 +33,7 @@
             </button>
           </div>
         </div>
-      </div>
+    </div>
     </div>
   </div>
   
@@ -65,11 +68,11 @@
                 <div id="customerSearchResults" class="position-absolute w-100 bg-white border rounded shadow-sm" 
                      style="z-index: 1050; max-height: 200px; overflow-y: auto; display: none;">
                   <!-- 検索結果がここに表示 -->
-                </div>
-              </div>
             </div>
+              </div>
           </div>
-          
+        </div>
+        
           <!-- 選択された顧客情報の表示 -->
           <div id="selectedCustomerInfo" class="row mb-3" style="display: none;">
             <div class="col-12">
@@ -216,11 +219,11 @@
           <i class="fas fa-times me-1"></i>キャンセル
         </button>
         <button type="button" class="btn btn-danger" id="deleteReservationBtn" style="display: none;">
-          <i class="fas fa-trash me-1"></i>削除
-        </button>
+            <i class="fas fa-trash me-1"></i>削除
+          </button>
         <button type="button" class="btn btn-primary" id="saveReservationBtn">
-          <i class="fas fa-save me-1"></i>保存
-        </button>
+            <i class="fas fa-save me-1"></i>保存
+          </button>
       </div>
     </div>
   </div>
@@ -402,16 +405,16 @@
   }
   
   .fc-timegrid-event.confirmed {
-    background-color: #28a745 !important;
+        background-color: #28a745 !important;
     border-color: #28a745 !important;
   }
   
   .fc-timegrid-event.tentative {
-    background-color: #ffc107 !important;
+        background-color: #ffc107 !important;
     border-color: #ffc107 !important;
-    color: #212529 !important;
-  }
-  
+        color: #212529 !important;
+      }
+      
   .fc-timegrid-event.cancelled {
     background-color: #dc3545 !important;
     border-color: #dc3545 !important;
@@ -433,6 +436,87 @@
     background-color: #17a2b8 !important;
     border-color: #17a2b8 !important;
   }
+  
+  /* タブ形式のイベントスタイル（縦積み） */
+  .fc-timegrid-event.reservation-with-tabs {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .fc-timegrid-event.reservation-with-tabs .event-tabs {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+  }
+  
+  .fc-timegrid-event.reservation-with-tabs .event-tab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    min-height: 0;
+    flex-shrink: 0;
+  }
+  
+  /* FullCalendarのイベント高さを強制制御 */
+  .fc-timegrid-event {
+    min-height: 20px !important;
+  }
+  
+  .fc-timegrid-event.reservation-with-tabs {
+    min-height: 40px !important;
+  }
+  
+  .fc-timegrid-event.reservation-with-tabs .event-tab:last-child {
+    border-bottom: none;
+  }
+  
+  .fc-timegrid-event.reservation-with-tabs .event-tab.course {
+    background-color: inherit;
+    color: white;
+  }
+  
+  /* コース部分の背景色を親要素から継承 */
+  .fc-timegrid-event.reservation-with-tabs.confirmed .event-tab.course {
+    background-color: #28a745 !important;
+  }
+  
+  .fc-timegrid-event.reservation-with-tabs.tentative .event-tab.course {
+    background-color: #ffc107 !important;
+    color: #212529 !important;
+  }
+  
+  .fc-timegrid-event.reservation-with-tabs.cancelled .event-tab.course {
+    background-color: #dc3545 !important;
+  }
+  
+  .fc-timegrid-event.reservation-with-tabs.completed .event-tab.course {
+    background-color: #6c757d !important;
+  }
+  
+  .fc-timegrid-event.reservation-with-tabs.no_show .event-tab.course {
+    background-color: #fd7e14 !important;
+  }
+  
+  .fc-timegrid-event.reservation-with-tabs .event-tab.interval {
+    background-color: #6c757d;
+    color: white;
+  }
+  
+  .fc-timegrid-event.reservation-with-tabs .event-tab.interval.individual {
+    background-color: #fd7e14;
+  }
+  
+  .fc-timegrid-event.reservation-with-tabs .event-tab.interval.system {
+    background-color: #6c757d;
+  }
+  
+
   
   /* レスポンシブ対応 */
   @media (max-width: 768px) {
@@ -524,9 +608,9 @@
                 <div class="text-muted text-center py-3">
                   <i class="fas fa-info-circle me-1"></i>
                   キャンセル履歴がありません
-                </div>
-              `;
-            }
+        </div>
+      `;
+    }
           } else {
             console.log('📊 Cancellation history container not found, skipping update');
           }
@@ -574,10 +658,13 @@
       },
       slotMinTime: '10:00:00',
       slotMaxTime: '20:00:00',
-      slotDuration: '00:30:00',
+      slotDuration: '00:10:00',
       allDaySlot: false,
       selectable: true,
       editable: true,
+      nowIndicator: true,
+      eventDisplay: 'block', // イベントをブロック表示にして高さを制御
+      eventMinHeight: 20, // 最小高さを設定
     
     // タイムゾーン処理の設定
     eventTimeFormat: {
@@ -613,6 +700,60 @@
       
       // 🔧 修正: openNewReservationModal を呼び出し
       openNewReservationModal(info.start, info.end);
+    },
+    
+    // イベントレンダリングのカスタマイズ
+    eventContent: function(arg) {
+      const event = arg.event;
+      const extendedProps = event.extendedProps;
+      
+      // タブ形式のイベントかどうかをチェック
+      if (extendedProps.has_interval) {
+        // コントローラーから送られた正確な時間を使用
+        const courseDuration = extendedProps.course_duration; // 分単位
+        const intervalDuration = extendedProps.interval_duration; // 分単位
+        const totalDuration = extendedProps.total_duration; // 分単位
+        
+        console.log(`🕐 Event ${event.id} tab calculation:`, {
+          courseDuration,
+          intervalDuration,
+          totalDuration,
+          courseHeight: (courseDuration / totalDuration) * 100,
+          intervalHeight: (intervalDuration / totalDuration) * 100,
+          eventStart: event.start,
+          eventEnd: event.end,
+          eventDuration: (new Date(event.end) - new Date(event.start)) / (1000 * 60), // 分単位
+          eventElement: event.el,
+          eventHeight: event.el ? event.el.offsetHeight : 'N/A'
+        });
+        
+        // タブの高さを計算（時間の比率に基づく）
+        const courseHeight = (courseDuration / totalDuration) * 100;
+        const intervalHeight = (intervalDuration / totalDuration) * 100;
+        
+        const intervalType = extendedProps.is_individual_interval ? 'individual' : 'system';
+        
+        const html = `
+          <div class="event-tabs" style="height: 100%; display: flex; flex-direction: column;">
+            <div class="event-tab course" style="height: ${courseHeight}%; flex: none; display: flex; align-items: center; justify-content: center; padding: 2px 4px; font-size: 0.8rem; font-weight: 500; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.3);">
+              <div>${event.title}</div>
+            </div>
+            <div class="event-tab interval ${intervalType}" style="height: ${intervalHeight}%; flex: none; display: flex; align-items: center; justify-content: center; padding: 2px 4px; font-size: 0.8rem; font-weight: 500; text-align: center;">
+              <div>整理 (${Math.round(intervalDuration)}分)</div>
+            </div>
+          </div>
+        `;
+        
+        console.log(`🕐 Event ${event.id} HTML:`, html);
+        console.log(`🕐 Event ${event.id} Heights: course=${courseHeight}%, interval=${intervalHeight}%`);
+        
+        return { html };
+      } else {
+        // 通常のイベント（インターバルなし）
+        return {
+          html: `<div>${event.title}</div>`
+        };
+      }
     },
     
     // イベントデータの取得
@@ -728,9 +869,9 @@
           
           const modal = new bootstrap.Modal(document.getElementById('cancelledHistoryModal'));
           modal.show();
-        });
+      });
     };
-
+    
     // インターバル情報を更新
     function updateIntervalInfo(extendedProps) {
       const intervalInfo = document.getElementById('currentIntervalInfo');
@@ -749,6 +890,27 @@
       loadCancellationStats();
     } catch (error) {
       console.log('📊 Initial cancellation stats loading skipped:', error.message);
+    }
+    
+    // URLパラメータから編集モードをチェック
+    const urlParams = new URLSearchParams(window.location.search);
+    const editReservationId = urlParams.get('edit');
+    
+    if (editReservationId) {
+      console.log('🔧 Edit mode detected for reservation:', editReservationId);
+      
+      // カレンダーが読み込まれた後に編集モーダルを開く
+      setTimeout(() => {
+        // カレンダーから該当のイベントを取得
+        const event = calendar.getEventById(editReservationId);
+        if (event) {
+          console.log('✅ Found event for editing:', event);
+          openReservationModal(event);
+        } else {
+          console.log('❌ Event not found for editing:', editReservationId);
+          showMessage('編集する予約が見つかりませんでした', 'warning');
+        }
+      }, 1000); // カレンダーの読み込みを待つ
     }
     
     // ナビゲーションボタン
@@ -788,9 +950,9 @@
       
       if (query.length < 2) {
         hideSearchResults();
-        return;
-      }
-      
+      return;
+    }
+    
       searchTimeout = setTimeout(() => {
         searchCustomers(query);
       }, 300);
@@ -819,26 +981,26 @@
 
     function searchCustomers(query) {
       fetch(`/admin/users/search?query=${encodeURIComponent(query)}`, {
-        headers: {
-          'Accept': 'application/json',
+      headers: {
+        'Accept': 'application/json',
           'Content-Type': 'application/json'
         }
-      })
-      .then(response => {
-        if (!response.ok) {
+    })
+    .then(response => {
+      if (!response.ok) {
           if (response.status === 401) {
             // 認証エラーの場合、ログインページにリダイレクト
             window.location.href = '/admin_users/sign_in';
             throw new Error('認証が必要です');
-          }
+      }
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        return response.json();
-      })
-      .then(data => {
+      return response.json();
+    })
+    .then(data => {
         displaySearchResults(data.users, query);
-      })
-      .catch(error => {
+    })
+    .catch(error => {
         console.error('顧客検索エラー:', error);
         hideSearchResults();
       });
@@ -858,7 +1020,7 @@
             </button>
           </div>
         `;
-      } else {
+    } else {
         let html = '';
         users.forEach(user => {
           html += `
@@ -1131,7 +1293,8 @@
       console.log('🔄 Updating reservation time:', {
         id: reservationId,
         start: newStart,
-        end: newEnd
+        end: newEnd,
+        extendedProps: event.extendedProps
       });
       
       // CSRF トークンを取得
@@ -1152,34 +1315,45 @@
         return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}+09:00`;
       }
       
+      // ドラッグ時の時間をそのまま送信（コントローラーで適切に処理）
       const startISO = formatAsJSTDateTime(newStart);
       const endISO = formatAsJSTDateTime(newEnd);
       
+      console.log('🕐 Drag time conversion:', {
+        start: newStart,
+        end: newEnd,
+        startISO: startISO,
+        endISO: endISO,
+        effectiveIntervalMinutes: event.extendedProps?.effective_interval_minutes || 0
+      });
+      
       console.log('🕐 Time conversion:', {
-        originalStart: newStart,
-        originalEnd: newEnd,
+        start: newStart,
+        end: newEnd,
         startISO: startISO,
         endISO: endISO,
         startLocalTime: newStart.toLocaleString('ja-JP'),
-        endLocalTime: newEnd.toLocaleString('ja-JP')
+        endLocalTime: newEnd.toLocaleString('ja-JP'),
+        effectiveIntervalMinutes: event.extendedProps?.effective_interval_minutes || 0
       });
       
       // 時間更新APIを呼び出し
       fetch(`/admin/reservations/${reservationId}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
           'X-CSRF-Token': csrfToken
         },
         body: JSON.stringify({
           reservation: {
             start_time: startISO,
             end_time: endISO
-          }
+          },
+          is_drag_update: true
         })
-      })
-      .then(response => {
+    })
+    .then(response => {
         console.log('📡 Update response status:', response.status);
         
         if (!response.ok) {
@@ -1187,12 +1361,12 @@
             throw new Error(data.error || '時間の更新に失敗しました');
           });
         }
-        return response.json();
-      })
-      .then(data => {
+      return response.json();
+    })
+    .then(data => {
         console.log('✅ Time update response:', data);
-        
-        if (data.success) {
+      
+      if (data.success) {
           showMessage('予約時間を更新しました', 'success');
           
           // 成功時もカレンダーを再読み込みして最新データを表示
@@ -1252,11 +1426,11 @@
             });
             html += '</div>';
             ticketInfo.innerHTML = html;
-          } else {
+      } else {
             ticketInfo.innerHTML = '<div class="text-muted">チケットがありません</div>';
-          }
-        })
-        .catch(error => {
+      }
+    })
+    .catch(error => {
           console.error('Error loading tickets:', error);
           document.getElementById('ticketInfo').innerHTML = '<div class="text-danger">チケット情報の取得に失敗しました</div>';
         });
@@ -1298,9 +1472,9 @@
       if (!selectedUserId) {
         console.log('❌ No customer selected');
         showMessage('顧客を選択してください', 'warning');
-        return;
-      }
-      
+      return;
+    }
+    
       // 必須フィールドのチェック
       const reservationDate = document.getElementById('reservationDate').value;
       const reservationTime = document.getElementById('reservationTime').value;
@@ -1315,7 +1489,7 @@
       // ボタンを無効化
       const saveBtn = this;
       const originalText = saveBtn.innerHTML;
-      saveBtn.disabled = true;
+    saveBtn.disabled = true;
       saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>保存中...';
       
       // 現在の予約IDを取得
@@ -1410,7 +1584,7 @@
           
           // キャンセル統計の更新は無効化（エラーの原因となるため）
           console.log('✅ Reservation saved successfully, calendar updated');
-        } else {
+  } else {
           throw new Error(data.error || '保存に失敗しました');
         }
       })
@@ -1526,3 +1700,59 @@
     }
   });
 </script>
+
+<style>
+  /* インターバルイベントのスタイル */
+  .fc-event.interval {
+    font-weight: 500;
+    border-radius: 4px;
+  }
+  
+  /* システム設定のインターバル（灰色） */
+  .fc-event.interval.system-interval {
+    background-color: #6c757d !important;
+    border-color: #545b62 !important;
+    color: white !important;
+  }
+  
+  /* 個別設定のインターバル（灰色） */
+  .fc-event.interval.individual-interval {
+    background-color: #6c757d !important;
+    border-color: #545b62 !important;
+    color: white !important;
+    font-weight: 600;
+  }
+  
+  /* 個別設定のインターバルに特別なアイコンを追加 */
+  .fc-event.interval.individual-interval::before {
+    content: "⚙️ ";
+    margin-right: 2px;
+  }
+  
+  /* ホバー時の効果 */
+  .fc-event.interval:hover {
+    opacity: 0.8;
+    transform: scale(1.02);
+    transition: all 0.2s ease;
+  }
+  
+  /* 個別設定のインターバルにツールチップ風のスタイル */
+  .fc-event.interval.individual-interval {
+    position: relative;
+  }
+  
+  .fc-event.interval.individual-interval:hover::after {
+    content: "個別設定";
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    white-space: nowrap;
+    z-index: 1000;
+}
+</style>

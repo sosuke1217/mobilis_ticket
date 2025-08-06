@@ -5,27 +5,33 @@ class Admin::ReservationsController < ApplicationController
   before_action :set_reservation, only: [:show, :edit, :update, :destroy]
 
   def index
+    # 今日の予約を取得
+    @today_reservations = Reservation.includes(:user)
+      .where(start_time: Time.current.beginning_of_day..Time.current.end_of_day)
+      .where.not(status: :cancelled)
+      .order(:start_time)
+    
     respond_to do |format|
-      format.html { redirect_to calendar_admin_reservations_path }
+      format.html
       format.json do
         if request.format.json?
           Rails.logger.info "🔍 JSON request received"
-          
+
           begin
             # システム設定を取得
             @settings = ApplicationSetting.current
             Rails.logger.info "✅ ApplicationSetting loaded"
             
             # 予約を取得（キャンセル済みは除外）
-            reservations = Reservation.includes(:user)
-              .where(start_time: params[:start]..params[:end])
+          reservations = Reservation.includes(:user)
+            .where(start_time: params[:start]..params[:end])
               .where.not(status: :cancelled)
-              .order(:start_time)
-            
-            Rails.logger.info "📋 Found #{reservations.count} reservations"
-            
-            events = []
-            
+            .order(:start_time)
+
+          Rails.logger.info "📋 Found #{reservations.count} reservations"
+
+          events = []
+
             reservations.each do |reservation|
               Rails.logger.info "🔍 Processing reservation ID=#{reservation.id}"
               
@@ -56,20 +62,48 @@ class Admin::ReservationsController < ApplicationController
               Rails.logger.info "  start_iso: #{start_iso}"
               Rails.logger.info "  end_iso: #{end_iso}"
               
+              # タブ形式のイベントデータを生成
+              effective_interval = reservation.effective_interval_minutes
+              has_interval = effective_interval > 0
+              is_individual = has_interval ? reservation.has_individual_interval? : false
+              
+              # コースの実際の時間を計算（コース名から時間を抽出）
+              course_minutes = reservation.extract_course_minutes(reservation.course)
+              Rails.logger.info "🕐 Course calculation for reservation #{reservation.id}:"
+              Rails.logger.info "  Course name: #{reservation.course}"
+              Rails.logger.info "  Extracted minutes: #{course_minutes}"
+              
+              # 全体の時間を計算（コース時間 + インターバル時間）
+              total_minutes = course_minutes + effective_interval
+              total_end_time = start_in_jst + total_minutes.minutes
+              total_end_iso = total_end_time.strftime('%Y-%m-%dT%H:%M:%S')
+              
+              Rails.logger.info "  Total duration: #{total_minutes} minutes"
+              Rails.logger.info "  Total end time: #{total_end_iso}"
+              
               event = {
                 id: reservation.id,
                 title: "#{customer_name} - #{reservation.course}",
-                start: start_iso,  # タイムゾーン情報なしで送信
-                end: end_iso,      # タイムゾーン情報なしで送信
+                start: start_iso,
+                end: total_end_iso,  # 全体の時間（コース + インターバル）
                 backgroundColor: getEventColor(reservation.status),
                 borderColor: getEventColor(reservation.status),
                 textColor: 'white',
-                className: reservation.status,  # ステータスに応じたCSSクラス
+                className: "reservation-with-tabs #{reservation.status}",
                 extendedProps: {
                   status: reservation.status,
                   course: reservation.course,
                   staff_id: reservation.user_id,
                   memo: reservation.note,
+                  individual_interval_minutes: reservation.individual_interval_minutes,
+                  effective_interval_minutes: reservation.effective_interval_minutes,
+                  has_individual_interval: reservation.has_individual_interval?,
+                  interval_setting_type: reservation.interval_setting_type,
+                  has_interval: has_interval,
+                  is_individual_interval: is_individual,
+                  course_duration: course_minutes,  # 分単位
+                  interval_duration: effective_interval,  # 分単位
+                  total_duration: total_minutes,  # 分単位
                   customer: {
                     id: reservation.user_id,
                     name: customer_name,
@@ -82,47 +116,22 @@ class Admin::ReservationsController < ApplicationController
               }
               
               events << event
-              Rails.logger.info "✅ Successfully processed reservation #{reservation.id}"
-              
-              # インターバルイベントも同様に修正
-              if @settings.reservation_interval_minutes > 0
-                interval_start_iso = end_in_jst.strftime('%Y-%m-%dT%H:%M:%S')
-                interval_end_iso = (end_in_jst + @settings.reservation_interval_minutes.minutes).strftime('%Y-%m-%dT%H:%M:%S')
-                
-                interval_event = {
-                  id: "interval-after-#{reservation.id}",
-                  title: "整理時間 (#{@settings.reservation_interval_minutes}分)",
-                  start: interval_start_iso,
-                  end: interval_end_iso,
-                  backgroundColor: '#17a2b8',
-                  borderColor: '#17a2b8',
-                  textColor: 'white',
-                  className: 'break',  # 休憩時間のCSSクラス
-                  extendedProps: {
-                    status: 'break',
-                    type: 'interval',
-                    reservation_id: reservation.id
-                  }
-                }
-                
-                events << interval_event
-                Rails.logger.info "✅ Added interval event for reservation #{reservation.id}"
-              end
+              Rails.logger.info "✅ Successfully processed reservation #{reservation.id} with tabs"
             end
             
             Rails.logger.info "✅ Successfully processed #{events.length} events"
             Rails.logger.info "📤 Sample event data: #{events.first&.slice(:id, :title, :start, :end)}"
             
             render json: events, content_type: 'application/json'
-            
-          rescue => e
-            Rails.logger.error "❌ Calendar data fetch error: #{e.message}"
-            Rails.logger.error e.backtrace.join("\n")
-            render json: { 
+
+        rescue => e
+          Rails.logger.error "❌ Calendar data fetch error: #{e.message}"
+          Rails.logger.error e.backtrace.join("\n")
+          render json: {
               error: 'カレンダーデータの取得に失敗しました',
               details: e.message,
               backtrace: Rails.env.development? ? e.backtrace.first(5) : nil
-            }, status: :internal_server_error
+          }, status: :internal_server_error
           end
         else
           render json: { error: 'Invalid request format' }, status: :bad_request
@@ -136,17 +145,17 @@ class Admin::ReservationsController < ApplicationController
   end
 
   def show
-    respond_to do |format|
+      respond_to do |format|
       format.html
       format.json do
-        render json: {
-          success: true,
-          id: @reservation.id,
+          render json: {
+            success: true,
+            id: @reservation.id,
           start_time: @reservation.start_time.in_time_zone('Asia/Tokyo').iso8601,  # JST時間で送信
           end_time: @reservation.end_time.in_time_zone('Asia/Tokyo').iso8601,      # JST時間で送信
-          course: @reservation.course,
-          status: @reservation.status,
-          note: @reservation.note,
+            course: @reservation.course,
+            status: @reservation.status,
+            note: @reservation.note,
           user_id: @reservation.user_id,
           user: {
             id: @reservation.user&.id,
@@ -215,10 +224,19 @@ class Admin::ReservationsController < ApplicationController
         end
       end
       
-      Rails.logger.info "🔄 Processed params: #{processed_params.inspect}"
-      Rails.logger.info "🔄 Individual interval minutes: #{processed_params[:individual_interval_minutes]}"
-      
+      # 予約オブジェクトを作成
       @reservation = Reservation.new(processed_params)
+      
+      # 管理者用のバリデーションスキップ設定
+      @reservation.skip_business_hours_validation = true
+      @reservation.skip_advance_booking_validation = true
+      @reservation.skip_advance_notice_validation = true
+      
+      # インターバル設定がある場合は時間バリデーションをスキップ
+      effective_interval = @reservation.effective_interval_minutes
+      if effective_interval && effective_interval > 0
+        @reservation.skip_time_validation = true
+      end
       
       # キャンセルステータスで作成する場合はcancel!メソッドを使用
       if processed_params[:status] == 'cancelled'
@@ -306,11 +324,51 @@ class Admin::ReservationsController < ApplicationController
           processed_params[:individual_interval_minutes] = nil
         else
           processed_params[:individual_interval_minutes] = processed_params[:individual_interval_minutes].to_i
+    end
+  end
+
+      # ドラッグ更新の場合はインターバル時間を追加しない
+      is_drag_update = params[:is_drag_update] == true
+      effective_interval = nil
+      
+      if !is_drag_update
+        # インターバル設定を反映して予約の終了時間を調整
+        
+        if processed_params[:individual_interval_minutes].present? && processed_params[:individual_interval_minutes] > 0
+          # 個別インターバル設定がある場合
+          effective_interval = processed_params[:individual_interval_minutes]
+        elsif processed_params[:individual_interval_minutes].nil?
+          # システム設定を使用する場合
+          effective_interval = ApplicationSetting.current.reservation_interval_minutes
         end
+        
+        if effective_interval && effective_interval > 0 && processed_params[:end_time].present?
+          # インターバル時間をそのまま追加（丸め処理なし）
+          processed_params[:end_time] = processed_params[:end_time] + effective_interval.minutes
+          Rails.logger.info "🕐 Adjusted end_time with interval: #{processed_params[:end_time]} (+#{effective_interval}分)"
+        end
+      else
+        Rails.logger.info "🔄 Drag update detected, skipping interval adjustment"
       end
       
       Rails.logger.info "🔄 Processed params: #{processed_params.inspect}"
       Rails.logger.info "🔄 Individual interval minutes: #{processed_params[:individual_interval_minutes]}"
+      
+      # 管理者用のバリデーションスキップ設定
+      @reservation.skip_business_hours_validation = true
+      @reservation.skip_advance_booking_validation = true
+      @reservation.skip_advance_notice_validation = true
+      
+      # インターバル設定がある場合、またはドラッグ更新の場合は時間バリデーションをスキップ
+      if (effective_interval && effective_interval > 0) || is_drag_update
+        @reservation.skip_time_validation = true
+        Rails.logger.info "🔄 Skipping time validation for #{is_drag_update ? 'drag update' : 'interval adjustment'}"
+      end
+      
+      # ドラッグ更新時は、送信された時間をそのまま使用（インターバル時間は既に含まれている）
+      if is_drag_update
+        Rails.logger.info "🔄 Drag update detected, using time as-is for overlap validation"
+      end
       
       # キャンセルステータスに変更する場合はcancel!メソッドを使用
       if processed_params[:status] == 'cancelled' && @reservation.status != 'cancelled'
@@ -354,8 +412,8 @@ class Admin::ReservationsController < ApplicationController
 
   def destroy
     @reservation.destroy
-    
-    respond_to do |format|
+      
+      respond_to do |format|
       format.html { redirect_to calendar_admin_reservations_path, notice: '予約を削除しました' }
       format.json { render json: { success: true } }
     end
@@ -434,4 +492,8 @@ class Admin::ReservationsController < ApplicationController
       '#007bff'  # デフォルト - 青
     end
   end
+  
+
+
+
 end
