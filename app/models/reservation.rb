@@ -190,6 +190,10 @@ class Reservation < ApplicationRecord
     end_time + self.class.interval_minutes.minutes
   end
 
+  def calendar_display_end_time
+    end_time + effective_interval_minutes.minutes
+  end
+
   scope :overlapping_with_interval, ->(start_time, end_time) {
     interval_min = interval_minutes
     where(
@@ -344,15 +348,30 @@ class Reservation < ApplicationRecord
   end
 
   def as_calendar_json
+    # コース時間を抽出
+    course_duration_minutes = extract_course_minutes(course)
+    
+    # インターバル時間を取得
+    interval_minutes = effective_interval_minutes
+    
+    # カレンダー表示用の終了時間（インターバル含む）
+    display_end_time = end_time + interval_minutes.minutes
+    
+    Rails.logger.info "🎨 Calendar JSON for reservation #{id}:"
+    Rails.logger.info "  Course: #{course} (#{course_duration_minutes}分)"
+    Rails.logger.info "  Interval: #{interval_minutes}分"
+    Rails.logger.info "  Original end_time: #{end_time}"
+    Rails.logger.info "  Display end_time: #{display_end_time}"
+    
     {
       id: id,
       title: "#{name} - #{course}",
       start: start_time.iso8601,
-      end: end_time.iso8601,
+      end: display_end_time.iso8601,  # ← インターバルを含む時間に修正
       backgroundColor: status_color,
       borderColor: status_color,
       textColor: text_color_for_status(status),
-      className: 'reservation-event',
+      className: "reservation-event reservation-with-tabs #{status}",  # タブ表示クラスを追加
       extendedProps: {
         type: 'reservation',
         name: name,
@@ -364,7 +383,13 @@ class Reservation < ApplicationRecord
         effective_interval_minutes: effective_interval_minutes,
         has_individual_interval: has_individual_interval?,
         interval_description: interval_description,
-        interval_setting_type: interval_setting_type
+        interval_setting_type: interval_setting_type,
+        # カレンダー表示用の追加情報（重要！）
+        course_duration: course_duration_minutes,
+        interval_duration: interval_minutes,
+        total_duration: course_duration_minutes + interval_minutes,
+        has_interval: interval_minutes > 0,
+        is_individual_interval: has_individual_interval?
       }
     }
   end
@@ -425,11 +450,17 @@ class Reservation < ApplicationRecord
     business_start = settings.business_hours_start
     business_end = settings.business_hours_end
     
-    start_hour = start_time.hour
-    end_hour = end_time.hour
+    # end_timeは既にコース時間＋インターバル時間を含んでいるため、そのまま使用
+    actual_end_time = end_time
     
-    if start_hour < business_start || end_hour > business_end
-      errors.add(:start_time, "営業時間内（#{business_start}:00-#{business_end}:00）でご予約ください")
+    start_hour = start_time.hour
+    end_hour = actual_end_time.hour
+    end_minute = actual_end_time.min
+    
+    Rails.logger.info "🕐 Business hours check: start=#{start_time.strftime('%H:%M')}, end=#{actual_end_time.strftime('%H:%M')}, business=#{business_start}:00-#{business_end}:00"
+    
+    if start_hour < business_start || end_hour > business_end || (end_hour == business_end && end_minute > 0)
+      errors.add(:start_time, "営業時間内（#{business_start}:00-#{business_end}:00）でご予約ください。終了時刻: #{actual_end_time.strftime('%H:%M')}")
     end
   end
 

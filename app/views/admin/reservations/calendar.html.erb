@@ -22,8 +22,8 @@
       
         <div class="calendar-actions">
           <div class="d-flex flex-column gap-2">
-            <a href="<%= admin_reservations_path %>" class="btn btn-outline-primary btn-sm">
-              <i class="fas fa-list me-1"></i>今日の予約一覧
+            <a href="<%= admin_reservations_path %>" class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); border: none; box-shadow: 0 4px 8px rgba(0,0,0,0.15); font-weight: 600;">
+              <i class="fas fa-list me-2"></i>📋 今日の予約一覧
             </a>
             <button id="newReservationBtn" class="btn btn-success">
               <i class="fas fa-plus me-1"></i>新規予約
@@ -133,7 +133,7 @@
             </div>
             <div class="col-md-6">
               <label for="reservationTime" class="form-label">時間 *</label>
-              <input type="time" class="form-control" id="reservationTime" required>
+              <input type="time" class="form-control" id="reservationTime" min="10:00" max="21:00" required>
             </div>
           </div>
           
@@ -304,145 +304,392 @@
 <style>
   /* カスタムスタイル */
   .calendar-container {
-    height: calc(100vh - 100px);
-    background: #f8f9fa;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    min-height: 100vh;
+    padding: 20px 0;
   }
   
   .calendar-header {
     background: white;
-    border-bottom: 1px solid #dee2e6;
-    padding: 15px 0;
+    border-bottom: 2px solid #dee2e6;
+    padding: 25px 0;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
   }
   
   .calendar-toolbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 20px;
   }
   
   .calendar-nav {
     display: flex;
+    gap: 12px;
     align-items: center;
-    gap: 10px;
   }
   
   .calendar-nav button {
-    background: #007bff;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
     color: white;
     border: none;
-    padding: 8px 15px;
-    border-radius: 5px;
+    padding: 10px 18px;
+    border-radius: 8px;
     cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
   
   .calendar-nav button:hover {
-    background: #0056b3;
+    background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
   }
   
   .calendar-title {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #333;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #2c3e50;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
   }
   
   .calendar-actions {
     display: flex;
-    gap: 10px;
+    gap: 12px;
+    align-items: center;
   }
   
   .btn-new-reservation {
-    background: #28a745;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
     color: white;
     border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
+    padding: 12px 24px;
+    border-radius: 8px;
     cursor: pointer;
-    font-weight: bold;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
   
   .btn-new-reservation:hover {
-    background: #218838;
+    background: linear-gradient(135deg, #20c997 0%, #1ea085 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
   }
   
   /* FullCalendar カスタマイズ */
   .fc {
     background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    border: 2px solid #e5e7eb;
+    overflow: hidden;
+  }
+  
+  /* カレンダーの背景をより見やすく */
+  .fc-view-harness {
+    background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
   }
   
   .fc-toolbar {
-    padding: 15px;
-    border-bottom: 1px solid #dee2e6;
+    padding: 20px;
+    border-bottom: 2px solid #f8f9fa;
+    margin-bottom: 0;
   }
   
   .fc-toolbar-title {
-    font-size: 1.3rem;
-    font-weight: bold;
-    color: #333;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #2c3e50;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
   }
   
   .fc-button {
-    background: #007bff !important;
-    border-color: #007bff !important;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+    border: none !important;
     color: white !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    padding: 10px 18px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
   }
   
   .fc-button:hover {
-    background: #0056b3 !important;
-    border-color: #0056b3 !important;
+    background: linear-gradient(135deg, #0056b3 0%, #004085 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
   }
   
   .fc-button:focus {
     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
   }
   
+  /* イベントスタイルの改善 */
   .fc-timegrid-event {
-    border-radius: 4px;
-    font-size: 0.9rem;
-    font-weight: 500;
+    border-radius: 8px !important;
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15) !important;
+    transition: all 0.3s ease !important;
+    border: none !important;
+    margin: 2px 0 !important;
   }
-  
+
+  .fc-timegrid-event:hover {
+    box-shadow: 0 6px 16px rgba(0,0,0,0.2) !important;
+    transform: translateY(-2px) !important;
+  }
+
+  .fc-timegrid-event .event-tabs {
+    height: 100% !important;
+    width: 100% !important;
+  }
+
+  .fc-timegrid-event .event-tab {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 4px 8px !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    text-align: center !important;
+    min-height: 0 !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .fc-timegrid-event .event-tab.course {
+    background-color: inherit !important;
+    color: inherit !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
+  }
+
+  .fc-timegrid-event .event-tab.interval {
+    color: white !important;
+  }
+
+  .fc-timegrid-event .event-tab.interval.individual {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
+  }
+
+  .fc-timegrid-event .event-tab.interval.system {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
+  }
+
+  /* ステータス別のイベント色 */
   .fc-timegrid-event.confirmed {
-        background-color: #28a745 !important;
-    border-color: #28a745 !important;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    color: white !important;
   }
   
   .fc-timegrid-event.tentative {
-        background-color: #ffc107 !important;
-    border-color: #ffc107 !important;
-        color: #212529 !important;
-      }
+    background: linear-gradient(135deg, #ffc107 0%, #ffca2c 100%) !important;
+    color: #212529 !important;
+  }
       
   .fc-timegrid-event.cancelled {
-    background-color: #dc3545 !important;
-    border-color: #dc3545 !important;
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+    color: white !important;
   }
   
   .fc-timegrid-event.completed {
-    background-color: #6c757d !important;
-    border-color: #6c757d !important;
-    color: #fff !important;
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
+    color: white !important;
   }
   
   .fc-timegrid-event.no_show {
-    background-color: #fd7e14 !important;
-    border-color: #fd7e14 !important;
-    color: #fff !important;
+    background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%) !important;
+    color: white !important;
   }
   
   .fc-timegrid-event.break {
-    background-color: #17a2b8 !important;
-    border-color: #17a2b8 !important;
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+    color: white !important;
+  }
+  
+  /* 時間軸とスロットの改善 */
+  .fc-timegrid-slot {
+    border-color: #d1d5db !important;
+    background: linear-gradient(90deg, #ffffff 0%, #f8f9fa 100%) !important;
+    border-width: 1px !important;
+  }
+  
+  /* 30分ごとの太線 */
+  .fc-timegrid-slot:nth-child(3n) {
+    border-top: 3px solid #9ca3af !important;
+  }
+  
+  /* 時間ラベルの改善 */
+  .fc-timegrid-slot-label {
+    font-size: 0.85rem !important;
+    color: #374151 !important;
+    font-weight: 600 !important;
+    padding: 6px 10px !important;
+  }
+  
+  /* 30分ごとの時間ラベルを強調 */
+  .fc-timegrid-slot:nth-child(3n) .fc-timegrid-slot-label {
+    font-weight: 700 !important;
+    color: #1f2937 !important;
+    font-size: 0.9rem !important;
+  }
+  
+  .fc-timegrid-axis {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+    border-right: 2px solid #dee2e6 !important;
+  }
+  
+  .fc-timegrid-axis-cushion {
+    font-weight: 600 !important;
+    color: #495057 !important;
+    padding: 8px 12px !important;
+  }
+  
+  .fc-col-header-cell {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+    border-color: #dee2e6 !important;
+    font-weight: 700 !important;
+    color: #2c3e50 !important;
+    padding: 15px 10px !important;
+    font-size: 1.1rem !important;
+  }
+  
+  .fc-daygrid-day {
+    border-color: #e9ecef !important;
+    transition: background-color 0.3s ease !important;
+  }
+  
+  .fc-daygrid-day:hover {
+    background-color: #f8f9fa !important;
+  }
+  
+  /* 全体的な縦線の追加 */
+  .fc-timegrid-col {
+    border-right: 2px solid #e5e7eb !important;
+  }
+  
+  .fc-timegrid-col:last-child {
+    border-right: none !important;
+  }
+  
+  /* より確実な縦線の追加 */
+  .fc-timegrid td {
+    border-right: 2px solid #e5e7eb !important;
+  }
+  
+  .fc-timegrid td:last-child {
+    border-right: none !important;
+  }
+  
+  /* 日付ヘッダーの縦線 */
+  .fc-col-header td {
+    border-right: 2px solid #e5e7eb !important;
+  }
+  
+  .fc-col-header td:last-child {
+    border-right: none !important;
+  }
+  
+  /* 今日の列の強調 */
+  .fc-day-today {
+    border-left: 3px solid #2196f3 !important;
+    border-right: 3px solid #2196f3 !important;
+    background: linear-gradient(90deg, rgba(33, 150, 243, 0.05) 0%, rgba(33, 150, 243, 0.02) 100%) !important;
+  }
+  
+  .fc-day-today .fc-timegrid-slot {
+    border-left: 1px solid rgba(33, 150, 243, 0.2) !important;
+  }
+  
+  /* 今日の列のヘッダーにも縦線を追加 */
+  .fc-day-today .fc-col-header-cell {
+    border-left: 3px solid #2196f3 !important;
+    border-right: 3px solid #2196f3 !important;
+  }
+  
+  /* 今日の列の時間軸部分にも縦線を追加 */
+  .fc-day-today .fc-timegrid-axis {
+    border-right: 3px solid #2196f3 !important;
+  }
+  
+  /* 今日の列の予約グリッド部分に縦線を追加 */
+  .fc-day-today .fc-timegrid-col {
+    border-left: 3px solid #2196f3 !important;
+    border-right: 3px solid #2196f3 !important;
+  }
+  
+  /* 日付ヘッダーの縦線 */
+  .fc-col-header-cell {
+    border-right: 2px solid #e5e7eb !important;
+  }
+  
+  .fc-col-header-cell:last-child {
+    border-right: none !important;
+  }
+  
+  /* 時間軸の縦線 */
+  .fc-timegrid-axis {
+    border-right: 2px solid #e5e7eb !important;
+  }
+  
+  /* より強力な縦線の追加 */
+  .fc table {
+    border-collapse: collapse !important;
+  }
+  
+  .fc table td {
+    border-right: 2px solid #e5e7eb !important;
+  }
+  
+  .fc table td:last-child {
+    border-right: none !important;
+  }
+  
+  /* 今日の列の特別な縦線 */
+  .fc-day-today td {
+    border-left: 3px solid #2196f3 !important;
+    border-right: 3px solid #2196f3 !important;
+  }
+  
+  /* 日付の境界線を強調 */
+  .fc-timegrid-col {
+    border-right: 3px solid #9ca3af !important;
+  }
+  
+  .fc-timegrid-col:last-child {
+    border-right: none !important;
+  }
+  
+  /* 時間軸の境界線を強調 */
+  .fc-timegrid-axis {
+    border-right: 4px solid #6b7280 !important;
+  }
+  
+  /* 現在時刻インジケーターの改善 */
+  .fc-timegrid-now-indicator-line {
+    border-color: #dc3545 !important;
+    border-width: 3px !important;
+    box-shadow: 0 0 8px rgba(220, 53, 69, 0.3) !important;
+  }
+  
+  .fc-timegrid-now-indicator-arrow {
+    border-color: #dc3545 !important;
+    border-width: 6px !important;
+    box-shadow: 0 0 8px rgba(220, 53, 69, 0.3) !important;
   }
   
   /* タブ形式のイベントスタイル（縦積み） */
   .fc-timegrid-event.reservation-with-tabs {
-    position: relative;
-    overflow: hidden;
+    min-height: 50px !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
   }
-  
+
   .fc-timegrid-event.reservation-with-tabs .event-tabs {
     display: flex;
     flex-direction: column;
@@ -454,9 +701,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2px 4px;
-    font-size: 0.8rem;
-    font-weight: 500;
+    padding: 4px 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
     text-align: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.3);
     min-height: 0;
@@ -465,11 +712,12 @@
   
   /* FullCalendarのイベント高さを強制制御 */
   .fc-timegrid-event {
-    min-height: 20px !important;
+    min-height: 25px !important;
   }
-  
-  .fc-timegrid-event.reservation-with-tabs {
-    min-height: 40px !important;
+
+  .fc-timegrid-event.reservation-with-tabs .fc-event-main {
+    padding: 0 !important;
+    height: 100% !important;
   }
   
   .fc-timegrid-event.reservation-with-tabs .event-tab:last-child {
@@ -483,37 +731,37 @@
   
   /* コース部分の背景色を親要素から継承 */
   .fc-timegrid-event.reservation-with-tabs.confirmed .event-tab.course {
-    background-color: #28a745 !important;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
   }
   
   .fc-timegrid-event.reservation-with-tabs.tentative .event-tab.course {
-    background-color: #ffc107 !important;
+    background: linear-gradient(135deg, #ffc107 0%, #ffca2c 100%) !important;
     color: #212529 !important;
   }
   
   .fc-timegrid-event.reservation-with-tabs.cancelled .event-tab.course {
-    background-color: #dc3545 !important;
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
   }
   
   .fc-timegrid-event.reservation-with-tabs.completed .event-tab.course {
-    background-color: #6c757d !important;
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
   }
   
   .fc-timegrid-event.reservation-with-tabs.no_show .event-tab.course {
-    background-color: #fd7e14 !important;
+    background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%) !important;
   }
   
   .fc-timegrid-event.reservation-with-tabs .event-tab.interval {
-    background-color: #6c757d;
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
     color: white;
   }
   
   .fc-timegrid-event.reservation-with-tabs .event-tab.interval.individual {
-    background-color: #fd7e14;
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
   }
   
   .fc-timegrid-event.reservation-with-tabs .event-tab.interval.system {
-    background-color: #6c757d;
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
   }
   
 
@@ -536,6 +784,11 @@
     
     .calendar-actions {
       order: 3;
+    }
+
+    .fc-timegrid-event .event-tab {
+      font-size: 0.7rem !important;
+      padding: 1px 2px !important;
     }
   }
 </style>
@@ -657,14 +910,16 @@
         day: '日'
       },
       slotMinTime: '10:00:00',
-      slotMaxTime: '20:00:00',
-      slotDuration: '00:10:00',
+      slotMaxTime: '21:00:00',
+      slotDuration: '00:10:00', // 10分間隔に変更
       allDaySlot: false,
       selectable: true,
       editable: true,
       nowIndicator: true,
       eventDisplay: 'block', // イベントをブロック表示にして高さを制御
-      eventMinHeight: 20, // 最小高さを設定
+      eventMinHeight: 25, // 最小高さを増加
+      dayHeaderFormat: { weekday: 'short', day: 'numeric', month: 'short' }, // ヘッダー形式を改善
+      slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false }, // 時間表示を改善
     
     // タイムゾーン処理の設定
     eventTimeFormat: {
@@ -691,12 +946,47 @@
     
     select: function(info) {
       console.log('🔍 Raw select info:', info);
+      
+      // TimeWithZoneオブジェクトの場合は適切なメソッドを使用
+      const startTime = info.start;
+      const endTime = info.end;
+      
+      // 時間と分を取得（TimeWithZone対応）
+      const startHour = startTime.getHours ? startTime.getHours() : startTime.hour;
+      const startMinute = startTime.getMinutes ? startTime.getMinutes() : startTime.min;
+      const endHour = endTime.getHours ? endTime.getHours() : endTime.hour;
+      const endMinute = endTime.getMinutes ? endTime.getMinutes() : endTime.min;
+      
       console.log('🔍 Start time details:', {
-        start: info.start,
-        hours: info.start.getHours(),
-        minutes: info.start.getMinutes(),
-        toString: info.start.toString()
+        start: startTime,
+        hours: startHour,
+        minutes: startMinute,
+        toString: startTime.toString()
       });
+      
+      // 営業時間外の選択をチェック
+      if (startHour < 10 || startHour >= 21) {
+        console.log('❌ Selected time outside business hours:', startHour);
+        showMessage('営業時間外です。10:00から21:00の間で選択してください', 'warning');
+        return;
+      }
+      
+      // 選択された時間幅を考慮した営業時間チェック
+      const selectionDuration = (endTime - startTime) / (1000 * 60); // 分単位
+      
+      console.log('🕐 Selection time check:', {
+        startHour,
+        endHour,
+        endMinute,
+        selectionDuration,
+        businessEnd: '21:00'
+      });
+      
+      if (endHour > 21 || (endHour === 21 && endMinute > 0)) {
+        console.log('❌ Selection extends beyond business hours');
+        showMessage(`この時間帯は営業時間外になります。終了時刻: ${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`, 'warning');
+        return;
+      }
       
       // 🔧 修正: openNewReservationModal を呼び出し
       openNewReservationModal(info.start, info.end);
@@ -707,51 +997,78 @@
       const event = arg.event;
       const extendedProps = event.extendedProps;
       
-      // タブ形式のイベントかどうかをチェック
-      if (extendedProps.has_interval) {
-        // コントローラーから送られた正確な時間を使用
+      console.log(`🎨 Rendering event ${event.id}:`, {
+        title: event.title,
+        start: event.start,
+        end: event.end,
+        extendedProps: extendedProps
+      });
+      
+      // インターバルがある場合はタブ形式で表示
+      if (extendedProps.has_interval && extendedProps.interval_duration > 0) {
         const courseDuration = extendedProps.course_duration; // 分単位
         const intervalDuration = extendedProps.interval_duration; // 分単位
         const totalDuration = extendedProps.total_duration; // 分単位
         
-        console.log(`🕐 Event ${event.id} tab calculation:`, {
+        // タブの高さを計算（時間の比率に基づく）
+        const courseHeight = Math.round((courseDuration / totalDuration) * 100);
+        const intervalHeight = Math.round((intervalDuration / totalDuration) * 100);
+        
+        console.log(`📊 Tab calculation for event ${event.id}:`, {
           courseDuration,
           intervalDuration,
           totalDuration,
-          courseHeight: (courseDuration / totalDuration) * 100,
-          intervalHeight: (intervalDuration / totalDuration) * 100,
-          eventStart: event.start,
-          eventEnd: event.end,
-          eventDuration: (new Date(event.end) - new Date(event.start)) / (1000 * 60), // 分単位
-          eventElement: event.el,
-          eventHeight: event.el ? event.el.offsetHeight : 'N/A'
+          courseHeight: `${courseHeight}%`,
+          intervalHeight: `${intervalHeight}%`
         });
-        
-        // タブの高さを計算（時間の比率に基づく）
-        const courseHeight = (courseDuration / totalDuration) * 100;
-        const intervalHeight = (intervalDuration / totalDuration) * 100;
         
         const intervalType = extendedProps.is_individual_interval ? 'individual' : 'system';
         
-        const html = `
-          <div class="event-tabs" style="height: 100%; display: flex; flex-direction: column;">
-            <div class="event-tab course" style="height: ${courseHeight}%; flex: none; display: flex; align-items: center; justify-content: center; padding: 2px 4px; font-size: 0.8rem; font-weight: 500; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.3);">
-              <div>${event.title}</div>
-            </div>
-            <div class="event-tab interval ${intervalType}" style="height: ${intervalHeight}%; flex: none; display: flex; align-items: center; justify-content: center; padding: 2px 4px; font-size: 0.8rem; font-weight: 500; text-align: center;">
-              <div>整理 (${Math.round(intervalDuration)}分)</div>
-            </div>
-          </div>
-        `;
-        
-        console.log(`🕐 Event ${event.id} HTML:`, html);
-        console.log(`🕐 Event ${event.id} Heights: course=${courseHeight}%, interval=${intervalHeight}%`);
-        
-        return { html };
-      } else {
-        // 通常のイベント（インターバルなし）
         return {
-          html: `<div>${event.title}</div>`
+          html: `
+            <div class="event-tabs" style="height: 100%; display: flex; flex-direction: column;">
+              <div class="event-tab course" style="
+                height: ${courseHeight}%; 
+                flex: none; 
+                display: flex; 
+                align-items: center; 
+                justify-content: center; 
+                padding: 2px 4px; 
+                font-size: 0.8rem; 
+                font-weight: 500; 
+                text-align: center; 
+                border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+                overflow: hidden;
+              ">
+                ${event.title}
+              </div>
+              <div class="event-tab interval ${intervalType}" style="
+                height: ${intervalHeight}%; 
+                flex: none; 
+                display: flex; 
+                align-items: center; 
+                justify-content: center; 
+                padding: 2px 4px; 
+                font-size: 0.8rem; 
+                font-weight: 500; 
+                text-align: center;
+                background-color: ${intervalType === 'individual' ? '#fd7e14' : '#6c757d'};
+                color: white;
+                overflow: hidden;
+              ">
+                整理${intervalDuration}分
+              </div>
+            </div>
+          `
+        };
+      } else {
+        // インターバルがない場合は通常表示
+        return {
+          html: `<div class="fc-event-main-frame">
+            <div class="fc-event-title-container">
+              <div class="fc-event-title fc-sticky">${event.title}</div>
+            </div>
+          </div>`
         };
       }
     },
@@ -1304,12 +1621,13 @@
       function formatAsJSTDateTime(date) {
         if (!date) return null;
         
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        const seconds = String(date.getSeconds()).padStart(2, '0');
+        // TimeWithZoneオブジェクトの場合は適切なメソッドを使用
+        const year = date.getFullYear ? date.getFullYear() : date.year;
+        const month = date.getMonth ? String(date.getMonth() + 1).padStart(2, '0') : String(date.month).padStart(2, '0');
+        const day = date.getDate ? String(date.getDate()).padStart(2, '0') : String(date.day).padStart(2, '0');
+        const hours = date.getHours ? String(date.getHours()).padStart(2, '0') : String(date.hour).padStart(2, '0');
+        const minutes = date.getMinutes ? String(date.getMinutes()).padStart(2, '0') : String(date.min).padStart(2, '0');
+        const seconds = date.getSeconds ? String(date.getSeconds()).padStart(2, '0') : String(date.sec).padStart(2, '0');
         
         // JST（UTC+09:00）として明示的にタイムゾーンを指定
         return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}+09:00`;
@@ -1483,6 +1801,44 @@
       if (!reservationDate || !reservationTime || !reservationCourse) {
         console.log('❌ Required fields missing:', { reservationDate, reservationTime, reservationCourse });
         showMessage('日時とコースを入力してください', 'warning');
+        return;
+      }
+      
+      // 時間の範囲チェック（10:00-21:00）
+      const timeParts = reservationTime.split(':');
+      const hours = parseInt(timeParts[0]);
+      const minutes = parseInt(timeParts[1]);
+      
+      if (hours < 10 || hours >= 21) {
+        console.log('❌ Time out of range:', reservationTime);
+        showMessage('予約時間は10:00から21:00の間で入力してください', 'warning');
+        return;
+      }
+      
+      // コース時間とインターバル時間を考慮した営業時間チェック
+      const courseDuration = parseInt(reservationCourse.match(/(\d+)分/)?.[1] || 60);
+      const checkIntervalValue = document.getElementById('reservationInterval').value;
+      const intervalDuration = checkIntervalValue ? parseInt(checkIntervalValue) : 15; // システムデフォルト
+      const totalDuration = courseDuration + intervalDuration;
+      
+      // 予約終了時刻を計算
+      const startTime = new Date(`${reservationDate}T${reservationTime}:00`);
+      const endTime = new Date(startTime.getTime() + totalDuration * 60 * 1000);
+      const endHour = endTime.getHours();
+      const endMinute = endTime.getMinutes();
+      
+      console.log('🕐 Reservation time check:', {
+        startTime: reservationTime,
+        courseDuration,
+        intervalDuration,
+        totalDuration,
+        endTime: `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`,
+        businessEnd: '21:00'
+      });
+      
+      if (endHour > 21 || (endHour === 21 && endMinute > 0)) {
+        console.log('❌ Reservation extends beyond business hours');
+        showMessage(`この予約は営業時間外になります。終了時刻: ${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`, 'warning');
         return;
       }
       

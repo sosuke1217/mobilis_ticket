@@ -227,8 +227,7 @@ class Admin::ReservationsController < ApplicationController
       # 予約オブジェクトを作成
       @reservation = Reservation.new(processed_params)
       
-      # 管理者用のバリデーションスキップ設定
-      @reservation.skip_business_hours_validation = true
+      # 管理者用のバリデーションスキップ設定（営業時間はチェックする）
       @reservation.skip_advance_booking_validation = true
       @reservation.skip_advance_notice_validation = true
       
@@ -354,8 +353,7 @@ class Admin::ReservationsController < ApplicationController
       Rails.logger.info "🔄 Processed params: #{processed_params.inspect}"
       Rails.logger.info "🔄 Individual interval minutes: #{processed_params[:individual_interval_minutes]}"
       
-      # 管理者用のバリデーションスキップ設定
-      @reservation.skip_business_hours_validation = true
+      # 管理者用のバリデーションスキップ設定（営業時間はチェックする）
       @reservation.skip_advance_booking_validation = true
       @reservation.skip_advance_notice_validation = true
       
@@ -493,6 +491,58 @@ class Admin::ReservationsController < ApplicationController
     end
   end
   
+  def process_reservation_params(params)
+    processed_params = params.permit(
+      :name, :course, :status, :note, :user_id, :ticket_id,
+      :start_time, :end_time, :date, :time, :individual_interval_minutes
+    ).to_h.with_indifferent_access
+  
+    Rails.logger.info "🔍 Raw params: #{params.inspect}"
+    Rails.logger.info "🔍 Processed params before: #{processed_params.inspect}"
+    
+    # date + time から start_time を作成
+    if processed_params[:date].present? && processed_params[:time].present?
+      begin
+        date = Date.parse(processed_params[:date])
+        time_parts = processed_params[:time].split(':').map(&:to_i)
+        start_datetime = Time.zone.local(date.year, date.month, date.day, time_parts[0], time_parts[1])
+        processed_params[:start_time] = start_datetime
+        
+        # end_timeの計算（コース時間のみ、インターバルは含めない）
+        if processed_params[:course].present?
+          duration = case processed_params[:course]
+                    when '40分' then 40.minutes
+                    when '60分' then 60.minutes  
+                    when '80分' then 80.minutes
+                    else 60.minutes
+                    end
+          # 重要: end_timeはコース時間のみ。インターバルは含めない
+          processed_params[:end_time] = start_datetime + duration
+          
+          Rails.logger.info "🕐 Set end_time to course duration only: #{processed_params[:end_time]} (course: #{duration/60}分)"
+        end
+        
+        # date, time パラメータは削除
+        processed_params.delete(:date)
+        processed_params.delete(:time)
+      rescue => e
+        Rails.logger.error "日時変換エラー: #{e.message}"
+      end
+    end
+    
+    # individual_interval_minutesの処理（空文字列をnullに変換）
+    if processed_params[:individual_interval_minutes].present?
+      if processed_params[:individual_interval_minutes].to_s.strip == ''
+        processed_params[:individual_interval_minutes] = nil
+      else
+        processed_params[:individual_interval_minutes] = processed_params[:individual_interval_minutes].to_i
+      end
+    end
+  
+    Rails.logger.info "🔄 Final processed params: #{processed_params.inspect}"
+    
+    processed_params
+  end
 
 
 
