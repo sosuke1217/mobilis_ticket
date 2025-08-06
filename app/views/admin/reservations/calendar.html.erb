@@ -302,805 +302,125 @@
 </div>
 
 <style>
-  /* カスタムスタイル */
-  .calendar-container {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    min-height: 100vh;
-    padding: 20px 0;
-  }
-  
-  .calendar-header {
-    background: white;
-    border-bottom: 2px solid #dee2e6;
-    padding: 25px 0;
-    margin-bottom: 25px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-  }
-  
-  .calendar-toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 20px;
-  }
-  
-  .calendar-nav {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-  }
-  
-  .calendar-nav button {
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-    color: white;
-    border: none;
-    padding: 10px 18px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-  
-  .calendar-nav button:hover {
-    background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-  }
-  
-  .calendar-title {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #2c3e50;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-  }
-  
-  .calendar-actions {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-  }
-  
-  .btn-new-reservation {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-  
-  .btn-new-reservation:hover {
-    background: linear-gradient(135deg, #20c997 0%, #1ea085 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-  }
-  
-  /* FullCalendar カスタマイズ */
-  .fc {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    border: 2px solid #e5e7eb;
-    overflow: hidden;
-  }
-  
-  /* カレンダーの背景をより見やすく */
-  .fc-view-harness {
-    background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
-  }
-  
-  .fc-toolbar {
-    padding: 20px;
-    border-bottom: 2px solid #f8f9fa;
-    margin-bottom: 0;
-  }
-  
-  .fc-toolbar-title {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #2c3e50;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-  }
-  
-  .fc-button {
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
-    border: none !important;
-    color: white !important;
-    border-radius: 8px !important;
-    font-weight: 600 !important;
-    padding: 10px 18px !important;
-    transition: all 0.3s ease !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
-  }
-  
-  .fc-button:hover {
-    background: linear-gradient(135deg, #0056b3 0%, #004085 100%) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
-  }
-  
-  .fc-button:focus {
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
-  }
-  
-  /* イベントスタイルの改善 */
-  .fc-timegrid-event {
-    border-radius: 8px !important;
-    font-size: 0.9rem !important;
-    font-weight: 600 !important;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.15) !important;
-    transition: all 0.3s ease !important;
-    border: none !important;
-    margin: 2px 0 !important;
-  }
+/* ==============================================
+   予約イベントの基本スタイル
+   ============================================== */
+.fc-timegrid-event {
+  border-radius: 8px !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15) !important;
+  transition: all 0.3s ease !important;
+  border: none !important;
+  margin: 2px 0 !important;
+  min-height: 25px !important;
+}
 
-  .fc-timegrid-event:hover {
-    box-shadow: 0 6px 16px rgba(0,0,0,0.2) !important;
-    transform: translateY(-2px) !important;
-  }
+.fc-timegrid-event:hover {
+  box-shadow: 0 6px 16px rgba(0,0,0,0.2) !important;
+  transform: translateY(-2px) !important;
+  z-index: 1000 !important;
+}
 
-  .fc-timegrid-event .event-tabs {
-    height: 100% !important;
-    width: 100% !important;
-  }
+/* ==============================================
+   タブ形式の予約イベント
+   ============================================== */
+.fc-timegrid-event.reservation-with-tabs {
+  min-height: 50px !important;
+  padding: 0 !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  border: none !important;
+}
 
-  .fc-timegrid-event .event-tab {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 4px 8px !important;
-    font-size: 0.85rem !important;
-    font-weight: 600 !important;
-    text-align: center !important;
-    min-height: 0 !important;
-    flex-shrink: 0 !important;
-    box-sizing: border-box !important;
-  }
+.fc-timegrid-event.reservation-with-tabs .fc-event-main {
+  padding: 0 !important;
+  height: 100% !important;
+}
 
-  .fc-timegrid-event .event-tab.course {
-    background-color: inherit !important;
-    color: inherit !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
-  }
+.fc-timegrid-event.reservation-with-tabs .event-tabs {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  width: 100% !important;
+}
 
-  .fc-timegrid-event .event-tab.interval {
-    color: white !important;
-  }
+.fc-timegrid-event.reservation-with-tabs .event-tab {
+  flex: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 2px 4px !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+  text-align: center !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
+  overflow: hidden !important;
+}
 
-  .fc-timegrid-event .event-tab.interval.individual {
-    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
-  }
+.fc-timegrid-event.reservation-with-tabs .event-tab:last-child {
+  border-bottom: none !important;
+}
 
-  .fc-timegrid-event .event-tab.interval.system {
-    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
-  }
+.fc-timegrid-event.reservation-with-tabs .event-tab.course {
+  background: inherit !important;
+  color: inherit !important;
+}
 
-  /* ステータス別のイベント色 */
-  .fc-timegrid-event.confirmed {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
-    color: white !important;
-  }
-  
-  .fc-timegrid-event.tentative {
-    background: linear-gradient(135deg, #ffc107 0%, #ffca2c 100%) !important;
-    color: #212529 !important;
-  }
-      
-  .fc-timegrid-event.cancelled {
-    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
-    color: white !important;
-  }
-  
-  .fc-timegrid-event.completed {
-    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
-    color: white !important;
-  }
-  
-  .fc-timegrid-event.no_show {
-    background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%) !important;
-    color: white !important;
-  }
-  
-  .fc-timegrid-event.break {
-    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
-    color: white !important;
-  }
-  
-  /* 時間軸とスロットの改善 */
-  .fc-timegrid-slot {
-    border-color: #d1d5db !important;
-    background: linear-gradient(90deg, #ffffff 0%, #f8f9fa 100%) !important;
-    border-width: 1px !important;
-  }
-  
-  /* 30分ごとの太線 */
-  .fc-timegrid-slot:nth-child(3n) {
-    border-top: 3px solid #9ca3af !important;
-  }
-  
-  /* 時間ラベルの改善 */
-  .fc-timegrid-slot-label {
-    font-size: 0.85rem !important;
-    color: #374151 !important;
-    font-weight: 600 !important;
-    padding: 6px 10px !important;
-  }
-  
-  /* 30分ごとの時間ラベルを強調 */
-  .fc-timegrid-slot:nth-child(3n) .fc-timegrid-slot-label {
-    font-weight: 700 !important;
-    color: #1f2937 !important;
-    font-size: 0.9rem !important;
-  }
-  
-  .fc-timegrid-axis {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
-    border-right: 2px solid #dee2e6 !important;
-  }
-  
-  .fc-timegrid-axis-cushion {
-    font-weight: 600 !important;
-    color: #495057 !important;
-    padding: 8px 12px !important;
-  }
-  
-  .fc-col-header-cell {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
-    border-color: #dee2e6 !important;
-    font-weight: 700 !important;
-    color: #2c3e50 !important;
-    padding: 15px 10px !important;
-    font-size: 1.1rem !important;
-  }
-  
-  .fc-daygrid-day {
-    border-color: #e9ecef !important;
-    transition: background-color 0.3s ease !important;
-  }
-  
-  .fc-daygrid-day:hover {
-    background-color: #f8f9fa !important;
-  }
-  
-  /* 全体的な縦線の追加 */
-  .fc-timegrid-col {
-    border-right: 2px solid #e5e7eb !important;
-  }
-  
-  .fc-timegrid-col:last-child {
-    border-right: none !important;
-  }
-  
-  /* より確実な縦線の追加 */
-  .fc-timegrid td {
-    border-right: 2px solid #e5e7eb !important;
-  }
-  
-  .fc-timegrid td:last-child {
-    border-right: none !important;
-  }
-  
-  /* 日付ヘッダーの縦線 */
-  .fc-col-header td {
-    border-right: 2px solid #e5e7eb !important;
-  }
-  
-  .fc-col-header td:last-child {
-    border-right: none !important;
-  }
-  
-  /* 今日の列の強調 */
-  .fc-day-today {
-    border-left: 3px solid #2196f3 !important;
-    border-right: 3px solid #2196f3 !important;
-    background: linear-gradient(90deg, rgba(33, 150, 243, 0.05) 0%, rgba(33, 150, 243, 0.02) 100%) !important;
-  }
-  
-  .fc-day-today .fc-timegrid-slot {
-    border-left: 1px solid rgba(33, 150, 243, 0.2) !important;
-  }
-  
-  /* 今日の列のヘッダーにも縦線を追加 */
-  .fc-day-today .fc-col-header-cell {
-    border-left: 3px solid #2196f3 !important;
-    border-right: 3px solid #2196f3 !important;
-  }
-  
-  /* 今日の列の時間軸部分にも縦線を追加 */
-  .fc-day-today .fc-timegrid-axis {
-    border-right: 3px solid #2196f3 !important;
-  }
-  
-  /* 今日の列の予約グリッド部分に縦線を追加 */
-  .fc-day-today .fc-timegrid-col {
-    border-left: 3px solid #2196f3 !important;
-    border-right: 3px solid #2196f3 !important;
-  }
-  
-  /* 日付ヘッダーの縦線 */
-  .fc-col-header-cell {
-    border-right: 2px solid #e5e7eb !important;
-  }
-  
-  .fc-col-header-cell:last-child {
-    border-right: none !important;
-  }
-  
-  /* 時間軸の縦線 */
-  .fc-timegrid-axis {
-    border-right: 2px solid #e5e7eb !important;
-  }
-  
-  /* より強力な縦線の追加 */
-  .fc table {
-    border-collapse: collapse !important;
-  }
-  
-  .fc table td {
-    border-right: 2px solid #e5e7eb !important;
-  }
-  
-  .fc table td:last-child {
-    border-right: none !important;
-  }
-  
-  /* 今日の列の特別な縦線 */
-  .fc-day-today td {
-    border-left: 3px solid #2196f3 !important;
-    border-right: 3px solid #2196f3 !important;
-  }
-  
-  /* timegrid専用の縦線 */
-  .fc-timegrid .fc-timegrid-col {
-    border-right: 2px solid #e5e7eb !important;
-  }
-  
-  .fc-timegrid .fc-timegrid-col:last-child {
-    border-right: none !important;
-  }
-  
-  /* timegridの各セルに縦線 */
-  .fc-timegrid .fc-timegrid-slot {
-    border-right: 2px solid #e5e7eb !important;
-  }
-  
-  .fc-timegrid .fc-timegrid-slot:last-child {
-    border-right: none !important;
-  }
-  
-  /* timegridの今日の列 */
-  .fc-timegrid .fc-day-today .fc-timegrid-col {
-    border-left: 3px solid #2196f3 !important;
-    border-right: 3px solid #2196f3 !important;
-  }
-  
-  /* FullCalendarの実際の構造に合わせた縦線 */
-  .fc-scrollgrid td {
-    border-right: 2px solid #e5e7eb !important;
-  }
-  
-  .fc-scrollgrid td:last-child {
-    border-right: none !important;
-  }
-  
-  /* timegridの各列に縦線 */
-  .fc-timegrid-body td {
-    border-right: 2px solid #e5e7eb !important;
-  }
-  
-  .fc-timegrid-body td:last-child {
-    border-right: none !important;
-  }
-  
-  /* 今日の列の特別な縦線 */
-  .fc-timegrid-body .fc-day-today {
-    border-left: 3px solid #2196f3 !important;
-    border-right: 3px solid #2196f3 !important;
-  }
-  
-  /* より強力な縦線の追加 */
-  .fc-timegrid .fc-timegrid-col-frame {
-    border-right: 2px solid #e5e7eb !important;
-  }
-  
-  .fc-timegrid .fc-timegrid-col-frame:last-child {
-    border-right: none !important;
-  }
-  
-  /* 今日の列のフレーム */
-  .fc-timegrid .fc-day-today .fc-timegrid-col-frame {
-    border-left: 3px solid #2196f3 !important;
-    border-right: 3px solid #2196f3 !important;
-  }
-  
-  /* 全体的なグリッド線の追加 */
-  .fc-timegrid-slot {
-    border-bottom: 1px solid #e5e7eb !important;
-  }
-  
-  .fc-timegrid-slot:nth-child(6n) {
-    border-bottom: 2px solid #d1d5db !important;
-  }
-  
-  /* 各列の縦線 */
-  .fc-timegrid-col {
-    border-right: 2px solid #e5e7eb !important;
-  }
-  
-  .fc-timegrid-col:last-child {
-    border-right: none !important;
-  }
-  
-  /* 今日の列の縦線 */
-  .fc-day-today .fc-timegrid-col {
-    border-left: 3px solid #2196f3 !important;
-    border-right: 3px solid #2196f3 !important;
-  }
-  
-  /* より強力なグリッド線 */
-  .fc-timegrid table {
-    border-collapse: collapse !important;
-  }
-  
-  .fc-timegrid table td {
-    border-right: 2px solid #e5e7eb !important;
-    border-bottom: 1px solid #e5e7eb !important;
-  }
-  
-  .fc-timegrid table td:last-child {
-    border-right: none !important;
-  }
-  
-  /* 今日の列のテーブルセル */
-  .fc-timegrid .fc-day-today table td {
-    border-left: 3px solid #2196f3 !important;
-    border-right: 3px solid #2196f3 !important;
-  }
-  
-  /* FullCalendarの実際の構造に合わせた縦線 */
-  .fc-timegrid .fc-timegrid-col-frame {
-    border-right: 2px solid #e5e7eb !important;
-  }
-  
-  .fc-timegrid .fc-timegrid-col-frame:last-child {
-    border-right: none !important;
-  }
-  
-  /* 今日の列のフレーム */
-  .fc-timegrid .fc-day-today .fc-timegrid-col-frame {
-    border-left: 3px solid #2196f3 !important;
-    border-right: 3px solid #2196f3 !important;
-  }
-  
-  /* より強力な縦線の追加 */
-  .fc-timegrid .fc-timegrid-col {
-    border-right: 2px solid #e5e7eb !important;
-  }
-  
-  .fc-timegrid .fc-timegrid-col:last-child {
-    border-right: none !important;
-  }
-  
-  /* 今日の列の特別な縦線 */
-  .fc-timegrid .fc-day-today .fc-timegrid-col {
-    border-left: 3px solid #2196f3 !important;
-    border-right: 3px solid #2196f3 !important;
-  }
-  
-  /* 最も強力な縦線の追加 */
-  .fc-timegrid .fc-timegrid-slot {
-    border-right: 2px solid #e5e7eb !important;
-  }
-  
-  .fc-timegrid .fc-timegrid-slot:last-child {
-    border-right: none !important;
-  }
-  
-  /* 今日のスロットの特別な縦線 */
-  .fc-timegrid .fc-day-today .fc-timegrid-slot {
-    border-left: 3px solid #2196f3 !important;
-    border-right: 3px solid #2196f3 !important;
-  }
-  
-  /* 最も基本的な縦線の追加 */
-  .fc-timegrid div {
-    border-right: 2px solid #e5e7eb !important;
-  }
-  
-  .fc-timegrid div:last-child {
-    border-right: none !important;
-  }
-  
-  /* 今日の列の全要素 */
-  .fc-timegrid .fc-day-today div {
-    border-left: 3px solid #2196f3 !important;
-    border-right: 3px solid #2196f3 !important;
-  }
-  
-  /* より強力な縦線の追加 */
-  .fc-timegrid * {
-    border-right: 2px solid #e5e7eb !important;
-  }
-  
-  .fc-timegrid *:last-child {
-    border-right: none !important;
-  }
-  
-  /* 今日の列の全要素 */
-  .fc-timegrid .fc-day-today * {
-    border-left: 3px solid #2196f3 !important;
-    border-right: 3px solid #2196f3 !important;
-  }
-  
-  /* 予約イベントの内部には縦線を表示しない */
-  .fc-timegrid-event {
-    border-right: none !important;
-    border-left: none !important;
-  }
-  
-  .fc-timegrid-event * {
-    border-right: none !important;
-    border-left: none !important;
-  }
-  
-  /* 予約イベントのタブ部分にも縦線を表示しない */
-  .fc-timegrid-event .event-tabs {
-    border-right: none !important;
-    border-left: none !important;
-  }
-  
-  .fc-timegrid-event .event-tab {
-    border-right: none !important;
-    border-left: none !important;
-  }
-  
-  /* 予約イベントのメイン部分にも縦線を表示しない */
-  .fc-timegrid-event .fc-event-main {
-    border-right: none !important;
-    border-left: none !important;
-  }
-  
-  /* 予約イベントの全要素から縦線を削除 */
-  .fc-timegrid-event,
-  .fc-timegrid-event *,
-  .fc-timegrid-event .event-tabs,
-  .fc-timegrid-event .event-tab,
-  .fc-timegrid-event .fc-event-main,
-  .fc-timegrid-event .fc-event-main * {
-    border-right: none !important;
-    border-left: none !important;
-  }
-  
-  /* より強力な予約イベントの縦線削除 */
-  .fc-timegrid-event,
-  .fc-timegrid-event * {
-    border-right: none !important;
-    border-left: none !important;
-    border-inline-end: none !important;
-    border-inline-start: none !important;
-  }
-  
-  /* 予約イベントの内部から縦線を完全に削除 */
-  .fc-timegrid-event,
-  .fc-timegrid-event *,
-  .fc-timegrid-event .event-tabs,
-  .fc-timegrid-event .event-tab,
-  .fc-timegrid-event .fc-event-main,
-  .fc-timegrid-event .fc-event-main *,
-  .fc-timegrid-event .fc-event-title,
-  .fc-timegrid-event .fc-event-title *,
-  .fc-timegrid-event .fc-event-time,
-  .fc-timegrid-event .fc-event-time * {
-    border-right: none !important;
-    border-left: none !important;
-    border-inline-end: none !important;
-    border-inline-start: none !important;
-  }
-  
-  /* 最も強力な予約イベントの縦線削除 */
-  .fc-timegrid-event,
-  .fc-timegrid-event *,
-  .fc-timegrid-event * * {
-    border-right: none !important;
-    border-left: none !important;
-    border-inline-end: none !important;
-    border-inline-start: none !important;
-  }
-  
-  /* 時間軸の縦線 */
-  .fc-timegrid-axis {
-    border-right: 2px solid #e5e7eb !important;
-  }
-  
-  /* 日付ヘッダーの縦線 */
-  .fc-col-header-cell {
-    border-right: 2px solid #e5e7eb !important;
-  }
-  
-  .fc-col-header-cell:last-child {
-    border-right: none !important;
-  }
-  
-  /* 今日の日付ヘッダー */
-  .fc-day-today .fc-col-header-cell {
-    border-left: 3px solid #2196f3 !important;
-    border-right: 3px solid #2196f3 !important;
-  }
-  
-  /* 日付の境界線を強調 */
-  .fc-timegrid-col {
-    border-right: 3px solid #9ca3af !important;
-  }
-  
-  .fc-timegrid-col:last-child {
-    border-right: none !important;
-  }
-  
-  /* 全体的なグリッド線の強制 */
-  .fc-timegrid * {
-    border-collapse: collapse !important;
-  }
-  
-  /* すべてのtimegrid要素に縦線 */
-  .fc-timegrid > * {
-    border-right: 2px solid #e5e7eb !important;
-  }
-  
-  .fc-timegrid > *:last-child {
-    border-right: none !important;
-  }
-  
-  /* 今日の列の全要素 */
-  .fc-day-today > * {
-    border-left: 3px solid #2196f3 !important;
-    border-right: 3px solid #2196f3 !important;
-  }
-  
-  /* より強力な横線 */
-  .fc-timegrid-slot {
-    border-bottom: 1px solid #e5e7eb !important;
-  }
-  
-  .fc-timegrid-slot:nth-child(3n) {
-    border-bottom: 2px solid #d1d5db !important;
-  }
-  
-  .fc-timegrid-slot:nth-child(6n) {
-    border-bottom: 3px solid #9ca3af !important;
-  }
-  
-  /* 時間軸の境界線を強調 */
-  .fc-timegrid-axis {
-    border-right: 4px solid #6b7280 !important;
-  }
-  
-  /* 現在時刻インジケーターの改善 */
-  .fc-timegrid-now-indicator-line {
-    border-color: #dc3545 !important;
-    border-width: 3px !important;
-    box-shadow: 0 0 8px rgba(220, 53, 69, 0.3) !important;
-  }
-  
-  .fc-timegrid-now-indicator-arrow {
-    border-color: #dc3545 !important;
-    border-width: 6px !important;
-    box-shadow: 0 0 8px rgba(220, 53, 69, 0.3) !important;
-  }
-  
-  /* タブ形式のイベントスタイル（縦積み） */
-  .fc-timegrid-event.reservation-with-tabs {
-    min-height: 50px !important;
-    padding: 0 !important;
-    border-radius: 8px !important;
-    overflow: hidden !important;
-  }
+.fc-timegrid-event.reservation-with-tabs .event-tab.interval {
+  background-color: #6c757d !important;
+  color: white !important;
+}
 
-  .fc-timegrid-event.reservation-with-tabs .event-tabs {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    width: 100%;
-  }
-  
-  .fc-timegrid-event.reservation-with-tabs .event-tab {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 4px 8px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-align: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-    min-height: 0;
-    flex-shrink: 0;
-  }
-  
-  /* FullCalendarのイベント高さを強制制御 */
-  .fc-timegrid-event {
-    min-height: 25px !important;
-  }
+.fc-timegrid-event.reservation-with-tabs .event-tab.interval.individual {
+  background-color: #fd7e14 !important;
+  color: white !important;
+  font-weight: 600 !important;
+}
 
-  .fc-timegrid-event.reservation-with-tabs .fc-event-main {
-    padding: 0 !important;
-    height: 100% !important;
-  }
-  
-  .fc-timegrid-event.reservation-with-tabs .event-tab:last-child {
-    border-bottom: none;
-  }
-  
-  .fc-timegrid-event.reservation-with-tabs .event-tab.course {
-    background-color: inherit;
-    color: white;
-  }
-  
-  /* コース部分の背景色を親要素から継承 */
-  .fc-timegrid-event.reservation-with-tabs.confirmed .event-tab.course {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
-  }
-  
-  .fc-timegrid-event.reservation-with-tabs.tentative .event-tab.course {
-    background: linear-gradient(135deg, #ffc107 0%, #ffca2c 100%) !important;
-    color: #212529 !important;
-  }
-  
-  .fc-timegrid-event.reservation-with-tabs.cancelled .event-tab.course {
-    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
-  }
-  
-  .fc-timegrid-event.reservation-with-tabs.completed .event-tab.course {
-    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
-  }
-  
-  .fc-timegrid-event.reservation-with-tabs.no_show .event-tab.course {
-    background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%) !important;
-  }
-  
-  .fc-timegrid-event.reservation-with-tabs .event-tab.interval {
-    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
-    color: white;
-  }
-  
-  .fc-timegrid-event.reservation-with-tabs .event-tab.interval.individual {
-    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
-  }
-  
-  .fc-timegrid-event.reservation-with-tabs .event-tab.interval.system {
-    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
-  }
-  
+.fc-timegrid-event.reservation-with-tabs .event-tab.interval.system {
+  background-color: #6c757d !important;
+  color: white !important;
+}
 
-  
-  /* レスポンシブ対応 */
-  @media (max-width: 768px) {
-    .calendar-toolbar {
-      flex-direction: column;
-      gap: 15px;
-    }
-    
-    .calendar-nav {
-      order: 1;
-    }
-    
-    .calendar-title {
-      order: 2;
-      font-size: 1.2rem;
-    }
-    
-    .calendar-actions {
-      order: 3;
-    }
+/* ==============================================
+   ステータス別の色分け
+   ============================================== */
+.fc-timegrid-event.confirmed {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+  border-color: #28a745 !important;
+  color: white !important;
+}
 
-    .fc-timegrid-event .event-tab {
-      font-size: 0.7rem !important;
-      padding: 1px 2px !important;
-    }
-  }
+.fc-timegrid-event.tentative {
+  background: linear-gradient(135deg, #ffc107 0%, #ffb84d 100%) !important;
+  border-color: #ffc107 !important;
+  color: #212529 !important;
+}
+
+.fc-timegrid-event.cancelled {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+  border-color: #dc3545 !important;
+  color: white !important;
+}
+
+.fc-timegrid-event.completed {
+  background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%) !important;
+  border-color: #6f42c1 !important;
+  color: white !important;
+}
+
+.fc-timegrid-event.no_show {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
+  border-color: #6c757d !important;
+  color: white !important;
+}
+
+.fc-timegrid-event.break {
+  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+  border-color: #17a2b8 !important;
+  color: white !important;
+}
 </style>
 
 <script>
@@ -2420,5 +1740,5 @@
     font-size: 10px;
     white-space: nowrap;
     z-index: 1000;
-}
+  }
 </style>
