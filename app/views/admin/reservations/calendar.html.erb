@@ -4,22 +4,15 @@
   <div class="calendar-header">
 <div class="container-fluid">
       <div class="calendar-toolbar">
-        <div class="calendar-nav">
-          <button id="prevBtn" class="btn btn-outline-primary">
-            <i class="fas fa-chevron-left"></i> 前週
-          </button>
-          <button id="todayBtn" class="btn btn-primary">
-            <i class="fas fa-calendar-day"></i> 今日
-          </button>
-          <button id="nextBtn" class="btn btn-outline-primary">
-            次週 <i class="fas fa-chevron-right"></i>
-          </button>
+                <!-- 小さな月カレンダーをタイトルの左側に配置 -->
+        <div class="calendar-mini-calendar">
+          <div id="monthCalendar" style="width: 200px; height: 100px;"></div>
         </div>
         
         <div class="calendar-title">
           <i class="fas fa-calendar-alt me-2"></i>予約カレンダー
-      </div>
-      
+        </div>
+        
         <div class="calendar-actions">
           <div class="d-flex flex-column gap-2">
             <a href="<%= admin_reservations_path %>" class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); border: none; box-shadow: 0 4px 8px rgba(0,0,0,0.15); font-weight: 600;">
@@ -322,10 +315,68 @@ body {
   border-bottom: 3px solid #e9ecef;
   padding: 20px 0;
   box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  backdrop-filter: blur(10px);
+}
+
+/* ヘッダー内のミニカレンダーのスタイル */
+.calendar-mini-calendar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+}
+
+.calendar-mini-calendar .fc {
+  font-size: 0.8rem !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+}
+
+.calendar-mini-calendar .fc-daygrid-day {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  padding: 0px !important;
+  border: none !important;
+  min-height: 5px !important;
+}
+
+.calendar-mini-calendar .fc-daygrid-day:hover {
+  background-color: #f8f9fa !important;
+}
+
+.calendar-mini-calendar .fc-daygrid-day.fc-day-today {
+  background-color: #e3f2fd !important;
+  border-radius: 4px !important;
+}
+
+.calendar-mini-calendar .fc-daygrid-day.fc-day-selected {
+  background-color: #007bff !important;
+  color: white !important;
+  border-radius: 4px !important;
+}
+
+.calendar-mini-calendar .fc-daygrid-day.fc-day-selected:hover {
+  background-color: #0056b3 !important;
+}
+
+.calendar-mini-calendar .fc-daygrid-day-number {
+  font-size: 0.6rem !important;
+  padding: 0px !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+}
+
+.calendar-mini-calendar .fc-col-header-cell {
+  padding: 0px !important;
+  font-size: 0.55rem !important;
+  font-weight: 600 !important;
+  background-color: #f8f9fa !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  min-height: 5px !important;
+}
+
+.calendar-mini-calendar .fc-daygrid-day.fc-day-other {
+  color: #cbd5e0 !important;
 }
 
 .calendar-toolbar {
@@ -617,19 +668,56 @@ body {
 }
 
 /* ==============================================
+   10分間隔スロットの高さ固定
+   ============================================== */
+        .fc-timegrid-slot {
+    height: 30px !important;
+    min-height: 30px !important;
+    max-height: 30px !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+
+.fc-timegrid-slots table {
+  height: 100% !important;
+}
+
+/* 30分ごとのメジャーライン */
+.fc-timegrid-slot[data-time$=":00"] {
+  border-bottom: 2px solid #cbd5e0 !important;
+}
+
+.fc-timegrid-slot[data-time$=":30"] {
+  border-bottom: 1.5px solid #e2e8f0 !important;
+}
+
+/* 時間軸の調整 */
+.fc-timegrid-axis-frame {
+  height: 30px !important;
+  min-height: 30px !important;
+}
+      
+        .fc-timegrid-slot-label {
+    font-size: 0.75rem !important;
+    padding: 2px 4px !important;
+    color: #4a5568 !important;
+  }
+  
+
+
+/* ==============================================
    予約イベントの基本スタイル
    ============================================== */
 .fc-timegrid-event {
-  border-radius: 12px !important;
-  font-size: 0.9rem !important;
+  border-radius: 8px !important;
+  font-size: 0.8rem !important;
   font-weight: 600 !important;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.15) !important;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  border: none !important;
-  margin: 3px 2px !important;
-  min-height: 30px !important;
-  position: relative !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+  transition: all 0.3s ease !important;
+  border: 2px solid transparent !important;
+  margin: 1px !important;
   overflow: hidden !important;
+  position: relative !important;
+  height: auto !important;
 }
 
 .fc-timegrid-event::before {
@@ -645,71 +733,140 @@ body {
 }
 
 .fc-timegrid-event:hover {
-  box-shadow: 0 8px 25px rgba(0,0,0,0.25) !important;
-  transform: translateY(-3px) scale(1.02) !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25) !important;
+  transform: translateX(2px) !important;
   z-index: 1000 !important;
 }
 
 /* ==============================================
-   タブ形式の予約イベント
+   全コース対応の高さ設定（30px base）
    ============================================== */
-.fc-timegrid-event.reservation-with-tabs {
-  min-height: 40px !important;
-  padding: 0 !important;
+
+/* 40分コース系 */
+.fc-timegrid-event[data-duration="40"] {
+  min-height: 120px !important;
+  height: 120px !important;
 }
 
-.fc-timegrid-event.reservation-with-tabs .fc-event-main {
-  padding: 0 !important;
+.fc-timegrid-event[data-duration="45"] {
+  min-height: 135px !important;
+  height: 135px !important;
+}
+
+.fc-timegrid-event[data-duration="50"] {
+  min-height: 150px !important;
+  height: 150px !important;
+}
+
+.fc-timegrid-event[data-duration="55"] {
+  min-height: 165px !important;
+  height: 165px !important;
+}
+
+/* 60分コース系 */
+.fc-timegrid-event[data-duration="60"] {
+  min-height: 180px !important;
+  height: 180px !important;
+}
+
+.fc-timegrid-event[data-duration="65"] {
+  min-height: 195px !important;
+  height: 195px !important;
+}
+
+.fc-timegrid-event[data-duration="70"] {
+  min-height: 210px !important;
+  height: 210px !important;
+}
+
+.fc-timegrid-event[data-duration="75"] {
+  min-height: 225px !important;
+  height: 225px !important;
+}
+
+.fc-timegrid-event[data-duration="80"] {
+  min-height: 240px !important;
+  height: 240px !important;
+}
+
+/* 80分コース系 */
+.fc-timegrid-event[data-duration="85"] {
+  min-height: 340px !important;
+  height: 340px !important;
+}
+
+.fc-timegrid-event[data-duration="90"] {
+  min-height: 360px !important;
+  height: 360px !important;
+}
+
+.fc-timegrid-event[data-duration="95"] {
+  min-height: 380px !important;
+  height: 380px !important;
+}
+
+.fc-timegrid-event[data-duration="100"] {
+  min-height: 400px !important;
+  height: 400px !important;
+}
+
+/* その他のカスタム時間 */
+.fc-timegrid-event[data-duration="105"] {
+  min-height: 420px !important;
+  height: 420px !important;
+}
+
+.fc-timegrid-event[data-duration="110"] {
+  min-height: 440px !important;
+  height: 440px !important;
+}
+
+.fc-timegrid-event[data-duration="120"] {
+  min-height: 480px !important;
+  height: 480px !important;
+}
+
+/* ==============================================
+   タブ形式のイベント用スタイル
+   ============================================== */
+.fc-timegrid-event .event-tab-container {
   height: 100% !important;
-}
-
-.fc-timegrid-event.reservation-with-tabs .event-tabs {
   display: flex !important;
   flex-direction: column !important;
-  height: 100% !important;
   width: 100% !important;
 }
 
-.fc-timegrid-event.reservation-with-tabs .event-tab {
-  flex: 1 !important;
+.fc-timegrid-event .event-tab {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  padding: 4px 6px !important;
-  font-size: 0.85rem !important;
   font-weight: 600 !important;
   text-align: center !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
   overflow: hidden !important;
-  transition: all 0.3s ease !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  transition: all 0.2s ease !important;
+  border: none !important;
 }
 
-.fc-timegrid-event.reservation-with-tabs .event-tab:last-child {
-  border-bottom: none !important;
-}
-
-.fc-timegrid-event.reservation-with-tabs .event-tab.course {
+.fc-timegrid-event .event-tab.course {
   background: inherit !important;
   color: inherit !important;
-  font-weight: 700 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
 }
 
-.fc-timegrid-event.reservation-with-tabs .event-tab.interval {
-  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
-  color: white !important;
+.fc-timegrid-event .event-tab.interval {
+        color: white !important;
+        font-weight: 500 !important;
+}
+
+.fc-timegrid-event .event-tab.interval.individual {
+  background-color: #fd7e14 !important;
   font-weight: 600 !important;
 }
 
-.fc-timegrid-event.reservation-with-tabs .event-tab.interval.individual {
-  background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%) !important;
-  color: white !important;
-  font-weight: 700 !important;
-}
-
-.fc-timegrid-event.reservation-with-tabs .event-tab.interval.system {
-  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
-  color: white !important;
-  font-weight: 600 !important;
+.fc-timegrid-event .event-tab.interval.system {
+  background-color: #6c757d !important;
 }
 
 /* ==============================================
@@ -724,8 +881,8 @@ body {
 
 .fc-timegrid-event.tentative {
   background: linear-gradient(135deg, #ffc107 0%, #ffb84d 100%) !important;
-  border: 2px solid #ffc107 !important;
-  color: #212529 !important;
+        border: 2px solid #ffc107 !important;
+        color: #212529 !important;
   box-shadow: 0 4px 16px rgba(255, 193, 7, 0.3) !important;
 }
 
@@ -756,11 +913,41 @@ body {
   color: white !important;
   box-shadow: 0 4px 16px rgba(23, 162, 184, 0.3) !important;
 }
-</style>
 
-<style>
 /* ==============================================
-   レスポンシブ対応とアニメーション
+   インターバルタイプ別の視覚的区別
+   ============================================== */
+.fc-timegrid-event.has-interval .event-tab.interval.individual::before {
+  content: "⚙️ ";
+  font-size: 0.6em;
+  margin-right: 2px;
+}
+
+.fc-timegrid-event.has-interval .event-tab.interval.system::before {
+  content: "🔧 ";
+  font-size: 0.6em;
+  margin-right: 2px;
+}
+
+/* ホバー時のインターバル情報表示 */
+.fc-timegrid-event.has-interval:hover::after {
+  content: attr(data-interval-info);
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+/* ==============================================
+   レスポンシブ対応
    ============================================== */
 @media (max-width: 1024px) {
   .calendar-toolbar {
@@ -813,13 +1000,36 @@ body {
     font-size: 0.9rem;
   }
 
+  /* モバイル用のスロット高さ (35px base) */
+  .fc-timegrid-slot {
+    height: 35px !important;
+    min-height: 35px !important;
+    max-height: 35px !important;
+  }
+  
+  .fc-timegrid-axis-frame {
+    height: 35px !important;
+    min-height: 35px !important;
+  }
+  
+  /* モバイル用の高さ調整 */
+  .fc-timegrid-event[data-duration="40"] { height: 140px !important; min-height: 140px !important; }
+  .fc-timegrid-event[data-duration="45"] { height: 157px !important; min-height: 157px !important; }
+  .fc-timegrid-event[data-duration="50"] { height: 175px !important; min-height: 175px !important; }
+  .fc-timegrid-event[data-duration="55"] { height: 192px !important; min-height: 192px !important; }
+  .fc-timegrid-event[data-duration="60"] { height: 210px !important; min-height: 210px !important; }
+  .fc-timegrid-event[data-duration="65"] { height: 227px !important; min-height: 227px !important; }
+  .fc-timegrid-event[data-duration="70"] { height: 245px !important; min-height: 245px !important; }
+  .fc-timegrid-event[data-duration="75"] { height: 262px !important; min-height: 262px !important; }
+  .fc-timegrid-event[data-duration="80"] { height: 280px !important; min-height: 280px !important; }
+  .fc-timegrid-event[data-duration="85"] { height: 297px !important; min-height: 297px !important; }
+  .fc-timegrid-event[data-duration="90"] { height: 315px !important; min-height: 315px !important; }
+  .fc-timegrid-event[data-duration="95"] { height: 332px !important; min-height: 332px !important; }
+  .fc-timegrid-event[data-duration="100"] { height: 350px !important; min-height: 350px !important; }
+  
   .fc-timegrid-event .event-tab {
     font-size: 0.7rem !important;
     padding: 1px 2px !important;
-  }
-  
-  .fc-timegrid-event.reservation-with-tabs {
-    min-height: 50px !important;
   }
   
   .fc {
@@ -853,31 +1063,36 @@ body {
     font-size: 0.8rem;
   }
   
-  .fc-timegrid-event.reservation-with-tabs {
-    min-height: 45px !important;
+  /* 小画面用のスロット高さ (30px base) */
+  .fc-timegrid-slot {
+    height: 30px !important;
+    min-height: 30px !important;
+    max-height: 30px !important;
   }
-
-  .fc-timegrid-event .event-tabs {
-  height: 100% !important;
-  width: 100% !important;
+  
+  .fc-timegrid-axis-frame {
+    height: 30px !important;
+    min-height: 30px !important;
   }
-
-  .fc-timegrid-event .event-tab.course {
-  background-color: inherit !important;
-  color: inherit !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
-  }
-
-  .fc-timegrid-event .event-tab.interval {
-  color: white !important;
-  }
-
-  .fc-timegrid-event .event-tab.interval.individual {
-  background-color: #fd7e14 !important;
-  }
-
-  .fc-timegrid-event .event-tab.interval.system {
-  background-color: #6c757d !important;
+  
+  /* 小画面用の高さ調整 */
+  .fc-timegrid-event[data-duration="40"] { height: 120px !important; min-height: 120px !important; }
+  .fc-timegrid-event[data-duration="45"] { height: 135px !important; min-height: 135px !important; }
+  .fc-timegrid-event[data-duration="50"] { height: 150px !important; min-height: 150px !important; }
+  .fc-timegrid-event[data-duration="55"] { height: 165px !important; min-height: 165px !important; }
+  .fc-timegrid-event[data-duration="60"] { height: 180px !important; min-height: 180px !important; }
+  .fc-timegrid-event[data-duration="65"] { height: 195px !important; min-height: 195px !important; }
+  .fc-timegrid-event[data-duration="70"] { height: 210px !important; min-height: 210px !important; }
+  .fc-timegrid-event[data-duration="75"] { height: 225px !important; min-height: 225px !important; }
+  .fc-timegrid-event[data-duration="80"] { height: 240px !important; min-height: 240px !important; }
+  .fc-timegrid-event[data-duration="85"] { height: 255px !important; min-height: 255px !important; }
+  .fc-timegrid-event[data-duration="90"] { height: 270px !important; min-height: 270px !important; }
+  .fc-timegrid-event[data-duration="95"] { height: 285px !important; min-height: 285px !important; }
+  .fc-timegrid-event[data-duration="100"] { height: 300px !important; min-height: 300px !important; }
+  
+  .fc-timegrid-event .event-tab {
+    font-size: 0.65rem !important;
+    padding: 1px !important;
   }
 
   .fc {
@@ -892,6 +1107,41 @@ body {
   .fc-toolbar-title {
     font-size: 1.2rem;
   }
+}
+
+/* ==============================================
+   動的高さ設定とアニメーション
+   ============================================== */
+.height-calculated {
+  transition: height 0.3s ease !important;
+}
+
+/* ==============================================
+   カレンダー全体のグリッド強化
+   ============================================== */
+.fc-timegrid-col-frame {
+  border-right: 1px solid #e2e8f0 !important;
+}
+
+/* ==============================================
+   営業時間外のスタイル
+   ============================================== */
+.fc-timegrid-slot[data-time^="09"]:before,
+.fc-timegrid-slot[data-time^="21"]:before,
+.fc-timegrid-slot[data-time^="22"]:before {
+  content: '';
+      position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, 
+    transparent 30%, 
+    rgba(220, 53, 69, 0.1) 35%, 
+    rgba(220, 53, 69, 0.1) 40%, 
+    transparent 45%
+  );
+  pointer-events: none;
 }
 
 /* ==============================================
@@ -927,8 +1177,20 @@ body {
   animation: slideInUp 0.8s ease-out;
 }
 
-.fc-timegrid-event {
-  animation: slideInUp 0.4s ease-out;
+/* ==============================================
+   デバッグ用スタイル（必要に応じて削除）
+   ============================================== */
+.debug-events .fc-timegrid-event {
+  border: 2px dashed red !important;
+}
+
+.debug-events .fc-timegrid-event .event-tab.course {
+  border: 1px solid blue !important;
+  background-color: rgba(0, 0, 255, 0.1) !important;
+}
+
+.debug-events .fc-timegrid-event .event-tab.interval {
+  border: 1px solid green !important;
 }
 
 /* ==============================================
@@ -959,6 +1221,577 @@ body {
     color: #e2e8f0 !important;
   }
 }
+
+/* ==============================================
+   特殊なコース時間対応（追加の組み合わせ）
+   ============================================== */
+
+/* 25分コース系 */
+.fc-timegrid-event[data-duration="25"] {
+  min-height: 100px !important;
+  height: 100px !important;
+}
+
+.fc-timegrid-event[data-duration="30"] {
+  min-height: 120px !important;
+  height: 120px !important;
+}
+
+.fc-timegrid-event[data-duration="35"] {
+  min-height: 140px !important;
+  height: 140px !important;
+}
+
+/* 115分以上の長時間コース */
+.fc-timegrid-event[data-duration="115"] {
+  min-height: 460px !important;
+  height: 460px !important;
+}
+
+.fc-timegrid-event[data-duration="125"] {
+  min-height: 500px !important;
+  height: 500px !important;
+}
+
+.fc-timegrid-event[data-duration="130"] {
+  min-height: 520px !important;
+  height: 520px !important;
+}
+
+.fc-timegrid-event[data-duration="135"] {
+  min-height: 540px !important;
+  height: 540px !important;
+}
+
+.fc-timegrid-event[data-duration="140"] {
+  min-height: 560px !important;
+  height: 560px !important;
+}
+
+.fc-timegrid-event[data-duration="150"] {
+  min-height: 600px !important;
+  height: 600px !important;
+}
+
+/* ==============================================
+   フォーカス状態のスタイル
+   ============================================== */
+.fc-timegrid-event:focus {
+  outline: 3px solid #007bff;
+  outline-offset: 2px;
+  z-index: 1001;
+}
+
+.fc-timegrid-event:focus-visible {
+  outline: 3px solid #007bff;
+  outline-offset: 2px;
+}
+
+/* ==============================================
+   印刷時の最適化
+   ============================================== */
+@media print {
+  .fc {
+    box-shadow: none !important;
+    border: 1px solid #000 !important;
+  }
+  
+  .fc-timegrid-event {
+    box-shadow: none !important;
+    border: 1px solid #000 !important;
+  }
+  
+  .fc-button {
+    display: none !important;
+  }
+  
+  .calendar-nav,
+  .calendar-actions {
+    display: none !important;
+  }
+}
+
+/* ==============================================
+   パフォーマンス最適化
+   ============================================== */
+.fc-timegrid-event {
+  will-change: transform, opacity;
+}
+
+.fc-timegrid-event:hover {
+  will-change: transform, box-shadow;
+}
+
+/* GPU加速を有効にする */
+.fc-timegrid-event,
+.fc-button {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* ==============================================
+   コース別の識別用カラーバリエーション（オプション）
+   ============================================== */
+
+/* 40分コース系のサブトル背景調整 */
+.fc-timegrid-event[data-duration="40"],
+.fc-timegrid-event[data-duration="45"],
+.fc-timegrid-event[data-duration="50"],
+.fc-timegrid-event[data-duration="55"] {
+  position: relative;
+}
+
+.fc-timegrid-event[data-duration="40"]::after,
+.fc-timegrid-event[data-duration="45"]::after,
+.fc-timegrid-event[data-duration="50"]::after,
+.fc-timegrid-event[data-duration="55"]::after {
+  content: '40';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: rgba(0, 0, 0, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: bold;
+  pointer-events: none;
+}
+
+/* 60分コース系 */
+.fc-timegrid-event[data-duration="60"]::after,
+.fc-timegrid-event[data-duration="65"]::after,
+.fc-timegrid-event[data-duration="70"]::after,
+.fc-timegrid-event[data-duration="75"]::after,
+.fc-timegrid-event[data-duration="80"]::after {
+  content: '60';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: rgba(0, 0, 0, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: bold;
+  pointer-events: none;
+}
+
+/* 80分コース系 */
+.fc-timegrid-event[data-duration="85"]::after,
+.fc-timegrid-event[data-duration="90"]::after,
+.fc-timegrid-event[data-duration="95"]::after,
+.fc-timegrid-event[data-duration="100"]::after {
+  content: '80';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: rgba(0, 0, 0, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: bold;
+  pointer-events: none;
+}
+
+/* ==============================================
+   スクロールバーのカスタマイズ
+   ============================================== */
+.fc-timegrid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.fc-timegrid::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.fc-timegrid::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  border-radius: 4px;
+}
+
+.fc-timegrid::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+}
+
+/* ==============================================
+   読み込み状態のスタイル
+   ============================================== */
+.calendar-loading {
+  position: relative;
+}
+
+.calendar-loading::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(2px);
+  z-index: 9999;
+}
+
+.calendar-loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  z-index: 10000;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ==============================================
+   エラー状態のスタイル
+   ============================================== */
+.calendar-error {
+  padding: 20px;
+  text-align: center;
+  color: #dc3545;
+  background: #fff5f5;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  margin: 20px;
+}
+
+.calendar-error::before {
+  content: '⚠️';
+  display: block;
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+/* ==============================================
+   ツールチップのスタイル強化
+   ============================================== */
+.fc-timegrid-event[data-interval-info]:hover::after {
+  animation: tooltipFadeIn 0.3s ease-out;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* ==============================================
+   セレクション状態のスタイル
+   ============================================== */
+.fc-timegrid-event.fc-event-selected {
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.3) !important;
+  z-index: 1002 !important;
+}
+
+/* ==============================================
+   ドラッグ状態のスタイル
+   ============================================== */
+.fc-timegrid-event.fc-event-dragging {
+  opacity: 0.7 !important;
+  transform: rotate(3deg) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+  z-index: 1003 !important;
+}
+
+.fc-timegrid-event.fc-event-resizing {
+  opacity: 0.8 !important;
+  box-shadow: 0 4px 20px rgba(0, 123, 255, 0.4) !important;
+}
+
+/* ==============================================
+   最終調整とクリーンアップ
+   ============================================== */
+
+/* 重複するスタイルの統合 */
+.fc-timegrid-event.reservation-with-tabs,
+.fc-timegrid-event.reservation-with-tabs .fc-event-main,
+.fc-timegrid-event.reservation-with-tabs .event-tabs,
+.fc-timegrid-event.reservation-with-tabs .event-tab {
+  /* 既存のタブスタイルと統合済み */
+}
+
+/* 不要なスタイルオーバーライドの削除 */
+.fc-timegrid-event {
+  /* 基本スタイルは既に定義済み */
+}
+
+/* ==============================================
+   1時間の線のみを太くする設定（10分ずらし修正版）
+   ============================================== */
+
+/* まず全ての線を細くリセット */
+.fc-timegrid-slot {
+  border-bottom: 3px solid #e2e8f0 !important; /* 基本は細い線 */
+}
+
+/* イベントの高さを正確に設定 */
+.fc-timegrid-event {
+  height: auto !important;
+  min-height: auto !important;
+}
+
+.fc-timegrid-event[data-duration] {
+  height: calc(var(--duration) * 3px) !important;
+  min-height: calc(var(--duration) * 3px) !important;
+  max-height: calc(var(--duration) * 3px) !important;
+}
+
+/* 特定の時間のイベント高さを直接指定（コンパクト化） */
+.fc-timegrid-event[data-duration="75"] {
+  height: 225px !important;
+  min-height: 225px !important;
+  max-height: 225px !important;
+}
+
+.fc-timegrid-event[data-duration="80"] {
+  height: 240px !important;
+  min-height: 240px !important;
+  max-height: 240px !important;
+}
+
+.fc-timegrid-event[data-duration="90"] {
+  height: 270px !important;
+  min-height: 270px !important;
+  max-height: 270px !important;
+}
+
+/* スロットの高さを強制的に30pxに設定（コンパクト化） */
+.fc-timegrid-slot {
+  height: 30px !important;
+  min-height: 30px !important;
+  max-height: 30px !important;
+}
+
+/* 日付ヘッダーのクリック可能スタイル */
+.fc-col-header-cell {
+  cursor: pointer !important;
+  transition: background-color 0.2s ease;
+}
+
+.fc-col-header-cell:hover {
+  background-color: #f8f9fa !important;
+}
+
+.fc-col-header-cell:active {
+  background-color: #e9ecef !important;
+}
+
+.fc-day-header {
+  cursor: pointer !important;
+  transition: background-color 0.2s ease;
+  user-select: none !important;
+}
+
+.fc-day-header:hover {
+  background-color: #f8f9fa !important;
+}
+
+.fc-day-header:active {
+  background-color: #e9ecef !important;
+}
+
+/* 月カレンダーのスタイル */
+#monthCalendar .fc {
+  font-size: 0.9rem;
+}
+
+#monthCalendar .fc-daygrid-day {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+#monthCalendar .fc-daygrid-day:hover {
+  background-color: #f8f9fa !important;
+}
+
+#monthCalendar .fc-daygrid-day.fc-day-today {
+  background-color: #e3f2fd !important;
+}
+
+#monthCalendar .fc-daygrid-day.fc-day-selected {
+  background-color: #007bff !important;
+  color: white !important;
+}
+
+#monthCalendar .fc-daygrid-day.fc-day-selected:hover {
+  background-color: #0056b3 !important;
+}
+
+/* より確実な方法：時間に基づいた具体的な指定（10分ずらし修正） */
+/* 営業時間10:00-21:00の場合 */
+
+/* 1時間ごとの線（太い線） */
+/* 10:00 (0番目のスロット) */
+.fc-timegrid-slots tr:nth-child(0) .fc-timegrid-slot {
+  border-bottom: 3px solid #64748b !important;
+}
+
+/* 11:00 (6番目のスロット) */
+.fc-timegrid-slots tr:nth-child(6) .fc-timegrid-slot {
+  border-bottom: 3px solid #64748b !important;
+}
+
+/* 12:00 (12番目のスロット) */
+.fc-timegrid-slots tr:nth-child(12) .fc-timegrid-slot {
+  border-bottom: 3px solid #64748b !important;
+}
+
+/* 13:00 (18番目のスロット) */
+.fc-timegrid-slots tr:nth-child(18) .fc-timegrid-slot {
+  border-bottom: 3px solid #64748b !important;
+}
+
+/* 14:00 (24番目のスロット) */
+.fc-timegrid-slots tr:nth-child(24) .fc-timegrid-slot {
+  border-bottom: 3px solid #64748b !important;
+}
+
+/* 15:00 (30番目のスロット) */
+.fc-timegrid-slots tr:nth-child(30) .fc-timegrid-slot {
+  border-bottom: 3px solid #64748b !important;
+}
+
+/* 16:00 (36番目のスロット) */
+.fc-timegrid-slots tr:nth-child(36) .fc-timegrid-slot {
+  border-bottom: 3px solid #64748b !important;
+}
+
+/* 17:00 (42番目のスロット) */
+.fc-timegrid-slots tr:nth-child(42) .fc-timegrid-slot {
+  border-bottom: 3px solid #64748b !important;
+}
+
+/* 18:00 (48番目のスロット) */
+.fc-timegrid-slots tr:nth-child(48) .fc-timegrid-slot {
+  border-bottom: 3px solid #64748b !important;
+}
+
+/* 19:00 (54番目のスロット) */
+.fc-timegrid-slots tr:nth-child(54) .fc-timegrid-slot {
+  border-bottom: 3px solid #64748b !important;
+}
+
+/* 20:00 (60番目のスロット) */
+.fc-timegrid-slots tr:nth-child(60) .fc-timegrid-slot {
+  border-bottom: 3px solid #64748b !important;
+}
+
+/* 21:00 (66番目のスロット) */
+.fc-timegrid-slots tr:nth-child(66) .fc-timegrid-slot {
+  border-bottom: 3px solid #64748b !important;
+}
+
+/* 30分ごとの線（中程度の太さ） */
+/* 10:30 (3番目のスロット) */
+.fc-timegrid-slots tr:nth-child(3) .fc-timegrid-slot {
+  border-bottom: 1.5px solid #64748b !important;
+}
+
+/* 11:30 (9番目のスロット) */
+.fc-timegrid-slots tr:nth-child(9) .fc-timegrid-slot {
+  border-bottom: 1.5px solid #64748b !important;
+}
+
+/* 12:30 (15番目のスロット) */
+.fc-timegrid-slots tr:nth-child(15) .fc-timegrid-slot {
+  border-bottom: 1.5px solid #64748b !important;
+}
+
+/* 13:30 (21番目のスロット) */
+.fc-timegrid-slots tr:nth-child(21) .fc-timegrid-slot {
+  border-bottom: 1.5px solid #64748b !important;
+}
+
+/* 14:30 (27番目のスロット) */
+.fc-timegrid-slots tr:nth-child(27) .fc-timegrid-slot {
+  border-bottom: 1.5px solid #64748b !important;
+}
+
+/* 15:30 (33番目のスロット) */
+.fc-timegrid-slots tr:nth-child(33) .fc-timegrid-slot {
+  border-bottom: 1.5px solid #64748b !important;
+}
+
+/* 16:30 (39番目のスロット) */
+.fc-timegrid-slots tr:nth-child(39) .fc-timegrid-slot {
+  border-bottom: 1.5px solid #64748b !important;
+}
+
+/* 17:30 (45番目のスロット) */
+.fc-timegrid-slots tr:nth-child(45) .fc-timegrid-slot {
+  border-bottom: 1.5px solid #64748b !important;
+}
+
+/* 18:30 (51番目のスロット) */
+.fc-timegrid-slots tr:nth-child(51) .fc-timegrid-slot {
+  border-bottom: 1.5px solid #64748b !important;
+}
+
+/* 19:30 (57番目のスロット) */
+.fc-timegrid-slots tr:nth-child(57) .fc-timegrid-slot {
+  border-bottom: 1.5px solid #64748b !important;
+}
+
+/* 20:30 (63番目のスロット) */
+.fc-timegrid-slots tr:nth-child(63) .fc-timegrid-slot {
+  border-bottom: 1.5px solid #64748b !important;
+}
+
+/* ==============================================
+   レスポンシブ対応
+   ============================================== */
+@media (max-width: 768px) {
+  .fc-timegrid-slot:nth-child(6n) {
+    border-bottom: 3px solid #64748b !important; /* モバイルでは少し細く */
+  }
+  
+  .fc-timegrid-slots tr:nth-child(1) .fc-timegrid-slot,
+  .fc-timegrid-slots tr:nth-child(6) .fc-timegrid-slot,
+  .fc-timegrid-slots tr:nth-child(12) .fc-timegrid-slot,
+  .fc-timegrid-slots tr:nth-child(18) .fc-timegrid-slot,
+  .fc-timegrid-slots tr:nth-child(24) .fc-timegrid-slot,
+  .fc-timegrid-slots tr:nth-child(30) .fc-timegrid-slot,
+  .fc-timegrid-slots tr:nth-child(36) .fc-timegrid-slot,
+  .fc-timegrid-slots tr:nth-child(42) .fc-timegrid-slot,
+  .fc-timegrid-slots tr:nth-child(48) .fc-timegrid-slot,
+  .fc-timegrid-slots tr:nth-child(54) .fc-timegrid-slot,
+  .fc-timegrid-slots tr:nth-child(60) .fc-timegrid-slot,
+  .fc-timegrid-slots tr:nth-child(66) .fc-timegrid-slot {
+    border-bottom: 3px solid #64748b !important;
+  }
+}
 </style>
 
 <script>
@@ -966,7 +1799,11 @@ body {
   document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 DOM Content Loaded');
     
-    // FullCalendarの初期化
+    // 月カレンダーの初期化
+    const monthCalendarEl = document.getElementById('monthCalendar');
+    console.log('📅 Month calendar element:', monthCalendarEl);
+    
+    // 予約カレンダーの初期化
     const calendarEl = document.getElementById('calendar');
     console.log('📅 Calendar element:', calendarEl);
     
@@ -980,9 +1817,9 @@ body {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
-          return response.json();
-        })
-        .then(data => {
+      return response.json();
+    })
+    .then(data => {
           console.log('📊 Received data:', data);
           
           // 要素の存在確認とエラーハンドリング
@@ -1023,7 +1860,7 @@ body {
                 </div>
               `).join('');
               historyContainer.innerHTML = historyHtml;
-            } else {
+      } else {
               console.log('📊 No cancellation history found');
               historyContainer.innerHTML = `
                 <div class="text-muted text-center py-3">
@@ -1034,9 +1871,9 @@ body {
     }
           } else {
             console.log('📊 Cancellation history container not found, skipping update');
-          }
-        })
-        .catch(error => {
+      }
+    })
+    .catch(error => {
           console.error('❌ キャンセル統計の取得に失敗:', error);
           // エラー時もデフォルト表示
           const cancelledCount = document.getElementById('cancelledCount');
@@ -1056,21 +1893,55 @@ body {
         });
     }
 
-    if (!calendarEl) {
-      console.error('❌ Calendar element not found');
+    if (!monthCalendarEl || !calendarEl) {
+      console.error('❌ Calendar elements not found');
       return;
     }
     
+    // 月カレンダーの初期化
+    const monthCalendar = new FullCalendar.Calendar(monthCalendarEl, {
+      initialView: 'dayGridMonth',
+      locale: 'ja',
+      height: 'auto',
+      headerToolbar: false, // ヘッダーを非表示
+      dayHeaderFormat: { weekday: 'short' },
+      dayCellClassNames: 'clickable-day-cell',
+      aspectRatio: 2, // より横長の比率
+      contentHeight: 100, // 高さを調整
+      dayCellDidMount: function(info) {
+        // 日付セルにクリックイベントを追加
+        info.el.style.cursor = 'pointer';
+        info.el.addEventListener('click', function() {
+          const clickedDate = info.date;
+          console.log('📅 Month calendar day clicked:', clickedDate);
+          
+          // 予約カレンダーをその週に移動
+          calendar.gotoDate(clickedDate);
+          
+          // 選択された日付をハイライト
+          monthCalendar.select(clickedDate);
+        });
+      },
+      select: function(info) {
+        const selectedDate = info.start;
+        console.log('📅 Month calendar date selected:', selectedDate);
+        
+        // 予約カレンダーをその週に移動
+        calendar.gotoDate(selectedDate);
+      }
+    });
+    
+    // 予約カレンダーの初期化
     const calendar = new FullCalendar.Calendar(calendarEl, {
       initialView: 'timeGridWeek',
       locale: 'ja',
-      // timeZone設定を削除（デフォルトのローカルタイムゾーンを使用）
       height: 'auto',
       headerToolbar: {
         left: 'prev,next today',
         center: 'title',
         right: 'dayGridMonth,timeGridWeek,timeGridDay'
       },
+      dayHeaderFormat: { weekday: 'short', day: 'numeric', month: 'short' },
       buttonText: {
         today: '今日',
         month: '月',
@@ -1079,226 +1950,449 @@ body {
       },
       slotMinTime: '10:00:00',
       slotMaxTime: '21:00:00',
-      slotDuration: '00:10:00', // 10分間隔に変更
+      slotDuration: '00:10:00', // 10分間隔
+      slotLabelInterval: '00:30:00', // ラベルは30分間隔
+      snapDuration: '00:10:00', // スナップも10分間隔
+      slotMinWidth: 60,
       allDaySlot: false,
       selectable: true,
       editable: true,
       nowIndicator: true,
-      eventDisplay: 'block', // イベントをブロック表示にして高さを制御
-      eventMinHeight: 25, // 最小高さを増加
-      dayHeaderFormat: { weekday: 'short', day: 'numeric', month: 'short' }, // ヘッダー形式を改善
-      slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false }, // 時間表示を改善
-    
-    // タイムゾーン処理の設定
-    eventTimeFormat: {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-      timeZone: 'Asia/Tokyo'  // 表示時も東京時間を明示
-    },
-    
-    // イベント処理
-    eventDrop: function(info) {
-      console.log('🔄 Event dropped:', info.event);
-      updateReservationTime(info.event);
-    },
-    
-    eventResize: function(info) {
-      console.log('📏 Event resized:', info.event);
-      updateReservationTime(info.event);
-    },
-    
-    eventClick: function(info) {
-      openReservationModal(info.event);
-    },
-    
-    select: function(info) {
-      console.log('🔍 Raw select info:', info);
+      eventDisplay: 'block',
+      eventMinHeight: 15,
+      eventMinWidth: 0,
+      slotEventOverlap: false,
+      slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
       
-      // TimeWithZoneオブジェクトの場合は適切なメソッドを使用
-      const startTime = info.start;
-      const endTime = info.end;
+      eventTimeFormat: {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: 'Asia/Tokyo'
+      },
       
-      // 時間と分を取得（TimeWithZone対応）
-      const startHour = startTime.getHours ? startTime.getHours() : startTime.hour;
-      const startMinute = startTime.getMinutes ? startTime.getMinutes() : startTime.min;
-      const endHour = endTime.getHours ? endTime.getHours() : endTime.hour;
-      const endMinute = endTime.getMinutes ? endTime.getMinutes() : endTime.min;
+      // イベント処理（既存のまま）
+      eventDrop: function(info) {
+        console.log('🔄 Event dropped:', info.event);
+        updateReservationTime(info.event);
+      },
       
-      console.log('🔍 Start time details:', {
-        start: startTime,
-        hours: startHour,
-        minutes: startMinute,
-        toString: startTime.toString()
-      });
+      eventResize: function(info) {
+        console.log('📏 Event resized:', info.event);
+        updateReservationTime(info.event);
+      },
       
-      // 営業時間外の選択をチェック
-      if (startHour < 10 || startHour >= 21) {
-        console.log('❌ Selected time outside business hours:', startHour);
-        showMessage('営業時間外です。10:00から21:00の間で選択してください', 'warning');
-        return;
-      }
+      eventClick: function(info) {
+        openReservationModal(info.event);
+      },
       
-      // 選択された時間幅を考慮した営業時間チェック
-      const selectionDuration = (endTime - startTime) / (1000 * 60); // 分単位
+
       
-      console.log('🕐 Selection time check:', {
-        startHour,
-        endHour,
-        endMinute,
-        selectionDuration,
-        businessEnd: '21:00'
-      });
-      
-      if (endHour > 21 || (endHour === 21 && endMinute > 0)) {
-        console.log('❌ Selection extends beyond business hours');
-        showMessage(`この時間帯は営業時間外になります。終了時刻: ${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`, 'warning');
-        return;
-      }
-      
-      // 🔧 修正: openNewReservationModal を呼び出し
-      openNewReservationModal(info.start, info.end);
-    },
-    
-    // イベントレンダリングのカスタマイズ
-    eventContent: function(arg) {
-      const event = arg.event;
-      const extendedProps = event.extendedProps;
-      
-      // イベントの実際の時間幅を計算
-      const eventStart = new Date(event.start);
-      const eventEnd = new Date(event.end);
-      const actualDurationMinutes = (eventEnd - eventStart) / (1000 * 60);
-      
-      console.log(`🎨 Rendering event ${event.id}:`, {
-        title: event.title,
-        start: event.start,
-        end: event.end,
-        actualDurationMinutes: Math.round(actualDurationMinutes),
-        extendedProps: extendedProps
-      });
-      
-      // インターバルがある場合はタブ形式で表示
-      if (extendedProps.has_interval && extendedProps.interval_duration > 0) {
-        const courseDuration = extendedProps.course_duration; // 分単位
-        const intervalDuration = extendedProps.interval_duration; // 分単位
-        const totalDuration = courseDuration + intervalDuration; // 手動で計算
+      select: function(info) {
+        // 既存のselect処理をそのまま使用
+        console.log('🔍 Raw select info:', info);
         
-        console.log(`🔍 Duration details for event ${event.id}:`, {
-          courseDuration,
-          intervalDuration,
-          totalDuration,
-          backendTotalDuration: extendedProps.total_duration,
-          hasInterval: extendedProps.has_interval,
-          intervalDurationFromProps: extendedProps.interval_duration
-        });
+        const startTime = info.start;
+        const endTime = info.end;
         
-        // タブの高さを計算（時間の比率に基づく）
-        const courseHeight = Math.round((courseDuration / totalDuration) * 100);
-        const intervalHeight = Math.round((intervalDuration / totalDuration) * 100);
+        const startHour = startTime.getHours ? startTime.getHours() : startTime.hour;
+        const startMinute = startTime.getMinutes ? startTime.getMinutes() : startTime.min;
+        const endHour = endTime.getHours ? endTime.getHours() : endTime.hour;
+        const endMinute = endTime.getMinutes ? endTime.getMinutes() : endTime.min;
         
-        console.log(`📊 Tab calculation for event ${event.id}:`, {
-          courseDuration,
-          intervalDuration,
-          totalDuration,
-          courseHeight: `${courseHeight}%`,
-          intervalHeight: `${intervalHeight}%`
-        });
+        if (startHour < 10 || startHour >= 21) {
+          console.log('❌ Selected time outside business hours:', startHour);
+          showMessage('営業時間外です。10:00から21:00の間で選択してください', 'warning');
+      return;
+    }
+    
+        const selectionDuration = (endTime - startTime) / (1000 * 60);
         
-        const intervalType = extendedProps.is_individual_interval ? 'individual' : 'system';
+        if (endHour > 21 || (endHour === 21 && endMinute > 0)) {
+          console.log('❌ Selection extends beyond business hours');
+          showMessage(`この時間帯は営業時間外になります。終了時刻: ${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`, 'warning');
+      return;
+    }
+    
+        openNewReservationModal(info.start, info.end);
+      },
+      
+      // 🔧 完全修正：eventContentで全コースに対応
+      eventContent: function(arg) {
+        const event = arg.event;
+        const extendedProps = event.extendedProps;
         
-        return {
-          html: `
-            <div class="event-tabs" style="height: 100%; display: flex; flex-direction: column;">
-              <div class="event-tab course" style="
-                height: ${courseHeight}%; 
-                flex: none; 
+        // イベントの実際の時間幅を計算
+        const eventStart = new Date(event.start);
+        const eventEnd = new Date(event.end);
+        const actualDurationMinutes = Math.round((eventEnd - eventStart) / (1000 * 60));
+        
+        // 詳細ログ
+        const courseDuration = extendedProps.course_duration || 60;
+        const intervalDuration = extendedProps.interval_duration || 0;
+        const totalExpected = courseDuration + intervalDuration;
+        
+        console.log(`🎨 Rendering event ${event.id}:`);
+        console.log(`  Title: ${event.title}`);
+        console.log(`  Course: ${courseDuration}分, Interval: ${intervalDuration}分`);
+        console.log(`  Total expected: ${totalExpected}分`);
+        console.log(`  Actual duration: ${actualDurationMinutes}分`);
+        console.log(`  Slots needed: ${actualDurationMinutes / 10}`);
+        console.log(`  Has interval: ${extendedProps.has_interval}`);
+        console.log(`  Interval type: ${extendedProps.is_individual_interval ? 'Individual' : 'System'}`);
+        
+        // インターバルがある場合はタブ形式で表示
+        if (extendedProps.has_interval && intervalDuration > 0) {
+          const intervalType = extendedProps.is_individual_interval ? 'individual' : 'system';
+          
+          // flexベースでの比率計算
+          const courseRatio = courseDuration;
+          const intervalRatio = intervalDuration;
+          
+          console.log(`📊 Tab ratios for event ${event.id}:`);
+          console.log(`  Course flex: ${courseRatio} (${courseDuration}分)`);
+          console.log(`  Interval flex: ${intervalRatio} (${intervalDuration}分)`);
+          console.log(`  Ratio: ${courseRatio}:${intervalRatio}`);
+          
+          return {
+            html: `
+              <div class="event-tab-container" style="
+                height: 100%; 
+                display: flex; 
+                flex-direction: column;
+                width: 100%;
+              ">
+                <div class="event-tab course" style="
+                  flex: ${courseRatio}; 
+                  display: flex; 
+                  align-items: center; 
+                  justify-content: center;
+                  padding: 2px 4px;
+                  font-size: 0.8rem;
+                  font-weight: 600;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+                  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+                  background: inherit;
+                  color: inherit;
+                ">
+                  ${event.title}
+                </div>
+                <div class="event-tab interval ${intervalType}" style="
+                  flex: ${intervalRatio}; 
+                  display: flex; 
+                  align-items: center; 
+                  justify-content: center;
+                  padding: 2px 4px;
+                  font-size: 0.75rem;
+                  font-weight: 500;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+                  background-color: ${intervalType === 'individual' ? '#fd7e14' : '#6c757d'};
+                  color: white;
+                ">
+                  整理${intervalDuration}分
+                </div>
+              </div>
+            `
+          };
+        } else {
+          // インターバルなしの場合は通常表示
+          return {
+            html: `
+              <div style="
+                height: 100%; 
                 display: flex; 
                 align-items: center; 
-                justify-content: center; 
-                padding: 2px 4px; 
-                font-size: 0.8rem; 
-                font-weight: 500; 
-                text-align: center; 
-                border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+                justify-content: center;
+                padding: 4px;
+                font-size: 0.85rem;
+                font-weight: 600;
                 overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
               ">
                 ${event.title}
               </div>
-              <div class="event-tab interval ${intervalType}" style="
-                height: ${intervalHeight}%; 
-                flex: none; 
-                display: flex; 
-                align-items: center; 
-                justify-content: center; 
-                padding: 2px 4px; 
-                font-size: 0.8rem; 
-                font-weight: 500; 
-                text-align: center;
-                background-color: ${intervalType === 'individual' ? '#fd7e14' : '#6c757d'};
-                color: white;
-                overflow: hidden;
-              ">
-                整理${intervalDuration}分
-              </div>
-            </div>
-          `
-        };
-      } else {
-        // インターバルがない場合は通常表示
-        return {
-          html: `<div class="fc-event-main-frame">
-            <div class="fc-event-title-container">
-              <div class="fc-event-title fc-sticky">${event.title}</div>
-            </div>
-          </div>`
-        };
-      }
-    },
-    
-    // イベントデータの取得
-    events: function(info, successCallback, failureCallback) {
-      console.log('🔍 Fetching events for:', info.startStr, 'to', info.endStr);
+            `
+          };
+        }
+      },
       
-      fetch('/admin/reservations.json', {
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
+      // 🔧 重要：eventDidMountで全コースの高さを正確に設定
+      eventDidMount: function(info) {
+        const event = info.event;
+        const element = info.el;
+        const extendedProps = event.extendedProps;
+        
+        // イベントの実際の時間幅を計算
+        const eventStart = new Date(event.start);
+        const eventEnd = new Date(event.end);
+        const actualDurationMinutes = Math.round((eventEnd - eventStart) / (1000 * 60));
+        
+        // data属性を設定してCSSの高さ指定を有効にする
+        element.setAttribute('data-duration', actualDurationMinutes);
+        
+        // イベントの高さを正確に設定
+        const slotHeight = 30; // 10分間隔のスロット高さ（コンパクト化）
+        const expectedHeight = (actualDurationMinutes / 10) * slotHeight;
+        element.style.height = `${expectedHeight}px`;
+        element.style.minHeight = `${expectedHeight}px`;
+        element.style.maxHeight = `${expectedHeight}px`;
+        element.style.setProperty('--duration', actualDurationMinutes);
+        
+        // デバッグ用ログ
+        console.log(`📏 Event ${event.id} height calculation:`);
+        console.log(`  Duration: ${actualDurationMinutes}分`);
+        console.log(`  Expected height: ${expectedHeight}px`);
+        console.log(`  Actual element height: ${element.offsetHeight}px`);
+        
+        // インターバル情報をdata属性として追加
+        const courseDuration = extendedProps.course_duration || 60;
+        const intervalDuration = extendedProps.interval_duration || 0;
+        const intervalType = extendedProps.is_individual_interval ? '個別' : 'システム';
+        
+        if (intervalDuration > 0) {
+          element.setAttribute('data-interval-info', 
+            `${courseDuration}分 + ${intervalType}${intervalDuration}分 = ${actualDurationMinutes}分`);
         }
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(events => {
-        console.log('✅ Events loaded:', events.length);
-        successCallback(events);
-      })
-      .catch(error => {
-        console.error('❌ Error loading events:', error);
-        failureCallback(error);
-      });
-    }
-  });
+        
+        // 10分間隔での正確なスロット数を計算
+        const slots = actualDurationMinutes / 10;
+        
+        console.log(`📏 Mounting event ${event.id}:`);
+        console.log(`  Course: ${courseDuration}分`);
+        console.log(`  Interval: ${intervalDuration}分 (${intervalType})`);
+        console.log(`  Total: ${actualDurationMinutes}分`);
+        console.log(`  Slots: ${slots}`);
+        console.log(`  Data attribute: data-duration="${actualDurationMinutes}"`);
+        
+        // スロット高さを取得して高さを調整
+        setTimeout(() => {
+          const timeGridSlots = document.querySelectorAll('.fc-timegrid-slot');
+          if (timeGridSlots.length > 0) {
+                         const slotHeight = timeGridSlots[0].offsetHeight;
+             const expectedHeight = Math.round(slots * slotHeight);
+             
+             // 30pxベースでの高さ計算も追加
+             const baseSlotHeight = 30; // 新しいベース高さ
+             const expectedHeight30px = Math.round(slots * baseSlotHeight);
+            
+            console.log(`📐 Height calculation for event ${event.id}:`);
+            console.log(`  Slot height: ${slotHeight}px`);
+            console.log(`  Slots needed: ${slots}`);
+            console.log(`  Expected height: ${expectedHeight}px`);
+            console.log(`  CSS rule height: ${getComputedStyle(element).height}`);
+            
+            // JavaScript でも高さを設定（CSSと併用）
+            element.style.setProperty('height', `${expectedHeight}px`, 'important');
+            element.style.setProperty('min-height', `${expectedHeight}px`, 'important');
+            element.style.setProperty('max-height', `${expectedHeight}px`, 'important');
+            
+            // height-calculated クラスを追加（アニメーション効果）
+            element.classList.add('height-calculated');
+            
+            // タブコンテナも調整
+            const tabContainer = element.querySelector('.event-tab-container');
+            if (tabContainer) {
+              tabContainer.style.setProperty('height', `${expectedHeight}px`, 'important');
+              tabContainer.style.setProperty('min-height', `${expectedHeight}px`, 'important');
+            }
+            
+            // 各コース+インターバル組み合わせの識別と表示
+            const courseIntervalMap = {
+              // 40分コース系
+              40: { course: '40分コース', interval: 'なし', description: '40分コースのみ' },
+              45: { course: '40分コース', interval: '5分', description: '40分コース + 5分インターバル' },
+              50: { course: '40分コース', interval: '10分', description: '40分コース + 10分インターバル' },
+              55: { course: '40分コース', interval: '15分', description: '40分コース + 15分インターバル' },
+              
+              // 60分コース系
+              60: { course: '60分コース', interval: 'なし', description: '60分コースのみ' },
+              65: { course: '60分コース', interval: '5分', description: '60分コース + 5分インターバル' },
+              70: { course: '60分コース', interval: '10分', description: '60分コース + 10分インターバル' },
+              75: { course: '60分コース', interval: '15分', description: '60分コース + 15分インターバル' },
+              80: { course: '60分コース', interval: '20分', description: '60分コース + 20分インターバル' },
+              
+              // 80分コース系
+              80: { course: '80分コース', interval: 'なし', description: '80分コースのみ' },
+              85: { course: '80分コース', interval: '5分', description: '80分コース + 5分インターバル' },
+              90: { course: '80分コース', interval: '10分', description: '80分コース + 10分インターバル' },
+              95: { course: '80分コース', interval: '15分', description: '80分コース + 15分インターバル' },
+              100: { course: '80分コース', interval: '20分', description: '80分コース + 20分インターバル' }
+            };
+            
+            const combinationInfo = courseIntervalMap[actualDurationMinutes];
+            if (combinationInfo) {
+              console.log(`🎯 ${combinationInfo.description}:`);
+              console.log(`  Height: ${expectedHeight}px (${slots}スロット)`);
+              console.log(`  CSS data-duration: [data-duration="${actualDurationMinutes}"]`);
+            } else {
+              console.log(`🎯 カスタム組み合わせ (${actualDurationMinutes}分):`);
+              console.log(`  Height: ${expectedHeight}px (${slots}スロット)`);
+            }
+            
+            // 高さ設定の最終確認
+            setTimeout(() => {
+              const finalHeight = element.offsetHeight;
+              const heightDiff = Math.abs(finalHeight - expectedHeight);
+              
+              if (heightDiff > 5) {
+                console.warn(`⚠️ Height adjustment failed for event ${event.id}:`);
+                console.warn(`  Expected: ${expectedHeight}px, Actual: ${finalHeight}px`);
+                console.warn(`  Difference: ${heightDiff}px`);
+                console.warn(`  Duration: ${actualDurationMinutes}分 (${slots}スロット)`);
+                
+                // 失敗した場合は再度強制設定
+                element.style.setProperty('height', `${expectedHeight}px`, 'important');
+              } else {
+                const combination = courseIntervalMap[actualDurationMinutes]?.description || 
+                                  `${actualDurationMinutes}分カスタム`;
+                console.log(`✅ ${combination} correctly displayed: ${finalHeight}px`);
+              }
+            }, 200);
+          }
+        }, 100);
+      },
+      
+      // 🔧 イベントデータの詳細検証
+      events: function(info, successCallback, failureCallback) {
+        console.log('🔍 Fetching events for:', info.startStr, 'to', info.endStr);
+        
+        fetch('/admin/reservations.json', {
+      headers: {
+        'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+    })
+    .then(response => {
+      if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+        .then(events => {
+          console.log('✅ Events loaded:', events.length);
+          
+          // 🎯 全コース組み合わせの検証
+          console.log('📊 Event duration analysis:');
+          
+          const durationStats = {};
+          events.forEach((event, index) => {
+            const startTime = new Date(event.start);
+            const endTime = new Date(event.end);
+            const actualDuration = Math.round((endTime - startTime) / (1000 * 60));
+            
+            const courseDuration = event.extendedProps?.course_duration || 0;
+            const intervalDuration = event.extendedProps?.interval_duration || 0;
+            const expectedDuration = courseDuration + intervalDuration;
+            
+            // 統計を集計
+            if (!durationStats[actualDuration]) {
+              durationStats[actualDuration] = {
+                count: 0,
+                examples: [],
+                slots: actualDuration / 10
+              };
+            }
+            durationStats[actualDuration].count++;
+            durationStats[actualDuration].examples.push({
+              id: event.id,
+              course: courseDuration,
+              interval: intervalDuration,
+              title: event.title
+            });
+            
+            console.log(`🎯 Event ${event.id}: ${courseDuration}分+${intervalDuration}分=${actualDuration}分 (${actualDuration/10}スロット)`);
+          });
+          
+          // 統計サマリー
+          console.log('📈 Duration statistics:');
+          Object.entries(durationStats).sort(([a], [b]) => Number(a) - Number(b)).forEach(([duration, stats]) => {
+            console.log(`  ${duration}分 (${stats.slots}スロット): ${stats.count}件`);
+            if (stats.examples.length <= 3) {
+              stats.examples.forEach(ex => {
+                console.log(`    - ${ex.title} (${ex.course}分+${ex.interval}分)`);
+              });
+            }
+          });
+          
+          successCallback(events);
+    })
+    .catch(error => {
+          console.error('❌ Error loading events:', error);
+          failureCallback(error);
+        });
+      }
+    });
   
-  console.log('🎨 Rendering calendar...');
-  calendar.render();
-  console.log('✅ Calendar rendered successfully');
-  
-  // インターバル情報を更新
-  function updateIntervalInfo(extendedProps) {
-    const intervalInfo = document.getElementById('currentIntervalInfo');
-    const individualInterval = extendedProps?.individual_interval_minutes;
-    const effectiveInterval = extendedProps?.effective_interval_minutes || 15;
+    console.log('🎨 Rendering calendars...');
     
-    if (individualInterval !== null && individualInterval !== undefined) {
-      intervalInfo.innerHTML = `<span class="badge bg-success">個別設定: ${individualInterval}分</span>`;
+    // 両方のカレンダーをレンダリング
+    monthCalendar.render();
+    calendar.render();
+    
+    console.log('✅ Calendars rendered successfully');
+    
+
+
+    // レンダリング完了後にスロット高さを確認
+    setTimeout(() => {
+      console.log('🔍 Final height validation for all events:');
+      
+      const allEvents = document.querySelectorAll('.fc-timegrid-event[data-duration]');
+      const heightStats = {};
+      
+      allEvents.forEach((element, index) => {
+        const duration = parseInt(element.getAttribute('data-duration'));
+        const actualHeight = element.offsetHeight;
+        const expectedSlots = duration / 10;
+        const slotHeight = 30; // ベースは30px（コンパクト化）
+        const expectedHeight = expectedSlots * slotHeight;
+        
+        if (!heightStats[duration]) {
+          heightStats[duration] = {
+            count: 0,
+            heights: [],
+            expectedHeight,
+            slots: expectedSlots
+          };
+        }
+        
+        heightStats[duration].count++;
+        heightStats[duration].heights.push(actualHeight);
+      });
+      
+      console.log('📊 Height validation summary:');
+      Object.entries(heightStats)
+        .sort(([a], [b]) => Number(a) - Number(b))
+        .forEach(([duration, stats]) => {
+          const avgHeight = Math.round(stats.heights.reduce((a, b) => a + b, 0) / stats.heights.length);
+          const isCorrect = Math.abs(avgHeight - stats.expectedHeight) <= 5;
+          const status = isCorrect ? '✅' : '❌';
+          
+          console.log(`  ${status} ${duration}分 (${stats.slots}スロット): ${stats.count}件`);
+          console.log(`    Expected: ${stats.expectedHeight}px, Average: ${avgHeight}px`);
+          
+          if (!isCorrect) {
+            console.warn(`    Height mismatch detected for ${duration}分 events!`);
+          }
+        });
+    }, 2000);
+  // インターバル情報を更新
+    function updateIntervalInfo(extendedProps) {
+      const intervalInfo = document.getElementById('currentIntervalInfo');
+      const individualInterval = extendedProps?.individual_interval_minutes;
+      const effectiveInterval = extendedProps?.effective_interval_minutes || 15;
+      
+      if (individualInterval !== null && individualInterval !== undefined) {
+        intervalInfo.innerHTML = `<span class="badge bg-success">個別設定: ${individualInterval}分</span>`;
     } else {
-      intervalInfo.innerHTML = `<span class="badge bg-primary">システム設定: ${effectiveInterval}分</span>`;
+        intervalInfo.innerHTML = `<span class="badge bg-primary">システム設定: ${effectiveInterval}分</span>`;
+      }
     }
-  }
 
   // 初期データ読み込み（エラーハンドリング付き）
   try {
@@ -1328,18 +2422,125 @@ body {
       }, 1000); // カレンダーの読み込みを待つ
     }
     
-    // ナビゲーションボタン
-    document.getElementById('prevBtn').addEventListener('click', () => {
-      calendar.prev();
-    });
+    // 日付クリック時の予約表示関数
+    function showDayReservations(date, reservations) {
+      const dateStr = date.toLocaleDateString('ja-JP', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        weekday: 'long'
+      });
+      
+      let html = `
+        <div class="modal fade" id="dayReservationsModal" tabindex="-1">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">
+                  <i class="fas fa-calendar-day me-2"></i>${dateStr}の予約一覧
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <div class="table-responsive">
+                  <table class="table table-hover">
+                    <thead class="table-light">
+                      <tr>
+                        <th>時間</th>
+                        <th>顧客名</th>
+                        <th>コース</th>
+                        <th>ステータス</th>
+                        <th>操作</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+      `;
+      
+      reservations.forEach(reservation => {
+        const startTime = new Date(reservation.start).toLocaleTimeString('ja-JP', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        });
+        const endTime = new Date(reservation.end).toLocaleTimeString('ja-JP', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        });
+        
+        const statusBadge = getStatusBadge(reservation.status);
+        
+        html += `
+          <tr>
+            <td><strong>${startTime} - ${endTime}</strong></td>
+            <td>${reservation.customer_name || '未設定'}</td>
+            <td>${reservation.course || '未設定'}</td>
+            <td>${statusBadge}</td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary" onclick="editReservation(${reservation.id})">
+                <i class="fas fa-edit"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+      
+      html += `
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
+                <button type="button" class="btn btn-primary" onclick="openNewReservationModal()">
+                  <i class="fas fa-plus me-1"></i>新規予約
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // 既存のモーダルを削除してから新しいモーダルを追加
+      const existingModal = document.getElementById('dayReservationsModal');
+      if (existingModal) {
+        existingModal.remove();
+      }
+      
+      document.body.insertAdjacentHTML('beforeend', html);
+      
+      const modal = new bootstrap.Modal(document.getElementById('dayReservationsModal'));
+      modal.show();
+    }
     
-    document.getElementById('nextBtn').addEventListener('click', () => {
-      calendar.next();
-    });
+    // ステータスバッジ生成関数
+    function getStatusBadge(status) {
+      const badges = {
+        'tentative': '<span class="badge bg-warning">仮予約</span>',
+        'confirmed': '<span class="badge bg-success">確定</span>',
+        'cancelled': '<span class="badge bg-danger">キャンセル</span>',
+        'completed': '<span class="badge bg-info">完了</span>',
+        'no_show': '<span class="badge bg-secondary">無断キャンセル</span>'
+      };
+      return badges[status] || '<span class="badge bg-secondary">未設定</span>';
+    }
     
-    document.getElementById('todayBtn').addEventListener('click', () => {
-      calendar.today();
-    });
+    // 予約編集関数
+    function editReservation(reservationId) {
+      // モーダルを閉じる
+      const modal = bootstrap.Modal.getInstance(document.getElementById('dayReservationsModal'));
+      if (modal) {
+        modal.hide();
+      }
+      
+      // カレンダーで該当のイベントを開く
+      setTimeout(() => {
+        const event = calendar.getEventById(reservationId.toString());
+        if (event) {
+          openReservationModal(event);
+        } else {
+          showMessage('予約が見つかりませんでした', 'warning');
+        }
+      }, 300);
+    }
     
     // 新規予約ボタン
     document.getElementById('newReservationBtn').addEventListener('click', () => {
@@ -1414,8 +2615,8 @@ body {
     })
     .then(data => {
         displaySearchResults(data.users, query);
-    })
-    .catch(error => {
+      })
+      .catch(error => {
         console.error('顧客検索エラー:', error);
         hideSearchResults();
       });
@@ -2057,7 +3258,7 @@ body {
       })
       .finally(() => {
         // ボタンを元に戻す
-        saveBtn.disabled = false;
+      saveBtn.disabled = false;
         saveBtn.innerHTML = originalText;
       });
     });
@@ -2302,5 +3503,5 @@ body {
     font-size: 10px;
     white-space: nowrap;
     z-index: 1000;
-  }
+}
 </style>

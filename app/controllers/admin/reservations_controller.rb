@@ -5,7 +5,6 @@ class Admin::ReservationsController < ApplicationController
   before_action :set_reservation, only: [:show, :edit, :update, :destroy]
 
   def index
-    # 今日の予約を取得
     @today_reservations = Reservation.includes(:user)
       .where(start_time: Time.current.beginning_of_day..Time.current.end_of_day)
       .where.not(status: :cancelled)
@@ -15,12 +14,13 @@ class Admin::ReservationsController < ApplicationController
       format.html
       format.json do
         if request.format.json?
-          Rails.logger.info "🔍 JSON request received"
+          Rails.logger.info "🔍 JSON request received for calendar events"
 
           begin
             # システム設定を取得
             @settings = ApplicationSetting.current
-            Rails.logger.info "✅ ApplicationSetting loaded"
+            system_interval = @settings&.reservation_interval_minutes || 15
+            Rails.logger.info "✅ System interval: #{system_interval} minutes"
             
             # 予約を取得（キャンセル済みは除外）
           reservations = Reservation.includes(:user)
@@ -38,89 +38,108 @@ class Admin::ReservationsController < ApplicationController
               # 顧客名を取得
               customer_name = reservation.name.present? ? reservation.name : reservation.user&.name || '未設定'
               
-              # 🔧 デバッグ: 時間の詳細を確認
-              Rails.logger.info "🕐 Raw DB times for reservation #{reservation.id}:"
-              Rails.logger.info "  start_time (raw): #{reservation.start_time}"
-              Rails.logger.info "  end_time (raw): #{reservation.end_time}"
-              Rails.logger.info "  start_time.class: #{reservation.start_time.class}"
-              Rails.logger.info "  Time.zone: #{Time.zone}"
-              Rails.logger.info "  Rails.application.config.time_zone: #{Rails.application.config.time_zone}"
-              
-              # JST時間として処理（複数の方法を試す）
+              # JST時間として処理
               start_in_jst = reservation.start_time.in_time_zone('Asia/Tokyo')
-              end_in_jst = reservation.end_time.in_time_zone('Asia/Tokyo')
               
-              Rails.logger.info "  start_in_jst: #{start_in_jst}"
-              Rails.logger.info "  end_in_jst: #{end_in_jst}"
+              # 🔧 重要：コース時間を正確に抽出
+              course_duration_minutes = extract_course_duration(reservation.course)
               
-              # 🔧 修正: タイムゾーン情報なしのISO8601形式で送信
-              # FullCalendarがローカル時間として解釈するように
+              # 🔧 重要：インターバル時間を正確に取得
+              # 個別設定があればそれを使用、なければシステム設定
+              interval_duration_minutes = if reservation.individual_interval_minutes.present?
+                reservation.individual_interval_minutes
+              else
+                system_interval
+              end
+              
+              # 🔧 重要：合計時間を計算
+              total_duration_minutes = course_duration_minutes + interval_duration_minutes
+              
+              # 🔧 重要：終了時間を開始時間から計算（DBの値は使わない）
+              calculated_end_time = start_in_jst + total_duration_minutes.minutes
+              
+              Rails.logger.info "🕐 Complete time calculation for reservation #{reservation.id}:"
+              Rails.logger.info "  course_string: '#{reservation.course}'"
+              Rails.logger.info "  course_duration: #{course_duration_minutes} minutes"
+              Rails.logger.info "  individual_interval: #{reservation.individual_interval_minutes || 'nil (using system)'}"
+              Rails.logger.info "  interval_duration: #{interval_duration_minutes} minutes"
+              Rails.logger.info "  total_duration: #{total_duration_minutes} minutes"
+              Rails.logger.info "  start_time: #{start_in_jst}"
+              Rails.logger.info "  calculated_end: #{calculated_end_time}"
+              Rails.logger.info "  db_end_time: #{reservation.end_time&.in_time_zone('Asia/Tokyo')}"
+              Rails.logger.info "  slots_needed: #{total_duration_minutes / 10.0} (10min intervals)"
+              
+              # FullCalendar用のISO文字列（タイムゾーン情報なし）
               start_iso = start_in_jst.strftime('%Y-%m-%dT%H:%M:%S')
-              end_iso = end_in_jst.strftime('%Y-%m-%dT%H:%M:%S')
+              end_iso = calculated_end_time.strftime('%Y-%m-%dT%H:%M:%S')
               
-              Rails.logger.info "🕐 Sending to FullCalendar:"
-              Rails.logger.info "  start_iso: #{start_iso}"
-              Rails.logger.info "  end_iso: #{end_iso}"
+              # インターバル情報
+              has_interval = interval_duration_minutes > 0
+              is_individual_interval = reservation.individual_interval_minutes.present?
               
-              # タブ形式のイベントデータを生成
-              effective_interval = reservation.effective_interval_minutes
-              has_interval = effective_interval > 0
-              is_individual = has_interval ? reservation.has_individual_interval? : false
+              # ステータスに応じた色設定
+              colors = get_status_colors(reservation.status)
               
-              # コースの実際の時間を計算（コース名から時間を抽出）
-              course_minutes = reservation.extract_course_minutes(reservation.course)
-              Rails.logger.info "🕐 Course calculation for reservation #{reservation.id}:"
-              Rails.logger.info "  Course name: #{reservation.course}"
-              Rails.logger.info "  Extracted minutes: #{course_minutes}"
-              
-              # 全体の時間を計算（コース時間 + インターバル時間）
-              total_minutes = course_minutes + effective_interval
-              total_end_time = start_in_jst + total_minutes.minutes
-              total_end_iso = total_end_time.strftime('%Y-%m-%dT%H:%M:%S')
-              
-              Rails.logger.info "  Total duration: #{total_minutes} minutes"
-              Rails.logger.info "  Total end time: #{total_end_iso}"
-              
+              # 🎯 重要：イベントオブジェクトを作成（正確な時間データ付き）
               event = {
-                id: reservation.id,
+                id: reservation.id.to_s,
                 title: "#{customer_name} - #{reservation.course}",
                 start: start_iso,
-                end: total_end_iso,  # 全体の時間（コース + インターバル）
-                backgroundColor: getEventColor(reservation.status),
-                borderColor: getEventColor(reservation.status),
-                textColor: 'white',
-                className: "reservation-with-tabs #{reservation.status}",
-                extendedProps: {
-                  status: reservation.status,
+                end: end_iso,  # 📅 計算された正確な終了時間
+                backgroundColor: colors[:bg],
+                borderColor: colors[:border],
+                textColor: colors[:text] || 'white',
+                classNames: build_event_classes(reservation, has_interval),
+                      extendedProps: {
+                  type: 'reservation',
+                  customer_name: customer_name,
                   course: reservation.course,
-                  staff_id: reservation.user_id,
-                  memo: reservation.note,
-                  individual_interval_minutes: reservation.individual_interval_minutes,
-                  effective_interval_minutes: reservation.effective_interval_minutes,
-                  has_individual_interval: reservation.has_individual_interval?,
-                  interval_setting_type: reservation.interval_setting_type,
+                  course_duration: course_duration_minutes,
+                  interval_duration: interval_duration_minutes,
+                  total_duration: total_duration_minutes,
                   has_interval: has_interval,
-                  is_individual_interval: is_individual,
-                  course_duration: course_minutes,  # 分単位
-                  interval_duration: effective_interval,  # 分単位
-                  total_duration: total_minutes,  # 分単位
+                  is_individual_interval: is_individual_interval,
+                  effective_interval_minutes: interval_duration_minutes,
+                  individual_interval_minutes: reservation.individual_interval_minutes,
+                  system_interval_minutes: system_interval,
+                  status: reservation.status,
+                  note: reservation.note,
+                  cancellation_reason: reservation.cancellation_reason,
+                  # 計算検証用
+                  calculated_slots: total_duration_minutes / 10.0,
+                  expected_height_px: (total_duration_minutes / 10.0) * 40,
                   customer: {
-                    id: reservation.user_id,
+                    id: reservation.user&.id,
                     name: customer_name,
-                    kana: reservation.user&.respond_to?(:kana) ? reservation.user.kana : nil,
                     phone: reservation.user&.phone_number,
                     email: reservation.user&.email,
+                    kana: reservation.user&.respond_to?(:kana) ? reservation.user.kana : nil,
                     birth_date: reservation.user&.birth_date&.strftime('%Y-%m-%d')
                   }
                 }
               }
               
               events << event
-              Rails.logger.info "✅ Successfully processed reservation #{reservation.id} with tabs"
+              
+              # 🎯 各コースの組み合わせをログ出力
+              course_type = case course_duration_minutes
+              when 40 then "40分コース"
+              when 60 then "60分コース"  
+              when 80 then "80分コース"
+              else "不明(#{course_duration_minutes}分)"
+              end
+              
+              interval_type = is_individual_interval ? "個別#{interval_duration_minutes}分" : "システム#{interval_duration_minutes}分"
+              
+              Rails.logger.info "✅ Event created: #{course_type} + #{interval_type} = #{total_duration_minutes}分 (#{total_duration_minutes/10.0}スロット)"
             end
             
-            Rails.logger.info "✅ Successfully processed #{events.length} events"
-            Rails.logger.info "📤 Sample event data: #{events.first&.slice(:id, :title, :start, :end)}"
+            # 🎯 全体のサマリーログ
+            Rails.logger.info "📊 Event creation summary:"
+            events.group_by { |e| e[:extendedProps][:total_duration] }.each do |duration, events_group|
+              slots = duration / 10.0
+              Rails.logger.info "  #{duration}分 (#{slots}スロット): #{events_group.length}件"
+            end
             
             render json: events, content_type: 'application/json'
 
@@ -472,25 +491,23 @@ class Admin::ReservationsController < ApplicationController
     )
   end
 
-  def getEventColor(status)
-    case status
+  def get_status_colors(status)
+    case status.to_s
     when 'confirmed'
-      '#28a745'  # 緑 - 確定予約
+      { bg: '#28a745', border: '#1e7e34', text: 'white' }
     when 'tentative'
-      '#ffc107'  # 黄 - 仮予約
+      { bg: '#ffc107', border: '#e0a800', text: '#212529' }
     when 'cancelled'
-      '#dc3545'  # 赤 - キャンセル
+      { bg: '#dc3545', border: '#bd2130', text: 'white' }
     when 'completed'
-      '#6c757d'  # グレー - 完了
+      { bg: '#6f42c1', border: '#59359a', text: 'white' }
     when 'no_show'
-      '#fd7e14'  # オレンジ - 無断キャンセル
-    when 'break'
-      '#17a2b8'  # 青 - 休憩
+      { bg: '#6c757d', border: '#545b62', text: 'white' }
     else
-      '#007bff'  # デフォルト - 青
+      { bg: '#17a2b8', border: '#138496', text: 'white' }
     end
   end
-  
+
   def process_reservation_params(params)
     processed_params = params.permit(
       :name, :course, :status, :note, :user_id, :ticket_id,
@@ -544,6 +561,29 @@ class Admin::ReservationsController < ApplicationController
     processed_params
   end
 
+  def extract_course_duration(course_string)
+    return 60 unless course_string.present? # デフォルト
+    
+    case course_string.to_s.strip
+    when /40分/, '40分コース'
+      40
+    when /60分/, '60分コース'
+      60
+    when /80分/, '80分コース'
+      80
+    when /(\d+)分/ # 数字+分の形式
+      $1.to_i
+    else
+      Rails.logger.warn "⚠️ Unknown course format: '#{course_string}', defaulting to 60 minutes"
+      60
+    end
+  end
 
+  def build_event_classes(reservation, has_interval)
+    classes = ['fc-timegrid-event', reservation.status]
+    classes << 'has-interval' if has_interval
+    classes << 'individual-interval' if reservation.individual_interval_minutes.present?
+    classes
+  end
 
 end
