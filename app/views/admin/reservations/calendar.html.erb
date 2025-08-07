@@ -1,39 +1,58 @@
 <% content_for :title, "予約カレンダー - Mobilis" %>
 
 <div class="calendar-container">
-  <div class="calendar-header">
-<div class="container-fluid">
+  <div class="calendar-header" style="background-color: #ffffff !important; border-bottom: 1px solid #e9ecef !important; padding: 20px 0 !important;">
+<div class="container-fluid" style="padding-left: 30px !important; padding-right: 30px !important;">
       <div class="calendar-toolbar">
-                <!-- 小さな月カレンダーをタイトルの左側に配置 -->
-        <div class="calendar-mini-calendar">
-          <div id="monthCalendar" style="width: 140px; height: 140px;"></div>
-        </div>
-        
-        <div class="calendar-title">
-          <i class="fas fa-calendar-alt me-2"></i>予約カレンダー
-        </div>
-        
-        <div class="calendar-actions">
-          <div class="d-flex flex-column gap-2">
-            <a href="<%= admin_reservations_path %>" class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); border: none; box-shadow: 0 4px 8px rgba(0,0,0,0.15); font-weight: 600;">
-              <i class="fas fa-list me-2"></i>📋 今日の予約一覧
-            </a>
-            <button id="newReservationBtn" class="btn btn-success">
-              <i class="fas fa-plus me-1"></i>新規予約
-            </button>
-            <button class="btn btn-outline-danger btn-sm" onclick="openCancelledHistoryModal()">
-              <i class="fas fa-times-circle me-1"></i>キャンセル履歴
-            </button>
+        <!-- ヘッダー全体を整理された配置に -->
+        <div class="calendar-header-content" style="display: flex !important; justify-content: space-between !important; align-items: center !important; gap: 20px !important; width: 100% !important; padding: 20px 0 !important;">
+          <!-- 左側：タイトル -->
+          <div class="calendar-title-section" style="flex: 0 0 auto !important; min-width: 200px !important; text-align: left !important;">
+            <h1 class="calendar-title" style="text-align: left !important; margin: 0 !important; padding: 0 !important; font-size: 1.8rem !important; font-weight: 700 !important; color: #2c3e50 !important; display: block !important; width: auto !important; float: none !important;">
+              <i class="fas fa-calendar-alt me-2"></i>予約カレンダー
+            </h1>
+          </div>
+          
+          <!-- 中央：ミニカレンダー -->
+          <div class="calendar-mini-calendar" style="display: flex !important; flex-direction: column !important; flex: 0 0 auto !important; align-items: center !important;">
+            <!-- 年と月の表示とナビゲーション -->
+            <div class="mini-calendar-header">
+              <button id="prevMonthBtn" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <div id="currentMonthYear" class="mini-calendar-title">
+                <!-- 年と月がここに表示される -->
+              </div>
+              <button id="nextMonthBtn" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+            <div id="monthCalendar" style="width: 180px; height: 140px;"></div>
+          </div>
+          
+          <!-- 右側：アクションボタン -->
+          <div class="calendar-actions" style="flex: 0 0 auto !important; min-width: 200px !important; display: flex !important; gap: 10px !important; flex-wrap: wrap !important; justify-content: flex-end !important;">
+            <div class="d-flex flex-column gap-2">
+              <a href="<%= admin_reservations_path %>" class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); border: none; box-shadow: 0 4px 8px rgba(0,0,0,0.15); font-weight: 600;">
+                <i class="fas fa-list me-2"></i>📋 今日の予約一覧
+              </a>
+              <button id="newReservationBtn" class="btn btn-success">
+                <i class="fas fa-plus me-1"></i>新規予約
+              </button>
+              <button class="btn btn-outline-danger btn-sm" onclick="openCancelledHistoryModal()">
+                <i class="fas fa-times-circle me-1"></i>キャンセル履歴
+              </button>
+            </div>
           </div>
         </div>
     </div>
     </div>
   </div>
   
-  <div class="container-fluid">
+  <div class="container-fluid" style="margin-top: 20px; margin-bottom: 20px;">
     <div id="calendar"></div>
   </div>
-</div>
+</div>  
 
 <!-- 予約モーダル -->
 <div class="modal fade" id="reservationModal" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true">
@@ -310,104 +329,209 @@ body {
   position: relative;
 }
 
+/* ==============================================
+   現在時刻インジケーター
+   ============================================== */
+.fc-timegrid-now-indicator-line {
+  border-color: #dc3545 !important;
+  border-width: 3px 0 0 !important;
+  z-index: 5 !important;
+}
+
+.fc-timegrid-now-indicator-arrow {
+  border-color: #dc3545 !important;
+  border-width: 8px 0 8px 10px !important;
+  z-index: 5 !important;
+}
+
 .calendar-header {
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
   border-bottom: 3px solid #e9ecef;
-  padding: 20px 0;
   box-shadow: 0 4px 20px rgba(0,0,0,0.1);
 }
 
 /* ヘッダー内のミニカレンダーのスタイル */
+/* ミニカレンダー完全修正 - 週番号による日曜日幅拡大の根本解決 */
 .calendar-mini-calendar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 15px;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-right: 15px !important;
+         width: 200px !important;
+     min-width: 200px !important;
+     max-width: 200px !important;
 }
 
 .calendar-mini-calendar .fc {
-  font-size: 0.7rem !important;
-  border: none !important;
-  border-radius: 8px !important;
-  overflow: hidden !important;
-  background: white !important;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
-  padding: 4px !important;
+    font-size: 0.7rem !important;
+    border: none !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    background: white !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+         padding: 6px !important;
+    width: 100% !important;
+    height: auto !important;
 }
 
+/* 週番号要素の完全削除 - 全ての可能性をカバー */
+.calendar-mini-calendar .fc-daygrid-week-number,
+.calendar-mini-calendar [class*="week-number"],
+.calendar-mini-calendar [class*="week"],
+.calendar-mini-calendar .fc-scrollgrid col:first-child:not(.fc-day-sun):not([data-day]) {
+    display: none !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    visibility: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+}
+
+/* テーブル全体のリセット */
+.calendar-mini-calendar .fc-scrollgrid,
+.calendar-mini-calendar .fc-scrollgrid table {
+    width: 100% !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+}
+
+/* 全てのcolを強制的に7分割 */
+.calendar-mini-calendar .fc-scrollgrid colgroup {
+    width: 100% !important;
+}
+
+.calendar-mini-calendar .fc-scrollgrid col {
+    width: 14.2857% !important;
+    min-width: 14.2857% !important;
+    max-width: 14.2857% !important;
+}
+
+/* ヘッダーセルを強制的に等幅に */
+.calendar-mini-calendar .fc-col-header-cell {
+    display: table-cell !important;
+    width: 14.2857% !important;
+    min-width: 14.2857% !important;
+    max-width: 14.2857% !important;
+    background-color: #f8f9fa !important;
+    color: #666 !important;
+         font-size: 0.65rem !important;
+    font-weight: 600 !important;
+         height: 16px !important;
+     line-height: 16px !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.calendar-mini-calendar .fc-col-header-cell-cushion {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+}
+
+/* 日付セルを強制的に等幅に */
 .calendar-mini-calendar .fc-daygrid-day {
-  cursor: pointer;
-  transition: all 0.2s ease;
-  padding: 0px !important;
-  border: none !important;
-  min-height: 10px !important;
-  aspect-ratio: 1 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  border-radius: 3px !important;
-}
-
-.calendar-mini-calendar .fc-daygrid-day:hover {
-  background-color: #f0f7ff !important;
-}
-
-.calendar-mini-calendar .fc-daygrid-day.fc-day-today {
-  background-color: #007aff !important;
-  color: white !important;
-  font-weight: 600 !important;
-}
-
-.calendar-mini-calendar .fc-daygrid-day.fc-day-today:hover {
-  background-color: #0056cc !important;
-}
-
-.calendar-mini-calendar .fc-daygrid-day.fc-day-selected {
-  background-color: #e3f2fd !important;
-  color: #1976d2 !important;
-  font-weight: 500 !important;
-}
-
-.calendar-mini-calendar .fc-daygrid-day.fc-day-selected:hover {
-  background-color: #e3f2fd !important;
+    display: table-cell !important;
+    width: 14.2857% !important;
+    min-width: 14.2857% !important;
+    max-width: 14.2857% !important;
+         height: 20px !important;
+    line-height: 18px !important;
+    cursor: pointer !important;
+    position: relative !important;
+    border: 1px solid #e2e8f0 !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
 }
 
 .calendar-mini-calendar .fc-daygrid-day-number {
-  font-size: 0.55rem !important;
-  padding: 0px !important;
-  font-weight: 500 !important;
-  line-height: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    text-align: center !important;
+    vertical-align: middle !important;
 }
 
-.calendar-mini-calendar .fc-col-header-cell {
-  padding: 1px 0px !important;
-  font-size: 0.5rem !important;
-  font-weight: 500 !important;
-  background-color: transparent !important;
-  border: none !important;
-  min-height: 6px !important;
-  color: #666 !important;
+.calendar-mini-calendar .fc-daygrid-day:hover {
+    background-color: #f0f7ff !important;
 }
 
-.calendar-mini-calendar .fc-daygrid-day.fc-day-other {
-  color: #ccc !important;
+.calendar-mini-calendar .fc-daygrid-day.fc-day-today {
+    background-color: #007aff !important;
+    color: white !important;
 }
 
-/* 日曜日を赤色に */
-.calendar-mini-calendar .fc-col-header-cell:first-child,
-.calendar-mini-calendar .fc-daygrid-day:nth-child(7n+1) .fc-daygrid-day-number {
-  color: #ff3b30 !important;
-}
-
-/* 土曜日を青色に */
-.calendar-mini-calendar .fc-col-header-cell:last-child,
-.calendar-mini-calendar .fc-daygrid-day:nth-child(7n) .fc-daygrid-day-number {
-  color: #007aff !important;
-}
-
-/* 今日の日付は色を上書き */
 .calendar-mini-calendar .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
-  color: white !important;
+    text-decoration: none !important;
+}
+
+/* 日曜日の特別処理 */
+.calendar-mini-calendar .fc-col-header tr th:nth-child(1),
+.calendar-mini-calendar .fc-daygrid-body tr td:nth-child(1) {
+    width: 14.2857% !important;
+    min-width: 14.2857% !important;
+    max-width: 14.2857% !important;
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+}
+
+.calendar-mini-calendar .fc-col-header tr th:nth-child(1) .fc-col-header-cell-cushion,
+.calendar-mini-calendar .fc-daygrid-body tr td:nth-child(1) .fc-daygrid-day-number {
+    color: #ff3b30 !important;
+    text-decoration: none !important;
+}
+
+.calendar-mini-calendar .fc-col-header tr th:nth-child(7) .fc-col-header-cell-cushion,
+.calendar-mini-calendar .fc-daygrid-body tr td:nth-child(7) .fc-daygrid-day-number {
+    color: #007aff !important;
+    text-decoration: none !important;
+}
+
+.calendar-mini-calendar .fc-daygrid-day-events {
+    position: absolute !important;
+    left: -9999px !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    visibility: hidden !important;
+}
+
+/* 全ての日付番号と曜日のアンダーラインを削除 */
+.calendar-mini-calendar .fc-daygrid-day-number,
+.calendar-mini-calendar .fc-daygrid-day-number a,
+.calendar-mini-calendar .fc-daygrid-day-number span,
+.calendar-mini-calendar a.fc-daygrid-day-number,
+.calendar-mini-calendar .fc-daygrid-day a,
+.calendar-mini-calendar .fc-daygrid-day a:hover,
+.calendar-mini-calendar .fc-daygrid-day a:focus,
+.calendar-mini-calendar .fc-daygrid-day a:visited,
+.calendar-mini-calendar .fc-col-header-cell,
+.calendar-mini-calendar .fc-col-header-cell a,
+.calendar-mini-calendar .fc-col-header-cell span,
+.calendar-mini-calendar .fc-col-header-cell-cushion,
+.calendar-mini-calendar .fc-col-header-cell-cushion a,
+.calendar-mini-calendar .fc-col-header-cell-cushion span {
+    text-decoration: none !important;
+    text-decoration-line: none !important;
+    text-decoration-style: none !important;
+    text-decoration-color: none !important;
 }
 
 .calendar-toolbar {
@@ -415,10 +539,11 @@ body {
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0;
+  gap: 15px;
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 30px;
+  position: relative;
 }
 
 .calendar-nav {
@@ -426,21 +551,23 @@ body {
   gap: 15px;
   align-items: center;
   flex: 1;
-  margin-right: 0;
+  margin: 0;
 }
 
 .calendar-nav button {
   background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
   color: white;
   border: none;
-  padding: 12px 20px;
-  border-radius: 12px;
+  padding: 10px 16px;
+  border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
+  font-size: 0.9rem;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   position: relative;
   overflow: hidden;
+  min-width: 80px;
 }
 
 .calendar-nav button::before {
@@ -466,7 +593,7 @@ body {
 
 .calendar-title {
   font-size: 2.2rem;
-  font-weight: 800;
+  font-weight: 700;
   color: #1e293b;
   text-shadow: 0 2px 4px rgba(0,0,0,0.1);
   flex: 2;
@@ -477,6 +604,10 @@ body {
   background-clip: text;
   margin: 0;
   padding: 0;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
 }
 
 .calendar-actions {
@@ -492,14 +623,16 @@ body {
   background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
   color: white;
   border: none;
-  padding: 14px 28px;
-  border-radius: 12px;
+  padding: 10px 20px;
+  border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
+  font-size: 0.9rem;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   position: relative;
   overflow: hidden;
+  min-width: 100px;
 }
 
 .btn-new-reservation::before {
@@ -527,14 +660,16 @@ body {
   background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%);
   color: white;
   border: none;
-  padding: 12px 20px;
-  border-radius: 12px;
+  padding: 8px 16px;
+  border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
+  font-size: 0.85rem;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   position: relative;
   overflow: hidden;
+  min-width: 90px;
 }
 
 .btn-today-reservations::before {
@@ -562,14 +697,16 @@ body {
   background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
   color: white;
   border: none;
-  padding: 12px 20px;
-  border-radius: 12px;
+  padding: 8px 16px;
+  border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
+  font-size: 0.85rem;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   position: relative;
   overflow: hidden;
+  min-width: 90px;
 }
 
 .btn-cancellation-stats::before {
@@ -601,7 +738,7 @@ body {
   border-radius: 20px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.12);
   border: 2px solid #e2e8f0;
-  margin: 30px auto;
+  margin: 0px auto;
   max-width: 1400px;
   position: relative;
   overflow: hidden;
@@ -627,11 +764,25 @@ body {
 }
 
 .fc-toolbar {
-  padding: 25px 30px;
+  padding: 8px 0;
   border-bottom: 2px solid #f1f5f9;
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   position: relative;
   z-index: 2;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fc-toolbar-chunk {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  justify-content: center;
 }
 
 .fc-toolbar::after {
@@ -661,11 +812,12 @@ body {
   color: white !important;
   border-radius: 12px !important;
   font-weight: 600 !important;
-  padding: 12px 20px !important;
+  padding: 16px 20px !important;
   transition: all 0.3s ease !important;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
   position: relative !important;
   overflow: hidden !important;
+  margin: 8px 0 !important;
 }
 
 .fc-button::before {
@@ -701,12 +853,12 @@ body {
 /* ==============================================
    10分間隔スロットの高さ固定
    ============================================== */
-        .fc-timegrid-slot {
-    height: 30px !important;
-    min-height: 30px !important;
-    max-height: 30px !important;
-    border-bottom: 1px solid #e2e8f0 !important;
-  }
+.fc-timegrid-slot {
+  height: 30px !important;
+  min-height: 30px !important;
+  max-height: 30px !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
 
 .fc-timegrid-slots table {
   height: 100% !important;
@@ -727,11 +879,11 @@ body {
   min-height: 30px !important;
 }
       
-        .fc-timegrid-slot-label {
-    font-size: 0.75rem !important;
-    padding: 2px 4px !important;
-    color: #4a5568 !important;
-  }
+.fc-timegrid-slot-label {
+  font-size: 0.75rem !important;
+  padding: 2px 4px !important;
+  color: #4a5568 !important;
+}
   
 
 
@@ -991,12 +1143,14 @@ body {
   }
   
   .fc {
-    margin: 20px auto;
+    margin: 0px auto;
     border-radius: 16px;
   }
   
   .fc-toolbar {
-    padding: 20px 25px;
+    padding: 8px 0;
+    width: 100%;
+    max-width: 100%;
   }
   
   .fc-toolbar-title {
@@ -1007,28 +1161,39 @@ body {
 @media (max-width: 768px) {
   .calendar-toolbar {
     flex-direction: column;
-    gap: 15px;
-    padding: 0 15px;
+    gap: 12px;
+    padding: 0 20px;
   }
   
   .calendar-nav {
     order: 1;
+    margin: 0;
   }
   
   .calendar-title {
     order: 2;
-    font-size: 1.4rem;
+    font-size: 1.6rem;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
   }
   
   .calendar-actions {
     order: 3;
+    flex-direction: row;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
   }
 
   .btn-new-reservation,
   .btn-today-reservations,
   .btn-cancellation-stats {
-    padding: 10px 16px;
-    font-size: 0.9rem;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    min-width: 100px;
+    flex: 1;
   }
 
   /* モバイル用のスロット高さ (35px base) */
@@ -1069,22 +1234,60 @@ body {
   }
   
   .fc-toolbar {
-    padding: 15px 20px;
+    padding: 8px 0;
+    width: 100%;
+    max-width: 100%;
   }
   
   .fc-toolbar-title {
     font-size: 1.4rem;
   }
+
+  .calendar-mini-calendar {
+    width: 200px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
+    align-self: center;
+  }
+  
+  .calendar-mini-calendar .fc-daygrid-day {
+    min-height: 16px !important;
+    height: 16px !important;
+    max-height: 16px !important;
+  }
+  
+  .calendar-mini-calendar .fc-col-header-cell {
+    min-height: 12px !important;
+    height: 12px !important;
+    max-height: 12px !important;
+  }
 }
 
 @media (max-width: 480px) {
   .calendar-toolbar {
-    gap: 10px;
-    padding: 0 10px;
+    gap: 8px;
+    padding: 0 15px;
   }
   
   .calendar-title {
-    font-size: 1.2rem;
+    font-size: 1.4rem;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+  }
+  
+  .calendar-actions {
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .btn-new-reservation,
+  .btn-today-reservations,
+  .btn-cancellation-stats {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    min-width: 80px;
   }
   
   .btn-new-reservation,
@@ -1137,6 +1340,32 @@ body {
   
   .fc-toolbar-title {
     font-size: 1.2rem;
+  }
+
+  .calendar-mini-calendar {
+    width: 220px !important;
+    min-width: 220px !important;
+    max-width: 220px !important;
+  }
+  
+  .calendar-mini-calendar .fc-daygrid-day {
+    min-height: 18px !important;
+    height: 18px !important;
+    max-height: 18px !important;
+    padding: 1px !important;
+  }
+  
+  .calendar-mini-calendar .fc-col-header-cell {
+    min-height: 14px !important;
+    height: 14px !important;
+    max-height: 14px !important;
+    font-size: 0.55rem !important;
+    padding: 1px !important;
+  }
+  
+  .calendar-mini-calendar .fc-daygrid-day-number {
+    font-size: 0.6rem !important;
+    text-decoration: none !important;
   }
 }
 
@@ -1658,6 +1887,153 @@ body {
   font-size: 0.9rem;
 }
 
+/* カレンダーレイアウトの調整 */
+.calendar-header {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e9ecef !important;
+  padding: 20px 0 !important;
+  margin-bottom: 20px !important;
+}
+
+.calendar-toolbar {
+  margin-bottom: 20px;
+}
+
+.calendar-header-content {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 20px !important;
+  flex-wrap: wrap !important;
+  padding: 20px 0 !important;
+  width: 100% !important;
+}
+
+.calendar-title-section {
+  flex: 0 0 auto !important;
+  min-width: 200px !important;
+  text-align: left !important;
+}
+
+.calendar-title {
+  font-size: 1.8rem !important;
+  font-weight: 700 !important;
+  color: #2c3e50 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  white-space: nowrap !important;
+  text-align: left !important;
+  display: block !important;
+  width: auto !important;
+  float: none !important;
+  position: static !important;
+}
+
+/* h1タグのデフォルトスタイルをリセット */
+.calendar-title h1 {
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: left !important;
+  display: block !important;
+  width: auto !important;
+  float: none !important;
+  position: static !important;
+}
+
+.calendar-mini-calendar {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  order: 2 !important;
+  margin: 0 auto !important;
+}
+
+.calendar-actions {
+  flex: 0 0 auto !important;
+  min-width: 200px !important;
+  display: flex !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-end !important;
+  order: 3 !important;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .calendar-header-content {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 15px 0;
+  }
+  
+  .calendar-title-section {
+    min-width: auto;
+    text-align: center;
+    padding-left: 0 !important;
+  }
+  
+  .calendar-title {
+    text-align: center;
+    font-size: 1.5rem;
+    white-space: normal;
+  }
+  
+  .calendar-actions {
+    min-width: auto;
+    justify-content: center;
+  }
+  
+  .calendar-mini-calendar {
+    padding: 10px;
+    margin: 0;
+  }
+  
+  #monthCalendar {
+    width: 150px !important;
+    height: 100px !important;
+  }
+}
+
+/* ミニカレンダーヘッダーのスタイル */
+.mini-calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0px;
+  padding: 4px;
+  background-color: #ffffff;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}
+
+.mini-calendar-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #495057;
+  text-align: center;
+  flex: 1;
+  margin: 0 8px;
+}
+
+#prevMonthBtn, #nextMonthBtn {
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  border-radius: 3px;
+  min-width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#prevMonthBtn:hover, #nextMonthBtn:hover {
+  background-color: #007bff;
+  border-color: #007bff;
+  color: white;
+}
+
 #monthCalendar .fc-daygrid-day {
   cursor: pointer;
   transition: background-color 0.2s ease;
@@ -1929,6 +2305,20 @@ body {
       return;
     }
     
+    // 年と月の表示を更新する関数
+    function updateMonthYearDisplay() {
+      const currentDate = monthCalendar.getDate();
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth() + 1;
+      const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', 
+                         '7月', '8月', '9月', '10月', '11月', '12月'];
+      
+      const monthYearElement = document.getElementById('currentMonthYear');
+      if (monthYearElement) {
+        monthYearElement.textContent = `${year}年 ${monthNames[month - 1]}`;
+      }
+    }
+
     // 月カレンダーの初期化
     const monthCalendar = new FullCalendar.Calendar(monthCalendarEl, {
       initialView: 'dayGridMonth',
@@ -1937,8 +2327,12 @@ body {
       headerToolbar: false, // ヘッダーを非表示
       dayHeaderFormat: { weekday: 'short' },
       dayCellClassNames: 'clickable-day-cell',
-              aspectRatio: 1, // 完全な正方形
-        contentHeight: 140, // 高さを調整
+      aspectRatio: 1, // 完全な正方形
+      contentHeight: 140, // 高さを調整
+      datesSet: function() {
+        // 日付が変更されたときに年と月の表示を更新
+        updateMonthYearDisplay();
+      },
       dayCellDidMount: function(info) {
         // 日付セルにクリックイベントを追加
         info.el.style.cursor = 'pointer';
@@ -2015,6 +2409,13 @@ body {
       
       eventClick: function(info) {
         openReservationModal(info.event);
+      },
+      
+      datesSet: function(info) {
+        // メインカレンダーの日付が変更されたときにミニカレンダーも同期
+        const currentDate = info.start;
+        monthCalendar.gotoDate(currentDate);
+        updateMonthYearDisplay();
       },
       
 
@@ -2364,6 +2765,20 @@ body {
     // 両方のカレンダーをレンダリング
     monthCalendar.render();
     calendar.render();
+    
+    // 初期表示の年と月を設定
+    updateMonthYearDisplay();
+    
+    // ナビゲーションボタンのイベントリスナーを追加
+    document.getElementById('prevMonthBtn').addEventListener('click', function() {
+      monthCalendar.prev();
+      updateMonthYearDisplay();
+    });
+    
+    document.getElementById('nextMonthBtn').addEventListener('click', function() {
+      monthCalendar.next();
+      updateMonthYearDisplay();
+    });
     
     console.log('✅ Calendars rendered successfully');
     
@@ -3393,6 +3808,167 @@ body {
         alertDiv.remove();
       }, 3000);
     }
+
+    function forceMiniCalendarFix() {
+        console.log('🔧 Starting mini calendar force fix...');
+        
+        const miniCalendarEl = document.querySelector('.calendar-mini-calendar');
+        if (!miniCalendarEl) {
+            console.log('❌ Mini calendar element not found');
+            return;
+        }
+
+        // 1. 週番号要素を完全削除
+        const weekNumberElements = miniCalendarEl.querySelectorAll([
+            '.fc-daygrid-week-number',
+            '[class*="week-number"]',
+            '[class*="week"]:not(.fc-daygrid-day)'
+        ].join(', '));
+        
+        weekNumberElements.forEach(el => {
+            console.log('🗑️ Removing week number element:', el);
+            el.remove();
+        });
+
+        // 2. colgroup と col 要素を修正
+        const colGroups = miniCalendarEl.querySelectorAll('colgroup');
+        colGroups.forEach(colGroup => {
+            console.log('🔧 Fixing colgroup:', colGroup);
+            const cols = colGroup.querySelectorAll('col');
+            
+            // 既存のcolを削除
+            cols.forEach(col => col.remove());
+            
+            // 新しく7つのcolを作成
+            for (let i = 0; i < 7; i++) {
+                const newCol = document.createElement('col');
+                newCol.style.width = '14.2857%';
+                newCol.style.minWidth = '14.2857%';
+                newCol.style.maxWidth = '14.2857%';
+                colGroup.appendChild(newCol);
+            }
+        });
+
+        // 3. ヘッダーセルの幅を直接設定
+        const headerCells = miniCalendarEl.querySelectorAll('.fc-col-header-cell');
+        headerCells.forEach((cell, index) => {
+            console.log(`🔧 Fixing header cell ${index + 1}:`, cell);
+            cell.style.width = '14.2857%';
+            cell.style.minWidth = '14.2857%';
+            cell.style.maxWidth = '14.2857%';
+            cell.style.boxSizing = 'border-box';
+        });
+
+        // 4. 日付セルの幅を直接設定
+        const dayCells = miniCalendarEl.querySelectorAll('.fc-daygrid-day');
+        dayCells.forEach((cell, index) => {
+            console.log(`🔧 Fixing day cell ${index + 1}:`, cell);
+            cell.style.width = '14.2857%';
+            cell.style.minWidth = '14.2857%';
+            cell.style.maxWidth = '14.2857%';
+            cell.style.boxSizing = 'border-box';
+        });
+
+        // 5. テーブルの幅を確実に設定
+        const tables = miniCalendarEl.querySelectorAll('table');
+        tables.forEach(table => {
+            console.log('🔧 Fixing table:', table);
+            table.style.width = '100%';
+            table.style.tableLayout = 'fixed';
+            table.style.borderCollapse = 'collapse';
+        });
+
+        // 6. 余分なpadding-leftを削除
+        const syncInners = miniCalendarEl.querySelectorAll('.fc-scrollgrid-sync-inner');
+        syncInners.forEach(el => {
+            el.style.paddingLeft = '0';
+        });
+
+        console.log('✅ Mini calendar force fix completed');
+    }
+
+    // 日付の「日」を削除する関数
+    function removeDayKanji() {
+        console.log('🔧 Removing "日" from day numbers...');
+        
+        const miniCalendarEl = document.querySelector('.calendar-mini-calendar');
+        if (!miniCalendarEl) return;
+        
+        // 日付番号要素を取得して「日」を削除
+        const dayNumbers = miniCalendarEl.querySelectorAll('.fc-daygrid-day-number');
+        dayNumbers.forEach(dayNumber => {
+            if (dayNumber.textContent && dayNumber.textContent.includes('日')) {
+                dayNumber.textContent = dayNumber.textContent.replace('日', '');
+                console.log('✂️ Removed 日 from:', dayNumber.textContent);
+            }
+        });
+        
+        // リンク要素内の「日」も削除
+        const dayLinks = miniCalendarEl.querySelectorAll('a[class*="day-number"]');
+        dayLinks.forEach(link => {
+            if (link.textContent && link.textContent.includes('日')) {
+                link.textContent = link.textContent.replace('日', '');
+            }
+        });
+        
+        console.log('✅ Day kanji removal completed');
+    }
+
+    // 複数のタイミングで実行
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('📅 DOM loaded, starting mini calendar fixes...');
+        
+        // 即座に実行
+        forceMiniCalendarFix();
+        removeDayKanji();
+        
+        // 少し待ってからも実行（FullCalendarの初期化待ち）
+        setTimeout(() => {
+            forceMiniCalendarFix();
+            removeDayKanji();
+        }, 100);
+        setTimeout(() => {
+            forceMiniCalendarFix();
+            removeDayKanji();
+        }, 500);
+        setTimeout(() => {
+            forceMiniCalendarFix();
+            removeDayKanji();
+        }, 1000);
+        
+        // MutationObserverで変更を監視
+        const observer = new MutationObserver(() => {
+            console.log('🔄 DOM changed, re-fixing mini calendar...');
+            forceMiniCalendarFix();
+            removeDayKanji();
+        });
+        
+        const miniCalendarEl = document.querySelector('.calendar-mini-calendar');
+        if (miniCalendarEl) {
+            observer.observe(miniCalendarEl, {
+                childList: true,
+                subtree: true,
+                attributes: true,
+                attributeFilter: ['style', 'class']
+            });
+        }
+    });
+
+    // ページ読み込み完了後にも実行
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            forceMiniCalendarFix();
+            removeDayKanji();
+        }, 100);
+    });
+
+    // リサイズ時にも実行
+    window.addEventListener('resize', () => {
+        setTimeout(() => {
+            forceMiniCalendarFix();
+            removeDayKanji();
+        }, 100);
+    });
     
     // キャンセル履歴モーダルを開く
     window.openCancelledHistoryModal = function() {
