@@ -1,53 +1,52 @@
 <% content_for :title, "予約カレンダー - Mobilis" %>
 
 <div class="calendar-container">
-  <div class="calendar-header" style="background-color: #ffffff !important; border-bottom: 1px solid #e9ecef !important; padding: 20px 0 !important;">
-<div class="container-fluid" style="padding-left: 30px !important; padding-right: 30px !important;">
-      <div class="calendar-toolbar">
-        <!-- ヘッダー全体を整理された配置に -->
-        <div class="calendar-header-content" style="display: flex !important; justify-content: space-between !important; align-items: center !important; gap: 20px !important; width: 100% !important; padding: 20px 0 !important;">
-          <!-- 左側：タイトル -->
-          <div class="calendar-title-section" style="flex: 0 0 auto !important; min-width: 200px !important; text-align: left !important;">
-            <h1 class="calendar-title" style="text-align: left !important; margin: 0 !important; padding: 0 !important; font-size: 1.8rem !important; font-weight: 700 !important; color: #2c3e50 !important; display: block !important; width: auto !important; float: none !important;">
-              <i class="fas fa-calendar-alt me-2"></i>予約カレンダー
-            </h1>
+  <header class="calendar-header" style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important; border-bottom: 2px solid #e2e8f0 !important; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important; position: sticky !important; top: 0 !important; z-index: 1000 !important; backdrop-filter: blur(10px) !important;">
+    <div class="container-fluid" style="padding: 1.5rem 0 !important;">
+      <div class="header-grid" style="display: grid !important; grid-template-columns: 1fr auto 1fr !important; grid-template-areas: 'title mini-calendar actions' !important; align-items: center !important; gap: 2rem !important; max-width: 1400px !important; margin: 0 auto !important;">
+        
+        <!-- タイトルセクション -->
+        <div class="title-section" style="grid-area: title !important; display: flex !important; align-items: center !important; gap: 0.75rem !important;">
+          <div class="title-icon" style="background: linear-gradient(135deg, #2563eb, #1d4ed8) !important; color: white !important; width: 3rem !important; height: 3rem !important; border-radius: 12px !important; display: flex !important; align-items: center !important; justify-content: center !important; font-size: 1.25rem !important; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1) !important;">
+            <i class="fas fa-calendar-alt"></i>
           </div>
-          
-          <!-- 中央：ミニカレンダー -->
-          <div class="calendar-mini-calendar" style="display: flex !important; flex-direction: column !important; flex: 0 0 auto !important; align-items: center !important;">
-            <!-- 年と月の表示とナビゲーション -->
-            <div class="mini-calendar-header">
-              <button id="prevMonthBtn" class="btn btn-sm btn-outline-secondary">
-                <i class="fas fa-chevron-left"></i>
-              </button>
-              <div id="currentMonthYear" class="mini-calendar-title">
-                <!-- 年と月がここに表示される -->
-              </div>
-              <button id="nextMonthBtn" class="btn btn-sm btn-outline-secondary">
-                <i class="fas fa-chevron-right"></i>
-              </button>
-            </div>
-            <div id="monthCalendar" style="width: 180px; height: 140px;"></div>
-          </div>
-          
-          <!-- 右側：アクションボタン -->
-          <div class="calendar-actions" style="flex: 0 0 auto !important; min-width: 200px !important; display: flex !important; gap: 10px !important; flex-wrap: wrap !important; justify-content: flex-end !important;">
-            <div class="d-flex flex-column gap-2">
-              <a href="<%= admin_reservations_path %>" class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); border: none; box-shadow: 0 4px 8px rgba(0,0,0,0.15); font-weight: 600;">
-                <i class="fas fa-list me-2"></i>📋 今日の予約一覧
-              </a>
-              <button id="newReservationBtn" class="btn btn-success">
-                <i class="fas fa-plus me-1"></i>新規予約
-              </button>
-              <button class="btn btn-outline-danger btn-sm" onclick="openCancelledHistoryModal()">
-                <i class="fas fa-times-circle me-1"></i>キャンセル履歴
-              </button>
-            </div>
-          </div>
+          <h1 class="page-title" style="font-size: 2rem !important; font-weight: 700 !important; color: #1e293b !important; margin: 0 !important; display: flex !important; align-items: center !important; gap: 0.5rem !important;">予約カレンダー</h1>
         </div>
+        
+        <!-- ミニカレンダーセクション -->
+        <div class="mini-calendar-section" style="grid-area: mini-calendar !important; background: white !important; border-radius: 16px !important; padding: 1rem !important; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important; border: 1px solid #e2e8f0 !important; min-width: 250px !important;">
+          <div class="mini-calendar-controls" style="display: flex !important; align-items: center !important; justify-content: space-between !important; margin-bottom: 0.75rem !important; gap: 1rem !important;">
+            <button class="month-nav-btn" id="prevMonthBtn" style="background: #f8fafc !important; border: 1px solid #e2e8f0 !important; color: #64748b !important; width: 2rem !important; height: 2rem !important; border-radius: 8px !important; display: flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important; transition: all 0.2s ease !important;">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="month-year-display" id="currentMonthYear" style="font-weight: 600 !important; font-size: 1rem !important; color: #1e293b !important; text-align: center !important; min-width: 120px !important;">
+              <!-- 年と月がここに表示される -->
+            </div>
+            <button class="month-nav-btn" id="nextMonthBtn" style="background: #f8fafc !important; border: 1px solid #e2e8f0 !important; color: #64748b !important; width: 2rem !important; height: 2rem !important; border-radius: 8px !important; display: flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important; transition: all 0.2s ease !important;">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+          <div id="monthCalendar" style="width: 180px; height: 140px;"></div>
+        </div>
+        
+        <!-- アクションボタンセクション -->
+        <div class="actions-section" style="grid-area: actions !important; display: flex !important; align-items: center !important; justify-content: flex-end !important; gap: 0.75rem !important;">
+          <a href="<%= admin_reservations_path %>" class="action-btn btn-primary-custom" style="padding: 0.75rem 1.5rem !important; border-radius: 12px !important; font-weight: 600 !important; font-size: 0.95rem !important; border: none !important; cursor: pointer !important; transition: all 0.3s ease !important; display: flex !important; align-items: center !important; gap: 0.5rem !important; text-decoration: none !important; min-width: fit-content !important; white-space: nowrap !important; background: linear-gradient(135deg, #2563eb, #1d4ed8) !important; color: white !important; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1) !important;">
+            <i class="fas fa-list"></i>
+            今日の予約一覧
+          </a>
+          <button id="newReservationBtn" class="action-btn btn-success-custom" style="padding: 0.75rem 1.5rem !important; border-radius: 12px !important; font-weight: 600 !important; font-size: 0.95rem !important; border: none !important; cursor: pointer !important; transition: all 0.3s ease !important; display: flex !important; align-items: center !important; gap: 0.5rem !important; text-decoration: none !important; min-width: fit-content !important; white-space: nowrap !important; background: linear-gradient(135deg, #10b981, #059669) !important; color: white !important; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1) !important;">
+            <i class="fas fa-plus"></i>
+            新規予約
+          </button>
+          <button class="action-btn btn-outline-danger" onclick="openCancelledHistoryModal()" style="padding: 0.75rem 1.5rem !important; border-radius: 12px !important; font-weight: 600 !important; font-size: 0.95rem !important; border: 1px solid #dc3545 !important; cursor: pointer !important; transition: all 0.3s ease !important; display: flex !important; align-items: center !important; gap: 0.5rem !important; text-decoration: none !important; min-width: fit-content !important; white-space: nowrap !important; background: transparent !important; color: #dc3545 !important;">
+            <i class="fas fa-times-circle"></i>
+            キャンセル履歴
+          </button>
+        </div>
+      </div>
     </div>
-    </div>
-  </div>
+  </header>
   
   <div class="container-fluid" style="margin-top: 20px; margin-bottom: 20px;">
     <div id="calendar"></div>
@@ -1889,105 +1888,228 @@ body {
 
 /* カレンダーレイアウトの調整 */
 .calendar-header {
-  background-color: #ffffff !important;
-  border-bottom: 1px solid #e9ecef !important;
-  padding: 20px 0 !important;
-  margin-bottom: 20px !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+  border-bottom: 2px solid #e2e8f0 !important;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
+  backdrop-filter: blur(10px) !important;
 }
 
-.calendar-toolbar {
-  margin-bottom: 20px;
-}
-
-.calendar-header-content {
-  display: flex !important;
-  justify-content: space-between !important;
+.header-grid {
+  display: grid !important;
+  grid-template-columns: 1fr auto 1fr !important;
+  grid-template-areas: 'title mini-calendar actions' !important;
   align-items: center !important;
-  gap: 20px !important;
-  flex-wrap: wrap !important;
-  padding: 20px 0 !important;
-  width: 100% !important;
-}
-
-.calendar-title-section {
-  flex: 0 0 auto !important;
-  min-width: 200px !important;
-  text-align: left !important;
-}
-
-.calendar-title {
-  font-size: 1.8rem !important;
-  font-weight: 700 !important;
-  color: #2c3e50 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  white-space: nowrap !important;
-  text-align: left !important;
-  display: block !important;
-  width: auto !important;
-  float: none !important;
-  position: static !important;
-}
-
-/* h1タグのデフォルトスタイルをリセット */
-.calendar-title h1 {
-  margin: 0 !important;
-  padding: 0 !important;
-  text-align: left !important;
-  display: block !important;
-  width: auto !important;
-  float: none !important;
-  position: static !important;
-}
-
-.calendar-mini-calendar {
-  display: flex !important;
-  flex-direction: column !important;
-  flex: 0 0 auto !important;
-  align-items: center !important;
-  order: 2 !important;
+  gap: 2rem !important;
+  max-width: 1400px !important;
   margin: 0 auto !important;
 }
 
-.calendar-actions {
-  flex: 0 0 auto !important;
-  min-width: 200px !important;
+.title-section {
+  grid-area: title !important;
   display: flex !important;
-  gap: 10px !important;
-  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+}
+
+.title-icon {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  color: white !important;
+  width: 3rem !important;
+  height: 3rem !important;
+  border-radius: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.25rem !important;
+  box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1) !important;
+}
+
+.page-title {
+  font-size: 2rem !important;
+  font-weight: 700 !important;
+  color: #1e293b !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+.mini-calendar-section {
+  grid-area: mini-calendar !important;
+  background: white !important;
+  border-radius: 16px !important;
+  padding: 1rem !important;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important;
+  border: 1px solid #e2e8f0 !important;
+  min-width: 250px !important;
+}
+
+.mini-calendar-controls {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 0.75rem !important;
+  gap: 1rem !important;
+}
+
+.month-nav-btn {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #64748b !important;
+  width: 2rem !important;
+  height: 2rem !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.month-nav-btn:hover {
+  background: #2563eb !important;
+  color: white !important;
+  border-color: #2563eb !important;
+}
+
+.month-year-display {
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+  color: #1e293b !important;
+  text-align: center !important;
+  min-width: 120px !important;
+}
+
+#monthCalendar {
+  width: 180px !important;
+  height: 140px !important;
+}
+
+.actions-section {
+  grid-area: actions !important;
+  display: flex !important;
+  align-items: center !important;
   justify-content: flex-end !important;
-  order: 3 !important;
+  gap: 0.75rem !important;
+}
+
+.action-btn {
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  font-size: 0.95rem !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  text-decoration: none !important;
+  min-width: fit-content !important;
+  white-space: nowrap !important;
+}
+
+.btn-primary-custom {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  color: white !important;
+  box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1) !important;
+}
+
+.btn-primary-custom:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1) !important;
+  color: white !important;
+}
+
+.btn-success-custom {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: white !important;
+  box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1) !important;
+}
+
+.btn-success-custom:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1) !important;
+  color: white !important;
 }
 
 /* レスポンシブ対応 */
+@media (max-width: 1200px) {
+  .header-grid {
+    grid-template-columns: 1fr auto 1fr !important;
+    gap: 1.5rem !important;
+  }
+  
+  .actions-section {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+}
+
+@media (max-width: 992px) {
+  .header-grid {
+    grid-template-columns: 1fr !important;
+    grid-template-areas: 
+      "title"
+      "mini-calendar"
+      "actions" !important;
+    gap: 1.5rem !important;
+    text-align: center !important;
+  }
+  
+  .title-section {
+    justify-content: center !important;
+  }
+  
+  .actions-section {
+    flex-direction: row !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+  }
+  
+  .page-title {
+    font-size: 1.75rem !important;
+  }
+}
+
 @media (max-width: 768px) {
-  .calendar-header-content {
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    padding: 15px 0;
+  .header-grid {
+    gap: 1rem !important;
   }
   
-  .calendar-title-section {
-    min-width: auto;
-    text-align: center;
-    padding-left: 0 !important;
+  .mini-calendar-section {
+    min-width: 220px !important;
+    padding: 0.75rem !important;
   }
   
-  .calendar-title {
-    text-align: center;
-    font-size: 1.5rem;
-    white-space: normal;
+  .action-btn {
+    padding: 0.625rem 1.25rem !important;
+    font-size: 0.875rem !important;
   }
   
-  .calendar-actions {
-    min-width: auto;
-    justify-content: center;
+  .page-title {
+    font-size: 1.5rem !important;
   }
   
-  .calendar-mini-calendar {
-    padding: 10px;
-    margin: 0;
+  .title-icon {
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    font-size: 1rem !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .actions-section {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+  
+  .action-btn {
+    width: 100% !important;
+    justify-content: center !important;
   }
   
   #monthCalendar {
