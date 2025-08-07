@@ -6,7 +6,7 @@
       <div class="calendar-toolbar">
                 <!-- 小さな月カレンダーをタイトルの左側に配置 -->
         <div class="calendar-mini-calendar">
-          <div id="monthCalendar" style="width: 200px; height: 100px;"></div>
+          <div id="monthCalendar" style="width: 140px; height: 140px;"></div>
         </div>
         
         <div class="calendar-title">
@@ -326,57 +326,88 @@ body {
 }
 
 .calendar-mini-calendar .fc {
-  font-size: 0.8rem !important;
-  border: 1px solid #e2e8f0 !important;
+  font-size: 0.7rem !important;
+  border: none !important;
   border-radius: 8px !important;
   overflow: hidden !important;
+  background: white !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+  padding: 4px !important;
 }
 
 .calendar-mini-calendar .fc-daygrid-day {
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
   padding: 0px !important;
   border: none !important;
-  min-height: 5px !important;
+  min-height: 10px !important;
+  aspect-ratio: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 3px !important;
 }
 
 .calendar-mini-calendar .fc-daygrid-day:hover {
-  background-color: #f8f9fa !important;
+  background-color: #f0f7ff !important;
 }
 
 .calendar-mini-calendar .fc-daygrid-day.fc-day-today {
-  background-color: #e3f2fd !important;
-  border-radius: 4px !important;
+  background-color: #007aff !important;
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+.calendar-mini-calendar .fc-daygrid-day.fc-day-today:hover {
+  background-color: #0056cc !important;
 }
 
 .calendar-mini-calendar .fc-daygrid-day.fc-day-selected {
-  background-color: #007bff !important;
-  color: white !important;
-  border-radius: 4px !important;
+  background-color: #e3f2fd !important;
+  color: #1976d2 !important;
+  font-weight: 500 !important;
 }
 
 .calendar-mini-calendar .fc-daygrid-day.fc-day-selected:hover {
-  background-color: #0056b3 !important;
+  background-color: #e3f2fd !important;
 }
 
 .calendar-mini-calendar .fc-daygrid-day-number {
-  font-size: 0.6rem !important;
+  font-size: 0.55rem !important;
   padding: 0px !important;
   font-weight: 500 !important;
   line-height: 1 !important;
 }
 
 .calendar-mini-calendar .fc-col-header-cell {
-  padding: 0px !important;
-  font-size: 0.55rem !important;
-  font-weight: 600 !important;
-  background-color: #f8f9fa !important;
-  border-bottom: 1px solid #e2e8f0 !important;
-  min-height: 5px !important;
+  padding: 1px 0px !important;
+  font-size: 0.5rem !important;
+  font-weight: 500 !important;
+  background-color: transparent !important;
+  border: none !important;
+  min-height: 6px !important;
+  color: #666 !important;
 }
 
 .calendar-mini-calendar .fc-daygrid-day.fc-day-other {
-  color: #cbd5e0 !important;
+  color: #ccc !important;
+}
+
+/* 日曜日を赤色に */
+.calendar-mini-calendar .fc-col-header-cell:first-child,
+.calendar-mini-calendar .fc-daygrid-day:nth-child(7n+1) .fc-daygrid-day-number {
+  color: #ff3b30 !important;
+}
+
+/* 土曜日を青色に */
+.calendar-mini-calendar .fc-col-header-cell:last-child,
+.calendar-mini-calendar .fc-daygrid-day:nth-child(7n) .fc-daygrid-day-number {
+  color: #007aff !important;
+}
+
+/* 今日の日付は色を上書き */
+.calendar-mini-calendar .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+  color: white !important;
 }
 
 .calendar-toolbar {
@@ -1906,8 +1937,8 @@ body {
       headerToolbar: false, // ヘッダーを非表示
       dayHeaderFormat: { weekday: 'short' },
       dayCellClassNames: 'clickable-day-cell',
-      aspectRatio: 2, // より横長の比率
-      contentHeight: 100, // 高さを調整
+              aspectRatio: 1, // 完全な正方形
+        contentHeight: 140, // 高さを調整
       dayCellDidMount: function(info) {
         // 日付セルにクリックイベントを追加
         info.el.style.cursor = 'pointer';
