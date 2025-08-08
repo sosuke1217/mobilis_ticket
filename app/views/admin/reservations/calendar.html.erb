@@ -1,58 +1,108 @@
 <% content_for :title, "予約カレンダー - Mobilis" %>
 
 <div class="calendar-container">
-  <div class="calendar-header" style="background-color: #ffffff !important; border-bottom: 1px solid #e9ecef !important; padding: 20px 0 !important;">
-<div class="container-fluid" style="padding-left: 30px !important; padding-right: 30px !important;">
-      <div class="calendar-toolbar">
-        <!-- ヘッダー全体を整理された配置に -->
-        <div class="calendar-header-content" style="display: flex !important; justify-content: space-between !important; align-items: center !important; gap: 20px !important; width: 100% !important; padding: 20px 0 !important;">
-          <!-- 左側：タイトル -->
-          <div class="calendar-title-section" style="flex: 0 0 auto !important; min-width: 200px !important; text-align: left !important;">
-            <h1 class="calendar-title" style="text-align: left !important; margin: 0 !important; padding: 0 !important; font-size: 1.8rem !important; font-weight: 700 !important; color: #2c3e50 !important; display: block !important; width: auto !important; float: none !important;">
-              <i class="fas fa-calendar-alt me-2"></i>予約カレンダー
-            </h1>
-          </div>
-          
-          <!-- 中央：ミニカレンダー -->
-          <div class="mini-calendar-container">
+      <div class="card shadow-sm border-0 mb-4">
+      <div class="card-body py-4">
+        <div class="row align-items-center" style="min-height: 200px;">
+        <!-- 左側：タイトル -->
+        <div class="col-lg-4 col-md-6 mb-3 mb-md-0">
+          <h1 class="h2 mb-0 text-primary" style="padding-left: 60px;">
+            <i class="fas fa-calendar-alt me-2"></i>予約カレンダー
+          </h1>
+        </div>
+        
+        <!-- 中央：ミニカレンダー -->
+        <div class="col-lg-4 col-md-6 d-flex justify-content-center align-items-center mb-3 mb-md-0">
+          <div id="monthCalendar">
             <!-- 年と月の表示とナビゲーション -->
-            <div class="mini-calendar-header">
-              <button id="prevMonthBtn" class="mini-calendar-nav-btn">
+            <div class="mini-calendar-header" style="background: #f8f9fa; border-bottom: 1px solid #dee2e6; border-radius: 4px; display: flex; align-items: center; justify-content: space-between;">
+              <button id="prevMonthBtn" class="mini-calendar-nav-btn" style="background: transparent; border: none; color: #6c757d; font-size: 0.5rem; padding: 2px; cursor: pointer;">
                 <i class="fas fa-chevron-left"></i>
               </button>
-              <div id="currentMonthYear" class="mini-calendar-title">
+              <div id="currentMonthYear" class="mini-calendar-title" style="font-size: 0.6rem; font-weight: 600; color: #495057; text-align: center; flex: 1; cursor: pointer;">
                 <!-- 年と月がここに表示される -->
               </div>
-              <button id="nextMonthBtn" class="mini-calendar-nav-btn">
+              <button id="nextMonthBtn" class="mini-calendar-nav-btn" style="background: transparent; border: none; color: #6c757d; font-size: 0.5rem; padding: 2px; cursor: pointer;">
                 <i class="fas fa-chevron-right"></i>
               </button>
             </div>
-            <div id="monthCalendar"></div>
+            <div id="monthCalendarContent"></div>
           </div>
-          
-          <!-- 右側：アクションボタン -->
-          <div class="calendar-actions" style="flex: 0 0 auto !important; min-width: 200px !important; display: flex !important; gap: 10px !important; flex-wrap: wrap !important; justify-content: flex-end !important;">
-            <div class="d-flex flex-column gap-2">
-              <a href="<%= admin_reservations_path %>" class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); border: none; box-shadow: 0 4px 8px rgba(0,0,0,0.15); font-weight: 600;">
-                <i class="fas fa-list me-2"></i>📋 今日の予約一覧
-              </a>
-              <button id="newReservationBtn" class="btn btn-success">
-                <i class="fas fa-plus me-1"></i>新規予約
+        </div>
+        
+        <!-- 右側：アクションボタン -->
+        <div class="col-lg-4 col-md-12">
+          <div class="d-flex flex-column gap-3">
+            <a href="<%= admin_reservations_path %>" class="btn btn-primary btn-lg shadow-sm">
+              <i class="fas fa-list me-2"></i>📋 今日の予約一覧
+            </a>
+            <div class="d-flex gap-3">
+              <button id="newReservationBtn" class="btn btn-success btn-lg">
+                <i class="fas fa-plus me-2"></i>新規予約
               </button>
-              <button class="btn btn-outline-danger btn-sm" onclick="openCancelledHistoryModal()">
-                <i class="fas fa-times-circle me-1"></i>キャンセル履歴
+              <button id="shiftSettingsBtn" class="btn btn-info btn-lg">
+                <i class="fas fa-clock me-2"></i>シフト設定
+              </button>
+              <button class="btn btn-outline-danger btn-lg" onclick="openCancelledHistoryModal()">
+                <i class="fas fa-times-circle me-2"></i>キャンセル履歴
               </button>
             </div>
           </div>
         </div>
-    </div>
+      </div>
     </div>
   </div>
+</div>
   
   <div class="container-fluid" style="margin-top: 20px; margin-bottom: 20px;">
     <div id="calendar"></div>
   </div>
 </div>  
+
+<!-- 年と月の選択モーダル -->
+<div class="modal fade" id="monthYearModal" tabindex="-1" aria-labelledby="monthYearModalLabel" data-bs-backdrop="static" data-bs-keyboard="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="monthYearModalLabel">
+          <i class="fas fa-calendar me-2"></i>年と月の選択
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="closeMonthYearModal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-6">
+            <label for="yearSelect" class="form-label">年</label>
+            <select class="form-select" id="yearSelect">
+              <!-- 年のオプションがここに動的に追加される -->
+            </select>
+          </div>
+          <div class="col-6">
+            <label for="monthSelect" class="form-label">月</label>
+            <select class="form-select" id="monthSelect">
+              <option value="1">1月</option>
+              <option value="2">2月</option>
+              <option value="3">3月</option>
+              <option value="4">4月</option>
+              <option value="5">5月</option>
+              <option value="6">6月</option>
+              <option value="7">7月</option>
+              <option value="8">8月</option>
+              <option value="9">9月</option>
+              <option value="10">10月</option>
+              <option value="11">11月</option>
+              <option value="12">12月</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+        <button type="button" class="btn btn-primary" id="applyMonthYear">適用</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- 予約モーダル -->
 <div class="modal fade" id="reservationModal" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true">
@@ -313,6 +363,128 @@
   </div>
 </div>
 
+<!-- シフト設定モーダル -->
+<div class="modal fade" id="shiftSettingsModal" tabindex="-1" aria-labelledby="shiftSettingsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="shiftSettingsModalLabel">
+          <i class="fas fa-clock text-info me-2"></i>シフト設定
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <label for="shiftDateSelect" class="form-label">日付選択</label>
+            <input type="date" class="form-control" id="shiftDateSelect">
+          </div>
+          <div class="col-md-6">
+            <label for="shiftTypeSelect" class="form-label">シフトタイプ</label>
+            <select class="form-select" id="shiftTypeSelect">
+              <option value="normal">通常営業</option>
+              <option value="extended">営業時間延長</option>
+              <option value="shortened">営業時間短縮</option>
+              <option value="closed">営業休止</option>
+              <option value="custom">カスタム時間</option>
+            </select>
+          </div>
+        </div>
+        
+        <div id="shiftTimeSettings" class="row" style="display: none;">
+          <div class="col-md-6">
+            <label for="shiftStartTime" class="form-label">開始時間</label>
+            <input type="time" class="form-control" id="shiftStartTime" value="09:00">
+          </div>
+          <div class="col-md-6">
+            <label for="shiftEndTime" class="form-label">終了時間</label>
+            <input type="time" class="form-control" id="shiftEndTime" value="18:00">
+          </div>
+        </div>
+        
+        <div id="shiftBreakSettings" class="row mt-3" style="display: none;">
+          <div class="col-12">
+            <div class="card border-info">
+              <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                  <i class="fas fa-coffee me-2"></i>休憩時間設定
+                </h6>
+              </div>
+              <div class="card-body">
+                <div id="breakTimeList">
+                  <div class="break-time-item card mb-3">
+                    <div class="card-body">
+                      <div class="row align-items-center">
+                        <div class="col-md-3">
+                          <label class="form-label small text-muted">開始時間</label>
+                          <input type="time" class="form-control" placeholder="12:00">
+                        </div>
+                        <div class="col-md-3">
+                          <label class="form-label small text-muted">終了時間</label>
+                          <input type="time" class="form-control" placeholder="13:00">
+                        </div>
+                        <div class="col-md-2">
+                          <label class="form-label small text-muted">操作</label>
+                          <button type="button" class="btn btn-outline-danger btn-sm remove-break w-100">
+                            <i class="fas fa-trash me-1"></i>削除
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="text-center">
+                  <button type="button" class="btn btn-outline-primary" id="addBreakTime">
+                    <i class="fas fa-plus me-2"></i>休憩時間を追加
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="row mt-4">
+          <div class="col-12">
+            <label for="shiftNotes" class="form-label">メモ</label>
+            <textarea class="form-control" id="shiftNotes" rows="3" placeholder="シフトに関するメモを入力してください..."></textarea>
+          </div>
+        </div>
+        
+        <div class="row mt-4">
+          <div class="col-12">
+            <div class="card border-success">
+              <div class="card-header bg-success text-white">
+                <h6 class="mb-0">
+                  <i class="fas fa-calendar-check me-2"></i>設定済みシフト一覧
+                </h6>
+              </div>
+              <div class="card-body">
+                <div id="shiftList">
+                  <!-- シフト一覧がここに動的に追加される -->
+                  <div id="emptyShiftList" class="text-center py-5">
+                    <i class="fas fa-calendar-times text-muted" style="font-size: 3rem;"></i>
+                    <h5 class="text-muted mt-3">設定済みシフトがありません</h5>
+                    <p class="text-muted">シフトを設定すると、ここに表示されます。</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times me-1"></i>キャンセル
+        </button>
+        <button type="button" class="btn btn-primary" id="saveShiftSettings">
+          <i class="fas fa-save me-1"></i>保存
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <style>
 /* ==============================================
    カレンダーページ全体のレイアウト
@@ -350,129 +522,352 @@ body {
   box-shadow: 0 4px 20px rgba(0,0,0,0.1);
 }
 
-/* ミニカレンダーの新しいスタイル */
-.mini-calendar-container {
-  width: 120px;
-  height: 120px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+/* ミニカレンダーのスタイル */
+#monthCalendar {
+    width: 300px !important;
+    height: auto !important;
+    min-height: 0px !important;
+    background: white !important;
+    color: #333 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    margin-top: -80px !important;
 }
 
+/* ミニカレンダーヘッダーのスタイル */
 .mini-calendar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 6px;
-  background: #f8f9fa;
-  border-bottom: 1px solid #e9ecef;
-  height: 20px;
-}
-
-.mini-calendar-title {
-  font-size: 0.6rem;
-  font-weight: 600;
-  color: #495057;
-  text-align: center;
-  flex: 1;
+    background: #f8f9fa !important;
+    border-bottom: 1px solid #dee2e6 !important;
+    padding: 2px 6px !important;
+    margin-top: -10px !important;
+    border-radius: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
 }
 
 .mini-calendar-nav-btn {
-  width: 16px;
-  height: 16px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: #6c757d;
-  font-size: 0.5rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    background: transparent !important;
+    border: none !important;
+    color: #6c757d !important;
+    font-size: 0.5rem !important;
+    padding: 2px !important;
+    cursor: pointer !important;
+    transition: color 0.2s !important;
 }
 
 .mini-calendar-nav-btn:hover {
-  color: #007bff;
+    color: #495057 !important;
 }
 
-#monthCalendar {
-  width: 120px;
-  height: 100px;
-  font-size: 0.5rem;
+.mini-calendar-title {
+    font-size: 0.6rem !important;
+    font-weight: 600 !important;
+    color: #495057 !important;
+    text-align: center !important;
+    flex: 1 !important;
+    cursor: pointer !important;
+    transition: color 0.2s !important;
 }
 
+.mini-calendar-title:hover {
+    color: #007bff !important;
+}
+
+/* FullCalendar要素の制限 */
 #monthCalendar .fc {
-  border: none;
-  background: transparent;
+    width: 100% !important;
+    height: 100% !important;
+    background: white !important;
+    color: #333 !important;
 }
 
 #monthCalendar .fc-scrollgrid {
-  border: none;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+}
+
+#monthCalendar .fc-scrollgrid table {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    border: none !important;
+    border-collapse: collapse !important;
+}
+
+#monthCalendar .fc-scrollgrid table td,
+#monthCalendar .fc-scrollgrid table th {
+    border: 1px solid #e2e8f0 !important;
+    padding: 0 !important;
 }
 
 #monthCalendar .fc-col-header {
-  height: 16px;
+    height: 18px !important;
+    max-height: 18px !important;
+    min-height: 18px !important;
+    overflow: hidden !important;
 }
 
 #monthCalendar .fc-col-header-cell {
-  height: 16px;
-  padding: 0;
-  font-size: 0.5rem;
-  font-weight: 600;
-  color: #6c757d;
-  text-align: center;
-  vertical-align: middle;
-  border: none;
-  background: transparent;
+    height: 18px !important;
+    max-height: 18px !important;
+    min-height: 18px !important;
+    padding: 0 !important;
+    font-size: 0.5rem !important;
+    color: #666 !important;
+    line-height: 18px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    border: 1px solid #e2e8f0 !important;
+    text-align: center !important;
+    vertical-align: middle !important;
 }
 
 #monthCalendar .fc-daygrid-body {
-  height: 84px;
+    height: auto !important;
 }
 
 #monthCalendar .fc-daygrid-day {
-  height: 14px;
-  padding: 0;
-  border: none;
-  text-align: center;
-  vertical-align: middle;
-  cursor: pointer;
-  font-size: 0.5rem;
+    height: 25px !important;
+    min-height: 25px !important;
+    max-height: 25px !important;
+    padding: 0 !important;
+    border: 1px solid #e2e8f0 !important;
+    display: table-cell !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+}
+
+/* 日付セル内の不要なスペースを削除 */
+#monthCalendar .fc-daygrid-day-frame {
+    height: auto !important;
+    min-height: 16px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* ヘッダーセル内のテキスト要素を制限 */
+#monthCalendar .fc-col-header-cell-cushion {
+    height: 20px !important;
+    max-height: 20px !important;
+    line-height: 20px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    text-decoration: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100% !important;
+    width: 100% !important;
 }
 
 #monthCalendar .fc-daygrid-day-number {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  text-decoration: none;
-  color: #495057;
+    font-size: 0.5rem !important;
+    color: #333 !important;
+    text-align: center !important;
+    line-height: 25px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    text-decoration: none !important;
+    height: 100% !important;
+    width: 100% !important;
 }
 
-#monthCalendar .fc-daygrid-day:hover {
-  background-color: #e3f2fd;
+/* 週末の色 */
+#monthCalendar .fc-day-sun .fc-daygrid-day-number {
+    color: #dc3545 !important;
 }
 
-#monthCalendar .fc-daygrid-day.fc-day-today {
-  background-color: #007bff;
-  color: white;
+#monthCalendar .fc-day-sat .fc-daygrid-day-number {
+    color: #007bff !important;
 }
 
-#monthCalendar .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
-  color: white;
+/* 今日の日付 */
+#monthCalendar .fc-day-today .fc-daygrid-day-number {
+    background: #007bff !important;
+    color: white !important;
+    border-radius: 2px !important;
 }
 
-#monthCalendar .fc-daygrid-day.fc-day-selected {
-  background-color: #007bff;
-  color: white;
+/* 他の月の日付 */
+#monthCalendar .fc-day-other .fc-daygrid-day-number {
+    color: #999 !important;
 }
 
-#monthCalendar .fc-daygrid-day.fc-day-selected .fc-daygrid-day-number {
-  color: white;
+/* イベント表示エリアを非表示 */
+#monthCalendar .fc-daygrid-day-events {
+    display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* FullCalendar要素自体のサイズ制限 */
+#monthCalendar .fc {
+    width: 100% !important;
+    max-width: 300px !important;
+    height: auto !important;
+    font-size: 0.65rem !important;
+    border: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+    background: white !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    color: #333 !important;
+    margin: 0 !important;
+  }
+
+/* ミニカレンダーのテーブル全体の制限 */
+#monthCalendar .fc-scrollgrid,
+#monthCalendar .fc-scrollgrid table {
+    width: 100% !important;
+    max-width: 300px !important;
+    height: 160px !important;
+    max-height: 16px !important;
+    min-height: 16px !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    overflow: hidden !important;
+}
+
+/* ヘッダー部分のサイズ調整 */
+.calendar-mini-calendar .fc-col-header-cell {
+    width: 14.2857% !important;
+    min-width: 0 !important;
+    max-width: 25px !important;
+    height: 20px !important;
+    line-height: 20px !important;
+    font-size: 0.6rem !important;
+    font-weight: 600 !important;
+    text-align: center !important;
+    padding: 0 !important;
+    border: 0.5px solid #e2e8f0 !important;
+    background-color: #f8f9fa !important;
+    color: #666 !important;
+    vertical-align: middle !important;
+  }
+
+/* 日付セルのサイズ調整 - checkable-day-cellも含む */
+.calendar-mini-calendar .fc-daygrid-day,
+.calendar-mini-calendar .checkable-day-cell,
+.calendar-mini-calendar td.fc-day {
+    width: 20px !important;
+    min-width: 20px !important;
+    max-width: 20px !important;
+    height: 20px !important;
+    min-height: 20px !important;
+    max-height: 20px !important;
+    line-height: 20px !important;
+    font-size: 0.55rem !important;
+    text-align: center !important;
+    padding: 0 !important;
+    border: 0.5px solid #e2e8f0 !important;
+    cursor: pointer !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+    background-color: white !important;
+    color: #333 !important;
+    vertical-align: middle !important;
+  }
+
+/* 日付番号の表示調整 */
+.calendar-mini-calendar .fc-daygrid-day-number {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    font-size: 0.55rem !important;
+    text-decoration: none !important;
+    color: #333 !important;
+    background: transparent !important;
+  }
+
+/* 今日の日付の強調 */
+.calendar-mini-calendar .fc-daygrid-day.fc-day-today {
+    background-color: #007aff !important;
+    color: white !important;
+}
+
+/* 130x130サイズ問題の根本修正 */
+.calendar-mini-calendar td.fc-day.fc-day-sun.fc-day-past.fc-day-other.fc-daygrid-day.fc-day.checkable-day-cell,
+.calendar-mini-calendar .checkable-day-cell {
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    max-width: 18px !important;
+    max-height: 18px !important;
+    font-size: 0.55rem !important;
+    line-height: 18px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0.5px solid #e2e8f0 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    position: relative !important;
+}
+
+/* 全ての大きなサイズのセルを強制的に小さくする */
+.calendar-mini-calendar td[width="130"],
+.calendar-mini-calendar td[height="130"],
+.calendar-mini-calendar [style*="130px"],
+.calendar-mini-calendar [style*="width: 130"],
+.calendar-mini-calendar [style*="height: 130"] {
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    max-width: 18px !important;
+    max-height: 18px !important;
+}
+
+/* 日曜日と土曜日の色分け */
+.calendar-mini-calendar .fc-col-header tr th:nth-child(1) .fc-col-header-cell-cushion,
+.calendar-mini-calendar .fc-daygrid-body tr td:nth-child(1) .fc-daygrid-day-number {
+    color: #ff3b30 !important; /* 日曜日 */
+}
+
+.calendar-mini-calendar .fc-col-header tr th:nth-child(7) .fc-col-header-cell-cushion,
+.calendar-mini-calendar .fc-daygrid-body tr td:nth-child(7) .fc-daygrid-day-number {
+    color: #007aff !important; /* 土曜日 */
+}
+
+/* 週番号要素の完全削除 */
+.calendar-mini-calendar .fc-daygrid-week-number,
+.calendar-mini-calendar [class*="week-number"],
+.calendar-mini-calendar [class*="week"]:not(.fc-daygrid-day) {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    visibility: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
 }
 
 .calendar-toolbar {
@@ -1910,9 +2305,7 @@ body {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 0px;
-  padding: 4px;
   background-color: #ffffff;
-  border-radius: 4px;
   border: 1px solid #dee2e6;
 }
 
@@ -2110,13 +2503,34 @@ body {
 </style>
 
 <script>
+  // メッセージ表示関数
+  function showMessage(message, type = 'info') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // 既存のアラートを削除
+    const existingAlerts = document.querySelectorAll('.alert.position-fixed');
+    existingAlerts.forEach(alert => alert.remove());
+    
+    // ページに追加
+    document.body.appendChild(alertDiv);
+    
+    // 3秒後に自動で消す
+    setTimeout(() => {
+      if (alertDiv.parentNode) {
+        alertDiv.remove();
+      }
+    }, 3000);
+  }
+
   // カレンダー初期化
   document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 DOM Content Loaded');
-    
-    // 月カレンダーの初期化
-    const monthCalendarEl = document.getElementById('monthCalendar');
-    console.log('📅 Month calendar element:', monthCalendarEl);
     
     // 予約カレンダーの初期化
     const calendarEl = document.getElementById('calendar');
@@ -2208,6 +2622,7 @@ body {
         });
     }
 
+    const monthCalendarEl = document.getElementById('monthCalendarContent');
     if (!monthCalendarEl || !calendarEl) {
       console.error('❌ Calendar elements not found');
       return;
@@ -2227,44 +2642,157 @@ body {
       }
     }
 
-                    // 月カレンダーの初期化
-          const monthCalendar = new FullCalendar.Calendar(monthCalendarEl, {
-            initialView: 'dayGridMonth',
-            locale: 'ja',
-            height: 100, // 固定の高さを設定
-            width: 120, // 固定の幅を設定
-            headerToolbar: false, // ヘッダーを非表示
-            dayHeaderFormat: { weekday: 'short' },
-            dayCellClassNames: 'clickable-day-cell',
-            aspectRatio: 1.2, // 幅が少し広い
-            contentHeight: 84, // 高さを調整
-            contentWidth: 120, // 幅を調整
-      datesSet: function() {
-        // 日付が変更されたときに年と月の表示を更新
-        updateMonthYearDisplay();
-      },
-      dayCellDidMount: function(info) {
-        // 日付セルにクリックイベントを追加
-        info.el.style.cursor = 'pointer';
-        info.el.addEventListener('click', function() {
-          const clickedDate = info.date;
-          console.log('📅 Month calendar day clicked:', clickedDate);
-          
-          // 予約カレンダーをその週に移動
-          calendar.gotoDate(clickedDate);
-          
-          // 選択された日付をハイライト
-          monthCalendar.select(clickedDate);
-        });
-      },
-      select: function(info) {
-        const selectedDate = info.start;
-        console.log('📅 Month calendar date selected:', selectedDate);
-        
-        // 予約カレンダーをその週に移動
-        calendar.gotoDate(selectedDate);
+    // 年と月の選択モーダルを開く関数
+    function openMonthYearModal() {
+      const currentDate = monthCalendar.getDate();
+      const yearSelect = document.getElementById('yearSelect');
+      const monthSelect = document.getElementById('monthSelect');
+      
+      // 年のオプションを生成（現在の年の前後5年）
+      const currentYear = currentDate.getFullYear();
+      yearSelect.innerHTML = '';
+      for (let year = currentYear - 5; year <= currentYear + 5; year++) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = `${year}年`;
+        if (year === currentYear) {
+          option.selected = true;
+        }
+        yearSelect.appendChild(option);
       }
+      
+      // 月を設定
+      monthSelect.value = currentDate.getMonth() + 1;
+      
+      // モーダルを開く
+      const modalElement = document.getElementById('monthYearModal');
+      const modal = new bootstrap.Modal(modalElement, {
+        backdrop: 'static',
+        keyboard: true,
+        focus: true
+      });
+      
+      // モーダルが開く前にフォーカスを保存
+      const previousFocus = document.activeElement;
+      
+      modal.show();
+      
+      // フォーカスを年選択に設定
+      setTimeout(() => {
+        if (yearSelect) {
+          yearSelect.focus();
+        }
+      }, 200);
+      
+      // モーダルが閉じられた時の処理
+      modalElement.addEventListener('hidden.bs.modal', function() {
+        // フォーカスを元の要素に戻す
+        if (previousFocus && previousFocus.focus) {
+          setTimeout(() => {
+            previousFocus.focus();
+          }, 100);
+        }
+      }, { once: true });
+      
+      // モーダルが閉じられる前の処理
+      modalElement.addEventListener('hide.bs.modal', function() {
+        // すべてのフォーカス可能な要素からフォーカスを外す
+        const focusableElements = modalElement.querySelectorAll('button, select, input, textarea, [tabindex]:not([tabindex="-1"])');
+        focusableElements.forEach(element => {
+          element.blur();
+        });
+      });
+    }
+
+    // ミニカレンダーの初期化
+    const monthCalendar = new FullCalendar.Calendar(monthCalendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'ja',
+        height: 'auto',
+        headerToolbar: false,
+        dayHeaderFormat: { weekday: 'short' },
+        fixedWeekCount: false,
+        showNonCurrentDates: true,
+        dayMaxEvents: false,
+        eventDisplay: 'none',
+        dayCellContent: function(arg) {
+            return arg.dayNumberText.replace(/[^\d]/g, '');
+        },
+        dayCellDidMount: function(info) {
+            info.el.style.cursor = 'pointer';
+            info.el.addEventListener('click', function() {
+                calendar.gotoDate(info.date);
+            });
+        }
     });
+    
+    // ミニカレンダーをレンダリング
+    monthCalendar.render();
+    
+    // 初期の年と月を表示
+    updateMonthYearDisplay();
+    
+    // ナビゲーションボタンのイベントリスナー
+    const prevMonthBtn = document.getElementById('prevMonthBtn');
+    const nextMonthBtn = document.getElementById('nextMonthBtn');
+    const currentMonthYear = document.getElementById('currentMonthYear');
+    
+    if (prevMonthBtn) {
+      prevMonthBtn.addEventListener('click', function() {
+        monthCalendar.prev();
+        updateMonthYearDisplay();
+      });
+    }
+    
+    if (nextMonthBtn) {
+      nextMonthBtn.addEventListener('click', function() {
+        monthCalendar.next();
+        updateMonthYearDisplay();
+      });
+    }
+    
+    // 年と月の表示部分のクリックイベント
+    if (currentMonthYear) {
+      currentMonthYear.addEventListener('click', function() {
+        openMonthYearModal();
+      });
+    }
+    
+    // 適用ボタンのイベントリスナー
+    const applyMonthYearBtn = document.getElementById('applyMonthYear');
+    if (applyMonthYearBtn) {
+      applyMonthYearBtn.addEventListener('click', function() {
+        const yearSelect = document.getElementById('yearSelect');
+        const monthSelect = document.getElementById('monthSelect');
+        
+        if (yearSelect && monthSelect) {
+          const selectedYear = parseInt(yearSelect.value);
+          const selectedMonth = parseInt(monthSelect.value);
+          
+          // カレンダーを指定した年と月に移動
+          monthCalendar.gotoDate(new Date(selectedYear, selectedMonth - 1, 1));
+          updateMonthYearDisplay();
+          
+          // モーダルを閉じる
+          const modalElement = document.getElementById('monthYearModal');
+          const modal = bootstrap.Modal.getInstance(modalElement);
+          if (modal) {
+            // フォーカスを外してからモーダルを閉じる
+            applyMonthYearBtn.blur();
+            modal.hide();
+          }
+        }
+      });
+    }
+    
+    // 閉じるボタンのイベントリスナー
+    const closeMonthYearModalBtn = document.getElementById('closeMonthYearModal');
+    if (closeMonthYearModalBtn) {
+      closeMonthYearModalBtn.addEventListener('click', function() {
+        // フォーカスを外してからモーダルを閉じる
+        closeMonthYearModalBtn.blur();
+      });
+    }
     
     // 予約カレンダーの初期化
     const calendar = new FullCalendar.Calendar(calendarEl, {
@@ -2463,7 +2991,7 @@ body {
         }
       },
       
-      // 🔧 重要：eventDidMountで全コースの高さを正確に設定
+      // 🔧 改善されたイベント高さ設定
       eventDidMount: function(info) {
         const event = info.event;
         const element = info.el;
@@ -2474,22 +3002,18 @@ body {
         const eventEnd = new Date(event.end);
         const actualDurationMinutes = Math.round((eventEnd - eventStart) / (1000 * 60));
         
-        // data属性を設定してCSSの高さ指定を有効にする
+        // data属性を設定
         element.setAttribute('data-duration', actualDurationMinutes);
         
-        // イベントの高さを正確に設定
-        const slotHeight = 30; // 10分間隔のスロット高さ（コンパクト化）
-        const expectedHeight = (actualDurationMinutes / 10) * slotHeight;
-        element.style.height = `${expectedHeight}px`;
-        element.style.minHeight = `${expectedHeight}px`;
-        element.style.maxHeight = `${expectedHeight}px`;
-        element.style.setProperty('--duration', actualDurationMinutes);
+        // 高さ計算（30pxベース）
+        const expectedHeight = (actualDurationMinutes / 10) * 30;
         
-        // デバッグ用ログ
-        console.log(`📏 Event ${event.id} height calculation:`);
-        console.log(`  Duration: ${actualDurationMinutes}分`);
-        console.log(`  Expected height: ${expectedHeight}px`);
-        console.log(`  Actual element height: ${element.offsetHeight}px`);
+        // 即座に高さを設定
+        element.style.setProperty('height', `${expectedHeight}px`, 'important');
+        element.style.setProperty('min-height', `${expectedHeight}px`, 'important');
+        element.style.setProperty('max-height', `${expectedHeight}px`, 'important');
+        element.style.setProperty('display', 'block', 'important');
+        element.style.setProperty('visibility', 'visible', 'important');
         
         // インターバル情報をdata属性として追加
         const courseDuration = extendedProps.course_duration || 60;
@@ -2501,100 +3025,21 @@ body {
             `${courseDuration}分 + ${intervalType}${intervalDuration}分 = ${actualDurationMinutes}分`);
         }
         
-        // 10分間隔での正確なスロット数を計算
-        const slots = actualDurationMinutes / 10;
-        
-        console.log(`📏 Mounting event ${event.id}:`);
-        console.log(`  Course: ${courseDuration}分`);
-        console.log(`  Interval: ${intervalDuration}分 (${intervalType})`);
-        console.log(`  Total: ${actualDurationMinutes}分`);
-        console.log(`  Slots: ${slots}`);
-        console.log(`  Data attribute: data-duration="${actualDurationMinutes}"`);
-        
-        // スロット高さを取得して高さを調整
+        // 遅延して最終確認
         setTimeout(() => {
-          const timeGridSlots = document.querySelectorAll('.fc-timegrid-slot');
-          if (timeGridSlots.length > 0) {
-                         const slotHeight = timeGridSlots[0].offsetHeight;
-             const expectedHeight = Math.round(slots * slotHeight);
-             
-             // 30pxベースでの高さ計算も追加
-             const baseSlotHeight = 30; // 新しいベース高さ
-             const expectedHeight30px = Math.round(slots * baseSlotHeight);
-            
-            console.log(`📐 Height calculation for event ${event.id}:`);
-            console.log(`  Slot height: ${slotHeight}px`);
-            console.log(`  Slots needed: ${slots}`);
-            console.log(`  Expected height: ${expectedHeight}px`);
-            console.log(`  CSS rule height: ${getComputedStyle(element).height}`);
-            
-            // JavaScript でも高さを設定（CSSと併用）
+          const finalHeight = element.offsetHeight;
+          if (finalHeight === 0 || finalHeight < expectedHeight * 0.8) {
+            // 強制的に再設定
             element.style.setProperty('height', `${expectedHeight}px`, 'important');
             element.style.setProperty('min-height', `${expectedHeight}px`, 'important');
             element.style.setProperty('max-height', `${expectedHeight}px`, 'important');
+            element.style.setProperty('display', 'block', 'important');
+            element.style.setProperty('visibility', 'visible', 'important');
+            element.style.setProperty('position', 'relative', 'important');
             
-            // height-calculated クラスを追加（アニメーション効果）
-            element.classList.add('height-calculated');
-            
-            // タブコンテナも調整
-            const tabContainer = element.querySelector('.event-tab-container');
-            if (tabContainer) {
-              tabContainer.style.setProperty('height', `${expectedHeight}px`, 'important');
-              tabContainer.style.setProperty('min-height', `${expectedHeight}px`, 'important');
-            }
-            
-            // 各コース+インターバル組み合わせの識別と表示
-            const courseIntervalMap = {
-              // 40分コース系
-              40: { course: '40分コース', interval: 'なし', description: '40分コースのみ' },
-              45: { course: '40分コース', interval: '5分', description: '40分コース + 5分インターバル' },
-              50: { course: '40分コース', interval: '10分', description: '40分コース + 10分インターバル' },
-              55: { course: '40分コース', interval: '15分', description: '40分コース + 15分インターバル' },
-              
-              // 60分コース系
-              60: { course: '60分コース', interval: 'なし', description: '60分コースのみ' },
-              65: { course: '60分コース', interval: '5分', description: '60分コース + 5分インターバル' },
-              70: { course: '60分コース', interval: '10分', description: '60分コース + 10分インターバル' },
-              75: { course: '60分コース', interval: '15分', description: '60分コース + 15分インターバル' },
-              80: { course: '60分コース', interval: '20分', description: '60分コース + 20分インターバル' },
-              
-              // 80分コース系
-              80: { course: '80分コース', interval: 'なし', description: '80分コースのみ' },
-              85: { course: '80分コース', interval: '5分', description: '80分コース + 5分インターバル' },
-              90: { course: '80分コース', interval: '10分', description: '80分コース + 10分インターバル' },
-              95: { course: '80分コース', interval: '15分', description: '80分コース + 15分インターバル' },
-              100: { course: '80分コース', interval: '20分', description: '80分コース + 20分インターバル' }
-            };
-            
-            const combinationInfo = courseIntervalMap[actualDurationMinutes];
-            if (combinationInfo) {
-              console.log(`🎯 ${combinationInfo.description}:`);
-              console.log(`  Height: ${expectedHeight}px (${slots}スロット)`);
-              console.log(`  CSS data-duration: [data-duration="${actualDurationMinutes}"]`);
-            } else {
-              console.log(`🎯 カスタム組み合わせ (${actualDurationMinutes}分):`);
-              console.log(`  Height: ${expectedHeight}px (${slots}スロット)`);
-            }
-            
-            // 高さ設定の最終確認
-            setTimeout(() => {
-              const finalHeight = element.offsetHeight;
-              const heightDiff = Math.abs(finalHeight - expectedHeight);
-              
-              if (heightDiff > 5) {
-                console.warn(`⚠️ Height adjustment failed for event ${event.id}:`);
-                console.warn(`  Expected: ${expectedHeight}px, Actual: ${finalHeight}px`);
-                console.warn(`  Difference: ${heightDiff}px`);
-                console.warn(`  Duration: ${actualDurationMinutes}分 (${slots}スロット)`);
-                
-                // 失敗した場合は再度強制設定
-                element.style.setProperty('height', `${expectedHeight}px`, 'important');
-              } else {
-                const combination = courseIntervalMap[actualDurationMinutes]?.description || 
-                                  `${actualDurationMinutes}分カスタム`;
-                console.log(`✅ ${combination} correctly displayed: ${finalHeight}px`);
-              }
-            }, 200);
+            console.log(`🔧 Event ${event.id} height adjusted: ${actualDurationMinutes}分 = ${expectedHeight}px`);
+          } else {
+            console.log(`✅ Event ${event.id} height: ${finalHeight}px (${actualDurationMinutes}分)`);
           }
         }, 100);
       },
@@ -2684,17 +3129,28 @@ body {
         const calendarEl = document.getElementById('monthCalendar');
         if (calendarEl) {
           // 強制的にサイズを設定
-          calendarEl.style.width = '120px';
+          calendarEl.style.width = '300px';
           calendarEl.style.height = '100px';
-          calendarEl.style.minWidth = '120px';
+          calendarEl.style.minWidth = '300px';
           calendarEl.style.minHeight = '100px';
-          calendarEl.style.maxWidth = '120px';
+          calendarEl.style.maxWidth = '300px';
           calendarEl.style.maxHeight = '100px';
           calendarEl.style.overflow = 'hidden';
           calendarEl.style.display = 'block';
           
-          // FullCalendar のサイズ更新
-          monthCalendar.updateSize();
+                   // FullCalendar のサイズ更新
+         monthCalendar.updateSize();
+         
+         // 強制的に再レンダリング
+         setTimeout(() => {
+           monthCalendar.render();
+           monthCalendar.updateSize();
+           
+           // さらに遅延して確実に表示
+           setTimeout(() => {
+             monthCalendar.updateSize();
+           }, 200);
+         }, 100);
           
           // 内部要素も強制的に調整
           const fcEl = calendarEl.querySelector('.fc');
@@ -2709,16 +3165,7 @@ body {
         }
       }, 100);
     
-    // ナビゲーションボタンのイベントリスナーを追加
-    document.getElementById('prevMonthBtn').addEventListener('click', function() {
-      monthCalendar.prev();
-      updateMonthYearDisplay();
-    });
-    
-    document.getElementById('nextMonthBtn').addEventListener('click', function() {
-      monthCalendar.next();
-      updateMonthYearDisplay();
-    });
+
     
     console.log('✅ Calendars rendered successfully');
     
@@ -2929,9 +3376,20 @@ body {
     }
     
     // 新規予約ボタン
-    document.getElementById('newReservationBtn').addEventListener('click', () => {
-      openNewReservationModal();
-    });
+    const newReservationBtn = document.getElementById('newReservationBtn');
+          if (newReservationBtn) {
+        newReservationBtn.addEventListener('click', () => {
+          openNewReservationModal();
+        });
+      }
+      
+      // シフト設定ボタンのイベントリスナー
+      const shiftSettingsBtn = document.getElementById('shiftSettingsBtn');
+      if (shiftSettingsBtn) {
+        shiftSettingsBtn.addEventListener('click', () => {
+          openShiftSettingsModal();
+        });
+      }
     
     // モーダル関連
     const reservationModal = new bootstrap.Modal(document.getElementById('reservationModal'));
@@ -2945,7 +3403,8 @@ body {
     const selectedCustomerInfo = document.getElementById('selectedCustomerInfo');
     const newCustomerForm = document.getElementById('newCustomerForm');
 
-    customerSearch.addEventListener('input', function() {
+    if (customerSearch) {
+      customerSearch.addEventListener('input', function() {
       const query = this.value.trim();
       
       clearTimeout(searchTimeout);
@@ -2959,6 +3418,7 @@ body {
         searchCustomers(query);
       }, 300);
     });
+    }
 
     // 検索結果以外をクリックしたら結果を隠す
     document.addEventListener('click', function(e) {
@@ -3110,7 +3570,9 @@ body {
     }
 
     // 顧客選択をクリア
-    document.getElementById('clearCustomerBtn').addEventListener('click', function() {
+    const clearCustomerBtn = document.getElementById('clearCustomerBtn');
+    if (clearCustomerBtn) {
+      clearCustomerBtn.addEventListener('click', function() {
       document.getElementById('selectedUserId').value = '';
       document.getElementById('customerSearch').value = '';
       
@@ -3130,6 +3592,7 @@ body {
       
       showMessage('顧客選択をクリアしました', 'info');
     });
+    }
 
     function resetReservationForm() {
       // フォームをリセット
@@ -3449,7 +3912,9 @@ body {
     }
     
     // ステータス変更時の処理
-    document.getElementById('reservationStatus').addEventListener('change', function() {
+    const reservationStatus = document.getElementById('reservationStatus');
+    if (reservationStatus) {
+      reservationStatus.addEventListener('change', function() {
       const status = this.value;
       console.log('📊 Status changed to:', status);
       
@@ -3462,9 +3927,12 @@ body {
         document.getElementById('cancellationReason').value = '';
       }
     });
+    }
 
     // インターバル設定変更時の処理
-    document.getElementById('reservationInterval').addEventListener('change', function() {
+    const reservationInterval = document.getElementById('reservationInterval');
+    if (reservationInterval) {
+      reservationInterval.addEventListener('change', function() {
       const intervalValue = this.value;
       const intervalInfo = document.getElementById('currentIntervalInfo');
       
@@ -3474,9 +3942,12 @@ body {
         intervalInfo.innerHTML = `<span class="badge bg-success">個別設定: ${intervalValue}分</span>`;
       }
     });
+    }
 
     // 保存ボタン
-    document.getElementById('saveReservationBtn').addEventListener('click', function() {
+    const saveReservationBtn = document.getElementById('saveReservationBtn');
+    if (saveReservationBtn) {
+      saveReservationBtn.addEventListener('click', function() {
       console.log('💾 Save button clicked');
       
       // 顧客選択のチェック
@@ -3648,267 +4119,62 @@ body {
         saveBtn.innerHTML = originalText;
       });
     });
-    
-    // 削除ボタン
-    document.getElementById('deleteReservationBtn').addEventListener('click', function() {
-      if (!confirm('この予約を削除しますか？\n削除した予約は復元できません。')) {
-        return;
-      }
-      
-      // ボタンを無効化
-      const deleteBtn = this;
-      const originalText = deleteBtn.innerHTML;
-      deleteBtn.disabled = true;
-      deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>削除中...';
-      
-      // 現在の予約IDを取得（モーダルから）
-      const reservationId = getCurrentReservationId();
-      
-      if (!reservationId) {
-        alert('削除する予約が選択されていません');
-        deleteBtn.disabled = false;
-        deleteBtn.innerHTML = originalText;
-        return;
-      }
-      
-      console.log('🗑️ Deleting reservation:', reservationId);
-      
-      // CSRF トークンを取得
-      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-      
-      // 削除APIを呼び出し
-      fetch(`/admin/reservations/${reservationId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-CSRF-Token': csrfToken
-        }
-      })
-      .then(response => {
-        console.log('📡 Delete response status:', response.status);
-        
-        if (!response.ok) {
-          return response.json().then(data => {
-            throw new Error(data.error || '削除に失敗しました');
-          });
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log('✅ Delete response:', data);
-        
-        if (data.success) {
-          // 成功メッセージを表示
-          showMessage('予約を削除しました', 'success');
-          
-          // モーダルを閉じる
-          reservationModal.hide();
-          
-          // カレンダーを更新
-          calendar.refetchEvents();
-        } else {
-          throw new Error(data.error || '削除に失敗しました');
-        }
-      })
-      .catch(error => {
-        console.error('❌ Delete error:', error);
-        alert('削除エラー: ' + error.message);
-      })
-      .finally(() => {
-        // ボタンを元に戻す
-        deleteBtn.disabled = false;
-        deleteBtn.innerHTML = originalText;
-      });
-    });
-    
-    // 現在の予約IDを取得する関数
-    function getCurrentReservationId() {
-      // モーダルから予約IDを取得する方法を実装
-      // 例: モーダルに隠しフィールドがある場合
-      const hiddenField = document.getElementById('currentReservationId');
-      return hiddenField ? hiddenField.value : null;
     }
     
-    // メッセージ表示関数
-    function showMessage(message, type = 'info') {
-      const alertDiv = document.createElement('div');
-      alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-      alertDiv.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-      `;
+
       
-      // ページの上部に表示
-      const container = document.querySelector('.calendar-container');
-      container.insertBefore(alertDiv, container.firstChild);
+
       
-      // 3秒後に自動で消す
-      setTimeout(() => {
-        alertDiv.remove();
-      }, 3000);
-    }
 
-    function forceMiniCalendarFix() {
-        console.log('🔧 Starting mini calendar force fix...');
+
+
+
+
+    
+
+    
+
+      
+
+
+
         
-        const miniCalendarEl = document.querySelector('.mini-calendar-container');
-        if (!miniCalendarEl) {
-            console.log('❌ Mini calendar element not found');
-            return;
-        }
 
-        // 1. 週番号要素を完全削除
-        const weekNumberElements = miniCalendarEl.querySelectorAll([
-            '.fc-daygrid-week-number',
-            '[class*="week-number"]',
-            '[class*="week"]:not(.fc-daygrid-day)'
-        ].join(', '));
+
+
+
         
-        weekNumberElements.forEach(el => {
-            console.log('🗑️ Removing week number element:', el);
-            el.remove();
-        });
 
-        // 2. colgroup と col 要素を修正
-        const colGroups = miniCalendarEl.querySelectorAll('colgroup');
-        colGroups.forEach(colGroup => {
-            console.log('🔧 Fixing colgroup:', colGroup);
-            const cols = colGroup.querySelectorAll('col');
+        
+
+        
+
+
+        
+
+
+        
+
+        
+
             
-            // 既存のcolを削除
-            cols.forEach(col => col.remove());
-            
-            // 新しく7つのcolを作成
-            for (let i = 0; i < 7; i++) {
-                const newCol = document.createElement('col');
-                newCol.style.width = '14.2857%';
-                newCol.style.minWidth = '14.2857%';
-                newCol.style.maxWidth = '14.2857%';
-                colGroup.appendChild(newCol);
-            }
-        });
 
-        // 3. ヘッダーセルの幅を直接設定
-        const headerCells = miniCalendarEl.querySelectorAll('.fc-col-header-cell');
-        headerCells.forEach((cell, index) => {
-            console.log(`🔧 Fixing header cell ${index + 1}:`, cell);
-            cell.style.width = '14.2857%';
-            cell.style.minWidth = '14.2857%';
-            cell.style.maxWidth = '14.2857%';
-            cell.style.boxSizing = 'border-box';
-        });
-
-        // 4. 日付セルの幅を直接設定
-        const dayCells = miniCalendarEl.querySelectorAll('.fc-daygrid-day');
-        dayCells.forEach((cell, index) => {
-            console.log(`🔧 Fixing day cell ${index + 1}:`, cell);
-            cell.style.width = '14.2857%';
-            cell.style.minWidth = '14.2857%';
-            cell.style.maxWidth = '14.2857%';
-            cell.style.boxSizing = 'border-box';
-        });
-
-        // 5. テーブルの幅を確実に設定
-        const tables = miniCalendarEl.querySelectorAll('table');
-        tables.forEach(table => {
-            console.log('🔧 Fixing table:', table);
-            table.style.width = '100%';
-            table.style.tableLayout = 'fixed';
-            table.style.borderCollapse = 'collapse';
-        });
-
-        // 6. 余分なpadding-leftを削除
-        const syncInners = miniCalendarEl.querySelectorAll('.fc-scrollgrid-sync-inner');
-        syncInners.forEach(el => {
-            el.style.paddingLeft = '0';
-        });
-
-        console.log('✅ Mini calendar force fix completed');
-    }
-
-    // 日付の「日」を削除する関数
-    function removeDayKanji() {
-        console.log('🔧 Removing "日" from day numbers...');
         
-        const miniCalendarEl = document.querySelector('.mini-calendar-container');
-        if (!miniCalendarEl) return;
-        
-        // 日付番号要素を取得して「日」を削除
-        const dayNumbers = miniCalendarEl.querySelectorAll('.fc-daygrid-day-number');
-        dayNumbers.forEach(dayNumber => {
-            if (dayNumber.textContent && dayNumber.textContent.includes('日')) {
-                dayNumber.textContent = dayNumber.textContent.replace('日', '');
-                console.log('✂️ Removed 日 from:', dayNumber.textContent);
-            }
-        });
-        
-        // リンク要素内の「日」も削除
-        const dayLinks = miniCalendarEl.querySelectorAll('a[class*="day-number"]');
-        dayLinks.forEach(link => {
-            if (link.textContent && link.textContent.includes('日')) {
-                link.textContent = link.textContent.replace('日', '');
-            }
-        });
-        
-        console.log('✅ Day kanji removal completed');
-    }
 
-    // 複数のタイミングで実行
-    document.addEventListener('DOMContentLoaded', () => {
-        console.log('📅 DOM loaded, starting mini calendar fixes...');
-        
-        // 即座に実行
-        forceMiniCalendarFix();
-        removeDayKanji();
-        
-        // 少し待ってからも実行（FullCalendarの初期化待ち）
-        setTimeout(() => {
-            forceMiniCalendarFix();
-            removeDayKanji();
-        }, 100);
-        setTimeout(() => {
-            forceMiniCalendarFix();
-            removeDayKanji();
-        }, 500);
-        setTimeout(() => {
-            forceMiniCalendarFix();
-            removeDayKanji();
-        }, 1000);
-        
-        // MutationObserverで変更を監視
-        const observer = new MutationObserver(() => {
-            console.log('🔄 DOM changed, re-fixing mini calendar...');
-            forceMiniCalendarFix();
-            removeDayKanji();
-        });
-        
-        const miniCalendarEl = document.querySelector('.mini-calendar-container');
-        if (miniCalendarEl) {
-            observer.observe(miniCalendarEl, {
-                childList: true,
-                subtree: true,
-                attributes: true,
-                attributeFilter: ['style', 'class']
-            });
-        }
-    });
 
-    // ページ読み込み完了後にも実行
-    window.addEventListener('load', () => {
-        setTimeout(() => {
-            forceMiniCalendarFix();
-            removeDayKanji();
-        }, 100);
-    });
 
-    // リサイズ時にも実行
-    window.addEventListener('resize', () => {
-        setTimeout(() => {
-            forceMiniCalendarFix();
-            removeDayKanji();
-        }, 100);
-    });
+
+        
+
+         
+
+         
+
+         
+
+
+    // ミニカレンダーの初期化
+    monthCalendar.render();
     
     // キャンセル履歴モーダルを開く
     window.openCancelledHistoryModal = function() {
@@ -3994,6 +4260,457 @@ body {
           modal.show();
         });
     };
+
+    // シフト設定モーダルを開く
+    window.openShiftSettingsModal = function() {
+      console.log('⏰ Opening shift settings modal');
+      
+      // 今日の日付を設定
+      const today = new Date().toISOString().split('T')[0];
+      
+      // フォームをリセット
+      document.getElementById('shiftDateSelect').value = today;
+      document.getElementById('shiftTypeSelect').value = 'normal';
+      document.getElementById('shiftStartTime').value = '09:00';
+      document.getElementById('shiftEndTime').value = '21:00';
+      document.getElementById('shiftNotes').value = '';
+      
+      // 休憩時間をクリア
+      const breakTimeList = document.getElementById('breakTimeList');
+      if (breakTimeList) {
+        breakTimeList.innerHTML = `
+          <div class="break-time-item card mb-3">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-md-4">
+                  <label class="form-label small text-muted">開始時間</label>
+                  <input type="time" class="form-control" placeholder="12:00">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label small text-muted">終了時間</label>
+                  <input type="time" class="form-control" placeholder="13:00">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label small text-muted">操作</label>
+                  <button type="button" class="btn btn-outline-danger btn-sm remove-break w-100">
+                    <i class="fas fa-trash me-1"></i>削除
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      // 保存ボタンを新規作成モードに戻す
+      const saveBtn = document.getElementById('saveShiftSettings');
+      if (saveBtn) {
+        saveBtn.textContent = '保存';
+        saveBtn.onclick = function() {
+          // 保存処理は既存のまま
+        };
+      }
+      
+      // シフトタイプの変更イベントを設定
+      const shiftTypeSelect = document.getElementById('shiftTypeSelect');
+      const shiftTimeSettings = document.getElementById('shiftTimeSettings');
+      const shiftBreakSettings = document.getElementById('shiftBreakSettings');
+      
+      shiftTypeSelect.addEventListener('change', function() {
+        const selectedType = this.value;
+        
+        switch(selectedType) {
+          case 'normal':
+            shiftTimeSettings.style.display = 'none';
+            shiftBreakSettings.style.display = 'none';
+            break;
+          case 'extended':
+            shiftTimeSettings.style.display = 'flex';
+            shiftBreakSettings.style.display = 'block';
+            document.getElementById('shiftStartTime').value = '08:00';
+            document.getElementById('shiftEndTime').value = '20:00';
+            break;
+          case 'shortened':
+            shiftTimeSettings.style.display = 'flex';
+            shiftBreakSettings.style.display = 'block';
+            document.getElementById('shiftStartTime').value = '10:00';
+            document.getElementById('shiftEndTime').value = '16:00';
+            break;
+          case 'closed':
+            shiftTimeSettings.style.display = 'none';
+            shiftBreakSettings.style.display = 'none';
+            break;
+          case 'custom':
+            shiftTimeSettings.style.display = 'flex';
+            shiftBreakSettings.style.display = 'block';
+            break;
+        }
+      });
+      
+      // 休憩時間の追加ボタン
+      const addBreakTimeBtn = document.getElementById('addBreakTime');
+      
+      if (addBreakTimeBtn) {
+        addBreakTimeBtn.addEventListener('click', function() {
+          const breakTimeList = document.getElementById('breakTimeList');
+          if (!breakTimeList) return;
+          
+          const breakItem = document.createElement('div');
+          breakItem.className = 'break-time-item card mb-3';
+          breakItem.innerHTML = `
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-md-4">
+                  <label class="form-label small text-muted">開始時間</label>
+                  <input type="time" class="form-control" placeholder="12:00">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label small text-muted">終了時間</label>
+                  <input type="time" class="form-control" placeholder="13:00">
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label small text-muted">操作</label>
+                  <button type="button" class="btn btn-outline-danger btn-sm remove-break w-100">
+                    <i class="fas fa-trash me-1"></i>削除
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+          breakTimeList.appendChild(breakItem);
+          
+          // 削除ボタンのイベントリスナーを追加
+          breakItem.querySelector('.remove-break').addEventListener('click', function() {
+            breakItem.remove();
+          });
+        });
+      }
+      
+      // 既存の削除ボタンにイベントリスナーを追加
+      document.querySelectorAll('.remove-break').forEach(btn => {
+        btn.addEventListener('click', function() {
+          this.closest('.break-time-item').remove();
+        });
+      });
+      
+              // 保存ボタンのイベントリスナー
+        const saveShiftBtn = document.getElementById('saveShiftSettings');
+        saveShiftBtn.addEventListener('click', function() {
+          const shiftData = {
+            shift: {
+              date: document.getElementById('shiftDateSelect').value,
+              shift_type: document.getElementById('shiftTypeSelect').value,
+              start_time: document.getElementById('shiftStartTime').value,
+              end_time: document.getElementById('shiftEndTime').value,
+              notes: document.getElementById('shiftNotes').value,
+              breaks: []
+            }
+          };
+          
+          // 休憩時間を収集
+          document.querySelectorAll('.break-time-item').forEach(item => {
+            const timeInputs = item.querySelectorAll('input[type="time"]');
+            if (timeInputs[0].value && timeInputs[1].value) {
+              shiftData.shift.breaks.push({
+                start: timeInputs[0].value,
+                end: timeInputs[1].value
+              });
+            }
+          });
+          
+          console.log('⏰ Saving shift data:', shiftData);
+          
+          // APIを呼び出してシフト設定を保存
+          fetch('/admin/shifts', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify(shiftData)
+          })
+          .then(response => response.json())
+                  .then(data => {
+          console.log('⏰ Save response:', data);
+          if (data.success) {
+            showMessage('シフト設定を保存しました', 'success');
+            // 少し待ってからシフト一覧を再読み込み
+            setTimeout(() => {
+              loadShiftList();
+            }, 100);
+            // モーダルを閉じる
+            const modal = bootstrap.Modal.getInstance(document.getElementById('shiftSettingsModal'));
+            modal.hide();
+          } else {
+            showMessage('保存に失敗しました: ' + data.errors.join(', '), 'error');
+          }
+        })
+          .catch(error => {
+            console.error('❌ Shift save error:', error);
+            showMessage('保存エラーが発生しました', 'error');
+          });
+        });
+      
+                    // モーダルを表示
+      const modal = new bootstrap.Modal(document.getElementById('shiftSettingsModal'));
+      
+      // モーダルが完全に表示された後にシフト一覧を読み込む
+      const modalElement = document.getElementById('shiftSettingsModal');
+      modalElement.addEventListener('shown.bs.modal', function() {
+        console.log('⏰ Modal shown event triggered');
+        // モーダルが表示された後に少し待ってからシフト一覧を読み込む
+        setTimeout(() => {
+          loadShiftList();
+        }, 500);
+      }, { once: true });
+      
+      modal.show();
+      };
+      
+      // シフト一覧を読み込む関数
+      function loadShiftList() {
+        console.log('⏰ Loading shift list...');
+        
+        // 要素の存在を確認
+        const modal = document.getElementById('shiftSettingsModal');
+        const shiftList = document.getElementById('shiftList');
+        
+        console.log('⏰ Modal element:', modal);
+        console.log('⏰ Shift list element:', shiftList);
+        
+        // shiftListが存在しない場合は再試行（最大5回）
+        if (!shiftList) {
+          console.log('⏰ Shift list element not found, retrying...');
+          if (typeof loadShiftList.retryCount === 'undefined') {
+            loadShiftList.retryCount = 0;
+          }
+          loadShiftList.retryCount++;
+          
+          if (loadShiftList.retryCount < 5) {
+            setTimeout(loadShiftList, 200);
+            return;
+          } else {
+            console.error('❌ Failed to find shift list element after 5 retries');
+            return;
+          }
+        }
+        
+        // リトライカウントをリセット
+        loadShiftList.retryCount = 0;
+        
+        fetch('/admin/shifts')
+          .then(response => response.json())
+          .then(shifts => {
+            console.log('⏰ Received shifts:', shifts);
+            
+            console.log('⏰ Found shiftList:', shiftList);
+
+            
+            if (shifts.length === 0) {
+              console.log('⏰ No shifts found, showing empty state');
+              shiftList.innerHTML = `
+                <div class="text-center py-5">
+                  <i class="fas fa-calendar-times text-muted" style="font-size: 3rem;"></i>
+                  <h5 class="text-muted mt-3">設定済みシフトがありません</h5>
+                  <p class="text-muted">シフトを設定すると、ここに表示されます。</p>
+                </div>
+              `;
+            } else {
+              console.log('⏰ Found shifts, displaying list:', shifts.length, 'shifts');
+                              const shiftsHtml = shifts.map(shift => `
+                  <div class="shift-item card mb-3 border-0 shadow-sm">
+                    <div class="card-body">
+                      <div class="row align-items-center">
+                        <div class="col-md-2">
+                          <div class="text-center">
+                            <div class="fw-bold text-primary">${shift.date_display}</div>
+                            <small class="text-muted">${shift.weekday}</small>
+                          </div>
+                        </div>
+                        <div class="col-md-2">
+                          <span class="badge ${shift.shift_type_badge_class}">${shift.shift_type_display}</span>
+                        </div>
+                        <div class="col-md-2">
+                          <div class="text-center">
+                            <div class="fw-bold">${shift.business_hours || '休業日'}</div>
+                            <small class="text-muted">${shift.business_hours_duration || '-'}</small>
+                          </div>
+                        </div>
+                        <div class="col-md-3">
+                          <div class="small">
+                            <div class="text-muted">休憩時間：</div>
+                            <div>${shift.breaks_display}</div>
+                          </div>
+                        </div>
+                        <div class="col-md-2">
+                          <div class="small text-muted">
+                            <i class="fas fa-sticky-note me-1"></i>
+                            ${shift.notes || '-'}
+                          </div>
+                        </div>
+                        <div class="col-md-1">
+                          <div class="btn-group-vertical">
+                            <button class="btn btn-outline-primary btn-sm" title="編集" onclick="editShift(${shift.id})">
+                              <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" title="削除" onclick="deleteShift(${shift.id})">
+                              <i class="fas fa-trash"></i>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                `).join('');
+                shiftList.innerHTML = shiftsHtml;
+            }
+          })
+          .catch(error => {
+            console.error('❌ Load shifts error:', error);
+            showMessage('シフト一覧の読み込みに失敗しました', 'error');
+          });
+      }
+      
+      // シフトを編集する関数
+      function editShift(shiftId) {
+        fetch(`/admin/shifts/${shiftId}`)
+          .then(response => response.json())
+          .then(shift => {
+            // フォームに値を設定
+            document.getElementById('shiftDateSelect').value = shift.date;
+            document.getElementById('shiftTypeSelect').value = shift.shift_type;
+            document.getElementById('shiftStartTime').value = shift.start_time || '';
+            document.getElementById('shiftEndTime').value = shift.end_time || '';
+            document.getElementById('shiftNotes').value = shift.notes || '';
+            
+            // シフトタイプに応じて表示を切り替え
+            const shiftTypeSelect = document.getElementById('shiftTypeSelect');
+            shiftTypeSelect.dispatchEvent(new Event('change'));
+            
+            // 休憩時間を設定
+            const breakTimeList = document.getElementById('breakTimeList');
+            breakTimeList.innerHTML = '';
+            
+            if (shift.breaks && shift.breaks.length > 0) {
+              shift.breaks.forEach(breakTime => {
+                const breakItem = document.createElement('div');
+                breakItem.className = 'break-time-item card mb-3';
+                breakItem.innerHTML = `
+                  <div class="card-body">
+                    <div class="row align-items-center">
+                      <div class="col-md-4">
+                        <label class="form-label small text-muted">開始時間</label>
+                        <input type="time" class="form-control" value="${breakTime.start}">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label small text-muted">終了時間</label>
+                        <input type="time" class="form-control" value="${breakTime.end}">
+                      </div>
+                      <div class="col-md-3">
+                        <label class="form-label small text-muted">操作</label>
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-break w-100">
+                          <i class="fas fa-trash me-1"></i>削除
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                `;
+                breakTimeList.appendChild(breakItem);
+                
+                // 削除ボタンのイベントリスナーを追加
+                breakItem.querySelector('.remove-break').addEventListener('click', function() {
+                  breakItem.remove();
+                });
+              });
+            }
+            
+            // 保存ボタンを更新モードに変更
+            const saveBtn = document.getElementById('saveShiftSettings');
+            saveBtn.textContent = '更新';
+            saveBtn.onclick = function() {
+              updateShift(shiftId);
+            };
+          })
+          .catch(error => {
+            console.error('❌ Load shift error:', error);
+            showMessage('シフトの読み込みに失敗しました', 'error');
+          });
+      }
+      
+      // シフトを更新する関数
+      function updateShift(shiftId) {
+        const shiftData = {
+          shift: {
+            date: document.getElementById('shiftDateSelect').value,
+            shift_type: document.getElementById('shiftTypeSelect').value,
+            start_time: document.getElementById('shiftStartTime').value,
+            end_time: document.getElementById('shiftEndTime').value,
+            notes: document.getElementById('shiftNotes').value,
+            breaks: []
+          }
+        };
+        
+        // 休憩時間を収集
+        document.querySelectorAll('.break-time-item').forEach(item => {
+          const timeInputs = item.querySelectorAll('input[type="time"]');
+          if (timeInputs[0].value && timeInputs[1].value) {
+            shiftData.shift.breaks.push({
+              start: timeInputs[0].value,
+              end: timeInputs[1].value
+            });
+          }
+        });
+        
+        fetch(`/admin/shifts/${shiftId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+          },
+          body: JSON.stringify(shiftData)
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showMessage('シフト設定を更新しました', 'success');
+            loadShiftList();
+            // モーダルを閉じる
+            const modal = bootstrap.Modal.getInstance(document.getElementById('shiftSettingsModal'));
+            modal.hide();
+          } else {
+            showMessage('更新に失敗しました: ' + data.errors.join(', '), 'error');
+          }
+        })
+        .catch(error => {
+          console.error('❌ Update shift error:', error);
+          showMessage('更新エラーが発生しました', 'error');
+        });
+      }
+      
+      // シフトを削除する関数
+      function deleteShift(shiftId) {
+        if (confirm('このシフトを削除しますか？')) {
+          fetch(`/admin/shifts/${shiftId}`, {
+            method: 'DELETE',
+            headers: {
+              'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+            }
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              showMessage('シフトを削除しました', 'success');
+              loadShiftList();
+            } else {
+              showMessage('削除に失敗しました: ' + data.errors.join(', '), 'error');
+            }
+          })
+          .catch(error => {
+            console.error('❌ Delete shift error:', error);
+            showMessage('削除エラーが発生しました', 'error');
+          });
+        }
+      }
   });
 </script>
 

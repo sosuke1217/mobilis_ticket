@@ -49,6 +49,9 @@ Rails.application.routes.draw do
     resources :notification_logs, only: [:index]
     resources :notification_preferences, only: [:index]
     
+    # シフト管理
+    resources :shifts, only: [:index, :show, :create, :update, :destroy]
+    
     # 設定
     resources :settings, only: [:index, :show, :edit, :update]
   end
