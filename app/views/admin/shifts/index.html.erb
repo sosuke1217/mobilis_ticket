@@ -1,0 +1,394 @@
+<% content_for :title, "シフト設定 - Mobilis" %>
+
+<div class="container-lg my-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2">📅 シフト設定</h1>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><%= link_to "管理画面", admin_root_path %></li>
+        <li class="breadcrumb-item active">シフト設定</li>
+      </ol>
+    </nav>
+  </div>
+
+  <!-- 新規シフト作成フォーム -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">➕ 新規シフト作成</h5>
+    </div>
+    <div class="card-body">
+      <%= form_with model: @shift, url: admin_shifts_path, local: true, class: "needs-validation", novalidate: true, id: "shiftForm" do |f| %>
+        <div class="row">
+          <div class="col-md-4">
+            <div class="mb-3">
+              <label for="shift_date" class="form-label">📅 日付</label>
+              <%= f.date_field :date, class: "form-control", required: true %>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="mb-3">
+              <label for="shift_start_time" class="form-label">🌅 開始時間</label>
+              <%= f.time_field :start_time, class: "form-control", required: true %>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="mb-3">
+              <label for="shift_end_time" class="form-label">🌆 終了時間</label>
+              <%= f.time_field :end_time, class: "form-control", required: true %>
+            </div>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label for="shift_notes" class="form-label">📝 メモ</label>
+          <%= f.text_area :notes, class: "form-control", rows: 3, placeholder: "シフトに関するメモを入力してください" %>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-1"></i>シフトを作成
+          </button>
+          <button type="button" class="btn btn-outline-secondary" onclick="clearShiftForm()">
+            <i class="fas fa-eraser me-1"></i>フォームをクリア
+          </button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- シフト一覧 -->
+  <div class="card shadow-sm">
+    <div class="card-header bg-info text-white">
+      <h5 class="mb-0">📋 シフト一覧</h5>
+    </div>
+    <div class="card-body">
+      <% if @shifts.any? %>
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>📅 日付</th>
+                <th>⏰ 時間</th>
+                <th>📝 メモ</th>
+                <th>🔄 操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @shifts.each do |shift| %>
+                <tr data-shift-id="<%= shift.id %>">
+                  <td>
+                    <strong><%= shift.date.strftime("%m/%d") %></strong>
+                    <small class="text-muted d-block"><%= shift.date.strftime("%Y年%m月%d日") %></small>
+                  </td>
+                  <td>
+                    <span class="badge bg-primary">
+                      <%= shift.start_time.strftime("%H:%M") %> - <%= shift.end_time.strftime("%H:%M") %>
+                    </span>
+                    <small class="text-muted d-block">
+                      <%= ((shift.end_time - shift.start_time) / 3600).round(1) %>時間
+                    </small>
+                  </td>
+                  <td>
+                    <% if shift.notes.present? %>
+                      <span class="text-truncate d-inline-block" style="max-width: 200px;" title="<%= shift.notes %>">
+                        <%= shift.notes %>
+                      </span>
+                    <% else %>
+                      <span class="text-muted">-</span>
+                    <% end %>
+                  </td>
+                  <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                      <button type="button" class="btn btn-outline-primary" onclick="editShift(<%= shift.id %>)">
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button type="button" class="btn btn-outline-danger" onclick="deleteShift(<%= shift.id %>)">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="text-center py-4">
+          <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+          <h5 class="text-muted">シフトが登録されていません</h5>
+          <p class="text-muted">上記のフォームからシフトを作成してください。</p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<!-- 編集モーダル -->
+<div class="modal fade" id="editShiftModal" tabindex="-1" aria-labelledby="editShiftModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editShiftModalLabel">✏️ シフト編集</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editShiftForm">
+          <input type="hidden" id="edit_shift_id">
+          <div class="mb-3">
+            <label for="edit_shift_date" class="form-label">📅 日付</label>
+            <input type="date" id="edit_shift_date" class="form-control" required>
+          </div>
+          <div class="row">
+            <div class="col-6">
+              <div class="mb-3">
+                <label for="edit_shift_start_time" class="form-label">🌅 開始時間</label>
+                <input type="time" id="edit_shift_start_time" class="form-control" required>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="mb-3">
+                <label for="edit_shift_end_time" class="form-label">🌆 終了時間</label>
+                <input type="time" id="edit_shift_end_time" class="form-control" required>
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="edit_shift_notes" class="form-label">📝 メモ</label>
+            <textarea id="edit_shift_notes" class="form-control" rows="3"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+        <button type="button" class="btn btn-primary" onclick="updateShift()">更新</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // フォームバリデーション
+  const forms = document.querySelectorAll('.needs-validation');
+  Array.from(forms).forEach(form => {
+    form.addEventListener('submit', event => {
+      if (!form.checkValidity()) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      form.classList.add('was-validated');
+    }, false);
+  });
+
+  // シフト作成フォームのJavaScript処理
+  const shiftForm = document.getElementById('shiftForm');
+  if (shiftForm) {
+    shiftForm.addEventListener('submit', function(event) {
+      event.preventDefault();
+      
+      const formData = new FormData(shiftForm);
+      const shiftData = {
+        shift: {
+          date: formData.get('shift[date]'),
+          shift_type: formData.get('shift[shift_type]') || 'regular',
+          start_time: formData.get('shift[start_time]'),
+          end_time: formData.get('shift[end_time]'),
+          notes: formData.get('shift[notes]')
+        }
+      };
+
+      fetch('/admin/shifts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+        },
+        body: JSON.stringify(shiftData)
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.success) {
+          showNotification('シフトを作成しました', 'success');
+          shiftForm.reset();
+          location.reload();
+        } else {
+          showNotification('シフトの作成に失敗しました: ' + (data.errors ? data.errors.join(', ') : '不明なエラー'), 'error');
+        }
+      })
+      .catch(error => {
+        console.error('❌ シフト作成エラー:', error);
+        console.error('❌ Error details:', error.message);
+        showNotification('シフトの作成に失敗しました: ' + error.message, 'error');
+      });
+    });
+  }
+});
+
+// シフト編集
+function editShift(shiftId) {
+  console.log(`✏️ シフト編集: ${shiftId}`);
+  
+  // シフトデータを取得
+  fetch(`/admin/shifts/${shiftId}.json`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      document.getElementById('edit_shift_id').value = data.id;
+      document.getElementById('edit_shift_date').value = data.date;
+      document.getElementById('edit_shift_start_time').value = data.start_time;
+      document.getElementById('edit_shift_end_time').value = data.end_time;
+      document.getElementById('edit_shift_notes').value = data.notes || '';
+      
+      // モーダルを表示
+      const modal = new bootstrap.Modal(document.getElementById('editShiftModal'));
+      modal.show();
+    })
+    .catch(error => {
+      console.error('❌ シフトデータの取得に失敗:', error);
+      console.error('❌ Error details:', error.message);
+      showNotification('シフトデータの取得に失敗しました: ' + error.message, 'error');
+    });
+}
+
+// シフト更新
+function updateShift() {
+  const shiftId = document.getElementById('edit_shift_id').value;
+  const formData = {
+    shift: {
+      date: document.getElementById('edit_shift_date').value,
+      start_time: document.getElementById('edit_shift_start_time').value,
+      end_time: document.getElementById('edit_shift_end_time').value,
+      notes: document.getElementById('edit_shift_notes').value
+    }
+  };
+  
+  fetch(`/admin/shifts/${shiftId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+    },
+    body: JSON.stringify(formData)
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    if (data.success) {
+      showNotification('シフトを更新しました', 'success');
+      location.reload();
+    } else {
+      showNotification('シフトの更新に失敗しました: ' + (data.errors ? data.errors.join(', ') : '不明なエラー'), 'error');
+    }
+  })
+  .catch(error => {
+    console.error('❌ シフト更新エラー:', error);
+    console.error('❌ Error details:', error.message);
+    showNotification('ネットワークエラーが発生しました: ' + error.message, 'error');
+  });
+}
+
+// シフト削除
+function deleteShift(shiftId) {
+  if (!confirm('このシフトを削除しますか？')) {
+    return;
+  }
+  
+  console.log(`🗑️ シフト削除: ${shiftId}`);
+  
+  fetch(`/admin/shifts/${shiftId}`, {
+    method: 'DELETE',
+    headers: {
+      'Accept': 'application/json',
+      'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+    }
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    if (data.success) {
+      showNotification('シフトを削除しました', 'success');
+      location.reload();
+    } else {
+      showNotification('シフトの削除に失敗しました: ' + (data.errors ? data.errors.join(', ') : '不明なエラー'), 'error');
+    }
+  })
+  .catch(error => {
+    console.error('❌ シフト削除エラー:', error);
+    console.error('❌ Error details:', error.message);
+    showNotification('ネットワークエラーが発生しました: ' + error.message, 'error');
+  });
+}
+
+// フォームクリア
+function clearShiftForm() {
+  document.getElementById('shiftForm').reset();
+  console.log('🧹 フォームをクリアしました');
+}
+
+// 通知表示
+function showNotification(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+  notification.style.cssText = `
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+    min-width: 300px;
+    animation: slideIn 0.3s ease-out;
+  `;
+  notification.innerHTML = `
+    ${message}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  `;
+  
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.remove();
+  }, 3000);
+}
+</script>
+
+<style>
+.table th {
+  border-top: none;
+  font-weight: 600;
+}
+
+.btn-group-sm .btn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.badge {
+  font-size: 0.875rem;
+}
+
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+</style> 

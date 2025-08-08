@@ -18,7 +18,7 @@
           <h5 class="mb-0">🕐 予約時間設定</h5>
         </div>
         <div class="card-body">
-          <%= form_with model: @settings, url: admin_settings_path, local: true, class: "needs-validation", novalidate: true do |f| %>
+          <%= form_with model: @settings, url: admin_settings_path, local: true, class: "needs-validation business-hours-form", novalidate: true do |f| %>
             
             <div class="mb-3">
               <label for="application_setting_reservation_interval_minutes" class="form-label">
@@ -45,7 +45,7 @@
                 <label for="application_setting_business_hours_start" class="form-label">🌅 営業開始時間</label>
                 <div class="input-group">
                   <%= f.number_field :business_hours_start, 
-                      class: "form-control", 
+                      class: "form-control business-hours-input", 
                       min: 0, 
                       max: 23,
                       required: true %>
@@ -56,7 +56,7 @@
                 <label for="application_setting_business_hours_end" class="form-label">🌆 営業終了時間</label>
                 <div class="input-group">
                   <%= f.number_field :business_hours_end, 
-                      class: "form-control", 
+                      class: "form-control business-hours-input", 
                       min: 1, 
                       max: 24,
                       required: true %>
@@ -87,6 +87,7 @@
               <button type="submit" class="btn btn-success">
                 <i class="fas fa-save me-1"></i>設定を保存
               </button>
+
             </div>
           <% end %>
         </div>
@@ -213,7 +214,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }, false);
   });
 
-  // 営業時間の妥当性チェック
+  // 営業時間の妥当性チェックとリアルタイム更新
   const startTime = document.getElementById('application_setting_business_hours_start');
   const endTime = document.getElementById('application_setting_business_hours_end');
   
@@ -223,15 +224,99 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (start >= end) {
       endTime.setCustomValidity('営業終了時間は開始時間より後に設定してください');
+      return false;
     } else {
       endTime.setCustomValidity('');
+      return true;
+    }
+  }
+  
+  // 営業時間のリアルタイム更新
+  function updateBusinessHours() {
+    const start = parseInt(startTime.value);
+    const end = parseInt(endTime.value);
+    
+    if (start < end) {
+      console.log(`🔄 営業時間を更新: ${start}:00-${end}:00`);
+      
+      // カレンダーページが開いている場合は更新
+      if (window.shiftHighlighter) {
+        window.shiftHighlighter.changeShift(start, end);
+      }
+      
+      // サーバーに保存
+      saveBusinessHoursToServer(start, end);
+      
+      // 成功通知を表示
+      showNotification('営業時間が更新されました', 'success');
+    }
+  }
+  
+  // サーバーに営業時間を保存
+  async function saveBusinessHoursToServer(start, end) {
+    try {
+      const response = await fetch('/admin/settings/1/update_business_hours', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+        },
+        body: JSON.stringify({
+          business_hours_start: start,
+          business_hours_end: end
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log('✅ Business hours saved to server:', data);
+      } else {
+        console.error('❌ Failed to save business hours:', data.error);
+        showNotification('営業時間の保存に失敗しました', 'error');
+      }
+    } catch (error) {
+      console.error('❌ Network error:', error);
+      showNotification('ネットワークエラーが発生しました', 'error');
     }
   }
   
   if (startTime && endTime) {
-    startTime.addEventListener('change', validateBusinessHours);
-    endTime.addEventListener('change', validateBusinessHours);
+    startTime.addEventListener('change', () => {
+      validateBusinessHours();
+      updateBusinessHours();
+    });
+    endTime.addEventListener('change', () => {
+      validateBusinessHours();
+      updateBusinessHours();
+    });
   }
+  
+  // 通知表示関数
+  function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = `
+      top: 20px;
+      right: 20px;
+      z-index: 1050;
+      min-width: 300px;
+      animation: slideIn 0.3s ease-out;
+    `;
+    notification.innerHTML = `
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // 3秒後に自動削除
+    setTimeout(() => {
+      notification.remove();
+    }, 3000);
+  }
+  
+
 });
 </script>
 

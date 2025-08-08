@@ -33,6 +33,27 @@
         <!-- 右側：アクションボタン -->
         <div class="col-lg-4 col-md-12">
           <div class="d-flex flex-column gap-3">
+            <!-- 営業時間ステータス表示 -->
+            <div class="business-status-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+              <div class="d-flex align-items-center justify-content-between">
+                <div>
+                  <h6 class="mb-1" style="margin: 0; font-weight: 600;">
+                    <i class="fas fa-clock me-2"></i>営業時間
+                  </h6>
+                  <div class="business-hours-display" style="font-size: 0.9rem; opacity: 0.9;">
+                    <%= ApplicationSetting.current.formatted_business_hours %>
+                  </div>
+                </div>
+                <div class="business-status-indicator" style="text-align: center;">
+                  <div class="status-dot <%= ApplicationSetting.current.currently_open? ? 'open' : 'closed' %>" 
+                       style="width: 12px; height: 12px; border-radius: 50%; margin: 0 auto 5px; background: <%= ApplicationSetting.current.currently_open? ? '#28a745' : '#dc3545' %>;"></div>
+                  <div style="font-size: 0.8rem; font-weight: 500;">
+                    <%= ApplicationSetting.current.currently_open? ? '営業中' : '営業時間外' %>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
             <a href="<%= admin_reservations_path %>" class="btn btn-primary btn-lg shadow-sm">
               <i class="fas fa-list me-2"></i>📋 今日の予約一覧
             </a>
@@ -49,11 +70,8 @@
             </div>
             <!-- デバッグ用ボタン -->
             <div class="d-flex gap-2">
-              <button class="btn btn-outline-secondary btn-sm" onclick="testGridUpdate()">
-                <i class="fas fa-bug me-1"></i>グリッド更新テスト
-              </button>
-              <button class="btn btn-outline-secondary btn-sm" onclick="testShiftFetch()">
-                <i class="fas fa-download me-1"></i>シフト取得テスト
+              <button class="btn btn-outline-warning btn-sm" onclick="toggleDebugMode()">
+                <i class="fas fa-eye me-1"></i>デバッグモード
               </button>
             </div>
           </div>
@@ -64,7 +82,7 @@
 </div>  
 
   <div class="container-fluid" style="margin-top: 20px; margin-bottom: 20px;">
-    <div id="calendar"></div>
+    <div id="calendar" class="shift-highlight-enabled"></div>
   </div>
 </div>  
 
@@ -5729,7 +5747,11 @@ body {
       
               // 保存ボタンのイベントリスナー
         const saveShiftBtn = document.getElementById('saveShiftSettings');
-        saveShiftBtn.addEventListener('click', function() {
+        // 既存のイベントリスナーを削除
+        const newSaveShiftBtn = saveShiftBtn.cloneNode(true);
+        saveShiftBtn.parentNode.replaceChild(newSaveShiftBtn, saveShiftBtn);
+        
+        newSaveShiftBtn.addEventListener('click', function() {
           const shiftData = {
             shift: {
               date: document.getElementById('shiftDateSelect').value,
@@ -5759,15 +5781,25 @@ body {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'Accept': 'application/json',
               'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
             },
             body: JSON.stringify(shiftData)
           })
-          .then(response => response.json())
-                  .then(data => {
-          console.log('⏰ Save response:', data);
-          if (data.success) {
-            showMessage('シフト設定を保存しました', 'success');
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then(data => {
+            console.log('⏰ Save response:', data);
+            if (data.success) {
+                          showMessage('シフト設定を保存しました', 'success');
+            
+            // カレンダーを更新
+            updateCalendarWithShifts();
+            
             // 少し待ってからシフト一覧を再読み込み
             setTimeout(() => {
               loadShiftList();
@@ -5775,13 +5807,21 @@ body {
             // モーダルを閉じる
             const modal = bootstrap.Modal.getInstance(document.getElementById('shiftSettingsModal'));
             modal.hide();
-          } else {
-            showMessage('保存に失敗しました: ' + data.errors.join(', '), 'error');
-          }
-        })
+            
+            // 保存ボタンを新規作成モードにリセット
+            const resetSaveBtn = document.getElementById('saveShiftSettings');
+            resetSaveBtn.textContent = '保存';
+            const newResetSaveBtn = resetSaveBtn.cloneNode(true);
+            resetSaveBtn.parentNode.replaceChild(newResetSaveBtn, resetSaveBtn);
+            newResetSaveBtn.textContent = '保存';
+            } else {
+              showMessage('保存に失敗しました: ' + (data.errors ? data.errors.join(', ') : '不明なエラー'), 'error');
+            }
+          })
           .catch(error => {
             console.error('❌ Shift save error:', error);
-            showMessage('保存エラーが発生しました', 'error');
+            console.error('❌ Error details:', error.message);
+            showMessage('保存エラーが発生しました: ' + error.message, 'error');
           });
         });
       
@@ -5802,7 +5842,7 @@ body {
       };
       
       // シフト一覧を読み込む関数
-      function loadShiftList() {
+      window.loadShiftList = function() {
         console.log('⏰ Loading shift list...');
         
         // 要素の存在を確認
@@ -5832,8 +5872,13 @@ body {
         // リトライカウントをリセット
         loadShiftList.retryCount = 0;
         
-        fetch('/admin/shifts')
-          .then(response => response.json())
+        fetch('/admin/shifts.json')
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+          })
           .then(shifts => {
             console.log('⏰ Received shifts:', shifts);
             
@@ -5901,14 +5946,20 @@ body {
           })
           .catch(error => {
             console.error('❌ Load shifts error:', error);
-            showMessage('シフト一覧の読み込みに失敗しました', 'error');
+            console.error('❌ Error details:', error.message);
+            showMessage('シフト一覧の読み込みに失敗しました: ' + error.message, 'error');
           });
       }
       
       // シフトを編集する関数
-      function editShift(shiftId) {
-        fetch(`/admin/shifts/${shiftId}`)
-          .then(response => response.json())
+      window.editShift = function(shiftId) {
+        fetch(`/admin/shifts/${shiftId}.json`)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+          })
           .then(shift => {
             // フォームに値を設定
             document.getElementById('shiftDateSelect').value = shift.date;
@@ -5961,18 +6012,24 @@ body {
             // 保存ボタンを更新モードに変更
             const saveBtn = document.getElementById('saveShiftSettings');
             saveBtn.textContent = '更新';
-            saveBtn.onclick = function() {
+            
+            // 既存のイベントリスナーを削除して新しいリスナーを追加
+            const newSaveBtn = saveBtn.cloneNode(true);
+            saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+            newSaveBtn.textContent = '更新';
+            newSaveBtn.onclick = function() {
               updateShift(shiftId);
             };
           })
           .catch(error => {
             console.error('❌ Load shift error:', error);
-            showMessage('シフトの読み込みに失敗しました', 'error');
+            console.error('❌ Error details:', error.message);
+            showMessage('シフトの読み込みに失敗しました: ' + error.message, 'error');
           });
       }
       
       // シフトを更新する関数
-      function updateShift(shiftId) {
+      window.updateShift = function(shiftId) {
         const shiftData = {
           shift: {
             date: document.getElementById('shiftDateSelect').value,
@@ -5999,53 +6056,478 @@ body {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
             'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
           },
           body: JSON.stringify(shiftData)
         })
-        .then(response => response.json())
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
         .then(data => {
           if (data.success) {
             showMessage('シフト設定を更新しました', 'success');
+            
+            // カレンダーを更新
+            updateCalendarWithShifts();
+            
             loadShiftList();
             // モーダルを閉じる
             const modal = bootstrap.Modal.getInstance(document.getElementById('shiftSettingsModal'));
             modal.hide();
+            
+            // 保存ボタンを新規作成モードにリセット
+            const resetSaveBtn = document.getElementById('saveShiftSettings');
+            resetSaveBtn.textContent = '保存';
+            const newResetSaveBtn = resetSaveBtn.cloneNode(true);
+            resetSaveBtn.parentNode.replaceChild(newResetSaveBtn, resetSaveBtn);
+            newResetSaveBtn.textContent = '保存';
           } else {
-            showMessage('更新に失敗しました: ' + data.errors.join(', '), 'error');
+            showMessage('更新に失敗しました: ' + (data.errors ? data.errors.join(', ') : '不明なエラー'), 'error');
           }
         })
         .catch(error => {
           console.error('❌ Update shift error:', error);
-          showMessage('更新エラーが発生しました', 'error');
+          console.error('❌ Error details:', error.message);
+          showMessage('更新エラーが発生しました: ' + error.message, 'error');
         });
       }
       
+      // カレンダーをシフトで更新する関数
+      function updateCalendarWithShifts() {
+        console.log('🔄 カレンダーをシフトで更新中...');
+        
+        // カレンダーインスタンスを取得（複数の方法を試行）
+        let calendarInstance = null;
+        
+        // 方法1: window.pageCalendar
+        if (window.pageCalendar) {
+          calendarInstance = window.pageCalendar;
+          console.log('✅ pageCalendar found');
+        }
+        // 方法2: window.calendar
+        else if (window.calendar) {
+          calendarInstance = window.calendar;
+          console.log('✅ calendar found');
+        }
+        // 方法3: FullCalendar要素から取得
+        else {
+          const calendarEl = document.getElementById('calendar');
+          if (calendarEl) {
+            console.log('🔍 Calendar element found, checking for FullCalendar instance...');
+            console.log('🔍 Calendar element properties:', Object.getOwnPropertyNames(calendarEl));
+            
+            // FullCalendar v6の要素プロパティを確認
+            if (calendarEl._fullCalendar) {
+              try {
+                const fcInstance = calendarEl._fullCalendar;
+                if (typeof fcInstance.getApi === 'function') {
+                  calendarInstance = fcInstance.getApi();
+                  console.log('✅ FullCalendar v6 API found via element');
+                } else {
+                  calendarInstance = fcInstance;
+                  console.log('✅ FullCalendar instance found via element');
+                }
+              } catch (e) {
+                console.log('⚠️ FullCalendar API not available via element:', e);
+              }
+            } else {
+              console.log('⚠️ FullCalendar instance not found on element');
+            }
+          }
+        }
+        
+        if (!calendarInstance) {
+          console.log('❌ カレンダーインスタンスが見つかりません');
+          return;
+        }
+        
+        // シフトデータを取得してカレンダーを更新
+        fetch('/admin/shifts.json')
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then(shifts => {
+            console.log('🔄 シフトデータを取得:', shifts);
+            
+            // シフトハイライターが利用可能な場合
+            if (window.shiftHighlighter) {
+              console.log('🎨 Updating shift highlights...');
+              
+              // 各シフトの営業時間を適用
+              shifts.forEach(shift => {
+                if (shift.start_time && shift.end_time) {
+                  const startHour = parseInt(shift.start_time.split(':')[0]);
+                  const endHour = parseInt(shift.end_time.split(':')[0]);
+                  
+                  console.log(`🕐 Applying shift: ${startHour}:00-${endHour}:00 for ${shift.date}`);
+                  window.shiftHighlighter.updateTimeSlotHighlight(startHour, endHour);
+                }
+              });
+              
+              // グリッド背景色を更新
+              if (window.shiftHighlighter.updateGridBackgroundColors) {
+                window.shiftHighlighter.updateGridBackgroundColors();
+              }
+            } else {
+              console.warn('⚠️ Shift highlighter not available');
+            }
+            
+            // カレンダーを再レンダリング
+            try {
+              console.log('🔄 カレンダー更新を試行中...');
+              console.log('🔍 Calendar instance type:', typeof calendarInstance);
+              console.log('🔍 Calendar instance methods:', Object.getOwnPropertyNames(calendarInstance || {}));
+              
+              // FullCalendar v6の正しいAPIを使用
+              if (calendarInstance) {
+                // 方法1: getApi()を使用してAPIインスタンスを取得
+                if (typeof calendarInstance.getApi === 'function') {
+                  const api = calendarInstance.getApi();
+                  console.log('✅ FullCalendar API取得:', api);
+                  
+                  if (api && typeof api.refetchEvents === 'function') {
+                    api.refetchEvents();
+                    console.log('✅ FullCalendar v6 APIで更新しました');
+                  } else if (api && typeof api.getEvents === 'function') {
+                    // イベントを再取得する代替方法
+                    api.getEvents();
+                    console.log('✅ FullCalendar v6 getEventsで更新しました');
+                  } else {
+                    throw new Error('FullCalendar v6 APIのrefetchEvents/getEventsメソッドが見つかりません');
+                  }
+                }
+                // 方法2: 直接refetchEventsを呼び出し
+                else if (typeof calendarInstance.refetchEvents === 'function') {
+                  calendarInstance.refetchEvents();
+                  console.log('✅ 直接refetchEventsで更新しました');
+                }
+                // 方法3: カレンダー要素から直接操作
+                else {
+                  console.log('🔄 カレンダー要素から直接操作...');
+                  const calendarEl = document.getElementById('calendar');
+                  if (calendarEl) {
+                    // FullCalendar v6の要素プロパティを確認
+                    console.log('🔍 Calendar element properties:', Object.getOwnPropertyNames(calendarEl));
+                    
+                    // カレンダーインスタンスを要素から取得
+                    if (calendarEl._fullCalendar) {
+                      const fcInstance = calendarEl._fullCalendar;
+                      console.log('✅ FullCalendar instance found on element');
+                      
+                      if (typeof fcInstance.getApi === 'function') {
+                        const api = fcInstance.getApi();
+                        if (api && typeof api.refetchEvents === 'function') {
+                          api.refetchEvents();
+                          console.log('✅ 要素から取得したFullCalendar APIで更新しました');
+                        }
+                      }
+                    } else {
+                      throw new Error('FullCalendarインスタンスが要素に見つかりません');
+                    }
+                  } else {
+                    throw new Error('カレンダー要素が見つかりません');
+                  }
+                }
+              } else {
+                throw new Error('カレンダーインスタンスが利用できません');
+              }
+            } catch (error) {
+              console.error('❌ カレンダー更新エラー:', error);
+              
+              // 最後の手段: ページをリロード
+              console.log('🔄 最後の手段: カレンダー部分のみをリロード...');
+              const calendarContainer = document.querySelector('.calendar-container');
+              if (calendarContainer) {
+                // カレンダー部分のみを再読み込み
+                const currentUrl = window.location.href;
+                fetch(currentUrl)
+                  .then(response => response.text())
+                  .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newCalendar = doc.querySelector('#calendar');
+                    if (newCalendar) {
+                      calendarContainer.innerHTML = newCalendar.outerHTML;
+                      console.log('✅ カレンダー部分を再読み込みしました');
+                    }
+                  })
+                  .catch(err => {
+                    console.error('❌ カレンダー再読み込みエラー:', err);
+                  });
+              }
+            }
+            
+            // 視覚的フィードバック
+            showVisualFeedback();
+          })
+          .catch(error => {
+            console.error('❌ カレンダー更新エラー:', error);
+          });
+      }
+      
+      // 視覚的フィードバックを表示
+      function showVisualFeedback() {
+        const calendar = document.getElementById('calendar');
+        if (calendar) {
+          // 一時的なアニメーション効果を追加
+          calendar.classList.add('shift-update-animation');
+          setTimeout(() => {
+            calendar.classList.remove('shift-update-animation');
+          }, 1000);
+        }
+      }
+      
       // シフトを削除する関数
-      function deleteShift(shiftId) {
+      window.deleteShift = function(shiftId) {
         if (confirm('このシフトを削除しますか？')) {
           fetch(`/admin/shifts/${shiftId}`, {
             method: 'DELETE',
             headers: {
-              'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+              'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
             }
           })
-          .then(response => response.json())
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+          })
           .then(data => {
             if (data.success) {
               showMessage('シフトを削除しました', 'success');
+              
+              // カレンダーを更新
+              updateCalendarWithShifts();
+              
               loadShiftList();
             } else {
-              showMessage('削除に失敗しました: ' + data.errors.join(', '), 'error');
+              showMessage('削除に失敗しました: ' + (data.errors ? data.errors.join(', ') : '不明なエラー'), 'error');
             }
           })
           .catch(error => {
             console.error('❌ Delete shift error:', error);
-            showMessage('削除エラーが発生しました', 'error');
+            console.error('❌ Error details:', error.message);
+            showMessage('削除エラーが発生しました: ' + error.message, 'error');
           });
         }
       }
   });
+</script>
+
+<!-- 営業時間の初期化用JavaScript -->
+<script type="module">
+  // 営業時間の初期値を設定
+  window.initialBusinessHours = {
+    start: <%= ApplicationSetting.current.business_hours_start || 10 %>,
+    end: <%= ApplicationSetting.current.business_hours_end || 21 %>,
+    sundayClosed: <%= ApplicationSetting.current.sunday_closed? %>
+  };
+  
+  // 営業時間の動的更新
+  function updateBusinessHours(start, end) {
+    if (window.shiftHighlighter) {
+      console.log(`🔄 営業時間を動的更新: ${start}:00-${end}:00`);
+      window.shiftHighlighter.changeShift(start, end);
+      
+      // 営業時間表示も更新
+      const hoursDisplay = document.querySelector('.business-hours-display');
+      if (hoursDisplay) {
+        hoursDisplay.textContent = `${start}:00 - ${end}:00`;
+      }
+      
+      // 成功通知を表示
+      showNotification('営業時間が更新されました', 'success');
+    } else {
+      console.error('❌ Shift highlighter not available');
+    }
+  }
+  
+  // シフトハイライターの初期化を確実にする
+  function initializeShiftHighlighter() {
+    console.log('🎨 Initializing shift highlighter...');
+    
+    // カレンダーが利用可能になるまで待機（最大10回まで）
+    let retryCount = 0;
+    const maxRetries = 10;
+    
+    const waitForCalendar = () => {
+      if (window.pageCalendar) {
+        console.log('✅ Calendar found, initializing shift highlighter...');
+        
+        // 動的シフトハイライト機能を初期化
+        import('./calendar/dynamic_shift_highlight.js').then(module => {
+          const highlighter = module.initializeDynamicShiftHighlight(window.pageCalendar);
+          window.shiftHighlighter = highlighter;
+          console.log('✅ Shift highlighter initialized:', highlighter);
+          
+          // 初期状態でハイライトを適用
+          if (highlighter) {
+            highlighter.updateTimeSlotHighlight(10, 21); // デフォルト営業時間
+            console.log('✅ Initial highlight applied');
+          }
+        }).catch(error => {
+          console.error('❌ Failed to import shift highlight module:', error);
+        });
+      } else if (retryCount < maxRetries) {
+        retryCount++;
+        console.log(`⏳ Calendar not ready, retrying... (${retryCount}/${maxRetries})`);
+        setTimeout(waitForCalendar, 1000);
+      } else {
+        console.error('❌ Calendar initialization timeout after 10 retries');
+      }
+    };
+    
+    waitForCalendar();
+  }
+  
+  // カレンダーが利用可能になった後の初期化（最大5回まで）
+  let calendarWaitCount = 0;
+  const maxCalendarWaits = 5;
+  
+  function waitForCalendarAndInitialize() {
+    if (window.pageCalendar) {
+      console.log('🎨 Calendar available, initializing shift highlighter...');
+      initializeShiftHighlighter();
+    } else if (calendarWaitCount < maxCalendarWaits) {
+      calendarWaitCount++;
+      console.log(`⏳ Waiting for calendar to be available... (${calendarWaitCount}/${maxCalendarWaits})`);
+      setTimeout(waitForCalendarAndInitialize, 2000);
+    } else {
+      console.error('❌ Calendar wait timeout after 5 retries');
+    }
+  }
+  
+  // カレンダー初期化後にシフトハイライターを初期化
+  setTimeout(waitForCalendarAndInitialize, 3000);
+  
+  // カレンダー初期化の確認機能
+  function checkCalendarInitialization() {
+    console.log('🔍 Checking calendar initialization status...');
+    console.log('🔍 window.pageCalendar:', window.pageCalendar);
+    console.log('🔍 window.calendar:', window.calendar);
+    console.log('🔍 Calendar element:', document.getElementById('calendar'));
+    
+    if (window.pageCalendar) {
+      console.log('✅ Calendar is properly initialized');
+    } else {
+      console.log('❌ Calendar is not initialized yet');
+    }
+  }
+  
+  // 5秒後にカレンダー初期化状況を確認
+  setTimeout(checkCalendarInitialization, 5000);
+  
+  // 通知表示関数
+  function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = `
+      top: 20px;
+      right: 20px;
+      z-index: 1050;
+      min-width: 300px;
+      animation: slideIn 0.3s ease-out;
+    `;
+    notification.innerHTML = `
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // 3秒後に自動削除
+    setTimeout(() => {
+      notification.remove();
+    }, 3000);
+  }
+  
+  // 現在の営業状態を定期的にチェック
+  setInterval(() => {
+    fetch('/admin/settings/<%= ApplicationSetting.current.id %>/business_status')
+      .then(response => response.json())
+      .then(data => {
+        updateBusinessStatusIndicator(data);
+        updateBusinessHoursDisplay(data);
+      })
+      .catch(error => {
+        console.error('❌ Business status check failed:', error);
+      });
+  }, 60000); // 1分ごと
+  
+  // グローバル関数として公開
+  window.updateBusinessHours = updateBusinessHours;
+  
+
+  
+  // 営業時間表示の更新
+  function updateBusinessHoursDisplay(statusData) {
+    const hoursDisplay = document.querySelector('.business-hours-display');
+    const statusIndicator = document.querySelector('.business-status-indicator');
+    const statusDot = document.querySelector('.status-dot');
+    const statusText = statusIndicator.querySelector('div:last-child');
+    
+    if (hoursDisplay) {
+      hoursDisplay.textContent = statusData.business_hours.formatted;
+    }
+    
+    if (statusDot) {
+      statusDot.className = `status-dot ${statusData.is_open ? 'open' : 'closed'}`;
+      statusDot.style.background = statusData.is_open ? '#28a745' : '#dc3545';
+    }
+    
+    if (statusText) {
+      statusText.textContent = statusData.is_open ? '営業中' : '営業時間外';
+    }
+  }
+  
+  // デバッグモードの切り替え
+  function toggleDebugMode() {
+    const calendar = document.getElementById('calendar');
+    const isDebugMode = calendar.classList.contains('debug-mode');
+    
+    if (isDebugMode) {
+      calendar.classList.remove('debug-mode');
+      console.log('🔍 Debug mode disabled');
+    } else {
+      calendar.classList.add('debug-mode');
+      console.log('🔍 Debug mode enabled');
+      
+      // デバッグ情報を表示
+      const timeSlots = document.querySelectorAll('.fc-timegrid-slot');
+      timeSlots.forEach((slot, index) => {
+        const hour = Math.floor(index / 6) + 10;
+        slot.setAttribute('data-slot-index', index);
+        slot.setAttribute('data-time-hour', hour);
+      });
+    }
+  }
+  
+  function updateBusinessStatusIndicator(statusData) {
+    let indicator = document.querySelector('.business-status-indicator');
+    
+    if (!indicator) {
+      indicator = document.createElement('div');
+      indicator.className = 'business-status-indicator';
+      document.querySelector('.calendar-container').appendChild(indicator);
+    }
+    
+    // ステータスに応じてクラスとテキストを更新
+    const statusClass = statusData.is_open ? 'open' : 'closed';
+    indicator.className = `business-status-indicator ${statusClass}`;
+    indicator.textContent = statusData.status_message;
+    
+    // ツールチップ情報を追加
+    indicator.title = `営業時間: ${statusData.business_hours.formatted}\n現在時刻: ${statusData.current_time}`;
+  }
 </script>
 
 <style>
@@ -6101,7 +6583,52 @@ body {
     font-size: 10px;
     white-space: nowrap;
     z-index: 1000;
-}
+  }
+  
+  /* シフト更新時のアニメーション */
+  .shift-update-animation {
+    animation: shiftUpdatePulse 1s ease-in-out;
+  }
+  
+  @keyframes shiftUpdatePulse {
+    0% { 
+      box-shadow: 0 0 0 rgba(40, 167, 69, 0);
+    }
+    50% { 
+      box-shadow: 0 0 20px rgba(40, 167, 69, 0.3);
+    }
+    100% { 
+      box-shadow: 0 0 0 rgba(40, 167, 69, 0);
+    }
+  }
+  
+  /* 営業時間ハイライトの強化 */
+  .fc-timegrid-slot.business-hour {
+    background: linear-gradient(135deg, 
+      rgba(40, 167, 69, 0.1) 0%, 
+      rgba(40, 167, 69, 0.05) 100%) !important;
+    border-left: 2px solid rgba(40, 167, 69, 0.3) !important;
+  }
+  
+  .fc-timegrid-slot.non-business-hour {
+    background: rgba(0, 0, 0, 0.05) !important;
+    border-left: 1px solid rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  /* 営業時間境界の強調 */
+  .fc-timegrid-slot.business-start {
+    border-top: 3px solid #28a745 !important;
+    background: linear-gradient(to bottom, 
+      rgba(40, 167, 69, 0.15) 0%, 
+      rgba(40, 167, 69, 0.08) 100%) !important;
+  }
+  
+  .fc-timegrid-slot.business-end {
+    border-bottom: 3px solid #28a745 !important;
+    background: linear-gradient(to bottom, 
+      rgba(40, 167, 69, 0.08) 0%, 
+      rgba(40, 167, 69, 0.15) 100%) !important;
+  }
 </style>
 
 <!-- デバッグ用のJavaScript関数を直接定義 -->
@@ -6147,6 +6674,32 @@ function testShiftFetch() {
   checkFunction();
 }
 
+function testShiftHighlight() {
+  console.log('🧪 Testing shift highlight...');
+  
+  // 関数が利用可能になるまで待つ
+  const checkFunction = () => {
+    if (typeof changeBusinessHours === 'function') {
+      // 営業時間を拡張
+      changeBusinessHours(9, 22);
+      setTimeout(() => {
+        // 営業時間を短縮
+        changeBusinessHours(11, 20);
+        setTimeout(() => {
+          // デフォルトに戻す
+          changeBusinessHours(10, 21);
+        }, 2000);
+      }, 2000);
+      console.log('✅ Shift highlight test completed');
+    } else {
+      console.log('⏳ changeBusinessHours not ready, retrying...');
+      setTimeout(checkFunction, 100);
+    }
+  };
+  
+  checkFunction();
+}
+
 // グローバル関数として公開
 window.testGridUpdate = testGridUpdate;
 window.testShiftFetch = testShiftFetch;
@@ -6156,14 +6709,15 @@ console.log('🔧 Debug functions defined in HTML:', {
   testShiftFetch: typeof window.testShiftFetch
 });
 
-// 関数の準備状況を定期的にチェック
-setInterval(() => {
+// 関数の準備状況をチェック（一度だけ）
+setTimeout(() => {
   console.log('🔍 Function availability check:', {
     updateGridBackgroundColors: typeof updateGridBackgroundColors,
     getBusinessHoursForDate: typeof getBusinessHoursForDate
   });
-}, 1000);
+}, 2000);
 </script>
 
 <!-- キャンセル履歴モーダル -->
+</style>
 </style>

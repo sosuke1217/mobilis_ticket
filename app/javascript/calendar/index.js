@@ -4,6 +4,8 @@ import { setupReservationModal, openReservationModal } from './modal.js';
 import { setupIntervalControls } from './interval_settings.js';
 import { setupReservationForm } from './reservation_form.js';
 import { setupGlobalUtils } from './utils.js';
+import { initializeShiftIntegration } from './shift_integration.js';
+import { initializeDynamicShiftHighlight } from './dynamic_shift_highlight.js';
 
 console.log('📅 Calendar module loading...');
 
@@ -29,12 +31,35 @@ function initializeComplete() {
     console.log('🔧 Calling initializeCalendar...');
     initializeCalendar();
     
+    // カレンダーが初期化された後にシフトハイライターを初期化
+    setTimeout(() => {
+      if (window.pageCalendar) {
+        console.log('🎨 Initializing shift highlighter...');
+        const highlighter = initializeDynamicShiftHighlight(window.pageCalendar);
+        console.log('✅ Shift highlighter initialized:', highlighter);
+        
+        // グローバルに公開されていることを確認
+        if (window.shiftHighlighter) {
+          console.log('✅ Shift highlighter available globally');
+        } else {
+          console.error('❌ Shift highlighter not available globally');
+        }
+      } else {
+        console.error('❌ Calendar not available for shift highlighter');
+      }
+    }, 3000); // 3秒に延長
+    
+    // シフト統合機能を初期化
+    console.log('🎨 Initializing shift integration...');
+    initializeShiftIntegration();
+    
     // 初期化完了後の確認
     setTimeout(() => {
       console.log('🔍 Post-initialization check:');
       console.log('🔍 window.pageCalendar exists:', typeof window.pageCalendar !== 'undefined');
       console.log('🔍 window.pageCalendar value:', window.pageCalendar);
       console.log('🔍 window.openReservationModal exists:', typeof window.openReservationModal !== 'undefined');
+      console.log('🔍 window.ShiftQuickActions exists:', typeof window.ShiftQuickActions !== 'undefined');
       
       if (window.pageCalendar) {
         console.log('✅ Calendar successfully initialized and available globally');

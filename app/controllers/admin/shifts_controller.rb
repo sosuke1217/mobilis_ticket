@@ -5,11 +5,65 @@ class Admin::ShiftsController < ApplicationController
 
   def index
     @shifts = Shift.recent
-    render json: @shifts.map(&:as_json_with_display)
+    @shift = Shift.new
+    
+    respond_to do |format|
+      format.html
+      format.json { 
+        if @shifts.any?
+          shifts_data = @shifts.map do |shift|
+            {
+              id: shift.id,
+              date: shift.date.strftime('%Y-%m-%d'),
+              date_display: shift.date.strftime('%m/%d'),
+              weekday: shift.date.strftime('%a'),
+              shift_type: shift.shift_type,
+              shift_type_display: shift.shift_type_display,
+              shift_type_badge_class: shift.shift_type_badge_class,
+              start_time: shift.start_time&.strftime('%H:%M'),
+              end_time: shift.end_time&.strftime('%H:%M'),
+              business_hours: shift.business_hours,
+              business_hours_duration: shift.business_hours_duration,
+              breaks: shift.breaks || [],
+              breaks_display: shift.breaks_display,
+              notes: shift.notes,
+              created_at: shift.created_at&.strftime('%Y-%m-%d %H:%M:%S'),
+              updated_at: shift.updated_at&.strftime('%Y-%m-%d %H:%M:%S')
+            }
+          end
+          render json: shifts_data
+        else
+          render json: []
+        end
+      }
+    end
   end
 
   def show
-    render json: @shift.as_json_with_display
+    respond_to do |format|
+      format.html
+      format.json { 
+        shift_data = {
+          id: @shift.id,
+          date: @shift.date.strftime('%Y-%m-%d'),
+          date_display: @shift.date.strftime('%m/%d'),
+          weekday: @shift.date.strftime('%a'),
+          shift_type: @shift.shift_type,
+          shift_type_display: @shift.shift_type_display,
+          shift_type_badge_class: @shift.shift_type_badge_class,
+          start_time: @shift.start_time&.strftime('%H:%M'),
+          end_time: @shift.end_time&.strftime('%H:%M'),
+          business_hours: @shift.business_hours,
+          business_hours_duration: @shift.business_hours_duration,
+          breaks: @shift.breaks || [],
+          breaks_display: @shift.breaks_display,
+          notes: @shift.notes,
+          created_at: @shift.created_at&.strftime('%Y-%m-%d %H:%M:%S'),
+          updated_at: @shift.updated_at&.strftime('%Y-%m-%d %H:%M:%S')
+        }
+        render json: shift_data
+      }
+    end
   end
 
   # 指定日のシフトを取得
@@ -48,25 +102,90 @@ class Admin::ShiftsController < ApplicationController
     @shift = Shift.new(shift_params)
     
     if @shift.save
-      render json: { success: true, shift: @shift.as_json_with_display }
+      respond_to do |format|
+        format.html { redirect_to admin_shifts_path, notice: 'シフトを作成しました' }
+        format.json { 
+          shift_data = {
+            id: @shift.id,
+            date: @shift.date.strftime('%Y-%m-%d'),
+            date_display: @shift.date.strftime('%m/%d'),
+            weekday: @shift.date.strftime('%a'),
+            shift_type: @shift.shift_type,
+            shift_type_display: @shift.shift_type_display,
+            shift_type_badge_class: @shift.shift_type_badge_class,
+            start_time: @shift.start_time&.strftime('%H:%M'),
+            end_time: @shift.end_time&.strftime('%H:%M'),
+            business_hours: @shift.business_hours,
+            business_hours_duration: @shift.business_hours_duration,
+            breaks: @shift.breaks || [],
+            breaks_display: @shift.breaks_display,
+            notes: @shift.notes,
+            created_at: @shift.created_at&.strftime('%Y-%m-%d %H:%M:%S'),
+            updated_at: @shift.updated_at&.strftime('%Y-%m-%d %H:%M:%S')
+          }
+          render json: { success: true, shift: shift_data }
+        }
+      end
     else
-      render json: { success: false, errors: @shift.errors.full_messages }
+      respond_to do |format|
+        format.html { 
+          @shifts = Shift.recent
+          flash.now[:alert] = 'シフトの作成に失敗しました'
+          render :index, status: :unprocessable_entity
+        }
+        format.json { render json: { success: false, errors: @shift.errors.full_messages } }
+      end
     end
   end
 
   def update
     if @shift.update(shift_params)
-      render json: { success: true, shift: @shift.as_json_with_display }
+      respond_to do |format|
+        format.html { redirect_to admin_shifts_path, notice: 'シフトを更新しました' }
+        format.json { 
+          shift_data = {
+            id: @shift.id,
+            date: @shift.date.strftime('%Y-%m-%d'),
+            date_display: @shift.date.strftime('%m/%d'),
+            weekday: @shift.date.strftime('%a'),
+            shift_type: @shift.shift_type,
+            shift_type_display: @shift.shift_type_display,
+            shift_type_badge_class: @shift.shift_type_badge_class,
+            start_time: @shift.start_time&.strftime('%H:%M'),
+            end_time: @shift.end_time&.strftime('%H:%M'),
+            business_hours: @shift.business_hours,
+            business_hours_duration: @shift.business_hours_duration,
+            breaks: @shift.breaks || [],
+            breaks_display: @shift.breaks_display,
+            notes: @shift.notes,
+            created_at: @shift.created_at&.strftime('%Y-%m-%d %H:%M:%S'),
+            updated_at: @shift.updated_at&.strftime('%Y-%m-%d %H:%M:%S')
+          }
+          render json: { success: true, shift: shift_data }
+        }
+      end
     else
-      render json: { success: false, errors: @shift.errors.full_messages }
+      respond_to do |format|
+        format.html { 
+          flash.now[:alert] = 'シフトの更新に失敗しました'
+          render :show, status: :unprocessable_entity
+        }
+        format.json { render json: { success: false, errors: @shift.errors.full_messages } }
+      end
     end
   end
 
   def destroy
     if @shift.destroy
-      render json: { success: true }
+      respond_to do |format|
+        format.html { redirect_to admin_shifts_path, notice: 'シフトを削除しました' }
+        format.json { render json: { success: true, message: 'シフトを削除しました' } }
+      end
     else
-      render json: { success: false, errors: @shift.errors.full_messages }
+      respond_to do |format|
+        format.html { redirect_to admin_shifts_path, alert: 'シフトの削除に失敗しました' }
+        format.json { render json: { success: false, errors: @shift.errors.full_messages } }
+      end
     end
   end
 

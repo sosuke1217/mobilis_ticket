@@ -1,6 +1,7 @@
 // app/javascript/calendar/calendar_core.js の最終修正版
 
 import { showMessage } from './utils.js';
+import { initializeDynamicShiftHighlight, changeBusinessHours } from './dynamic_shift_highlight.js';
 
 // システム設定（HTMLから取得）
 const systemSettings = {
@@ -563,7 +564,17 @@ export function initializeCalendar() {
   
   // グローバル変数として設定
   window.pageCalendar = calendar;
-  console.log('✅ pageCalendar set as global variable:', window.pageCalendar);
+  window.calendar = calendar; // 後方互換性のため
+  console.log('✅ pageCalendar and calendar set as global variables:', {
+    pageCalendar: window.pageCalendar,
+    calendar: window.calendar
+  });
+  console.log('🔍 Calendar instance methods:', {
+    refetchEvents: typeof calendar.refetchEvents,
+    getApi: typeof calendar.getApi,
+    render: typeof calendar.render,
+    destroy: typeof calendar.destroy
+  });
   
   // 初期化完了後にdatesSetコールバックを手動で呼び出し
   setTimeout(() => {
@@ -615,6 +626,12 @@ export function initializeCalendar() {
       console.error('❌ Additional grid background color update failed:', error);
     });
   }, 2000); // 2秒後に追加実行
+  
+  // シフトハイライト機能を初期化
+  setTimeout(() => {
+    console.log('🎨 Initializing dynamic shift highlight...');
+    initializeDynamicShiftHighlight(calendar);
+  }, 2500); // 2.5秒後にシフトハイライト初期化
   
   console.log('✅ Calendar core initialized');
 }
@@ -729,9 +746,29 @@ function testShiftFetch() {
   });
 }
 
+function testShiftHighlight() {
+  console.log('🧪 Testing shift highlight...');
+  if (window.changeBusinessHours) {
+    // 営業時間を拡張
+    changeBusinessHours(9, 22);
+    setTimeout(() => {
+      // 営業時間を短縮
+      changeBusinessHours(11, 20);
+      setTimeout(() => {
+        // デフォルトに戻す
+        changeBusinessHours(10, 21);
+      }, 2000);
+    }, 2000);
+    console.log('✅ Shift highlight test completed');
+  } else {
+    console.error('❌ changeBusinessHours function not found');
+  }
+}
+
 // グローバル関数として公開（即座に実行）
 window.testGridUpdate = testGridUpdate;
 window.testShiftFetch = testShiftFetch;
+window.testShiftHighlight = testShiftHighlight;
 window.updateBusinessHours = updateBusinessHours;
 window.highlightShiftHours = highlightShiftHours;
 window.updateGridBackgroundColors = updateGridBackgroundColors;

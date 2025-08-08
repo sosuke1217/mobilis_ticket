@@ -57,7 +57,15 @@ Rails.application.routes.draw do
     end
     
     # 設定
-    resources :settings, only: [:index, :show, :edit, :update]
+    resources :settings, only: [:index, :show, :edit, :update] do
+      member do
+        patch :update_business_hours  # 営業時間のリアルタイム更新
+        get :business_status         # 現在の営業状態取得
+      end
+      collection do
+        get :test_shift_changes      # テスト用エンドポイント（開発環境のみ）
+      end
+    end
   end
   
   # 一般ユーザー用ルート
