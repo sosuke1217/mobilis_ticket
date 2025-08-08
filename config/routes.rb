@@ -50,7 +50,11 @@ Rails.application.routes.draw do
     resources :notification_preferences, only: [:index]
     
     # シフト管理
-    resources :shifts, only: [:index, :show, :create, :update, :destroy]
+    resources :shifts, only: [:index, :show, :create, :update, :destroy] do
+      collection do
+        get 'for_date'
+      end
+    end
     
     # 設定
     resources :settings, only: [:index, :show, :edit, :update]

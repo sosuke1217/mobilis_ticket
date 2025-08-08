@@ -47,13 +47,22 @@
                 <i class="fas fa-times-circle me-2"></i>キャンセル履歴
               </button>
             </div>
+            <!-- デバッグ用ボタン -->
+            <div class="d-flex gap-2">
+              <button class="btn btn-outline-secondary btn-sm" onclick="testGridUpdate()">
+                <i class="fas fa-bug me-1"></i>グリッド更新テスト
+              </button>
+              <button class="btn btn-outline-secondary btn-sm" onclick="testShiftFetch()">
+                <i class="fas fa-download me-1"></i>シフト取得テスト
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-</div>
-  
+</div>  
+
   <div class="container-fluid" style="margin-top: 20px; margin-bottom: 20px;">
     <div id="calendar"></div>
   </div>
@@ -393,12 +402,14 @@
         
         <div id="shiftTimeSettings" class="row" style="display: none;">
           <div class="col-md-6">
-            <label for="shiftStartTime" class="form-label">開始時間</label>
-            <input type="time" class="form-control" id="shiftStartTime" value="09:00">
+                            <label for="shiftStartTime" class="form-label">開始時間</label>
+                <input type="time" class="form-control" id="shiftStartTime" value="10:00" min="08:00" max="22:00">
+                <small class="form-text text-muted">ベース営業時間: 10:00-21:00</small>
           </div>
           <div class="col-md-6">
-            <label for="shiftEndTime" class="form-label">終了時間</label>
-            <input type="time" class="form-control" id="shiftEndTime" value="18:00">
+                            <label for="shiftEndTime" class="form-label">終了時間</label>
+                <input type="time" class="form-control" id="shiftEndTime" value="21:00" min="08:00" max="22:00">
+                <small class="form-text text-muted">ベース営業時間: 10:00-21:00</small>
           </div>
         </div>
         
@@ -1189,11 +1200,21 @@ body {
 /* ==============================================
    10分間隔スロットの高さ固定
    ============================================== */
+/* スロット全体の調整 */
 .fc-timegrid-slot {
-  height: 30px !important;
-  min-height: 30px !important;
-  max-height: 30px !important;
-  border-bottom: 1px solid #e2e8f0 !important;
+  height: 20px !important; /* 10分刻みなので少し小さく */
+  border-bottom: 1px solid #e9ecef !important;
+}
+
+/* 30分刻みの境界線を強調 */
+.fc-timegrid-slot[data-time$=":00:00"],
+.fc-timegrid-slot[data-time$=":30:00"] {
+  border-bottom: 2px solid #dee2e6 !important;
+}
+
+/* 1時間刻みの境界線をさらに強調 */
+.fc-timegrid-slot[data-time$=":00:00"] {
+  border-bottom: 3px solid #adb5bd !important;
 }
 
 .fc-timegrid-slots table {
@@ -1220,7 +1241,115 @@ body {
   padding: 2px 4px !important;
   color: #4a5568 !important;
 }
-  
+
+.fc-timegrid-slot[data-time^="08:"],
+.fc-timegrid-slot[data-time^="09:"],
+.fc-timegrid-slot[data-time^="21:"] {
+  background-color: #f8f9fa !important;
+  opacity: 0.7;
+  position: relative;
+}
+
+/* 営業時間外の時間軸ラベルを薄く */
+.fc-timegrid-axis[data-time^="08:"],
+.fc-timegrid-axis[data-time^="09:"],
+.fc-timegrid-axis[data-time^="21:"] {
+  background-color: #f8f9fa !important;
+  color: #6c757d !important;
+  font-style: italic;
+  font-weight: normal;
+}
+
+/* 通常営業時間のラベルを強調 */
+.fc-timegrid-axis[data-time^="10:"],
+.fc-timegrid-axis[data-time^="11:"],
+.fc-timegrid-axis[data-time^="12:"],
+.fc-timegrid-axis[data-time^="13:"],
+.fc-timegrid-axis[data-time^="14:"],
+.fc-timegrid-axis[data-time^="15:"],
+.fc-timegrid-axis[data-time^="16:"],
+.fc-timegrid-axis[data-time^="17:"],
+.fc-timegrid-axis[data-time^="18:"],
+.fc-timegrid-axis[data-time^="19:"],
+.fc-timegrid-axis[data-time^="20:"] {
+  background-color: #fff !important;
+  color: #212529 !important;
+  font-weight: 600;
+}
+
+/* 営業開始時間（10:00）の境界線とラベル */
+.fc-timegrid-slot[data-time="10:00:00"] {
+  border-top: 3px solid #28a745 !important;
+  position: relative;
+}
+
+.fc-timegrid-slot[data-time="10:00:00"]::before {
+  content: "営業開始";
+  position: absolute;
+  left: 5px;
+  top: -15px;
+  background: #28a745;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* 営業終了時間（21:00）の境界線とラベル */
+.fc-timegrid-slot[data-time="21:00:00"] {
+  border-top: 3px solid #dc3545 !important;
+  position: relative;
+}
+
+.fc-timegrid-slot[data-time="21:00:00"]::before {
+  content: "営業終了";
+  position: absolute;
+  left: 5px;
+  top: -15px;
+  background: #dc3545;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* シフト延長時間のハイライト（今後の機能用） */
+.shift-extended-early {
+  background: linear-gradient(90deg, #e8f5e8 0%, #fff 30%) !important;
+  border-left: 3px solid #28a745 !important;
+}
+
+.shift-extended-late {
+  background: linear-gradient(90deg, #fff 70%, #e8f5e8 100%) !important;
+  border-left: 3px solid #28a745 !important;
+}
+
+/* ホバー効果の改善 */
+.fc-timegrid-slot:hover {
+  background-color: #e3f2fd !important;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+/* 営業時間外のホバー効果 */
+.fc-timegrid-slot[data-time^="08:"]:hover,
+.fc-timegrid-slot[data-time^="09:"]:hover,
+.fc-timegrid-slot[data-time^="21:"]:hover {
+  background-color: #fff3cd !important;
+}
+
+/* 時間軸全体の調整 */
+.fc-timegrid-axis {
+  font-size: 12px;
+  border-right: 2px solid #dee2e6 !important;
+  min-width: 80px;
+}
 
 
 /* ==============================================
@@ -1681,22 +1810,1215 @@ body {
 /* ==============================================
    営業時間外のスタイル
    ============================================== */
-.fc-timegrid-slot[data-time^="09"]:before,
-.fc-timegrid-slot[data-time^="21"]:before,
-.fc-timegrid-slot[data-time^="22"]:before {
+.fc-timegrid-slot[data-time^="08:"]:before,
+.fc-timegrid-slot[data-time^="09:"]:before,
+.fc-timegrid-slot[data-time^="21:"]:before,
+.fc-timegrid-slot[data-time^="22:"]:before {
   content: '';
-      position: absolute;
+  position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
   background: linear-gradient(45deg, 
     transparent 30%, 
-    rgba(220, 53, 69, 0.1) 35%, 
-    rgba(220, 53, 69, 0.1) 40%, 
+    rgba(108, 117, 125, 0.3) 35%, 
+    rgba(108, 117, 125, 0.3) 40%, 
     transparent 45%
   );
   pointer-events: none;
+}
+
+/* 営業時間外のスロット背景色 */
+.fc-timegrid-slot[data-time^="08:"],
+.fc-timegrid-slot[data-time^="09:"],
+.fc-timegrid-slot[data-time^="21:"],
+.fc-timegrid-slot[data-time^="22:"] {
+  background-color: #6c757d !important;
+  opacity: 0.3;
+  position: relative;
+}
+
+/* 営業時間内のスロット背景色（明るく） */
+.fc-timegrid-slot[data-time^="10:"],
+.fc-timegrid-slot[data-time^="11:"],
+.fc-timegrid-slot[data-time^="12:"],
+.fc-timegrid-slot[data-time^="13:"],
+.fc-timegrid-slot[data-time^="14:"],
+.fc-timegrid-slot[data-time^="15:"],
+.fc-timegrid-slot[data-time^="16:"],
+.fc-timegrid-slot[data-time^="17:"],
+.fc-timegrid-slot[data-time^="18:"],
+.fc-timegrid-slot[data-time^="19:"],
+.fc-timegrid-slot[data-time^="20:"] {
+  background-color: #f8f9fa !important;
+  position: relative;
+}
+
+/* 営業時間外の時間軸ラベルを薄く */
+.fc-timegrid-axis[data-time^="08:"],
+.fc-timegrid-axis[data-time^="09:"],
+.fc-timegrid-axis[data-time^="21:"],
+.fc-timegrid-axis[data-time^="22:"] {
+  background-color: #6c757d !important;
+  color: #ffffff !important;
+  font-style: italic;
+  font-weight: normal;
+  opacity: 0.7;
+}
+
+/* 通常営業時間のラベルを強調 */
+.fc-timegrid-axis[data-time^="10:"],
+.fc-timegrid-axis[data-time^="11:"],
+.fc-timegrid-axis[data-time^="12:"],
+.fc-timegrid-axis[data-time^="13:"],
+.fc-timegrid-axis[data-time^="14:"],
+.fc-timegrid-axis[data-time^="15:"],
+.fc-timegrid-axis[data-time^="16:"],
+.fc-timegrid-axis[data-time^="17:"],
+.fc-timegrid-axis[data-time^="18:"],
+.fc-timegrid-axis[data-time^="19:"],
+.fc-timegrid-axis[data-time^="20:"] {
+  background-color: #fff !important;
+  color: #212529 !important;
+  font-weight: 600;
+}
+
+/* 営業開始時間（10:00）の境界線とラベル */
+.fc-timegrid-slot[data-time="10:00:00"] {
+  border-top: 3px solid #28a745 !important;
+  position: relative;
+}
+
+.fc-timegrid-slot[data-time="10:00:00"]::before {
+  content: "営業開始";
+  position: absolute;
+  left: 5px;
+  top: -15px;
+  background: #28a745;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* 営業終了時間（21:00）の境界線とラベル */
+.fc-timegrid-slot[data-time="21:00:00"] {
+  border-top: 3px solid #dc3545 !important;
+  position: relative;
+}
+
+.fc-timegrid-slot[data-time="21:00:00"]::before {
+  content: "営業終了";
+  position: absolute;
+  left: 5px;
+  top: -15px;
+  background: #dc3545;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* シフト延長時間のハイライト（今後の機能用） */
+.shift-extended-early {
+  background: linear-gradient(90deg, #e8f5e8 0%, #fff 30%) !important;
+  border-left: 3px solid #28a745 !important;
+}
+
+.shift-extended-late {
+  background: linear-gradient(90deg, #fff 70%, #e8f5e8 100%) !important;
+  border-left: 3px solid #28a745 !important;
+}
+
+/* ホバー効果の改善 */
+.fc-timegrid-slot:hover {
+  background-color: #e3f2fd !important;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+/* 営業時間外のホバー効果 */
+.fc-timegrid-slot[data-time^="08:"]:hover,
+.fc-timegrid-slot[data-time^="09:"]:hover,
+.fc-timegrid-slot[data-time^="21:"]:hover {
+  background-color: #fff3cd !important;
+}
+
+/* 時間軸全体の調整 */
+.fc-timegrid-axis {
+  font-size: 12px;
+  border-right: 2px solid #dee2e6 !important;
+  min-width: 80px;
+}
+
+
+/* ==============================================
+   予約イベントの基本スタイル
+   ============================================== */
+.fc-timegrid-event {
+  border-radius: 8px !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+  transition: all 0.3s ease !important;
+  border: 2px solid transparent !important;
+  margin: 1px !important;
+  overflow: hidden !important;
+  position: relative !important;
+  height: auto !important;
+}
+
+.fc-timegrid-event::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.fc-timegrid-event:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25) !important;
+  transform: translateX(2px) !important;
+  z-index: 1000 !important;
+}
+
+/* ==============================================
+   全コース対応の高さ設定（30px base）
+   ============================================== */
+
+/* 40分コース系 */
+.fc-timegrid-event[data-duration="40"] {
+  min-height: 120px !important;
+  height: 120px !important;
+}
+
+.fc-timegrid-event[data-duration="45"] {
+  min-height: 135px !important;
+  height: 135px !important;
+}
+
+.fc-timegrid-event[data-duration="50"] {
+  min-height: 150px !important;
+  height: 150px !important;
+}
+
+.fc-timegrid-event[data-duration="55"] {
+  min-height: 165px !important;
+  height: 165px !important;
+}
+
+/* 60分コース系 */
+.fc-timegrid-event[data-duration="60"] {
+  min-height: 180px !important;
+  height: 180px !important;
+}
+
+.fc-timegrid-event[data-duration="65"] {
+  min-height: 195px !important;
+  height: 195px !important;
+}
+
+.fc-timegrid-event[data-duration="70"] {
+  min-height: 210px !important;
+  height: 210px !important;
+}
+
+.fc-timegrid-event[data-duration="75"] {
+  min-height: 225px !important;
+  height: 225px !important;
+}
+
+.fc-timegrid-event[data-duration="80"] {
+  min-height: 240px !important;
+  height: 240px !important;
+}
+
+/* 80分コース系 */
+.fc-timegrid-event[data-duration="85"] {
+  min-height: 340px !important;
+  height: 340px !important;
+}
+
+.fc-timegrid-event[data-duration="90"] {
+  min-height: 360px !important;
+  height: 360px !important;
+}
+
+.fc-timegrid-event[data-duration="95"] {
+  min-height: 380px !important;
+  height: 380px !important;
+}
+
+.fc-timegrid-event[data-duration="100"] {
+  min-height: 400px !important;
+  height: 400px !important;
+}
+
+/* その他のカスタム時間 */
+.fc-timegrid-event[data-duration="105"] {
+  min-height: 420px !important;
+  height: 420px !important;
+}
+
+.fc-timegrid-event[data-duration="110"] {
+  min-height: 440px !important;
+  height: 440px !important;
+}
+
+.fc-timegrid-event[data-duration="120"] {
+  min-height: 480px !important;
+  height: 480px !important;
+}
+
+/* ==============================================
+   タブ形式のイベント用スタイル
+   ============================================== */
+.fc-timegrid-event .event-tab-container {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+}
+
+.fc-timegrid-event .event-tab {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  transition: all 0.2s ease !important;
+  border: none !important;
+}
+
+.fc-timegrid-event .event-tab.course {
+  background: inherit !important;
+  color: inherit !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+.fc-timegrid-event .event-tab.interval {
+        color: white !important;
+        font-weight: 500 !important;
+}
+
+.fc-timegrid-event .event-tab.interval.individual {
+  background-color: #fd7e14 !important;
+  font-weight: 600 !important;
+}
+
+.fc-timegrid-event .event-tab.interval.system {
+  background-color: #6c757d !important;
+}
+
+/* ==============================================
+   ステータス別の色分け
+   ============================================== */
+.fc-timegrid-event.confirmed {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+  border: 2px solid #28a745 !important;
+  color: white !important;
+  box-shadow: 0 4px 16px rgba(40, 167, 69, 0.3) !important;
+}
+
+.fc-timegrid-event.tentative {
+  background: linear-gradient(135deg, #ffc107 0%, #ffb84d 100%) !important;
+        border: 2px solid #ffc107 !important;
+        color: #212529 !important;
+  box-shadow: 0 4px 16px rgba(255, 193, 7, 0.3) !important;
+}
+
+.fc-timegrid-event.cancelled {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+  border: 2px solid #dc3545 !important;
+  color: white !important;
+  box-shadow: 0 4px 16px rgba(220, 53, 69, 0.3) !important;
+}
+
+.fc-timegrid-event.completed {
+  background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%) !important;
+  border: 2px solid #6f42c1 !important;
+  color: white !important;
+  box-shadow: 0 4px 16px rgba(111, 66, 193, 0.3) !important;
+}
+
+.fc-timegrid-event.no_show {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
+  border: 2px solid #6c757d !important;
+  color: white !important;
+  box-shadow: 0 4px 16px rgba(108, 117, 125, 0.3) !important;
+}
+
+.fc-timegrid-event.break {
+  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+  border: 2px solid #17a2b8 !important;
+  color: white !important;
+  box-shadow: 0 4px 16px rgba(23, 162, 184, 0.3) !important;
+}
+
+/* ==============================================
+   インターバルタイプ別の視覚的区別
+   ============================================== */
+.fc-timegrid-event.has-interval .event-tab.interval.individual::before {
+  content: "⚙️ ";
+  font-size: 0.6em;
+  margin-right: 2px;
+}
+
+.fc-timegrid-event.has-interval .event-tab.interval.system::before {
+  content: "🔧 ";
+  font-size: 0.6em;
+  margin-right: 2px;
+}
+
+/* ホバー時のインターバル情報表示 */
+.fc-timegrid-event.has-interval:hover::after {
+  content: attr(data-interval-info);
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+/* ==============================================
+   レスポンシブ対応
+   ============================================== */
+@media (max-width: 1024px) {
+  .calendar-toolbar {
+    gap: 20px;
+    padding: 0 20px;
+  }
+  
+  .calendar-title {
+    font-size: 1.8rem;
+  }
+  
+  .fc {
+    margin: 0px auto;
+    border-radius: 16px;
+  }
+  
+  .fc-toolbar {
+    padding: 8px 0;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .fc-toolbar-title {
+    font-size: 1.6rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .calendar-toolbar {
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 20px;
+  }
+  
+  .calendar-nav {
+    order: 1;
+    margin: 0;
+  }
+  
+  .calendar-title {
+    order: 2;
+    font-size: 1.6rem;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+  }
+  
+  .calendar-actions {
+    order: 3;
+    flex-direction: row;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-new-reservation,
+  .btn-today-reservations,
+  .btn-cancellation-stats {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    min-width: 100px;
+    flex: 1;
+  }
+
+  /* モバイル用のスロット高さ (35px base) */
+  .fc-timegrid-slot {
+    height: 35px !important;
+    min-height: 35px !important;
+    max-height: 35px !important;
+  }
+  
+  .fc-timegrid-axis-frame {
+    height: 35px !important;
+    min-height: 35px !important;
+  }
+  
+  /* モバイル用の高さ調整 */
+  .fc-timegrid-event[data-duration="40"] { height: 140px !important; min-height: 140px !important; }
+  .fc-timegrid-event[data-duration="45"] { height: 157px !important; min-height: 157px !important; }
+  .fc-timegrid-event[data-duration="50"] { height: 175px !important; min-height: 175px !important; }
+  .fc-timegrid-event[data-duration="55"] { height: 192px !important; min-height: 192px !important; }
+  .fc-timegrid-event[data-duration="60"] { height: 210px !important; min-height: 210px !important; }
+  .fc-timegrid-event[data-duration="65"] { height: 227px !important; min-height: 227px !important; }
+  .fc-timegrid-event[data-duration="70"] { height: 245px !important; min-height: 245px !important; }
+  .fc-timegrid-event[data-duration="75"] { height: 262px !important; min-height: 262px !important; }
+  .fc-timegrid-event[data-duration="80"] { height: 280px !important; min-height: 280px !important; }
+  .fc-timegrid-event[data-duration="85"] { height: 297px !important; min-height: 297px !important; }
+  .fc-timegrid-event[data-duration="90"] { height: 315px !important; min-height: 315px !important; }
+  .fc-timegrid-event[data-duration="95"] { height: 332px !important; min-height: 332px !important; }
+  .fc-timegrid-event[data-duration="100"] { height: 350px !important; min-height: 350px !important; }
+  
+  .fc-timegrid-event .event-tab {
+    font-size: 0.7rem !important;
+    padding: 1px 2px !important;
+  }
+  
+  .fc {
+    margin: 15px auto;
+    border-radius: 12px;
+  }
+  
+  .fc-toolbar {
+    padding: 8px 0;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .fc-toolbar-title {
+    font-size: 1.4rem;
+  }
+
+
+}
+
+@media (max-width: 480px) {
+  .calendar-toolbar {
+    gap: 8px;
+    padding: 0 15px;
+  }
+  
+  .calendar-title {
+    font-size: 1.4rem;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+  }
+  
+  .calendar-actions {
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .btn-new-reservation,
+  .btn-today-reservations,
+  .btn-cancellation-stats {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    min-width: 80px;
+  }
+  
+  .btn-new-reservation,
+  .btn-today-reservations,
+  .btn-cancellation-stats {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+  
+  /* 小画面用のスロット高さ (30px base) */
+  .fc-timegrid-slot {
+    height: 30px !important;
+    min-height: 30px !important;
+    max-height: 30px !important;
+  }
+  
+  .fc-timegrid-axis-frame {
+    height: 30px !important;
+    min-height: 30px !important;
+  }
+  
+  /* 小画面用の高さ調整 */
+  .fc-timegrid-event[data-duration="40"] { height: 120px !important; min-height: 120px !important; }
+  .fc-timegrid-event[data-duration="45"] { height: 135px !important; min-height: 135px !important; }
+  .fc-timegrid-event[data-duration="50"] { height: 150px !important; min-height: 150px !important; }
+  .fc-timegrid-event[data-duration="55"] { height: 165px !important; min-height: 165px !important; }
+  .fc-timegrid-event[data-duration="60"] { height: 180px !important; min-height: 180px !important; }
+  .fc-timegrid-event[data-duration="65"] { height: 195px !important; min-height: 195px !important; }
+  .fc-timegrid-event[data-duration="70"] { height: 210px !important; min-height: 210px !important; }
+  .fc-timegrid-event[data-duration="75"] { height: 225px !important; min-height: 225px !important; }
+  .fc-timegrid-event[data-duration="80"] { height: 240px !important; min-height: 240px !important; }
+  .fc-timegrid-event[data-duration="85"] { height: 255px !important; min-height: 255px !important; }
+  .fc-timegrid-event[data-duration="90"] { height: 270px !important; min-height: 270px !important; }
+  .fc-timegrid-event[data-duration="95"] { height: 285px !important; min-height: 285px !important; }
+  .fc-timegrid-event[data-duration="100"] { height: 300px !important; min-height: 300px !important; }
+  
+  .fc-timegrid-event .event-tab {
+    font-size: 0.65rem !important;
+    padding: 1px !important;
+  }
+
+  .fc {
+    margin: 10px auto;
+    border-radius: 10px;
+  }
+  
+  .fc-toolbar {
+    padding: 12px 15px;
+  }
+  
+  .fc-toolbar-title {
+    font-size: 1.2rem;
+  }
+
+
+}
+
+/* ==============================================
+   動的高さ設定とアニメーション
+   ============================================== */
+.height-calculated {
+  transition: height 0.3s ease !important;
+}
+
+/* ==============================================
+   カレンダー全体のグリッド強化
+   ============================================== */
+.fc-timegrid-col-frame {
+  border-right: 1px solid #e2e8f0 !important;
+}
+
+/* ==============================================
+   営業時間外のスタイル
+   ============================================== */
+.fc-timegrid-slot[data-time^="08:"]:before,
+.fc-timegrid-slot[data-time^="09:"]:before,
+.fc-timegrid-slot[data-time^="21:"]:before,
+.fc-timegrid-slot[data-time^="22:"]:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, 
+    transparent 30%, 
+    rgba(108, 117, 125, 0.3) 35%, 
+    rgba(108, 117, 125, 0.3) 40%, 
+    transparent 45%
+  );
+  pointer-events: none;
+}
+
+/* 営業時間外のスロット背景色 */
+.fc-timegrid-slot[data-time^="08:"],
+.fc-timegrid-slot[data-time^="09:"],
+.fc-timegrid-slot[data-time^="21:"],
+.fc-timegrid-slot[data-time^="22:"] {
+  background-color: #6c757d !important;
+  opacity: 0.3;
+  position: relative;
+}
+
+/* 営業時間内のスロット背景色（明るく） */
+.fc-timegrid-slot[data-time^="10:"],
+.fc-timegrid-slot[data-time^="11:"],
+.fc-timegrid-slot[data-time^="12:"],
+.fc-timegrid-slot[data-time^="13:"],
+.fc-timegrid-slot[data-time^="14:"],
+.fc-timegrid-slot[data-time^="15:"],
+.fc-timegrid-slot[data-time^="16:"],
+.fc-timegrid-slot[data-time^="17:"],
+.fc-timegrid-slot[data-time^="18:"],
+.fc-timegrid-slot[data-time^="19:"],
+.fc-timegrid-slot[data-time^="20:"] {
+  background-color: #f8f9fa !important;
+  position: relative;
+}
+
+/* 営業時間外の時間軸ラベルを薄く */
+.fc-timegrid-axis[data-time^="08:"],
+.fc-timegrid-axis[data-time^="09:"],
+.fc-timegrid-axis[data-time^="21:"],
+.fc-timegrid-axis[data-time^="22:"] {
+  background-color: #6c757d !important;
+  color: #ffffff !important;
+  font-style: italic;
+  font-weight: normal;
+  opacity: 0.7;
+}
+
+/* 通常営業時間のラベルを強調 */
+.fc-timegrid-axis[data-time^="10:"],
+.fc-timegrid-axis[data-time^="11:"],
+.fc-timegrid-axis[data-time^="12:"],
+.fc-timegrid-axis[data-time^="13:"],
+.fc-timegrid-axis[data-time^="14:"],
+.fc-timegrid-axis[data-time^="15:"],
+.fc-timegrid-axis[data-time^="16:"],
+.fc-timegrid-axis[data-time^="17:"],
+.fc-timegrid-axis[data-time^="18:"],
+.fc-timegrid-axis[data-time^="19:"],
+.fc-timegrid-axis[data-time^="20:"] {
+  background-color: #fff !important;
+  color: #212529 !important;
+  font-weight: 600;
+}
+
+/* 営業開始時間（10:00）の境界線とラベル */
+.fc-timegrid-slot[data-time="10:00:00"] {
+  border-top: 3px solid #28a745 !important;
+  position: relative;
+}
+
+.fc-timegrid-slot[data-time="10:00:00"]::before {
+  content: "営業開始";
+  position: absolute;
+  left: 5px;
+  top: -15px;
+  background: #28a745;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* 営業終了時間（21:00）の境界線とラベル */
+.fc-timegrid-slot[data-time="21:00:00"] {
+  border-top: 3px solid #dc3545 !important;
+  position: relative;
+}
+
+.fc-timegrid-slot[data-time="21:00:00"]::before {
+  content: "営業終了";
+  position: absolute;
+  left: 5px;
+  top: -15px;
+  background: #dc3545;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* シフト延長時間のハイライト（今後の機能用） */
+.shift-extended-early {
+  background: linear-gradient(90deg, #e8f5e8 0%, #fff 30%) !important;
+  border-left: 3px solid #28a745 !important;
+}
+
+.shift-extended-late {
+  background: linear-gradient(90deg, #fff 70%, #e8f5e8 100%) !important;
+  border-left: 3px solid #28a745 !important;
+}
+
+/* ホバー効果の改善 */
+.fc-timegrid-slot:hover {
+  background-color: #e3f2fd !important;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+/* 営業時間外のホバー効果 */
+.fc-timegrid-slot[data-time^="08:"]:hover,
+.fc-timegrid-slot[data-time^="09:"]:hover,
+.fc-timegrid-slot[data-time^="21:"]:hover {
+  background-color: #fff3cd !important;
+}
+
+/* 時間軸全体の調整 */
+.fc-timegrid-axis {
+  font-size: 12px;
+  border-right: 2px solid #dee2e6 !important;
+  min-width: 80px;
+}
+
+
+/* ==============================================
+   予約イベントの基本スタイル
+   ============================================== */
+.fc-timegrid-event {
+  border-radius: 8px !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+  transition: all 0.3s ease !important;
+  border: 2px solid transparent !important;
+  margin: 1px !important;
+  overflow: hidden !important;
+  position: relative !important;
+  height: auto !important;
+}
+
+.fc-timegrid-event::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.fc-timegrid-event:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25) !important;
+  transform: translateX(2px) !important;
+  z-index: 1000 !important;
+}
+
+/* ==============================================
+   全コース対応の高さ設定（30px base）
+   ============================================== */
+
+/* 40分コース系 */
+.fc-timegrid-event[data-duration="40"] {
+  min-height: 120px !important;
+  height: 120px !important;
+}
+
+.fc-timegrid-event[data-duration="45"] {
+  min-height: 135px !important;
+  height: 135px !important;
+}
+
+.fc-timegrid-event[data-duration="50"] {
+  min-height: 150px !important;
+  height: 150px !important;
+}
+
+.fc-timegrid-event[data-duration="55"] {
+  min-height: 165px !important;
+  height: 165px !important;
+}
+
+/* 60分コース系 */
+.fc-timegrid-event[data-duration="60"] {
+  min-height: 180px !important;
+  height: 180px !important;
+}
+
+.fc-timegrid-event[data-duration="65"] {
+  min-height: 195px !important;
+  height: 195px !important;
+}
+
+.fc-timegrid-event[data-duration="70"] {
+  min-height: 210px !important;
+  height: 210px !important;
+}
+
+.fc-timegrid-event[data-duration="75"] {
+  min-height: 225px !important;
+  height: 225px !important;
+}
+
+.fc-timegrid-event[data-duration="80"] {
+  min-height: 240px !important;
+  height: 240px !important;
+}
+
+/* 80分コース系 */
+.fc-timegrid-event[data-duration="85"] {
+  min-height: 340px !important;
+  height: 340px !important;
+}
+
+.fc-timegrid-event[data-duration="90"] {
+  min-height: 360px !important;
+  height: 360px !important;
+}
+
+.fc-timegrid-event[data-duration="95"] {
+  min-height: 380px !important;
+  height: 380px !important;
+}
+
+.fc-timegrid-event[data-duration="100"] {
+  min-height: 400px !important;
+  height: 400px !important;
+}
+
+/* その他のカスタム時間 */
+.fc-timegrid-event[data-duration="105"] {
+  min-height: 420px !important;
+  height: 420px !important;
+}
+
+.fc-timegrid-event[data-duration="110"] {
+  min-height: 440px !important;
+  height: 440px !important;
+}
+
+.fc-timegrid-event[data-duration="120"] {
+  min-height: 480px !important;
+  height: 480px !important;
+}
+
+/* ==============================================
+   タブ形式のイベント用スタイル
+   ============================================== */
+.fc-timegrid-event .event-tab-container {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+}
+
+.fc-timegrid-event .event-tab {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  transition: all 0.2s ease !important;
+  border: none !important;
+}
+
+.fc-timegrid-event .event-tab.course {
+  background: inherit !important;
+  color: inherit !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+.fc-timegrid-event .event-tab.interval {
+        color: white !important;
+        font-weight: 500 !important;
+}
+
+.fc-timegrid-event .event-tab.interval.individual {
+  background-color: #fd7e14 !important;
+  font-weight: 600 !important;
+}
+
+.fc-timegrid-event .event-tab.interval.system {
+  background-color: #6c757d !important;
+}
+
+/* ==============================================
+   ステータス別の色分け
+   ============================================== */
+.fc-timegrid-event.confirmed {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+  border: 2px solid #28a745 !important;
+  color: white !important;
+  box-shadow: 0 4px 16px rgba(40, 167, 69, 0.3) !important;
+}
+
+.fc-timegrid-event.tentative {
+  background: linear-gradient(135deg, #ffc107 0%, #ffb84d 100%) !important;
+        border: 2px solid #ffc107 !important;
+        color: #212529 !important;
+  box-shadow: 0 4px 16px rgba(255, 193, 7, 0.3) !important;
+}
+
+.fc-timegrid-event.cancelled {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+  border: 2px solid #dc3545 !important;
+  color: white !important;
+  box-shadow: 0 4px 16px rgba(220, 53, 69, 0.3) !important;
+}
+
+.fc-timegrid-event.completed {
+  background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%) !important;
+  border: 2px solid #6f42c1 !important;
+  color: white !important;
+  box-shadow: 0 4px 16px rgba(111, 66, 193, 0.3) !important;
+}
+
+.fc-timegrid-event.no_show {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
+  border: 2px solid #6c757d !important;
+  color: white !important;
+  box-shadow: 0 4px 16px rgba(108, 117, 125, 0.3) !important;
+}
+
+.fc-timegrid-event.break {
+  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+  border: 2px solid #17a2b8 !important;
+  color: white !important;
+  box-shadow: 0 4px 16px rgba(23, 162, 184, 0.3) !important;
+}
+
+/* ==============================================
+   インターバルタイプ別の視覚的区別
+   ============================================== */
+.fc-timegrid-event.has-interval .event-tab.interval.individual::before {
+  content: "⚙️ ";
+  font-size: 0.6em;
+  margin-right: 2px;
+}
+
+.fc-timegrid-event.has-interval .event-tab.interval.system::before {
+  content: "🔧 ";
+  font-size: 0.6em;
+  margin-right: 2px;
+}
+
+/* ホバー時のインターバル情報表示 */
+.fc-timegrid-event.has-interval:hover::after {
+  content: attr(data-interval-info);
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+/* ==============================================
+   レスポンシブ対応
+   ============================================== */
+@media (max-width: 1024px) {
+  .calendar-toolbar {
+    gap: 20px;
+    padding: 0 20px;
+  }
+  
+  .calendar-title {
+    font-size: 1.8rem;
+  }
+  
+  .fc {
+    margin: 0px auto;
+    border-radius: 16px;
+  }
+  
+  .fc-toolbar {
+    padding: 8px 0;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .fc-toolbar-title {
+    font-size: 1.6rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .calendar-toolbar {
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 20px;
+  }
+  
+  .calendar-nav {
+    order: 1;
+    margin: 0;
+  }
+  
+  .calendar-title {
+    order: 2;
+    font-size: 1.6rem;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+  }
+  
+  .calendar-actions {
+    order: 3;
+    flex-direction: row;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-new-reservation,
+  .btn-today-reservations,
+  .btn-cancellation-stats {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    min-width: 100px;
+    flex: 1;
+  }
+
+  /* モバイル用のスロット高さ (35px base) */
+  .fc-timegrid-slot {
+    height: 35px !important;
+    min-height: 35px !important;
+    max-height: 35px !important;
+  }
+  
+  .fc-timegrid-axis-frame {
+    height: 35px !important;
+    min-height: 35px !important;
+  }
+  
+  /* モバイル用の高さ調整 */
+  .fc-timegrid-event[data-duration="40"] { height: 140px !important; min-height: 140px !important; }
+  .fc-timegrid-event[data-duration="45"] { height: 157px !important; min-height: 157px !important; }
+  .fc-timegrid-event[data-duration="50"] { height: 175px !important; min-height: 175px !important; }
+  .fc-timegrid-event[data-duration="55"] { height: 192px !important; min-height: 192px !important; }
+  .fc-timegrid-event[data-duration="60"] { height: 210px !important; min-height: 210px !important; }
+  .fc-timegrid-event[data-duration="65"] { height: 227px !important; min-height: 227px !important; }
+  .fc-timegrid-event[data-duration="70"] { height: 245px !important; min-height: 245px !important; }
+  .fc-timegrid-event[data-duration="75"] { height: 262px !important; min-height: 262px !important; }
+  .fc-timegrid-event[data-duration="80"] { height: 280px !important; min-height: 280px !important; }
+  .fc-timegrid-event[data-duration="85"] { height: 297px !important; min-height: 297px !important; }
+  .fc-timegrid-event[data-duration="90"] { height: 315px !important; min-height: 315px !important; }
+  .fc-timegrid-event[data-duration="95"] { height: 332px !important; min-height: 332px !important; }
+  .fc-timegrid-event[data-duration="100"] { height: 350px !important; min-height: 350px !important; }
+  
+  .fc-timegrid-event .event-tab {
+    font-size: 0.7rem !important;
+    padding: 1px 2px !important;
+  }
+  
+  .fc {
+    margin: 15px auto;
+    border-radius: 12px;
+  }
+  
+  .fc-toolbar {
+    padding: 8px 0;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .fc-toolbar-title {
+    font-size: 1.4rem;
+  }
+
+
+}
+
+@media (max-width: 480px) {
+  .calendar-toolbar {
+    gap: 8px;
+    padding: 0 15px;
+  }
+  
+  .calendar-title {
+    font-size: 1.4rem;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+  }
+  
+  .calendar-actions {
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .btn-new-reservation,
+  .btn-today-reservations,
+  .btn-cancellation-stats {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    min-width: 80px;
+  }
+  
+  .btn-new-reservation,
+  .btn-today-reservations,
+  .btn-cancellation-stats {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+  
+  /* 小画面用のスロット高さ (30px base) */
+  .fc-timegrid-slot {
+    height: 30px !important;
+    min-height: 30px !important;
+    max-height: 30px !important;
+  }
+  
+  .fc-timegrid-axis-frame {
+    height: 30px !important;
+    min-height: 30px !important;
+  }
+  
+  /* 小画面用の高さ調整 */
+  .fc-timegrid-event[data-duration="40"] { height: 120px !important; min-height: 120px !important; }
+  .fc-timegrid-event[data-duration="45"] { height: 135px !important; min-height: 135px !important; }
+  .fc-timegrid-event[data-duration="50"] { height: 150px !important; min-height: 150px !important; }
+  .fc-timegrid-event[data-duration="55"] { height: 165px !important; min-height: 165px !important; }
+  .fc-timegrid-event[data-duration="60"] { height: 180px !important; min-height: 180px !important; }
+  .fc-timegrid-event[data-duration="65"] { height: 195px !important; min-height: 195px !important; }
+  .fc-timegrid-event[data-duration="70"] { height: 210px !important; min-height: 210px !important; }
+  .fc-timegrid-event[data-duration="75"] { height: 225px !important; min-height: 225px !important; }
+  .fc-timegrid-event[data-duration="80"] { height: 240px !important; min-height: 240px !important; }
+  .fc-timegrid-event[data-duration="85"] { height: 255px !important; min-height: 255px !important; }
+  .fc-timegrid-event[data-duration="90"] { height: 270px !important; min-height: 270px !important; }
+  .fc-timegrid-event[data-duration="95"] { height: 285px !important; min-height: 285px !important; }
+  .fc-timegrid-event[data-duration="100"] { height: 300px !important; min-height: 300px !important; }
+  
+  .fc-timegrid-event .event-tab {
+    font-size: 0.65rem !important;
+    padding: 1px !important;
+  }
+
+  .fc {
+    margin: 10px auto;
+    border-radius: 10px;
+  }
+  
+  .fc-toolbar {
+    padding: 12px 15px;
+  }
+  
+  .fc-toolbar-title {
+    font-size: 1.2rem;
+  }
+
+
+}
+
+/* ==============================================
+   動的高さ設定とアニメーション
+   ============================================== */
+.height-calculated {
+  transition: height 0.3s ease !important;
+}
+
+/* ==============================================
+   カレンダー全体のグリッド強化
+   ============================================== */
+.fc-timegrid-col-frame {
+  border-right: 1px solid #e2e8f0 !important;
 }
 
 /* ==============================================
@@ -2811,9 +4133,21 @@ body {
         week: '週',  
         day: '日'
       },
-      slotMinTime: '10:00:00',
-      slotMaxTime: '21:00:00',
-      slotDuration: '00:10:00', // 10分間隔
+                slotMinTime: '08:00:00',
+          slotMaxTime: '22:00:00',
+          slotDuration: '00:10:00', // 10分間隔
+                  // ベース営業時間の背景色を設定
+        dayCellDidMount: function(arg) {
+          const date = arg.date;
+          const hour = date.getHours();
+          const minute = date.getMinutes();
+          
+          // 10:00-21:00の範囲をベース営業時間として設定
+          if (hour >= 10 && hour < 21) {
+            arg.el.style.backgroundColor = '#f8f9fa';
+            arg.el.style.borderLeft = '2px solid #28a745';
+          }
+        },
       slotLabelInterval: '00:30:00', // ラベルは30分間隔
       snapDuration: '00:10:00', // スナップも10分間隔
       slotMinWidth: 60,
@@ -2870,19 +4204,19 @@ body {
         const endHour = endTime.getHours ? endTime.getHours() : endTime.hour;
         const endMinute = endTime.getMinutes ? endTime.getMinutes() : endTime.min;
         
-        if (startHour < 10 || startHour >= 21) {
-          console.log('❌ Selected time outside business hours:', startHour);
-          showMessage('営業時間外です。10:00から21:00の間で選択してください', 'warning');
-      return;
-    }
+        if (startHour < 8 || startHour >= 22) {
+          console.log('❌ Selected time outside available hours:', startHour);
+          showMessage('カレンダー表示時間外です。8:00から21:59の間で選択してください', 'warning');
+          return;
+        }
     
         const selectionDuration = (endTime - startTime) / (1000 * 60);
         
-        if (endHour > 21 || (endHour === 21 && endMinute > 0)) {
-          console.log('❌ Selection extends beyond business hours');
-          showMessage(`この時間帯は営業時間外になります。終了時刻: ${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`, 'warning');
-      return;
-    }
+        if (endHour > 22 || (endHour === 22 && endMinute > 0)) {
+          console.log('❌ Selection extends beyond available hours');
+          showMessage(`この時間帯はカレンダー表示範囲外になります。終了時刻: ${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`, 'warning');
+          return;
+        }
     
         openNewReservationModal(info.start, info.end);
       },
@@ -3974,9 +5308,9 @@ body {
       const hours = parseInt(timeParts[0]);
       const minutes = parseInt(timeParts[1]);
       
-      if (hours < 10 || hours >= 21) {
+      if (hours < 8 || hours >= 22) {
         console.log('❌ Time out of range:', reservationTime);
-        showMessage('予約時間は10:00から21:00の間で入力してください', 'warning');
+        showMessage('予約時間は8:00から21:59の間で入力してください', 'warning');
         return;
       }
       
@@ -4001,12 +5335,12 @@ body {
         businessEnd: '21:00'
       });
       
-      if (endHour > 21 || (endHour === 21 && endMinute > 0)) {
-        console.log('❌ Reservation extends beyond business hours');
-        showMessage(`この予約は営業時間外になります。終了時刻: ${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`, 'warning');
+      if (endHour > 22 || (endHour === 22 && endMinute > 0)) {
+        console.log('❌ Reservation extends beyond available hours');
+        showMessage(`この予約は表示時間範囲外になります。終了時刻: ${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`, 'warning');
         return;
       }
-      
+            
       // ボタンを無効化
       const saveBtn = this;
       const originalText = saveBtn.innerHTML;
@@ -4271,7 +5605,7 @@ body {
       // フォームをリセット
       document.getElementById('shiftDateSelect').value = today;
       document.getElementById('shiftTypeSelect').value = 'normal';
-      document.getElementById('shiftStartTime').value = '09:00';
+      document.getElementById('shiftStartTime').value = '10:00';
       document.getElementById('shiftEndTime').value = '21:00';
       document.getElementById('shiftNotes').value = '';
       
@@ -4327,14 +5661,14 @@ body {
           case 'extended':
             shiftTimeSettings.style.display = 'flex';
             shiftBreakSettings.style.display = 'block';
-            document.getElementById('shiftStartTime').value = '08:00';
-            document.getElementById('shiftEndTime').value = '20:00';
+                    document.getElementById('shiftStartTime').value = '10:00';
+        document.getElementById('shiftEndTime').value = '21:00';
             break;
           case 'shortened':
             shiftTimeSettings.style.display = 'flex';
             shiftBreakSettings.style.display = 'block';
-            document.getElementById('shiftStartTime').value = '10:00';
-            document.getElementById('shiftEndTime').value = '16:00';
+                    document.getElementById('shiftStartTime').value = '10:00';
+        document.getElementById('shiftEndTime').value = '18:00';
             break;
           case 'closed':
             shiftTimeSettings.style.display = 'none';
@@ -4768,4 +6102,68 @@ body {
     white-space: nowrap;
     z-index: 1000;
 }
+</style>
+
+<!-- デバッグ用のJavaScript関数を直接定義 -->
+<script>
+// デバッグ用の関数を直接定義
+function testGridUpdate() {
+  console.log('🧪 Testing grid update...');
+  
+  // 関数が利用可能になるまで待つ
+  const checkFunction = () => {
+    if (typeof updateGridBackgroundColors === 'function') {
+      updateGridBackgroundColors(new Date()).then(() => {
+        console.log('✅ Grid update test completed');
+      }).catch(error => {
+        console.error('❌ Grid update test failed:', error);
+      });
+    } else {
+      console.log('⏳ updateGridBackgroundColors not ready, retrying...');
+      setTimeout(checkFunction, 100);
+    }
+  };
+  
+  checkFunction();
+}
+
+function testShiftFetch() {
+  console.log('🧪 Testing shift fetch...');
+  
+  // 関数が利用可能になるまで待つ
+  const checkFunction = () => {
+    if (typeof getBusinessHoursForDate === 'function') {
+      getBusinessHoursForDate(new Date()).then(businessHours => {
+        console.log('✅ Shift fetch test completed:', businessHours);
+      }).catch(error => {
+        console.error('❌ Shift fetch test failed:', error);
+      });
+    } else {
+      console.log('⏳ getBusinessHoursForDate not ready, retrying...');
+      setTimeout(checkFunction, 100);
+    }
+  };
+  
+  checkFunction();
+}
+
+// グローバル関数として公開
+window.testGridUpdate = testGridUpdate;
+window.testShiftFetch = testShiftFetch;
+
+console.log('🔧 Debug functions defined in HTML:', {
+  testGridUpdate: typeof window.testGridUpdate,
+  testShiftFetch: typeof window.testShiftFetch
+});
+
+// 関数の準備状況を定期的にチェック
+setInterval(() => {
+  console.log('🔍 Function availability check:', {
+    updateGridBackgroundColors: typeof updateGridBackgroundColors,
+    getBusinessHoursForDate: typeof getBusinessHoursForDate
+  });
+}, 1000);
+</script>
+
+<!-- キャンセル履歴モーダル -->
 </style>

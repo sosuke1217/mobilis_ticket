@@ -157,65 +157,72 @@ class Admin::ReservationsController < ApplicationController
               Rails.logger.info "✅ Event created: #{course_type} + #{interval_type} = #{total_duration_minutes}分 (#{total_duration_minutes/10.0}スロット)"
             end
 
-            # シフトイベントを生成
-            Rails.logger.info "🎯 Starting shift event generation for #{shifts.count} shifts"
-            shifts.each do |shift|
-              begin
-                Rails.logger.info "🔍 Processing shift ID=#{shift.id} for date=#{shift.date}"
+            # シフトイベントを生成（無効化）
+            # Rails.logger.info "🎯 Starting shift event generation for #{shifts.count} shifts"
+            # shifts.each do |shift|
+            #   begin
+            #     Rails.logger.info "🔍 Processing shift ID=#{shift.id} for date=#{shift.date}"
+                
+                # シフトの開始時間と終了時間を設定
+                # shift_start_time = if shift.start_time.present?
+                #   shift.date.to_time.change(hour: shift.start_time.hour, min: shift.start_time.min)
+                # else
+                #   shift.date.to_time.change(hour: 9, min: 0) # デフォルト9:00
+                # end
+                # 
+                # shift_end_time = if shift.end_time.present?
+                #   shift.date.to_time.change(hour: shift.end_time.hour, min: shift.end_time.min)
+                # else
+                #   shift.date.to_time.change(hour: 18, min: 0) # デフォルト18:00
+                # end
               
-              # シフトの開始時間と終了時間を設定
-              shift_start_time = if shift.start_time.present?
-                shift.date.to_time.change(hour: shift.start_time.hour, min: shift.start_time.min)
-              else
-                shift.date.to_time.change(hour: 9, min: 0) # デフォルト9:00
-              end
+                # シフトタイプに応じた色設定
+                # シフトイベントを作成（表示しない）
+                # shift_event = {
+                #   id: "shift_#{shift.id}",
+                #   title: "#{shift.shift_type_display} - #{shift.business_hours}",
+                #   start: shift_start_time.strftime('%Y-%m-%dT%H:%M:%S'),
+                #   end: shift_end_time.strftime('%Y-%m-%dT%H:%M:%S'),
+                #   backgroundColor: '#6c757d',
+                #   borderColor: '#545b62',
+                #   textColor: 'white',
+                #   classNames: ['fc-timegrid-event', 'shift-event', shift.shift_type],
+                #   extendedProps: {
+                #     type: 'shift',
+                #     shift_id: shift.id,
+                #     shift_type: shift.shift_type,
+                #     shift_type_display: shift.shift_type_display,
+                #     business_hours: shift.business_hours,
+                #     breaks: shift.breaks,
+                #     notes: shift.notes
+                #   }
+                # }
+                
+                # Rails.logger.info "✅ Shift event created: #{shift.shift_type_display} (#{shift.business_hours})"
+                
+                # events << shift_event
+              # rescue => e
+              #   Rails.logger.error "❌ Error processing shift #{shift.id}: #{e.message}"
+              #   Rails.logger.error e.backtrace.first(5).join("\n")
+              # end
+              # end
               
-              shift_end_time = if shift.end_time.present?
-                shift.date.to_time.change(hour: shift.end_time.hour, min: shift.end_time.min)
-              else
-                shift.date.to_time.change(hour: 18, min: 0) # デフォルト18:00
-              end
-              
-              # シフトタイプに応じた色設定
-              shift_colors = get_shift_colors(shift.shift_type)
-              
-              # シフトイベントを作成
-              shift_event = {
-                id: "shift_#{shift.id}",
-                title: "#{shift.shift_type_display} - #{shift.business_hours}",
-                start: shift_start_time.strftime('%Y-%m-%dT%H:%M:%S'),
-                end: shift_end_time.strftime('%Y-%m-%dT%H:%M:%S'),
-                backgroundColor: shift_colors[:bg],
-                borderColor: shift_colors[:border],
-                textColor: shift_colors[:text] || 'white',
-                classNames: ['fc-timegrid-event', 'shift-event', shift.shift_type],
-                extendedProps: {
-                  type: 'shift',
-                  shift_id: shift.id,
-                  shift_type: shift.shift_type,
-                  shift_type_display: shift.shift_type_display,
-                  business_hours: shift.business_hours,
-                  breaks: shift.breaks,
-                  notes: shift.notes
-                }
-              }
-              
-              Rails.logger.info "✅ Shift event created: #{shift.shift_type_display} (#{shift.business_hours})"
-              
-              events << shift_event
-              rescue => e
-                Rails.logger.error "❌ Error processing shift #{shift.id}: #{e.message}"
-                Rails.logger.error e.backtrace.first(5).join("\n")
-              end
-            end
-            
-            Rails.logger.info "🎯 Shift event generation completed. Total events: #{events.count}"
+              # Rails.logger.info "🎯 Shift event generation completed. Total events: #{events.count}"
             
             # 🎯 全体のサマリーログ
             Rails.logger.info "📊 Event creation summary:"
             events.group_by { |e| e[:extendedProps][:total_duration] }.each do |duration, events_group|
-              slots = duration / 10.0
-              Rails.logger.info "  #{duration}分 (#{slots}スロット): #{events_group.length}件"
+              # nil チェックを追加
+              if duration.present? && duration.is_a?(Numeric)
+                slots = duration / 10.0
+                Rails.logger.info "  #{duration}分 (#{slots}スロット): #{events_group.length}件"
+              else
+                Rails.logger.warn "⚠️ Invalid duration found: #{duration.inspect} for #{events_group.length} events"
+                # デバッグ用に最初のイベントの詳細を出力
+                if events_group.first
+                  Rails.logger.warn "  Sample event: #{events_group.first[:extendedProps].inspect}"
+                end
+              end
             end
             
             render json: events, content_type: 'application/json'
@@ -585,22 +592,7 @@ class Admin::ReservationsController < ApplicationController
     end
   end
 
-  def get_shift_colors(shift_type)
-    case shift_type.to_s
-    when 'normal'
-      { bg: '#17a2b8', border: '#138496', text: 'white' }
-    when 'extended'
-      { bg: '#fd7e14', border: '#e8690b', text: 'white' }
-    when 'shortened'
-      { bg: '#6f42c1', border: '#5a32a3', text: 'white' }
-    when 'closed'
-      { bg: '#6c757d', border: '#545b62', text: 'white' }
-    when 'custom'
-      { bg: '#20c997', border: '#1ea085', text: 'white' }
-    else
-      { bg: '#6c757d', border: '#545b62', text: 'white' }
-    end
-  end
+  
 
   def process_reservation_params(params)
     processed_params = params.permit(

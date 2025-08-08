@@ -81,9 +81,9 @@ function calculateEndTime(startTime, course) {
 }
 
 // 営業時間内チェック
-function checkBusinessHours(date, startTime, endTime) {
+async function checkBusinessHours(date, startTime, endTime) {
   const businessStart = parseInt(document.querySelector('meta[name="business-hours-start"]')?.content || '10');
-  const businessEnd = parseInt(document.querySelector('meta[name="business-hours-end"]')?.content || '20');
+  const businessEnd = parseInt(document.querySelector('meta[name="business-hours-end"]')?.content || '21');
   const sundayClosed = document.querySelector('meta[name="sunday-closed"]')?.content === 'true';
   
   const selectedDate = new Date(date);
@@ -94,7 +94,38 @@ function checkBusinessHours(date, startTime, endTime) {
     return { valid: false, message: '日曜日は休業日です' };
   }
   
-  // 営業時間チェック
+  // シフトの設定を動的に取得
+  try {
+    const shiftResponse = await fetch(`/admin/shifts/for_date?date=${date}`);
+    if (shiftResponse.ok) {
+      const shiftData = await shiftResponse.json();
+      if (shiftData.shift && shiftData.shift.requires_time) {
+        // シフトの営業時間を使用
+        const shiftStart = parseInt(shiftData.shift.start_time.split(':')[0]);
+        const shiftEnd = parseInt(shiftData.shift.end_time.split(':')[0]);
+        
+        console.log(`🕐 Using shift hours: ${shiftStart}:00-${shiftEnd}:00`);
+        
+        // 営業時間チェック（シフト設定）
+        const [startHour] = startTime.split(':').map(Number);
+        const [endHour, endMinute] = endTime.split(':').map(Number);
+        
+        if (startHour < shiftStart) {
+          return { valid: false, message: `営業開始時間は${shiftStart}:00です (${shiftData.shift.shift_type_display})` };
+        }
+        
+        if (endHour > shiftEnd || (endHour === shiftEnd && endMinute > 0)) {
+          return { valid: false, message: `営業終了時間は${shiftEnd}:00です (${shiftData.shift.shift_type_display})` };
+        }
+        
+        return { valid: true };
+      }
+    }
+  } catch (error) {
+    console.warn('⚠️ Failed to fetch shift data, using default hours:', error);
+  }
+  
+  // デフォルトの営業時間チェック
   const [startHour] = startTime.split(':').map(Number);
   const [endHour, endMinute] = endTime.split(':').map(Number);
   
@@ -127,7 +158,7 @@ async function performFinalValidation() {
   const endTime = calculateEndTime(time, course);
   
   // 営業時間チェック
-  const businessHoursCheck = checkBusinessHours(date, time, endTime);
+  const businessHoursCheck = await checkBusinessHours(date, time, endTime);
   if (!businessHoursCheck.valid) {
     showMessage(businessHoursCheck.message, 'warning');
     return false;
@@ -186,10 +217,11 @@ function setupRealtimeValidation() {
       // 営業時間チェック
       const date = dateField?.value;
       if (date) {
-        const businessHoursCheck = checkBusinessHours(date, time, endTime);
-        if (!businessHoursCheck.valid) {
-          showMessage(businessHoursCheck.message, 'warning');
-        }
+        checkBusinessHours(date, time, endTime).then(businessHoursCheck => {
+          if (!businessHoursCheck.valid) {
+            showMessage(businessHoursCheck.message, 'warning');
+          }
+        });
       }
     }
   }

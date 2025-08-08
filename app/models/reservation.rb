@@ -445,10 +445,16 @@ class Reservation < ApplicationRecord
   def booking_within_business_hours
     return unless start_time && end_time
     
-    # システム設定から営業時間を取得
-    settings = ApplicationSetting.current
-    business_start = settings.business_hours_start
-    business_end = settings.business_hours_end
+    # 指定日のシフトを取得
+    shift = Shift.for_date(start_time.to_date).first
+    
+    # 営業時間を決定（シフト設定があればそれを使用、なければシステム設定）
+    business_start, business_end = if shift&.requires_time?
+      [shift.start_time.hour, shift.end_time.hour]
+    else
+      settings = ApplicationSetting.current
+      [settings.business_hours_start, settings.business_hours_end]
+    end
     
     # end_timeは既にコース時間＋インターバル時間を含んでいるため、そのまま使用
     actual_end_time = end_time
@@ -458,9 +464,11 @@ class Reservation < ApplicationRecord
     end_minute = actual_end_time.min
     
     Rails.logger.info "🕐 Business hours check: start=#{start_time.strftime('%H:%M')}, end=#{actual_end_time.strftime('%H:%M')}, business=#{business_start}:00-#{business_end}:00"
+    Rails.logger.info "🕐 Shift info: #{shift&.shift_type_display || 'No shift'} (#{shift&.business_hours || 'Default hours'})"
     
     if start_hour < business_start || end_hour > business_end || (end_hour == business_end && end_minute > 0)
-      errors.add(:start_time, "営業時間内（#{business_start}:00-#{business_end}:00）でご予約ください。終了時刻: #{actual_end_time.strftime('%H:%M')}")
+      shift_info = shift ? " (#{shift.shift_type_display})" : ""
+      errors.add(:start_time, "営業時間内（#{business_start}:00-#{business_end}:00#{shift_info}）でご予約ください。終了時刻: #{actual_end_time.strftime('%H:%M')}")
     end
   end
 

@@ -4,6 +4,15 @@
   <title>管理画面</title>
   <%= csrf_meta_tags %>
   <%= csp_meta_tag %>
+  
+  <!-- システム設定のメタタグ -->
+  <% settings = ApplicationSetting.current %>
+  <meta name="business-hours-start" content="<%= settings.business_hours_start %>">
+  <meta name="business-hours-end" content="<%= settings.business_hours_end %>">
+  <meta name="slot-interval" content="<%= settings.slot_interval_minutes %>">
+  <meta name="reservation-interval" content="<%= settings.reservation_interval_minutes %>">
+  <meta name="sunday-closed" content="<%= settings.sunday_closed %>">
+  
   <%= stylesheet_link_tag    "application", media: "all" %>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
