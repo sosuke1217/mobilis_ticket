@@ -1,2202 +1,1308 @@
-<% content_for :title, "予約カレンダー - Mobilis" %>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>予約管理システム</title>
+<style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-<div class="calendar-container">
-  <div class="card shadow-sm border-0 mb-4">
-    <div class="card-body py-4">
-      <div class="row align-items-center" style="min-height: 200px;">
-        <!-- 左側：タイトル -->
-        <div class="col-lg-4 col-md-6 mb-3 mb-md-0">
-          <h1 class="h2 mb-0 text-primary" style="padding-left: 60px;">
-            <i class="fas fa-calendar-alt me-2"></i>予約カレンダー
-          </h1>
-        </div>
-        
-        <!-- 中央：ミニカレンダー -->
-        <div class="col-lg-4 col-md-6 d-flex justify-content-center align-items-center mb-3 mb-md-0">
-          <div id="monthCalendar">
-            <!-- 年と月の表示とナビゲーション -->
-            <div class="mini-calendar-header" style="background: #f8f9fa; border-bottom: 1px solid #dee2e6; border-radius: 4px; display: flex; align-items: center; justify-content: space-between;">
-              <button id="prevMonthBtn" class="mini-calendar-nav-btn" style="background: transparent; border: none; color: #6c757d; font-size: 0.5rem; padding: 2px; cursor: pointer;">
-                <i class="fas fa-chevron-left"></i>
-              </button>
-              <div id="currentMonthYear" class="mini-calendar-title" style="font-size: 0.6rem; font-weight: 600; color: #495057; text-align: center; flex: 1; cursor: pointer;">
-                <!-- 年と月がここに表示される -->
-              </div>
-              <button id="nextMonthBtn" class="mini-calendar-nav-btn" style="background: transparent; border: none; color: #6c757d; font-size: 0.5rem; padding: 2px; cursor: pointer;">
-                <i class="fas fa-chevron-right"></i>
-              </button>
+        body {
+            font-family: 'Hiragino Kaku Gothic Pro', 'ヒラギノ角ゴ Pro W3', Meiryo, sans-serif;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        .container {
+  max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+        }
+
+        .header-controls {
+  display: flex;
+            gap: 12px;
+  align-items: center;
+}
+
+        .week-nav {
+  display: flex;
+  align-items: center;
+            gap: 16px;
+        }
+
+        .nav-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: #0056b3;
+        }
+
+        .current-week {
+            font-weight: 600;
+            color: #333;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .settings-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .settings-btn:hover {
+            background: #1e7e34;
+            transform: translateY(-1px);
+        }
+
+        /* Mini Calendar */
+        .mini-calendar-container {
+            position: relative;
+        }
+
+        .mini-calendar-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .mini-calendar-btn:hover {
+            background: #545b62;
+        }
+
+        .mini-calendar {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            padding: 16px;
+            z-index: 1000;
+            min-width: 280px;
+            display: none;
+            animation: slideDown 0.2s ease;
+        }
+
+        .mini-calendar.show {
+            display: block;
+        }
+
+        .mini-calendar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .mini-calendar-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .mini-calendar-nav {
+            display: flex;
+            gap: 4px;
+        }
+
+        .mini-calendar-nav-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: #6c757d;
+            transition: background 0.2s;
+        }
+
+        .mini-calendar-nav-btn:hover {
+            background: #f8f9fa;
+        }
+
+        .mini-calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            margin-bottom: 8px;
+        }
+
+        .mini-calendar-weekday {
+            text-align: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: #6c757d;
+            padding: 4px 0;
+        }
+
+        .mini-calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+        }
+
+        .mini-calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .mini-calendar-day:hover {
+            background: #f8f9fa;
+        }
+
+        .mini-calendar-day.other-month {
+            color: #adb5bd;
+        }
+
+        .mini-calendar-day.today {
+            background: #007bff;
+            color: white;
+            font-weight: 600;
+        }
+
+        .mini-calendar-day.selected {
+            background: #28a745;
+            color: white;
+            font-weight: 600;
+        }
+
+        .mini-calendar-day.week-start {
+            border-color: #28a745;
+            background: #e8f5e8;
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .schedule-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .schedule-header {
+            display: grid;
+            grid-template-columns: 80px repeat(7, 1fr);
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .time-column-header {
+            padding: 16px 8px;
+            text-align: center;
+            font-weight: 600;
+            color: #6c757d;
+            border-right: 1px solid #dee2e6;
+        }
+
+        .day-header {
+            padding: 16px 12px;
+            text-align: center;
+            font-weight: 600;
+            color: #333;
+            border-right: 1px solid #dee2e6;
+        }
+
+        .day-header.sunday {
+            color: #dc3545;
+            background: #ffeaea;
+        }
+
+        .day-header.saturday {
+            color: #007bff;
+            background: #e6f3ff;
+        }
+
+        .schedule-body {
+            display: grid;
+            grid-template-columns: 80px repeat(7, 1fr);
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .time-slot {
+            padding: 8px;
+            text-align: center;
+  font-size: 12px;
+            color: #6c757d;
+            border-right: 1px solid #dee2e6;
+            border-bottom: 1px solid #f0f0f0;
+            background: #fafafa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+        }
+
+        .schedule-cell {
+            padding: 4px;
+            border-right: 1px solid #dee2e6;
+            border-bottom: 1px solid #f0f0f0;
+            min-height: 40px;
+            cursor: pointer;
+            transition: background 0.2s;
+  position: relative;
+}
+
+        .schedule-cell:hover {
+            background: #f8f9fa;
+        }
+
+        .schedule-cell.available {
+            background: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .schedule-cell.reserved {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        .reservation-block {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white;
+            padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+            font-weight: 500;
+            text-align: center;
+            margin: 2px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .reservation-block:hover {
+            transform: scale(1.02);
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+        }
+
+        .reservation-block.completed {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+        }
+
+        .reservation-block.cancelled {
+            background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+        }
+
+        .available-slot {
+            background: #e8f5e8;
+            color: #155724;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            text-align: center;
+            margin: 1px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .available-slot:hover {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        /* 設定モーダル */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+  left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 3% auto;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+            color: white;
+            padding: 20px 24px;
+            border-radius: 12px 12px 0 0;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .close {
+  color: white;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+
+        .close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .settings-tabs {
+            display: flex;
+            border-bottom: 2px solid #dee2e6;
+            margin-bottom: 24px;
+        }
+
+        .tab-button {
+            padding: 12px 24px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6c757d;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-button.active {
+            color: #007bff;
+            border-bottom-color: #007bff;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .day-setting {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        .day-setting-header {
+            background: #f8f9fa;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+        }
+
+        .day-setting-header.sunday {
+            color: #dc3545;
+            background: #ffeaea;
+        }
+
+        .day-setting-header.saturday {
+            color: #007bff;
+            background: #e6f3ff;
+        }
+
+        .day-toggle {
+            position: relative;
+            width: 50px;
+            height: 24px;
+            background: #ccc;
+    border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .day-toggle.active {
+            background: #28a745;
+        }
+
+        .day-toggle::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .day-toggle.active::before {
+            transform: translateX(26px);
+        }
+
+        .time-slots-container {
+            padding: 16px;
+            background: white;
+        }
+
+        .time-slot-input {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .time-input {
+            padding: 6px 10px;
+            border: 1px solid #dee2e6;
+  border-radius: 4px;
+            font-size: 14px;
+}
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+  border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        .btn-primary {
+            background: #007bff;
+  color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-success {
+            background: #28a745;
+  color: white;
+        }
+
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+  color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+  color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .add-time-btn {
+            width: 100%;
+            margin-top: 8px;
+            border: 2px dashed #dee2e6;
+            background: white;
+            color: #6c757d;
+            padding: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .add-time-btn:hover {
+            border-color: #28a745;
+            color: #28a745;
+            background: #f8fff8;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+@media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 16px;
+                padding: 16px;
+            }
+
+            .header-controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .schedule-header {
+                grid-template-columns: 60px repeat(7, 1fr);
+            }
+
+            .schedule-body {
+                grid-template-columns: 60px repeat(7, 1fr);
+            }
+
+            .time-column-header,
+            .time-slot {
+                padding: 8px 4px;
+                font-size: 10px;
+            }
+
+            .day-header {
+                padding: 12px 4px;
+                font-size: 12px;
+            }
+
+            .schedule-cell {
+                min-height: 30px;
+            }
+
+            .reservation-block {
+          font-size: 10px;
+                padding: 2px 4px;
+            }
+
+            .modal-content {
+                margin: 5% auto;
+                width: 95%;
+            }
+
+            .settings-tabs {
+                overflow-x: auto;
+            }
+
+            .tab-button {
+                white-space: nowrap;
+                min-width: 100px;
+            }
+
+            .time-slot-input {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📅 予約管理システム</h1>
+            <div class="header-controls">
+                <div class="week-nav">
+                    <button class="nav-btn" onclick="previousWeek()">← 前週</button>
+                    <div class="current-week" id="currentWeek">2025年 8月10日 - 8月16日</div>
+                    <button class="nav-btn" onclick="nextWeek()">次週 →</button>
+                </div>
+                <div class="mini-calendar-container">
+                    <button class="mini-calendar-btn" onclick="toggleMiniCalendar()">
+                        📅 週を選択
+                    </button>
+                    <div class="mini-calendar" id="miniCalendar">
+                        <div class="mini-calendar-header">
+                            <div class="mini-calendar-title" id="miniCalendarTitle">2025年 8月</div>
+                            <div class="mini-calendar-nav">
+                                <button class="mini-calendar-nav-btn" onclick="previousMiniCalendarMonth()">‹</button>
+                                <button class="mini-calendar-nav-btn" onclick="nextMiniCalendarMonth()">›</button>
+                            </div>
+                        </div>
+                        <div class="mini-calendar-weekdays">
+                            <div class="mini-calendar-weekday">日</div>
+                            <div class="mini-calendar-weekday">月</div>
+                            <div class="mini-calendar-weekday">火</div>
+                            <div class="mini-calendar-weekday">水</div>
+                            <div class="mini-calendar-weekday">木</div>
+                            <div class="mini-calendar-weekday">金</div>
+                            <div class="mini-calendar-weekday">土</div>
+                        </div>
+                        <div class="mini-calendar-days" id="miniCalendarDays">
+                            <!-- 動的に生成される -->
+                        </div>
+                    </div>
+                </div>
+                <button class="settings-btn" onclick="openSettingsModal()">
+                    ⚙️ 予約可能日時を編集
+                </button>
             </div>
-            <div id="monthCalendarContent"></div>
-          </div>
         </div>
-        
-        <!-- 右側：アクションボタン -->
-        <div class="col-lg-4 col-md-12">
-          <div class="d-flex flex-column gap-3">
-            <!-- 営業時間ステータス表示 -->
-            <div class="business-status-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
-              <div class="d-flex align-items-center justify-content-between">
-                <div>
-                  <h6 class="mb-1" style="margin: 0; font-weight: 600;">
-                    <i class="fas fa-clock me-2"></i>営業時間
-                  </h6>
-                  <div class="business-hours-display" style="font-size: 0.9rem; opacity: 0.9;">
-                    <%= ApplicationSetting.current.formatted_business_hours %>
-                  </div>
-                </div>
-                <div class="business-status-indicator" style="text-align: center;">
-                  <div class="status-dot <%= ApplicationSetting.current.currently_open? ? 'open' : 'closed' %>" 
-                       style="width: 12px; height: 12px; border-radius: 50%; margin: 0 auto 5px; background: <%= ApplicationSetting.current.currently_open? ? '#007bff' : '#6c757d' %>;"></div>
-                  <div style="font-size: 0.8rem; font-weight: 500;">
-                    <%= ApplicationSetting.current.currently_open? ? '営業中' : '営業時間外' %>
-                  </div>
-                </div>
-              </div>
+
+        <div class="schedule-container">
+            <div class="schedule-header">
+                <div class="time-column-header">時刻</div>
+                <div class="day-header sunday">日<br><span style="font-size: 12px;">8/10</span></div>
+                <div class="day-header">月<br><span style="font-size: 12px;">8/11</span></div>
+                <div class="day-header">火<br><span style="font-size: 12px;">8/12</span></div>
+                <div class="day-header">水<br><span style="font-size: 12px;">8/13</span></div>
+                <div class="day-header">木<br><span style="font-size: 12px;">8/14</span></div>
+                <div class="day-header">金<br><span style="font-size: 12px;">8/15</span></div>
+                <div class="day-header saturday">土<br><span style="font-size: 12px;">8/16</span></div>
             </div>
             
-            <a href="<%= admin_reservations_path %>" class="btn btn-primary btn-lg shadow-sm">
-              <i class="fas fa-list me-2"></i>📋 今日の予約一覧
-            </a>
-            <div class="d-flex gap-3">
-              <button id="newReservationBtn" class="btn btn-success btn-lg">
-                <i class="fas fa-plus me-2"></i>新規予約
-              </button>
-              <button id="shiftSettingsBtn" class="btn btn-info btn-lg">
-                <i class="fas fa-clock me-2"></i>シフト設定
-              </button>
-              <button id="testHighlightBtn" class="btn btn-warning btn-lg">
-                <i class="fas fa-paint-brush me-2"></i>テスト背景色
-              </button>
-              <button class="btn btn-outline-danger btn-lg" onclick="openCancelledHistoryModal()">
-                <i class="fas fa-times-circle me-2"></i>キャンセル履歴
-              </button>
+            <div class="schedule-body" id="scheduleBody">
+                <!-- 時間スロットは動的に生成される -->
             </div>
+        </div>
+    </div>
+
+    <!-- 設定モーダル -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚙️ 予約可能日時を編集</h2>
+                <span class="close" onclick="closeSettingsModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="settings-tabs">
+                    <button class="tab-button active" onclick="switchTab('general')">一回限りの変更</button>
+                    <button class="tab-button" onclick="switchTab('recurring')">定期的なスケジュール</button>
+                </div>
+
+                <!-- 一回限りの変更タブ -->
+                <div id="general-tab" class="tab-content active">
+                    <p style="margin-bottom: 20px; color: #666;">8月10日 - 8月16日の予約可能時間を設定</p>
+                    
+                    <div id="daySettings">
+                        <!-- 曜日別設定が動的に生成される -->
+      </div>
+    </div>
+
+                <!-- 定期的なスケジュールタブ -->
+                <div id="recurring-tab" class="tab-content">
+                    <p style="margin-bottom: 20px; color: #666;">今後の週に適用するデフォルトスケジュールを設定</p>
+                    
+                    <div id="recurringDaySettings">
+                        <!-- 定期的な設定が動的に生成される -->
+        </div>
+        </div>
+        </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeSettingsModal()">キャンセル</button>
+                <button class="btn btn-success" onclick="saveSettings()">完了</button>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-</div>  
-
-<div class="container-fluid" style="margin-top: 20px; margin-bottom: 20px;">
-  <div id="calendar" class="shift-highlight-enabled"></div>
-</div>
-
-<!-- シフト設定モーダル -->
-<div class="modal fade" id="shiftSettingsModal" tabindex="-1" aria-labelledby="shiftSettingsModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="shiftSettingsModalLabel">
-          <i class="fas fa-clock me-2"></i>営業時間設定
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="shiftSettingsForm">
-          <!-- 日付選択 -->
-          <div class="mb-3">
-            <label for="shiftDate" class="form-label">
-              <i class="fas fa-calendar me-2"></i>日付
-            </label>
-            <input type="date" class="form-control" id="shiftDate" required>
-          </div>
-          
-          <!-- 営業状態 -->
-          <div class="mb-3">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="shiftIsOpen" checked>
-              <label class="form-check-label" for="shiftIsOpen">
-                <i class="fas fa-store me-2"></i>営業する
-              </label>
-            </div>
-          </div>
-          
-          <!-- 営業時間 -->
-          <div class="row">
-            <div class="col-md-6">
-              <label for="shiftStartTime" class="form-label">
-                <i class="fas fa-sun me-2"></i>開始時間
-              </label>
-              <input type="time" class="form-control" id="shiftStartTime" value="10:00" required>
-            </div>
-            <div class="col-md-6">
-              <label for="shiftEndTime" class="form-label">
-                <i class="fas fa-moon me-2"></i>終了時間
-              </label>
-              <input type="time" class="form-control" id="shiftEndTime" value="20:00" required>
-            </div>
-          </div>
-          
-          <!-- プレビュー -->
-          <div class="mt-3 p-3 bg-light rounded">
-            <h6 class="mb-2">
-              <i class="fas fa-eye me-2"></i>プレビュー
-            </h6>
-            <div id="shiftPreview" class="text-muted">
-              選択した日付の営業時間がここに表示されます
-            </div>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-          <i class="fas fa-times me-2"></i>キャンセル
-        </button>
-        <button type="button" class="btn btn-primary" id="saveShiftBtn">
-          <i class="fas fa-save me-2"></i>保存
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<style>
-/* ==============================================
-   CLEAN CALENDAR STYLING - 2025-01-27
-   ============================================== */
-:root {
-  /* カラー */
-  --primary-color: #007bff;
-  --success-color: #28a745;
-  --warning-color: #ffc107;
-  --danger-color: #dc3545;
-  --info-color: #17a2b8;
-  --secondary-color: #6c757d;
-  
-  /* 背景色 */
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8f9fa;
-  --bg-light: #f8f9fa;
-  
-  /* ボーダー */
-  --border-light: #e9ecef;
-  --border-medium: #dee2e6;
-  
-  /* シャドウ */
-  --shadow-light: 0 2px 8px rgba(0,0,0,0.15);
-  
-  /* サイズ */
-  --slot-height: 30px;
-  --border-radius: 8px;
-}
-  --border-radius-xl: 20px;
-  
-  /* トランジション */
-  --transition-fast: 0.2s ease;
-  --transition-normal: 0.3s ease;
-  --transition-slow: 0.5s ease;
-}
-
-/* ==============================================
-   共通スタイル
-   ============================================== */
-.fc {
-  background: #ffffff;
-  border-radius: var(--border-radius-xl);
-  box-shadow: var(--shadow-heavy);
-  border: 2px solid var(--border-primary);
-  margin: 0 auto;
-  max-width: 1400px;
-  position: relative;
-  overflow: hidden;
-  animation: slideInUp 0.8s ease-out;
-}
-
-.fc::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
-  pointer-events: none;
-  z-index: 1;
-}
-
-.fc-view-harness {
-  background: #ffffff;
-  border-radius: 18px;
-  position: relative;
-  z-index: 2;
-}
-
-/* ==============================================
-   ツールバー
-   ============================================== */
-.fc-toolbar {
-  padding: 8px 0;
-  border-bottom: 2px solid var(--border-primary);
-  background: #ffffff;
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.fc-toolbar-chunk {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-  justify-content: center;
-}
-
-.fc-toolbar::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--border-primary), transparent);
-}
-
-.fc-toolbar-title {
-  font-size: 2rem;
-  font-weight: 800;
-  color: #1e293b;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* ==============================================
-   ボタン
-   ============================================== */
-.fc-button {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%) !important;
-  border: none !important;
-  color: white !important;
-  border-radius: var(--border-radius-lg) !important;
-  font-weight: 600 !important;
-  padding: 16px 20px !important;
-  transition: all var(--transition-normal) !important;
-  box-shadow: var(--shadow-light) !important;
-  position: relative !important;
-  overflow: hidden !important;
-  margin: 8px 0 !important;
-}
-
-.fc-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  transition: left var(--transition-slow);
-}
-
-.fc-button:hover::before {
-  left: 100%;
-}
-
-.fc-button:hover {
-  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-darker) 100%) !important;
-  transform: translateY(-3px) !important;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.2) !important;
-}
-
-.fc-button:focus {
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
-}
-
-.fc-button-active {
-  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-darker) 100%) !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
-}
-
-/* ==============================================
-   タイムグリッド
-   ============================================== */
-.fc-timegrid-slot {
-  height: var(--slot-height) !important;
-  min-height: var(--slot-height) !important;
-  max-height: var(--slot-height) !important;
-  border-top: 1px solid var(--border-light) !important;
-  transition: background-color var(--transition-fast);
-}
-
-.fc-timegrid-slot[data-time$=":30:00"] {
-  border-top: 2px solid var(--border-medium) !important;
-}
-
-.fc-timegrid-slot[data-time$=":00:00"] {
-  border-top: 3px solid var(--border-dark) !important;
-}
-
-.fc-timegrid-slots table {
-  height: 100% !important;
-}
-
-.fc-timegrid-axis-frame {
-  height: var(--slot-height) !important;
-  min-height: var(--slot-height) !important;
-}
-
-.fc-timegrid-slot-label {
-  font-size: 0.75rem !important;
-  padding: 2px 4px !important;
-  color: #4a5568 !important;
-}
-
-.fc-timegrid-axis {
-  font-size: 12px;
-  border-right: 2px solid var(--border-medium) !important;
-  min-width: 80px;
-}
-
-.fc-timegrid-col-frame {
-  border-right: 1px solid var(--border-primary) !important;
-}
-
-/* ==============================================
-   営業時間外（動的）
-   ============================================== */
-.fc-timegrid-slot.business-hour-inactive {
-  opacity: 0.7;
-  position: relative;
-  pointer-events: none;
-}
-
-.fc-timegrid-axis.business-hour-inactive {
-  color: #6c757d !important;
-  font-style: italic;
-  font-weight: normal;
-}
-
-/* 営業時間内（動的） */
-.fc-timegrid-slot.business-hour-active {
-  opacity: 1;
-  position: relative;
-  pointer-events: auto;
-}
-
-.fc-timegrid-axis.business-hour-active {
-  color: #212529 !important;
-  font-weight: 600;
-}
-
-/* ==============================================
-   営業時間ラベル（動的）
-   ============================================== */
-.fc-timegrid-slot.business-start-time {
-  border-top: 3px solid var(--success-color) !important;
-  position: relative;
-}
-
-.fc-timegrid-slot.business-end-time {
-  border-top: 3px solid var(--danger-color) !important;
-  position: relative;
-}
-
-.fc-timegrid-slot.business-start-time::before {
-  content: "営業開始";
-  position: absolute;
-  left: 5px;
-  top: -15px;
-  background: var(--success-color);
-  color: white;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: bold;
-  z-index: 10;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-.fc-timegrid-slot.business-end-time::before {
-  content: "営業終了";
-  position: absolute;
-  left: 5px;
-  top: -15px;
-  background: var(--danger-color);
-  color: white;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: bold;
-  z-index: 10;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-/* ==============================================
-   ホバー効果（動的）
-   ============================================== */
-.fc-timegrid-slot.business-hour-active:hover {
-  cursor: pointer;
-}
-
-.fc-timegrid-slot.business-hour-inactive:hover {
-  cursor: not-allowed;
-}
-
-/* ==============================================
-   イベント基本スタイル
-   ============================================== */
-.fc-timegrid-event {
-  border-radius: var(--border-radius) !important;
-  font-size: 0.8rem !important;
-  font-weight: 600 !important;
-  box-shadow: var(--shadow-light) !important;
-  transition: all var(--transition-normal) !important;
-  border: 2px solid transparent !important;
-  margin: 1px !important;
-  overflow: hidden !important;
-  position: relative !important;
-  height: auto !important;
-}
-
-.fc-timegrid-event::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
-  pointer-events: none;
-  z-index: 1;
-}
-
-.fc-timegrid-event:hover {
-  box-shadow: var(--shadow-medium) !important;
-  transform: translateX(2px) !important;
-  z-index: 1000 !important;
-}
-
-/* ==============================================
-   イベント高さ設定
-   ============================================== */
-.fc-timegrid-event[data-duration="40"] { height: 120px !important; min-height: 120px !important; }
-.fc-timegrid-event[data-duration="45"] { height: 135px !important; min-height: 135px !important; }
-.fc-timegrid-event[data-duration="50"] { height: 150px !important; min-height: 150px !important; }
-.fc-timegrid-event[data-duration="55"] { height: 165px !important; min-height: 165px !important; }
-.fc-timegrid-event[data-duration="60"] { height: 180px !important; min-height: 180px !important; }
-.fc-timegrid-event[data-duration="65"] { height: 195px !important; min-height: 195px !important; }
-.fc-timegrid-event[data-duration="70"] { height: 210px !important; min-height: 210px !important; }
-.fc-timegrid-event[data-duration="75"] { height: 225px !important; min-height: 225px !important; }
-.fc-timegrid-event[data-duration="80"] { height: 240px !important; min-height: 240px !important; }
-.fc-timegrid-event[data-duration="85"] { height: 255px !important; min-height: 255px !important; }
-.fc-timegrid-event[data-duration="90"] { height: 270px !important; min-height: 270px !important; }
-.fc-timegrid-event[data-duration="95"] { height: 285px !important; min-height: 285px !important; }
-.fc-timegrid-event[data-duration="100"] { height: 300px !important; min-height: 300px !important; }
-
-/* ==============================================
-   イベントタブ
-   ============================================== */
-.fc-timegrid-event .event-tab-container {
-  height: 100% !important;
-  display: flex !important;
-  flex-direction: column !important;
-  width: 100% !important;
-}
-
-.fc-timegrid-event .event-tab {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-weight: 600 !important;
-  text-align: center !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
-  transition: all var(--transition-fast) !important;
-  border: none !important;
-}
-
-.fc-timegrid-event .event-tab.course {
-  background: inherit !important;
-  color: inherit !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
-}
-
-.fc-timegrid-event .event-tab.interval {
-  color: white !important;
-  font-weight: 500 !important;
-}
-
-.fc-timegrid-event .event-tab.interval.individual {
-  background-color: var(--orange-color) !important;
-  font-weight: 600 !important;
-}
-
-.fc-timegrid-event .event-tab.interval.system {
-  background-color: var(--secondary-color) !important;
-}
-
-/* ==============================================
-   ステータス別色分け
-   ============================================== */
-.fc-timegrid-event.confirmed {
-  background: linear-gradient(135deg, var(--success-color) 0%, var(--success-light) 100%) !important;
-  border: 2px solid var(--success-color) !important;
-  color: white !important;
-  box-shadow: 0 4px 16px rgba(0, 123, 255, 0.3) !important;
-}
-
-.fc-timegrid-event.tentative {
-  background: linear-gradient(135deg, var(--warning-color) 0%, var(--warning-light) 100%) !important;
-  border: 2px solid var(--warning-color) !important;
-  color: #212529 !important;
-  box-shadow: 0 4px 16px rgba(255, 193, 7, 0.3) !important;
-}
-
-.fc-timegrid-event.cancelled {
-  background: linear-gradient(135deg, var(--danger-color) 0%, var(--danger-dark) 100%) !important;
-  border: 2px solid var(--danger-color) !important;
-  color: white !important;
-  box-shadow: 0 4px 16px rgba(108, 117, 125, 0.3) !important;
-}
-
-.fc-timegrid-event.completed {
-  background: linear-gradient(135deg, var(--purple-color) 0%, var(--purple-dark) 100%) !important;
-  border: 2px solid var(--purple-color) !important;
-  color: white !important;
-  box-shadow: 0 4px 16px rgba(111, 66, 193, 0.3) !important;
-}
-
-.fc-timegrid-event.no_show {
-  background: linear-gradient(135deg, var(--secondary-color) 0%, var(--secondary-dark) 100%) !important;
-  border: 2px solid var(--secondary-color) !important;
-  color: white !important;
-  box-shadow: 0 4px 16px rgba(108, 117, 125, 0.3) !important;
-}
-
-.fc-timegrid-event.break {
-  background: linear-gradient(135deg, var(--info-color) 0%, var(--info-dark) 100%) !important;
-  border: 2px solid var(--info-color) !important;
-  color: white !important;
-  box-shadow: 0 4px 16px rgba(23, 162, 184, 0.3) !important;
-}
-
-/* ==============================================
-   インターバル表示
-   ============================================== */
-.fc-timegrid-event.has-interval .event-tab.interval.individual::before {
-  content: "⚙️ ";
-  font-size: 0.6em;
-  margin-right: 2px;
-}
-
-.fc-timegrid-event.has-interval .event-tab.interval.system::before {
-  content: "🔧 ";
-  font-size: 0.6em;
-  margin-right: 2px;
-}
-
-.fc-timegrid-event.has-interval:hover::after {
-  content: attr(data-interval-info);
-  position: absolute;
-  top: -30px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.9);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  white-space: nowrap;
-  z-index: 10000;
-  pointer-events: none;
-}
-
-/* ==============================================
-   日付ヘッダー
-   ============================================== */
-.fc-col-header-cell,
-.fc-day-header {
-  cursor: pointer !important;
-  transition: background-color var(--transition-fast);
-}
-
-.fc-col-header-cell:hover,
-.fc-day-header:hover {
-  background-color: var(--bg-light) !important;
-}
-
-.fc-col-header-cell:active,
-.fc-day-header:active {
-  background-color: #e9ecef !important;
-}
-
-.fc-day-header {
-  user-select: none !important;
-}
-
-/* ==============================================
-   アニメーション
-   ============================================== */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.calendar-container {
-  animation: fadeInUp 0.6s ease-out;
-}
-
-/* ==============================================
-   レスポンシブ対応
-   ============================================== */
-@media (max-width: 1024px) {
-  .fc {
-    margin: 0 auto;
-    border-radius: 16px;
-  }
-  
-  .fc-toolbar {
-    padding: 8px 0;
-    width: 100%;
-    max-width: 100%;
-  }
-  
-  .fc-toolbar-title {
-    font-size: 1.6rem;
-  }
-}
-
-@media (max-width: 768px) {
-  :root {
-    --slot-height: 35px;
-  }
-  
-  .fc-timegrid-event[data-duration="40"] { height: 140px !important; min-height: 140px !important; }
-  .fc-timegrid-event[data-duration="45"] { height: 157px !important; min-height: 157px !important; }
-  .fc-timegrid-event[data-duration="50"] { height: 175px !important; min-height: 175px !important; }
-  .fc-timegrid-event[data-duration="55"] { height: 192px !important; min-height: 192px !important; }
-  .fc-timegrid-event[data-duration="60"] { height: 210px !important; min-height: 210px !important; }
-  .fc-timegrid-event[data-duration="65"] { height: 227px !important; min-height: 227px !important; }
-  .fc-timegrid-event[data-duration="70"] { height: 245px !important; min-height: 245px !important; }
-  .fc-timegrid-event[data-duration="75"] { height: 262px !important; min-height: 262px !important; }
-  .fc-timegrid-event[data-duration="80"] { height: 280px !important; min-height: 280px !important; }
-  .fc-timegrid-event[data-duration="85"] { height: 297px !important; min-height: 297px !important; }
-  .fc-timegrid-event[data-duration="90"] { height: 315px !important; min-height: 315px !important; }
-  .fc-timegrid-event[data-duration="95"] { height: 332px !important; min-height: 332px !important; }
-  .fc-timegrid-event[data-duration="100"] { height: 350px !important; min-height: 350px !important; }
-  
-  .fc-timegrid-event .event-tab {
-    font-size: 0.7rem !important;
-    padding: 1px 2px !important;
-  }
-  
-  .fc {
-    margin: 15px auto;
-    border-radius: 12px;
-  }
-  
-  .fc-toolbar {
-    padding: 8px 0;
-    width: 100%;
-    max-width: 100%;
-  }
-  
-  .fc-toolbar-title {
-    font-size: 1.4rem;
-  }
-}
-
-@media (max-width: 480px) {
-  :root {
-    --slot-height: 30px;
-  }
-  
-  .fc-timegrid-event[data-duration="40"] { height: 120px !important; min-height: 120px !important; }
-  .fc-timegrid-event[data-duration="45"] { height: 135px !important; min-height: 135px !important; }
-  .fc-timegrid-event[data-duration="50"] { height: 150px !important; min-height: 150px !important; }
-  .fc-timegrid-event[data-duration="55"] { height: 165px !important; min-height: 165px !important; }
-  .fc-timegrid-event[data-duration="60"] { height: 180px !important; min-height: 180px !important; }
-  .fc-timegrid-event[data-duration="65"] { height: 195px !important; min-height: 195px !important; }
-  .fc-timegrid-event[data-duration="70"] { height: 210px !important; min-height: 210px !important; }
-  .fc-timegrid-event[data-duration="75"] { height: 225px !important; min-height: 225px !important; }
-  .fc-timegrid-event[data-duration="80"] { height: 240px !important; min-height: 240px !important; }
-  .fc-timegrid-event[data-duration="85"] { height: 255px !important; min-height: 255px !important; }
-  .fc-timegrid-event[data-duration="90"] { height: 270px !important; min-height: 270px !important; }
-  .fc-timegrid-event[data-duration="95"] { height: 285px !important; min-height: 285px !important; }
-  .fc-timegrid-event[data-duration="100"] { height: 300px !important; min-height: 300px !important; }
-  
-  .fc-timegrid-event .event-tab {
-    font-size: 0.65rem !important;
-    padding: 1px !important;
-  }
-
-  .fc {
-    margin: 10px auto;
-    border-radius: 10px;
-  }
-  
-  .fc-toolbar {
-    padding: 12px 15px;
-  }
-  
-  .fc-toolbar-title {
-    font-size: 1.2rem;
-  }
-}
-
-/* ==============================================
-   アクセシビリティ
-   ============================================== */
-@media (prefers-contrast: high) {
-  .fc-timegrid-event {
-    border-width: 3px !important;
-  }
-  
-  .fc-button {
-    border: 2px solid currentColor !important;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  .fc {
-    background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-darker) 100%) !important;
-    border-color: #4a5568 !important;
-  }
-  
-  .fc-toolbar {
-    background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-darker) 100%) !important;
-    border-bottom-color: #4a5568 !important;
-  }
-  
-  .fc-toolbar-title {
-    color: #e2e8f0 !important;
-  }
-}
-
-/* ==============================================
-   フォーカス・ドラッグ状態
-   ============================================== */
-.fc-timegrid-event:focus,
-.fc-timegrid-event:focus-visible {
-  outline: 3px solid var(--primary-color);
-  outline-offset: 2px;
-  z-index: 1001;
-}
-
-.fc-timegrid-event.fc-event-selected {
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.3) !important;
-  z-index: 1002 !important;
-}
-
-.fc-timegrid-event.fc-event-dragging {
-  opacity: 0.7 !important;
-  transform: rotate(3deg) !important;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
-  z-index: 1003 !important;
-}
-
-.fc-timegrid-event.fc-event-resizing {
-  opacity: 0.8 !important;
-  box-shadow: 0 4px 20px rgba(0, 123, 255, 0.4) !important;
-}
-
-/* ==============================================
-   パフォーマンス最適化
-   ============================================== */
-.fc-timegrid-event {
-  will-change: transform, opacity;
-}
-
-.fc-timegrid-event:hover {
-  will-change: transform, box-shadow;
-}
-
-.fc-timegrid-event,
-.fc-button {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-}
-
-/* ==============================================
-   スクロールバー
-   ============================================== */
-.fc-timegrid::-webkit-scrollbar {
-  width: 8px;
-}
-
-.fc-timegrid::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.fc-timegrid::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-  border-radius: 4px;
-}
-
-.fc-timegrid::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-darker) 100%);
-}
-
-/* ==============================================
-   シフト設定モーダル（スクエア風）
-   ============================================== */
-#shiftSettingsModal .modal-dialog {
-  max-width: 600px;
-}
-
-#shiftSettingsModal .modal-header {
-  border-bottom: 1px solid #e9ecef;
-  padding: 1rem 1.5rem;
-}
-
-#shiftSettingsModal .modal-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #333;
-}
-
-#shiftSettingsModal .modal-body {
-  padding: 1.5rem;
-}
-
-#shiftSettingsModal .nav-tabs {
-  border-bottom: 1px solid #e9ecef;
-}
-
-#shiftSettingsModal .nav-tabs .nav-link {
-  border: none;
-  color: #6c757d;
-  font-weight: 500;
-  padding: 0.75rem 1rem;
-}
-
-#shiftSettingsModal .nav-tabs .nav-link.active {
-  color: #007bff;
-  border-bottom: 2px solid #007bff;
-  background: none;
-}
-
-/* 日付範囲表示 */
-.date-range-display {
-  display: flex;
-  align-items: center;
-  font-weight: 600;
-  color: #333;
-}
-
-.date-range-display span {
-  font-size: 1rem;
-}
-
-/* 日別設定アイテム */
-.daily-setting-item {
-  display: flex;
-  align-items: center;
-  padding: 1rem 0;
-  border-bottom: 1px solid #f8f9fa;
-}
-
-.daily-setting-item:last-child {
-  border-bottom: none;
-}
-
-.daily-setting-item .day-info {
-  flex: 1;
-  display: flex;
-  align-items: center;
-}
-
-.daily-setting-item .day-checkbox {
-  margin-right: 1rem;
-}
-
-.daily-setting-item .day-label {
-  font-weight: 500;
-  color: #333;
-  min-width: 120px;
-}
-
-.daily-setting-item .time-inputs {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex: 1;
-}
-
-.daily-setting-item .time-input {
-  width: 80px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 0.375rem 0.5rem;
-  font-size: 0.9rem;
-}
-
-.daily-setting-item .time-input:disabled {
-  background-color: #f8f9fa;
-  color: #6c757d;
-}
-
-.daily-setting-item .time-separator {
-  color: #6c757d;
-  font-weight: 500;
-}
-
-.daily-setting-item .action-buttons {
-  display: flex;
-  gap: 0.25rem;
-  margin-left: 1rem;
-}
-
-.daily-setting-item .btn-icon {
-  width: 32px;
-  height: 32px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: white;
-  color: #6c757d;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.daily-setting-item .btn-icon:hover {
-  background-color: #f8f9fa;
-  border-color: #adb5bd;
-}
-
-.daily-setting-item .btn-icon.remove {
-  color: #6c757d;
-}
-
-.daily-setting-item .btn-icon.add {
-  color: #007bff;
-}
-
-/* 無効状態 */
-.daily-setting-item.disabled .day-label {
-  color: #6c757d;
-}
-
-.daily-setting-item.disabled .time-inputs {
-  opacity: 0.5;
-}
-
-/* シフトタイプ別の色分け */
-.shift-type-normal {
-  background-color: var(--success-color) !important;
-}
-
-.shift-type-extended {
-  background-color: var(--warning-color) !important;
-}
-
-.shift-type-shortened {
-  background-color: var(--orange-color) !important;
-}
-
-.shift-type-closed {
-  background-color: var(--danger-color) !important;
-}
-
-.shift-type-custom {
-  background-color: var(--purple-color) !important;
-}
-
-/* レスポンシブ対応 */
-@media (max-width: 768px) {
-  #shiftSettingsModal .modal-dialog {
-    max-width: 95%;
-    margin: 10px;
-  }
-  
-  .shift-item .row {
-    flex-direction: column;
-  }
-  
-  .shift-item .col-md-1,
-  .shift-item .col-md-2,
-  .shift-item .col-md-3 {
-    margin-bottom: 10px;
-  }
-  
-  .btn-group-vertical {
-    flex-direction: row;
-    gap: 5px;
-  }
-}
-
-/* ==============================================
-   営業時間の視覚的表示
-   ============================================== */
-.business-hour-active {
-  border-right: 1px solid #e9ecef !important;
-  border-top: 1px solid #e9ecef !important;
-  border-bottom: 1px solid #e9ecef !important;
-}
-
-.business-hour-inactive {
-  border-right: 1px solid #e9ecef !important;
-  border-top: 1px solid #e9ecef !important;
-  border-bottom: 1px solid #e9ecef !important;
-  opacity: 0.7;
-}
-
-/* 休業日の場合はさらに暗く表示 */
-.fc-daygrid-day.closed-day .fc-timegrid-slot,
-.fc-daygrid-day.closed-day .fc-timegrid-slot.business-hour-inactive {
-  background-color: rgba(108, 117, 125, 0.2) !important;
-  border-left: 3px solid var(--danger-color) !important;
-  opacity: 0.4;
-}
-
-/* 休業日の時間表示も暗く */
-.fc-daygrid-day.closed-day .fc-timegrid-slot-label {
-  color: var(--danger-color) !important;
-  opacity: 0.6;
-}
-
-/* 休業日のスロットスタイル */
-.fc-timegrid-slot.closed-day {
-  background-color: rgba(108, 117, 125, 0.1) !important;
-  opacity: 0.3 !important;
-  pointer-events: none !important;
-  position: relative;
-}
-
-/* シフト未設定の日付スタイル */
-.fc-daygrid-day.no-shift {
-  background-color: #000000 !important;
-  color: #ffffff !important;
-  opacity: 0.8 !important;
-  position: relative;
-}
-
-.fc-daygrid-day.no-shift .fc-daygrid-day-number {
-  color: #ffffff !important;
-}
-
-.fc-daygrid-day.no-shift:hover {
-  background-color: #000000 !important;
-  opacity: 1 !important;
-}
-
-.fc-daygrid-day.has-shift {
-  background-color: #ffffff !important;
-  border: 2px solid #dee2e6 !important;
-}
-
-.fc-daygrid-day.has-shift .fc-daygrid-day-number {
-  color: #000000 !important;
-}
-
-.fc-timegrid-slot.closed-day::before {
-  content: '休業日';
-  position: absolute;
-  top: 5px;
-  left: 5px;
-  background: #dc3545;
-  color: white;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: bold;
-  z-index: 10;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-/* シフト情報ラベル */
-.shift-info-label {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  background: #17a2b8;
-  color: white;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: bold;
-  z-index: 10;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-/* 休業日ラベル */
-.closed-day-label {
-  position: absolute;
-  top: 5px;
-  left: 5px;
-  background: #dc3545;
-  color: white;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: bold;
-  z-index: 10;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-/* 営業時間の開始・終了マーカー */
-.fc-timegrid-slot.business-hour-active:first-child {
-  border-top: 3px solid #28a745 !important;
-}
-
-.fc-timegrid-slot.business-hour-inactive:first-child {
-  border-top: 3px solid #6c757d !important;
-}
-
-/* 営業時間の時間表示 */
-.fc-timegrid-slot.business-hour-active .fc-timegrid-slot-label {
-  color: #000000 !important;
-  font-weight: bold;
-}
-
-.fc-timegrid-slot.business-hour-inactive .fc-timegrid-slot-label {
-  color: #6c757d !important;
-  opacity: 0.7;
-}
-
-/* 営業時間のホバー効果 */
-.fc-timegrid-slot.business-hour-active:hover {
-  background-color: transparent !important;
-}
-
-.fc-timegrid-slot.business-hour-inactive:hover {
-  background-color: transparent !important;
-}
-
-/* 営業時間の境界線 */
-.fc-timegrid-slot.business-hour-active + .fc-timegrid-slot.business-hour-inactive,
-.fc-timegrid-slot.business-hour-inactive + .fc-timegrid-slot.business-hour-active {
-  border-top: 2px dashed #28a745 !important;
-}
-
-/* 営業時間のラベル */
-.fc-timegrid-slot[data-time="10:00:00"].business-hour-active::before,
-.fc-timegrid-slot[data-time="21:00:00"].business-hour-active::before {
-  display: none; /* 動的に生成されるラベルを使用 */
-}
-
-/* 動的に生成される営業時間ラベル */
-.business-start-label,
-.business-end-label {
-  position: absolute;
-  left: 5px;
-  top: -15px;
-  color: white;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: bold;
-  z-index: 10;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  animation: fadeInUp 0.3s ease-out;
-}
-
-.business-start-label {
-  background: #28a745;
-}
-
-.business-end-label {
-  background: #6c757d;
-}
-
-/* 営業時間ラベルのアニメーション */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* 営業時間の境界線 */
-.fc-timegrid-slot.business-hour-active:first-child {
-  border-top: 3px solid #28a745 !important;
-}
-
-.fc-timegrid-slot.business-hour-inactive:first-child {
-  border-top: 3px solid #6c757d !important;
-}
-
-/* 営業時間の時間表示 */
-.fc-timegrid-slot.business-hour-active .fc-timegrid-slot-label {
-  color: #000000 !important;
-  font-weight: bold;
-}
-
-.fc-timegrid-slot.business-hour-inactive .fc-timegrid-slot-label {
-  color: #6c757d !important;
-  opacity: 0.7;
-}
-
-/* 営業時間のホバー効果 */
-.fc-timegrid-slot.business-hour-active:hover {
-  background-color: transparent !important;
-}
-
-.fc-timegrid-slot.business-hour-inactive:hover {
-  background-color: transparent !important;
-}
-
-/* 営業時間の境界線 */
-.fc-timegrid-slot.business-hour-active + .fc-timegrid-slot.business-hour-inactive,
-.fc-timegrid-slot.business-hour-inactive + .fc-timegrid-slot.business-hour-active {
-  border-top: 2px dashed #28a745 !important;
-}
-
-/* 営業時間のツールチップ */
-.fc-timegrid-slot.business-hour-active::after {
-  content: "営業時間";
-  position: absolute;
-  right: 5px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: #28a745;
-  color: white;
-  padding: 1px 4px;
-  border-radius: 2px;
-  font-size: 9px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.fc-timegrid-slot.business-hour-active:hover::after {
-  opacity: 1;
-}
-
-.fc-timegrid-slot.business-hour-inactive::after {
-  content: "営業時間外";
-  position: absolute;
-  right: 5px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: var(--secondary-color);
-  color: white;
-  padding: 1px 4px;
-  border-radius: 2px;
-  font-size: 9px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.fc-timegrid-slot.business-hour-inactive:hover::after {
-  opacity: 1;
-}
-
-/* レスポンシブ対応 */
-@media (max-width: 768px) {
-  #shiftSettingsModal .modal-dialog {
-    max-width: 95%;
-    margin: 10px;
-  }
-  
-  .shift-item .row {
-    flex-direction: column;
-  }
-  
-  .shift-item .col-md-1,
-  .shift-item .col-md-2,
-  .shift-item .col-md-3 {
-    margin-bottom: 10px;
-  }
-  
-  .btn-group-vertical {
-    flex-direction: row;
-    gap: 5px;
-  }
-}
-
-/* ==============================================
-   月表示のシフト表示
-   ============================================== */
-.fc-daygrid-day {
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.fc-daygrid-day:hover {
-  background-color: rgba(0, 123, 255, 0.1) !important;
-  transform: scale(1.02);
-}
-
-.fc-daygrid-day.has-shift {
-  position: relative;
-}
-
-.fc-daygrid-day.has-shift::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border: 2px solid transparent;
-  border-radius: 4px;
-  pointer-events: none;
-}
-
-.fc-daygrid-day.shift-normal::after {
-  border-color: var(--success-color);
-}
-
-.fc-daygrid-day.shift-extended::after {
-  border-color: var(--warning-color);
-}
-
-.fc-daygrid-day.shift-shortened::after {
-  border-color: var(--orange-color);
-}
-
-.fc-daygrid-day.shift-closed::after {
-  border-color: var(--danger-color);
-}
-
-.fc-daygrid-day.shift-custom::after {
-  border-color: var(--purple-color);
-}
-
-/* シフトインジケーター */
-.shift-indicator {
-  animation: fadeInScale 0.3s ease-out;
-}
-
-@keyframes fadeInScale {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* 月表示の日付セル */
-.fc-daygrid-day-frame {
-  min-height: 80px;
-  position: relative;
-}
-
-.fc-daygrid-day-number {
-  font-weight: bold;
-  color: var(--text-dark);
-}
-
-/* シフト設定がある日付の強調表示 */
-.fc-daygrid-day.has-shift .fc-daygrid-day-number {
-  font-weight: 900;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-}
-
-/* ホバー効果の改善 */
-.fc-daygrid-day:hover .shift-indicator {
-  transform: scale(1.1);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-}
-
-/* 月表示のツールチップ */
-.fc-daygrid-day.has-shift::before {
-  content: attr(data-shift-info);
-  position: absolute;
-  top: -30px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--text-dark);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-  z-index: 1000;
-}
-
-.fc-daygrid-day.has-shift:hover::before {
-  opacity: 1;
-}
-
-/* ==============================================
-   月間シフト設定
-   ============================================== */
-.month-shift-grid {
-  max-height: 500px;
-  overflow-y: auto;
-}
-
-.month-shift-header {
-  background: var(--light-gray);
-  padding: 15px;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-}
-
-.month-shift-day {
-  padding: 10px;
-  border-radius: 6px;
-  transition: all var(--transition-fast);
-  border: 1px solid transparent;
-}
-
-.month-shift-day:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
-}
-
-.month-shift-day.open-day {
-  background-color: rgba(40, 167, 69, 0.1);
-  border-color: rgba(40, 167, 69, 0.3);
-}
-
-.month-shift-day.closed-day {
-  background-color: rgba(220, 53, 69, 0.1);
-  border-color: rgba(220, 53, 69, 0.3);
-}
-
-.day-number {
-  font-weight: bold;
-  font-size: 1.1em;
-  color: var(--text-dark);
-}
-
-.weekday {
-  font-weight: 500;
-  color: var(--text-muted);
-}
-
-.business-hours {
-  font-weight: 500;
-  color: var(--text-dark);
-}
-
-/* トグルスイッチのカスタマイズ */
-.shift-toggle {
-  width: 3rem !important;
-  height: 1.5rem !important;
-  cursor: pointer;
-}
-
-.shift-toggle:checked {
-  background-color: var(--success-color) !important;
-  border-color: var(--success-color) !important;
-}
-
-.shift-toggle:not(:checked) {
-  background-color: var(--danger-color) !important;
-  border-color: var(--danger-color) !important;
-}
-
-/* 営業状態ラベル */
-.form-check-label {
-  font-weight: 500;
-  font-size: 0.9em;
-}
-
-/* 詳細設定ボタン */
-.edit-day-shift {
-  transition: all var(--transition-fast);
-}
-
-.edit-day-shift:hover {
-  transform: scale(1.1);
-}
-
-/* レスポンシブ対応 */
-@media (max-width: 768px) {
-  .month-shift-day {
-    padding: 8px;
-  }
-  
-  .day-number {
-    font-size: 1em;
-  }
-  
-  .business-hours {
-    font-size: 0.9em;
-  }
-  
-  .shift-toggle {
-    width: 2.5rem !important;
-    height: 1.2rem !important;
-  }
-}
-
-/* Clean Calendar Styling */
-.fc-timegrid-slot {
-  background-color: #ffffff !important;
-  border-color: #dee2e6 !important;
-}
-
-.fc-timegrid-slot.fc-slot-disabled {
-  background-color: #f8f9fa !important;
-  pointer-events: none !important;
-}
-
-.fc-timegrid-slot.fc-slot-available {
-  background-color: #ffffff !important;
-  pointer-events: auto !important;
-}
-
-/* Remove any fixed background colors */
-.fc-timegrid-slot[style*="background-color"] {
-  background-color: inherit !important;
-}
-
-/* Modal styling */
-.modal-content {
-  border-radius: 12px;
-  border: none;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-}
-
-.modal-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-radius: 12px 12px 0 0;
-}
-
-.modal-title {
-  font-weight: 600;
-}
-
-/* Form styling */
-.form-control:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-}
-
-.btn-primary:hover {
-  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-}
-</style>
-
-<script>
-// CLEAN SHIFT SETTINGS IMPLEMENTATION - 2025-01-27
-// Square-style booking system with per-day business hours
-
-console.log('🚀 Clean Shift Settings Implementation Loaded');
-
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('🚀 Initializing calendar with shift settings');
-
-  // Global variables
-  window.currentCalendar = null;
-  window.shifts = loadShiftsFromLocalStorage();
-
-  // Initialize calendar
-  initializeCalendar();
-  
-  // Initialize shift settings modal
-  initializeShiftModal();
-  
-  // Add test button listener
-  const testBtn = document.getElementById('testHighlightBtn');
-  if (testBtn) {
-    testBtn.addEventListener('click', function() {
-      console.log('🧪 Test button clicked - applying highlights...');
-      applyShiftHighlights();
-      
-      // Also test manual background color application
-      const slots = document.querySelectorAll('.fc-timegrid-slot');
-      console.log(`🧪 Found ${slots.length} slots for manual test`);
-      
-      slots.forEach((slot, index) => {
-        if (index % 2 === 0) {
-          slot.style.setProperty('background-color', '#ffebee', 'important');
-          console.log(`🧪 Applied red tint to slot ${index}`);
-        } else {
-          slot.style.setProperty('background-color', '#e8f5e8', 'important');
-          console.log(`🧪 Applied green tint to slot ${index}`);
+        </div>
+
+    <script>
+        let currentWeekStart = new Date(2025, 7, 10); // 2025年8月10日（日曜日）
+        let weeklySchedule = {}; // 週間スケジュール
+        let reservations = {}; // 予約データ
+        let miniCalendarMonth = new Date(currentWeekStart.getFullYear(), currentWeekStart.getMonth(), 1); // ミニカレンダーの表示月
+        
+        // 曜日の名前
+        const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+        const dayNamesLong = ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'];
+        
+        // 月の名前
+        const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+        
+        // 初期化
+        function init() {
+            initializeDefaultSchedule();
+            generateSampleReservations();
+            renderWeekView();
+            renderDaySettings();
+            renderMiniCalendar();
         }
-      });
-    });
-  }
-  
-  // Apply initial shift highlights
-  setTimeout(() => {
-    applyShiftHighlights();
-  }, 500);
-});
 
-// Calendar initialization
-function initializeCalendar() {
-  const calendarEl = document.getElementById('calendar');
-  if (!calendarEl) {
-    console.error('❌ Calendar element not found');
-    return;
-  }
-
-  const calendar = new FullCalendar.Calendar(calendarEl, {
-    initialView: 'timeGridWeek',
-    headerToolbar: {
-      left: 'prev,next today',
-      center: 'title',
-      right: 'dayGridMonth,timeGridWeek,timeGridDay'
-    },
-    locale: 'ja',
-    height: 'auto',
-    editable: true,
-    selectable: true,
-    selectMirror: true,
-    dayMaxEvents: true,
-    weekends: true,
-    allDaySlot: false,
-    slotMinTime: '08:00:00',
-    slotMaxTime: '22:00:00',
-    slotDuration: '00:30:00',
-    nowIndicator: true,
-    events: {
-      url: '/admin/reservations.json',
-      failure: function(error) {
-        console.error('❌ Error loading events:', error);
-      }
-    },
-    dateClick: function(info) {
-      handleDateClick(info);
-    },
-    eventClick: function(info) {
-      console.log('📅 Event clicked:', info.event.title);
-    },
-    datesSet: function(info) {
-      console.log('📅 View changed, applying shift highlights...');
-      setTimeout(() => applyShiftHighlights(), 100);
-    }
-  });
-
-  calendar.render();
-  window.currentCalendar = calendar;
-  console.log('✅ Calendar initialized successfully');
-}
-
-// Shift settings modal initialization
-function initializeShiftModal() {
-  const shiftBtn = document.getElementById('shiftSettingsBtn');
-  if (shiftBtn) {
-    shiftBtn.addEventListener('click', function() {
-      openShiftSettingsModal();
-    });
-  }
-  
-  // Create test shift data for demonstration
-  createTestShiftData();
-}
-
-// Create test shift data
-function createTestShiftData() {
-  if (window.shifts.length === 0) {
-    const today = new Date();
-    const testShift = {
-      date: formatDateToLocalString(today),
-      is_open: true,
-      start_time: '10:00',
-      end_time: '18:00',
-      updated_at: new Date().toISOString()
-    };
-    
-    window.shifts.push(testShift);
-    saveShiftsToLocalStorage(window.shifts);
-    console.log('📝 Created test shift data:', testShift);
-  }
-}
-
-// Handle date clicks with shift validation
-function handleDateClick(info) {
-  const dateStr = formatDateToLocalString(info.date);
-  const shift = getShiftForDate(dateStr);
-  
-  if (!shift || !shift.is_open) {
-    showMessage('この日時は予約できません', 'warning');
-    return;
-  }
-  
-  const hour = info.date.getHours();
-  const startHour = parseInt(shift.start_time.split(':')[0]);
-  const endHour = parseInt(shift.end_time.split(':')[0]);
-  
-  if (hour < startHour || hour >= endHour) {
-    showMessage('営業時間外です', 'warning');
-    return;
-  }
-  
-  console.log('📅 Valid booking time clicked:', dateStr, hour);
-  // Add booking logic here
-}
-
-// Apply shift highlights to calendar
-  function applyShiftHighlights() {
-    console.log('🎨 Applying shift highlights...');
-
-    // Try a different approach - look for the main time grid structure
-    const timeGrid = document.querySelector('.fc-timegrid');
-    if (!timeGrid) {
-      console.log('⚠️ No time grid found, retrying...');
-      setTimeout(applyShiftHighlights, 200);
-      return;
-    }
-
-    console.log(`🔍 Time grid structure:`, timeGrid);
-    console.log(`🔍 Time grid children:`, timeGrid.children);
-
-    // Look for the time grid body which should contain the actual slots
-    const timeGridBody = timeGrid.querySelector('.fc-timegrid-body');
-    if (!timeGridBody) {
-      console.log('⚠️ No time grid body found');
-      return;
-    }
-
-    console.log(`🔍 Time grid body structure:`, timeGridBody);
-    console.log(`🔍 Time grid body children:`, timeGridBody.children);
-
-    // Look for the time grid slots table
-    const timeGridSlots = timeGridBody.querySelector('.fc-timegrid-slots');
-    if (!timeGridSlots) {
-      console.log('⚠️ No time grid slots found');
-      return;
-    }
-
-    console.log(`🔍 Time grid slots structure:`, timeGridSlots);
-    console.log(`🔍 Time grid slots children:`, timeGridSlots.children);
-
-    // Get the current week's dates from FullCalendar
-    if (!window.currentCalendar) {
-      console.log('❌ Calendar not available');
-      return;
-    }
-
-    const view = window.currentCalendar.view;
-    if (!view || !view.currentStart) {
-      console.log('❌ Calendar view not available');
-      return;
-    }
-
-    const weekStart = view.currentStart;
-    console.log(`🔍 Week start: ${weekStart}`);
-
-    // Try to find all time slots directly
-    let timeSlots = timeGridSlots.querySelectorAll('.fc-timegrid-slot');
-    console.log(`🔍 Found ${timeSlots.length} time slots directly in time grid slots`);
-
-    if (timeSlots.length === 0) {
-      // Try alternative selectors
-      timeSlots = timeGridSlots.querySelectorAll('.fc-timegrid-slot-lane');
-      console.log(`🔍 Found ${timeSlots.length} time slot lanes in time grid slots`);
-    }
-
-    if (timeSlots.length === 0) {
-      // Try finding all td elements
-      timeSlots = timeGridSlots.querySelectorAll('td');
-      console.log(`🔍 Found ${timeSlots.length} td elements in time grid slots`);
-    }
-
-    if (timeSlots.length === 0) {
-      // Try finding all div elements
-      timeSlots = timeGridSlots.querySelectorAll('div');
-      console.log(`🔍 Found ${timeSlots.length} div elements in time grid slots`);
-    }
-
-    // Process each time slot
-    timeSlots.forEach((slot, slotIndex) => {
-      // Skip time label cells
-      if (slot.classList.contains('fc-timegrid-slot-label')) {
-        return;
-      }
-
-      // Debug: log the slot structure
-      console.log(`🔍 Slot ${slotIndex}:`, slot);
-      console.log(`🔍 Slot ${slotIndex} classes:`, slot.className);
-      console.log(`🔍 Slot ${slotIndex} data attributes:`, slot.dataset);
-
-      // Get the date and hour from the slot
-      const slotDate = getSlotDate(slot);
-      const hour = getSlotHour(slot);
-      
-      if (slotDate === null || hour === null) {
-        console.log(`⚠️ Could not get date or hour for slot ${slotIndex}`);
-        return;
-      }
-
-      console.log(`🔍 Processing slot ${slotIndex}: date=${slotDate}, hour=${hour}`);
-
-      // Get shift data for this date
-      const shift = getShiftForDate(slotDate);
-      console.log(`Shift for ${slotDate}:`, shift);
-
-      // Remove existing classes
-      slot.classList.remove('fc-slot-available', 'fc-slot-disabled');
-
-      if (!shift || !shift.is_open) {
-        // No shift or closed - disabled
-        slot.classList.add('fc-slot-disabled');
-        slot.style.setProperty('background-color', '#f8f9fa', 'important');
-        slot.style.setProperty('pointer-events', 'none', 'important');
-        console.log(`🔴 Applied disabled style to ${slotDate} hour ${hour}`);
-      } else {
-        const startHour = parseInt(shift.start_time.split(':')[0]);
-        const endHour = parseInt(shift.end_time.split(':')[0]);
-
-        if (hour >= startHour && hour < endHour) {
-          // Within business hours - available
-          slot.classList.add('fc-slot-available');
-          slot.style.setProperty('background-color', '#ffffff', 'important');
-          slot.style.setProperty('pointer-events', 'auto', 'important');
-          console.log(`⚪ Applied available style to ${slotDate} hour ${hour}`);
-        } else {
-          // Outside business hours - disabled
-          slot.classList.add('fc-slot-disabled');
-          slot.style.setProperty('background-color', '#f8f9fa', 'important');
-          slot.style.setProperty('pointer-events', 'none', 'important');
-          console.log(`🔴 Applied disabled style to ${slotDate} hour ${hour}`);
+        // デフォルトスケジュールを初期化
+        function initializeDefaultSchedule() {
+            weeklySchedule = {
+                0: { enabled: false, times: [] }, // 日曜日は休業
+                1: { enabled: true, times: [{ start: '09:00', end: '20:00' }] }, // 月曜日
+                2: { enabled: true, times: [{ start: '10:00', end: '20:00' }] }, // 火曜日
+                3: { enabled: true, times: [{ start: '10:00', end: '20:00' }] }, // 水曜日
+                4: { enabled: true, times: [{ start: '10:00', end: '20:00' }] }, // 木曜日
+                5: { enabled: true, times: [{ start: '10:00', end: '20:00' }] }, // 金曜日
+                6: { enabled: true, times: [{ start: '09:00', end: '18:00' }] }, // 土曜日
+            };
         }
-      }
-    });
 
-    console.log('✅ Shift highlights applied');
-  }
+        // サンプル予約データを生成
+        function generateSampleReservations() {
+            reservations = {
+                '2025-08-11': [
+                    { time: '10:00', duration: 60, customer: '田中様', status: 'confirmed' },
+                    { time: '14:00', duration: 90, customer: '佐藤様', status: 'confirmed' },
+                ],
+                '2025-08-13': [
+                    { time: '11:00', duration: 60, customer: '山田様', status: 'completed' },
+                    { time: '16:00', duration: 75, customer: '鈴木様', status: 'confirmed' },
+                ],
+                '2025-08-14': [
+                    { time: '09:30', duration: 60, customer: '高橋様', status: 'cancelled' },
+                ],
+            };
+        }
 
-// Get date from slot element
-function getSlotDate(slot) {
-  try {
-    // Find the parent td of the slot
-    const parentTd = slot.closest('td');
-    if (!parentTd) {
-      console.log('❌ No parent td found for slot');
-      return null;
-    }
-    
-    // Check if this is a time label slot (first column)
-    if (parentTd.classList.contains('fc-timegrid-slot-label')) {
-      console.log('❌ This is a time label slot, not a day slot');
-      return null;
-    }
-    
-    // Use FullCalendar API to get the current view's date range
-    if (!window.currentCalendar) {
-      console.log('❌ Calendar not available');
-      return null;
-    }
-    
-    const view = window.currentCalendar.view;
-    if (!view) {
-      console.log('❌ Calendar view not available');
-      return null;
-    }
-    
-    // Get the current week's start date
-    const weekStart = view.currentStart;
-    if (!weekStart) {
-      console.log('❌ Week start date not available');
-      return null;
-    }
-    
-    // Find the row that contains our slot
-    const slotRow = parentTd.closest('tr');
-    if (!slotRow) {
-      console.log('❌ No slot row found');
-      return null;
-    }
-    
-    // Get all cells in the slot row
-    const rowCells = slotRow.querySelectorAll('td');
-    if (rowCells.length === 0) {
-      console.log('❌ No row cells found');
-      return null;
-    }
-    
-    // Find the index of our slot's parent td in the row
-    let slotIndex = -1;
-    for (let i = 0; i < rowCells.length; i++) {
-      if (rowCells[i] === parentTd) {
-        slotIndex = i;
-        break;
-      }
-    }
-    
-    if (slotIndex === -1) {
-      console.log('❌ Could not find slot index in row');
-      return null;
-    }
-    
-    // Skip the first cell (time label) and calculate the day offset
-    const dayOffset = slotIndex - 1; // Adjust for time label column
-    if (dayOffset < 0 || dayOffset > 6) {
-      console.log(`❌ Invalid day offset: ${dayOffset}`);
-      return null;
-    }
-    
-    // Calculate the date by adding the day offset to the week start
-    const targetDate = new Date(weekStart);
-    targetDate.setDate(weekStart.getDate() + dayOffset);
-    
-    const result = formatDateToLocalString(targetDate);
-    console.log(`✅ Calculated date: ${result} (week start: ${formatDateToLocalString(weekStart)}, day offset: ${dayOffset})`);
-    return result;
-    
-  } catch (error) {
-    console.error('❌ Error getting slot date:', error);
-    return null;
-  }
-}
+        // 週表示を描画
+        function renderWeekView() {
+            updateWeekHeader();
+            generateTimeSlots();
+        }
 
-// Get hour from slot element
-function getSlotHour(slot) {
-  try {
-    // First try to get hour from the slot's data-time attribute
-    const timeAttr = slot.getAttribute('data-time');
-    if (timeAttr) {
-      const hour = parseInt(timeAttr.split(':')[0]);
-      console.log(`Extracted hour: ${hour} from data-time: ${timeAttr}`);
-      return hour;
-    }
-    
-    // Fallback: get from the time label in the first cell of the row
-    const row = slot.closest('tr');
-    if (!row) {
-      console.log('❌ No row found for slot');
-      return 0;
-    }
-    
-    // Get the first cell in this row (time label)
-    const timeCell = row.querySelector('td:first-child');
-    if (!timeCell) {
-      console.log('❌ No time cell found');
-      return 0;
-    }
-    
-    const timeText = timeCell.textContent.trim();
-    console.log(`Time text: "${timeText}"`);
-    
-    // Match Japanese time format like "8時", "10時", etc.
-    const japaneseMatch = timeText.match(/(\d{1,2})時/);
-    if (japaneseMatch) {
-      const hour = parseInt(japaneseMatch[1]);
-      console.log(`Extracted hour: ${hour} from Japanese format`);
-      return hour;
-    }
-    
-    // Fallback: Match time format like "8:00", "10:30", etc.
-    const match = timeText.match(/(\d{1,2}):\d{2}/);
-    const hour = match ? parseInt(match[1]) : 0;
-    
-    console.log(`Extracted hour: ${hour} from standard format`);
-    return hour;
-  } catch (error) {
-    console.error('❌ Error getting slot hour:', error);
-    return 0;
-  }
-}
+        // 週のヘッダーを更新
+        function updateWeekHeader() {
+            const endDate = new Date(currentWeekStart);
+            endDate.setDate(endDate.getDate() + 6);
+            
+            const startStr = formatDateShort(currentWeekStart);
+            const endStr = formatDateShort(endDate);
+            
+            document.getElementById('currentWeek').textContent = 
+                `${currentWeekStart.getFullYear()}年 ${startStr} - ${endStr}`;
+            
+            // 日付ヘッダーを更新
+            const headers = document.querySelectorAll('.day-header');
+            for (let i = 1; i < headers.length; i++) {
+                const date = new Date(currentWeekStart);
+                date.setDate(date.getDate() + (i - 1));
+                
+                const dayName = dayNames[date.getDay()];
+                const dateStr = `${date.getMonth() + 1}/${date.getDate()}`;
+                
+                headers[i].innerHTML = `${dayName}<br><span style="font-size: 12px;">${dateStr}</span>`;
+            }
+        }
 
-// Get shift for specific date
-function getShiftForDate(dateStr) {
-  return window.shifts.find(shift => shift.date === dateStr);
-}
-
-// Open shift settings modal
-function openShiftSettingsModal() {
-  const modal = new bootstrap.Modal(document.getElementById('shiftSettingsModal'));
-  modal.show();
-  
-  // Initialize modal content
-  initializeModalContent();
-}
-
-// Initialize modal content
-function initializeModalContent() {
-  const dateInput = document.getElementById('shiftDate');
-  if (dateInput) {
-    dateInput.value = formatDateToLocalString(new Date());
-    loadShiftForDate(dateInput.value);
-  }
-  
-  // Add event listeners
-  setupModalEventListeners();
-}
-
-// Update shift preview
-function updateShiftPreview() {
-  const dateInput = document.getElementById('shiftDate');
-  const isOpenCheckbox = document.getElementById('shiftIsOpen');
-  const startTimeInput = document.getElementById('shiftStartTime');
-  const endTimeInput = document.getElementById('shiftEndTime');
-  const previewDiv = document.getElementById('shiftPreview');
-  
-  if (!dateInput || !previewDiv) return;
-  
-  const date = new Date(dateInput.value);
-  const dateStr = formatDateToLocalString(date);
-  const weekday = ['日', '月', '火', '水', '木', '金', '土'][date.getDay()];
-  
-  if (!isOpenCheckbox.checked) {
-    previewDiv.innerHTML = `
-      <div class="text-danger">
-        <i class="fas fa-times-circle me-2"></i>
-        <strong>${dateStr} (${weekday})</strong> - 休業日
-      </div>
-    `;
+        // タイムスロットを生成
+        function generateTimeSlots() {
+            const scheduleBody = document.getElementById('scheduleBody');
+            scheduleBody.innerHTML = '';
+            
+            // 8:00から21:00まで10分刻みで生成
+            for (let hour = 8; hour <= 21; hour++) {
+                for (let minute = 0; minute < 60; minute += 10) {
+                    if (hour === 21 && minute > 0) break; // 21:00で終了
+                    
+                    const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+                    
+                    // 時刻ラベル
+                    const timeSlot = document.createElement('div');
+                    timeSlot.className = 'time-slot';
+                    timeSlot.textContent = timeStr;
+                    scheduleBody.appendChild(timeSlot);
+                    
+                    // 各曜日のセル
+                    for (let day = 0; day < 7; day++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'schedule-cell';
+                        cell.dataset.day = day;
+                        cell.dataset.time = timeStr;
+                        
+                        const currentDate = new Date(currentWeekStart);
+                        currentDate.setDate(currentDate.getDate() + day);
+                        const dateKey = formatDateKey(currentDate);
+                        
+                        // 営業時間チェック
+                        if (isBusinessHour(day, timeStr)) {
+                            // 予約チェック
+                            const reservation = findReservation(dateKey, timeStr);
+                            if (reservation) {
+                                const block = createReservationBlock(reservation);
+                                cell.appendChild(block);
   } else {
-    previewDiv.innerHTML = `
-      <div class="text-success">
-        <i class="fas fa-check-circle me-2"></i>
-        <strong>${dateStr} (${weekday})</strong> - 営業時間: ${startTimeInput.value} - ${endTimeInput.value}
-      </div>
-    `;
-  }
-}
+                                cell.classList.add('available');
+                                const slot = document.createElement('div');
+                                slot.className = 'available-slot';
+                                slot.textContent = '空き';
+                                cell.appendChild(slot);
+                            }
+                        }
+                        
+                        scheduleBody.appendChild(cell);
+                    }
+                }
+            }
+        }
 
-// Setup modal event listeners
-function setupModalEventListeners() {
-  const dateInput = document.getElementById('shiftDate');
-  const isOpenCheckbox = document.getElementById('shiftIsOpen');
-  const startTimeInput = document.getElementById('shiftStartTime');
-  const endTimeInput = document.getElementById('shiftEndTime');
-  const saveBtn = document.getElementById('saveShiftBtn');
-  
-  if (dateInput) {
-    dateInput.addEventListener('change', function() {
-      loadShiftForDate(this.value);
-      updateShiftPreview();
-    });
-  }
-  
-  if (isOpenCheckbox) {
-    isOpenCheckbox.addEventListener('change', function() {
-      const timeInputs = [startTimeInput, endTimeInput];
-      timeInputs.forEach(input => {
-        if (input) input.disabled = !this.checked;
-      });
-      updateShiftPreview();
-    });
-  }
-  
-  if (startTimeInput) {
-    startTimeInput.addEventListener('change', updateShiftPreview);
-  }
-  
-  if (endTimeInput) {
-    endTimeInput.addEventListener('change', updateShiftPreview);
-  }
-  
-  if (saveBtn) {
-    saveBtn.addEventListener('click', saveShiftSettings);
-  }
-}
+        // 営業時間かどうかチェック
+        function isBusinessHour(dayOfWeek, timeStr) {
+            const schedule = weeklySchedule[dayOfWeek];
+            if (!schedule || !schedule.enabled) return false;
+            
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            const timeInMinutes = hours * 60 + minutes;
+            
+            return schedule.times.some(slot => {
+                const [startHour, startMin] = slot.start.split(':').map(Number);
+                const [endHour, endMin] = slot.end.split(':').map(Number);
+                const startInMinutes = startHour * 60 + startMin;
+                const endInMinutes = endHour * 60 + endMin;
+                
+                return timeInMinutes >= startInMinutes && timeInMinutes < endInMinutes;
+            });
+        }
 
-// Load shift data for specific date
-function loadShiftForDate(dateStr) {
-  const shift = getShiftForDate(dateStr);
-  
-  const isOpenCheckbox = document.getElementById('shiftIsOpen');
-  const startTimeInput = document.getElementById('shiftStartTime');
-  const endTimeInput = document.getElementById('shiftEndTime');
-  
-  if (shift) {
-    if (isOpenCheckbox) isOpenCheckbox.checked = shift.is_open;
-    if (startTimeInput) startTimeInput.value = shift.start_time;
-    if (endTimeInput) endTimeInput.value = shift.end_time;
+        // 予約を検索
+        function findReservation(dateKey, timeStr) {
+            const dayReservations = reservations[dateKey] || [];
+            return dayReservations.find(reservation => {
+                const reservationTime = reservation.time;
+                const [resHour, resMin] = reservationTime.split(':').map(Number);
+                const [checkHour, checkMin] = timeStr.split(':').map(Number);
+                
+                const resTimeInMin = resHour * 60 + resMin;
+                const checkTimeInMin = checkHour * 60 + checkMin;
+                const endTimeInMin = resTimeInMin + reservation.duration;
+                
+                return checkTimeInMin >= resTimeInMin && checkTimeInMin < endTimeInMin;
+            });
+        }
+
+        // 予約ブロックを作成
+        function createReservationBlock(reservation) {
+            const block = document.createElement('div');
+            block.className = `reservation-block ${reservation.status}`;
+            
+            const statusIcon = {
+                'confirmed': '✓',
+                'completed': '✓',
+                'cancelled': '✗'
+            };
+            
+            block.innerHTML = `
+                ${statusIcon[reservation.status] || ''} ${reservation.customer}
+                <div style="font-size: 9px; opacity: 0.9;">${reservation.duration}分</div>
+            `;
+            
+            return block;
+        }
+
+        // 設定モーダルを開く
+        function openSettingsModal() {
+            document.getElementById('settingsModal').style.display = 'block';
+            renderDaySettings();
+        }
+
+        // 設定モーダルを閉じる
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+
+        // タブ切り替え
+        function switchTab(tabName) {
+            // タブボタンの状態更新
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            
+            // タブコンテンツの表示切り替え
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            if (tabName === 'recurring') {
+                renderRecurringDaySettings();
+            }
+        }
+
+        // 曜日別設定を描画
+        function renderDaySettings() {
+            const container = document.getElementById('daySettings');
+            container.innerHTML = '';
+            
+            for (let day = 0; day < 7; day++) {
+                const dayDiv = createDaySettingDiv(day, false);
+                container.appendChild(dayDiv);
+            }
+        }
+
+        // 定期的な設定を描画
+        function renderRecurringDaySettings() {
+            const container = document.getElementById('recurringDaySettings');
+            container.innerHTML = '';
+            
+            for (let day = 0; day < 7; day++) {
+                const dayDiv = createDaySettingDiv(day, true);
+                container.appendChild(dayDiv);
+            }
+        }
+
+        // 曜日設定DIVを作成
+        function createDaySettingDiv(day, isRecurring) {
+            const schedule = weeklySchedule[day];
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'day-setting';
+            
+            const headerClass = day === 0 ? 'sunday' : day === 6 ? 'saturday' : '';
+            
+            dayDiv.innerHTML = `
+                <div class="day-setting-header ${headerClass}">
+                    <span>${dayNamesLong[day]}</span>
+                    <div class="day-toggle ${schedule.enabled ? 'active' : ''}" onclick="toggleDay(${day}, ${isRecurring})"></div>
+            </div>
+                <div class="time-slots-container" style="display: ${schedule.enabled ? 'block' : 'none'};">
+                    <div id="timeSlots-${day}-${isRecurring}" class="time-slots">
+                        ${renderTimeSlots(day, schedule.times)}
+            </div>
+                    <button class="add-time-btn" onclick="addTimeSlot(${day}, ${isRecurring})">
+                        + 時間帯を追加
+              </button>
+        </div>
+      `;
+            
+            return dayDiv;
+        }
+
+        // 時間スロットを描画
+        function renderTimeSlots(day, times) {
+            return times.map((time, index) => `
+                <div class="time-slot-input">
+                    <input type="time" class="time-input" value="${time.start}" 
+                           onchange="updateTimeSlot(${day}, ${index}, 'start', this.value)">
+                    <span>〜</span>
+                    <input type="time" class="time-input" value="${time.end}"
+                           onchange="updateTimeSlot(${day}, ${index}, 'end', this.value)">
+                    <button class="btn btn-danger btn-sm" onclick="removeTimeSlot(${day}, ${index})">削除</button>
+                </div>
+            `).join('');
+        }
+
+        // 曜日の有効/無効を切り替え
+        function toggleDay(day, isRecurring) {
+            weeklySchedule[day].enabled = !weeklySchedule[day].enabled;
+            
+            const toggle = document.querySelector(`[onclick="toggleDay(${day}, ${isRecurring})"]`);
+            const container = toggle.parentElement.nextElementSibling;
+            
+            if (weeklySchedule[day].enabled) {
+                toggle.classList.add('active');
+                container.style.display = 'block';
+                
+                // 時間スロットがない場合は追加
+                if (weeklySchedule[day].times.length === 0) {
+                    weeklySchedule[day].times.push({ start: '09:00', end: '18:00' });
+                    renderTimeSlots(day, weeklySchedule[day].times);
+                }
   } else {
-    if (isOpenCheckbox) isOpenCheckbox.checked = true;
-    if (startTimeInput) startTimeInput.value = '10:00';
-    if (endTimeInput) endTimeInput.value = '20:00';
-  }
-  
-  // Update time input states
-  if (isOpenCheckbox) {
-    const timeInputs = [startTimeInput, endTimeInput];
-    timeInputs.forEach(input => {
-      if (input) input.disabled = !isOpenCheckbox.checked;
-    });
-  }
-  
-  // Update preview
-  updateShiftPreview();
-}
+                toggle.classList.remove('active');
+                container.style.display = 'none';
+            }
+        }
 
-// Save shift settings
-function saveShiftSettings() {
-  const dateInput = document.getElementById('shiftDate');
-  const isOpenCheckbox = document.getElementById('shiftIsOpen');
-  const startTimeInput = document.getElementById('shiftStartTime');
-  const endTimeInput = document.getElementById('shiftEndTime');
-  
-  if (!dateInput || !isOpenCheckbox || !startTimeInput || !endTimeInput) {
-    showMessage('フォームが見つかりません', 'error');
-    return;
-  }
-  
-  const shift = {
-    date: dateInput.value,
-    is_open: isOpenCheckbox.checked,
-    start_time: startTimeInput.value,
-    end_time: endTimeInput.value,
-    updated_at: new Date().toISOString()
-  };
-  
-  // Update or add shift
-  const existingIndex = window.shifts.findIndex(s => s.date === shift.date);
-  if (existingIndex >= 0) {
-    window.shifts[existingIndex] = shift;
-  } else {
-    window.shifts.push(shift);
-  }
-  
-  // Save to localStorage
-  saveShiftsToLocalStorage(window.shifts);
-  
-  // Apply highlights
-  applyShiftHighlights();
-  
-  // Close modal
-  const modal = bootstrap.Modal.getInstance(document.getElementById('shiftSettingsModal'));
-  if (modal) modal.hide();
-  
-  showMessage('シフト設定を保存しました', 'success');
-}
+        // 時間スロットを追加
+        function addTimeSlot(day, isRecurring) {
+            weeklySchedule[day].times.push({ start: '09:00', end: '18:00' });
+            
+            const container = document.getElementById(`timeSlots-${day}-${isRecurring}`);
+            container.innerHTML = renderTimeSlots(day, weeklySchedule[day].times);
+        }
 
-// Utility functions
-function formatDateToLocalString(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
+        // 時間スロットを削除
+        function removeTimeSlot(day, index) {
+            weeklySchedule[day].times.splice(index, 1);
+            
+            // 現在表示されているタブに応じてコンテナを更新
+            const isRecurringTab = document.getElementById('recurring-tab').classList.contains('active');
+            const container = document.getElementById(`timeSlots-${day}-${isRecurringTab}`);
+            container.innerHTML = renderTimeSlots(day, weeklySchedule[day].times);
+        }
 
-function showMessage(message, type = 'info') {
-  console.log(`${type.toUpperCase()}: ${message}`);
-  // Add toast notification here if needed
-}
+        // 時間スロットを更新
+        function updateTimeSlot(day, index, field, value) {
+            weeklySchedule[day].times[index][field] = value;
+        }
 
-function loadShiftsFromLocalStorage() {
-  const stored = localStorage.getItem('shifts');
-  return stored ? JSON.parse(stored) : [];
-}
+        // 設定を保存
+        function saveSettings() {
+            // 設定を保存（実際のアプリケーションではサーバーに送信）
+            console.log('設定を保存:', weeklySchedule);
+            
+            // 表示を更新
+            renderWeekView();
+            closeSettingsModal();
+            
+            // 保存完了メッセージ
+            showMessage('設定が保存されました', 'success');
+        }
 
-function saveShiftsToLocalStorage(shifts) {
-  localStorage.setItem('shifts', JSON.stringify(shifts));
-}
-</script> 
+        // 前週へ
+        function previousWeek() {
+            currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+            renderWeekView();
+        }
+
+        // 次週へ
+        function nextWeek() {
+            currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+            renderWeekView();
+        }
+
+        // 日付をフォーマット（短縮版）
+        function formatDateShort(date) {
+            return `${date.getMonth() + 1}月${date.getDate()}日`;
+        }
+
+        // 日付キーをフォーマット
+        function formatDateKey(date) {
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        // メッセージ表示
+        function showMessage(message, type = 'info') {
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 2000;
+                padding: 12px 20px;
+                border-radius: 6px;
+                color: white;
+                font-weight: 500;
+                animation: slideInRight 0.3s ease;
+                background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#007bff'};
+            `;
+            messageDiv.textContent = message;
+            
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => document.body.removeChild(messageDiv), 300);
+            }, 3000);
+        }
+
+        // モーダルの外側クリックで閉じる
+        window.onclick = function(event) {
+            const modal = document.getElementById('settingsModal');
+            if (event.target === modal) {
+                closeSettingsModal();
+            }
+            
+            // ミニカレンダーの外側クリックで閉じる
+            const miniCalendar = document.getElementById('miniCalendar');
+            const miniCalendarContainer = document.querySelector('.mini-calendar-container');
+            if (miniCalendar && !miniCalendarContainer.contains(event.target)) {
+                miniCalendar.classList.remove('show');
+            }
+        }
+
+        // ミニカレンダー関連の関数
+        function toggleMiniCalendar() {
+            const miniCalendar = document.getElementById('miniCalendar');
+            miniCalendar.classList.toggle('show');
+        }
+
+        function renderMiniCalendar() {
+            const year = miniCalendarMonth.getFullYear();
+            const month = miniCalendarMonth.getMonth();
+            
+            // タイトルを更新
+            document.getElementById('miniCalendarTitle').textContent = 
+                `${year}年 ${monthNames[month]}`;
+            
+            // 月の最初の日と最後の日を取得
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            
+            // 最初の週の開始日を取得（日曜日から）
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+            
+            // 最後の週の終了日を取得（土曜日まで）
+            const endDate = new Date(lastDay);
+            endDate.setDate(endDate.getDate() + (6 - lastDay.getDay()));
+            
+            const daysContainer = document.getElementById('miniCalendarDays');
+            daysContainer.innerHTML = '';
+            
+            // カレンダーの日付セルを生成
+            const current = new Date(startDate);
+            while (current <= endDate) {
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'mini-calendar-day';
+                dayDiv.textContent = current.getDate();
+                
+                // 今月以外の日付
+                if (current.getMonth() !== month) {
+                    dayDiv.classList.add('other-month');
+                }
+                
+                // 今日の日付
+                const today = new Date();
+                if (current.toDateString() === today.toDateString()) {
+                    dayDiv.classList.add('today');
+                }
+                
+                // 現在選択されている週の開始日
+                if (current.getFullYear() === currentWeekStart.getFullYear() && 
+                    current.getMonth() === currentWeekStart.getMonth() && 
+                    current.getDate() === currentWeekStart.getDate()) {
+                    dayDiv.classList.add('week-start');
+                }
+                
+                // クリックイベント
+                dayDiv.addEventListener('click', () => {
+                    selectWeekFromDate(current);
+                });
+                
+                daysContainer.appendChild(dayDiv);
+                current.setDate(current.getDate() + 1);
+            }
+        }
+
+        function selectWeekFromDate(date) {
+            console.log('Selected date:', date);
+            console.log('Selected date day of week:', date.getDay());
+            console.log('Selected date month:', date.getMonth());
+            
+            // 指定された日付が含まれる週の開始日（日曜日）を計算
+            const dayOfWeek = date.getDay();
+            const targetDate = date.getDate() - dayOfWeek;
+            
+            console.log('Target date calculation:', date.getDate(), '-', dayOfWeek, '=', targetDate);
+            
+            // Create a new date object for the week start
+            const weekStart = new Date();
+            weekStart.setFullYear(date.getFullYear());
+            weekStart.setMonth(date.getMonth());
+            weekStart.setDate(targetDate);
+            weekStart.setHours(0, 0, 0, 0);
+            
+            console.log('Calculated week start:', weekStart);
+            console.log('Week start month:', weekStart.getMonth());
+            
+            // 週を更新
+            currentWeekStart = weekStart;
+            
+            // 表示を更新
+            renderWeekView();
+            
+            // ミニカレンダーを閉じる
+            document.getElementById('miniCalendar').classList.remove('show');
+            
+            // ミニカレンダーを再描画（選択状態を更新）
+            renderMiniCalendar();
+        }
+
+        function previousMiniCalendarMonth() {
+            miniCalendarMonth.setMonth(miniCalendarMonth.getMonth() - 1);
+            renderMiniCalendar();
+        }
+
+        function nextMiniCalendarMonth() {
+            miniCalendarMonth.setMonth(miniCalendarMonth.getMonth() + 1);
+            renderMiniCalendar();
+        }
+
+        // 初期化実行
+        init();
+    </script>
+
+    <!-- アニメーション用CSS -->
+    <style>
+        @keyframes slideInRight {
+            from { transform: translateX(300px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(300px); opacity: 0; }
+        }
+    </style>
+</body>
+</html> 
