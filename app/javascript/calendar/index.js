@@ -5,7 +5,7 @@ import { setupIntervalControls } from './interval_settings.js';
 import { setupReservationForm } from './reservation_form.js';
 import { setupGlobalUtils } from './utils.js';
 import { initializeShiftIntegration } from './shift_integration.js';
-import { initializeDynamicShiftHighlight } from './dynamic_shift_highlight.js';
+
 
 console.log('📅 Calendar module loading...');
 
@@ -31,23 +31,7 @@ function initializeComplete() {
     console.log('🔧 Calling initializeCalendar...');
     initializeCalendar();
     
-    // カレンダーが初期化された後にシフトハイライターを初期化
-    setTimeout(() => {
-      if (window.pageCalendar) {
-        console.log('🎨 Initializing shift highlighter...');
-        const highlighter = initializeDynamicShiftHighlight(window.pageCalendar);
-        console.log('✅ Shift highlighter initialized:', highlighter);
-        
-        // グローバルに公開されていることを確認
-        if (window.shiftHighlighter) {
-          console.log('✅ Shift highlighter available globally');
-        } else {
-          console.error('❌ Shift highlighter not available globally');
-        }
-      } else {
-        console.error('❌ Calendar not available for shift highlighter');
-      }
-    }, 3000); // 3秒に延長
+    // シフトハイライターは削除（CSSのみでグリッドライン表示）
     
     // シフト統合機能を初期化
     console.log('🎨 Initializing shift integration...');

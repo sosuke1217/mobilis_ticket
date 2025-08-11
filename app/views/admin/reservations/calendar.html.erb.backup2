@@ -1,0 +1,855 @@
+<% content_for :title, "予約カレンダー - Mobilis" %>
+
+<div class="calendar-container">
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body py-4">
+      <div class="row align-items-center" style="min-height: 200px;">
+        <!-- 左側：タイトル -->
+        <div class="col-lg-4 col-md-6 mb-3 mb-md-0">
+          <h1 class="h2 mb-0 text-primary" style="padding-left: 60px;">
+            <i class="fas fa-calendar-alt me-2"></i>予約カレンダー
+          </h1>
+        </div>
+        
+        <!-- 中央：ミニカレンダー -->
+        <div class="col-lg-4 col-md-6 d-flex justify-content-center align-items-center mb-3 mb-md-0">
+          <div id="monthCalendar">
+            <!-- 年と月の表示とナビゲーション -->
+            <div class="mini-calendar-header" style="background: #f8f9fa; border-bottom: 1px solid #dee2e6; border-radius: 4px; display: flex; align-items: center; justify-content: space-between;">
+              <button id="prevMonthBtn" class="mini-calendar-nav-btn" style="background: transparent; border: none; color: #6c757d; font-size: 0.5rem; padding: 2px; cursor: pointer;">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <div id="currentMonthYear" class="mini-calendar-title" style="font-size: 0.6rem; font-weight: 600; color: #495057; text-align: center; flex: 1; cursor: pointer;">
+                <!-- 年と月がここに表示される -->
+              </div>
+              <button id="nextMonthBtn" class="mini-calendar-nav-btn" style="background: transparent; border: none; color: #6c757d; font-size: 0.5rem; padding: 2px; cursor: pointer;">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+            <div id="monthCalendarContent"></div>
+          </div>
+        </div>
+        
+        <!-- 右側：アクションボタン -->
+        <div class="col-lg-4 col-md-12">
+          <div class="d-flex flex-column gap-3">
+            <!-- 営業時間ステータス表示 -->
+            <div class="business-status-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+              <div class="d-flex align-items-center justify-content-between">
+                <div>
+                  <h6 class="mb-1" style="margin: 0; font-weight: 600;">
+                    <i class="fas fa-clock me-2"></i>営業時間
+                  </h6>
+                  <div class="business-hours-display" style="font-size: 0.9rem; opacity: 0.9;">
+                    <%= ApplicationSetting.current.formatted_business_hours %>
+                  </div>
+                </div>
+                <div class="business-status-indicator" style="text-align: center;">
+                  <div class="status-dot <%= ApplicationSetting.current.currently_open? ? 'open' : 'closed' %>" 
+                       style="width: 12px; height: 12px; border-radius: 50%; margin: 0 auto 5px; background: <%= ApplicationSetting.current.currently_open? ? '#28a745' : '#dc3545' %>;"></div>
+                  <div style="font-size: 0.8rem; font-weight: 500;">
+                    <%= ApplicationSetting.current.currently_open? ? '営業中' : '営業時間外' %>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <a href="<%= admin_reservations_path %>" class="btn btn-primary btn-lg shadow-sm">
+              <i class="fas fa-list me-2"></i>📋 今日の予約一覧
+            </a>
+            <div class="d-flex gap-3">
+              <button id="newReservationBtn" class="btn btn-success btn-lg">
+                <i class="fas fa-plus me-2"></i>新規予約
+              </button>
+              <button id="shiftSettingsBtn" class="btn btn-info btn-lg">
+                <i class="fas fa-clock me-2"></i>シフト設定
+              </button>
+              <button class="btn btn-outline-danger btn-lg" onclick="openCancelledHistoryModal()">
+                <i class="fas fa-times-circle me-2"></i>キャンセル履歴
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>  
+
+<div class="container-fluid" style="margin-top: 20px; margin-bottom: 20px;">
+  <div id="calendar" class="shift-highlight-enabled"></div>
+</div>
+
+<style>
+/* ==============================================
+   カレンダー全体の基本スタイル
+   ============================================== */
+.fc {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  border: 2px solid #e2e8f0;
+  margin: 0px auto;
+  max-width: 1400px;
+  position: relative;
+  overflow: hidden;
+}
+
+.fc::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.fc-view-harness {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 18px;
+  position: relative;
+  z-index: 2;
+}
+
+/* ==============================================
+   ツールバーのスタイル
+   ============================================== */
+.fc-toolbar {
+  padding: 8px 0;
+  border-bottom: 2px solid #f1f5f9;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fc-toolbar-chunk {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  justify-content: center;
+}
+
+.fc-toolbar::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+}
+
+.fc-toolbar-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1e293b;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ==============================================
+   ボタンのスタイル
+   ============================================== */
+.fc-button {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+  border: none !important;
+  color: white !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  padding: 16px 20px !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  margin: 8px 0 !important;
+}
+
+.fc-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.fc-button:hover::before {
+  left: 100%;
+}
+
+.fc-button:hover {
+  background: linear-gradient(135deg, #0056b3 0%, #004085 100%) !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2) !important;
+}
+
+.fc-button:focus {
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+}
+
+.fc-button-active {
+  background: linear-gradient(135deg, #0056b3 0%, #004085 100%) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+}
+
+/* ==============================================
+   タイムグリッドの基本スタイル
+   ============================================== */
+.fc-timegrid-slot {
+  height: 30px !important;
+  min-height: 30px !important;
+  max-height: 30px !important;
+  border-top: 1px solid #e9ecef !important;
+}
+
+.fc-timegrid-slot[data-time$=":30:00"] {
+  border-top: 2px solid #dee2e6 !important;
+}
+
+.fc-timegrid-slot[data-time$=":00:00"] {
+  border-top: 3px solid #adb5bd !important;
+}
+
+.fc-timegrid-slots table {
+  height: 100% !important;
+}
+
+.fc-timegrid-axis-frame {
+  height: 30px !important;
+  min-height: 30px !important;
+}
+
+.fc-timegrid-slot-label {
+  font-size: 0.75rem !important;
+  padding: 2px 4px !important;
+  color: #4a5568 !important;
+}
+
+.fc-timegrid-axis {
+  font-size: 12px;
+  border-right: 2px solid #dee2e6 !important;
+  min-width: 80px;
+}
+
+.fc-timegrid-col-frame {
+  border-right: 1px solid #e2e8f0 !important;
+}
+
+/* ==============================================
+   営業時間外のスタイル
+   ============================================== */
+.fc-timegrid-slot[data-time^="08:"],
+.fc-timegrid-slot[data-time^="09:"],
+.fc-timegrid-slot[data-time^="21:"],
+.fc-timegrid-slot[data-time^="22:"] {
+  background-color: #f8f9fa !important;
+  opacity: 0.7;
+  position: relative;
+}
+
+.fc-timegrid-axis[data-time^="08:"],
+.fc-timegrid-axis[data-time^="09:"],
+.fc-timegrid-axis[data-time^="21:"],
+.fc-timegrid-axis[data-time^="22:"] {
+  background-color: #f8f9fa !important;
+  color: #6c757d !important;
+  font-style: italic;
+  font-weight: normal;
+}
+
+/* 通常営業時間のラベルを強調 */
+.fc-timegrid-axis[data-time^="10:"],
+.fc-timegrid-axis[data-time^="11:"],
+.fc-timegrid-axis[data-time^="12:"],
+.fc-timegrid-axis[data-time^="13:"],
+.fc-timegrid-axis[data-time^="14:"],
+.fc-timegrid-axis[data-time^="15:"],
+.fc-timegrid-axis[data-time^="16:"],
+.fc-timegrid-axis[data-time^="17:"],
+.fc-timegrid-axis[data-time^="18:"],
+.fc-timegrid-axis[data-time^="19:"],
+.fc-timegrid-axis[data-time^="20:"] {
+  background-color: #fff !important;
+  color: #212529 !important;
+  font-weight: 600;
+}
+
+/* ==============================================
+   営業開始・終了時間のラベル
+   ============================================== */
+.fc-timegrid-slot[data-time="10:00:00"] {
+  border-top: 3px solid #28a745 !important;
+  position: relative;
+}
+
+.fc-timegrid-slot[data-time="10:00:00"]::before {
+  content: "営業開始";
+  position: absolute;
+  left: 5px;
+  top: -15px;
+  background: #28a745;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.fc-timegrid-slot[data-time="21:00:00"] {
+  border-top: 3px solid #dc3545 !important;
+  position: relative;
+}
+
+.fc-timegrid-slot[data-time="21:00:00"]::before {
+  content: "営業終了";
+  position: absolute;
+  left: 5px;
+  top: -15px;
+  background: #dc3545;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* ==============================================
+   ホバー効果
+   ============================================== */
+.fc-timegrid-slot:hover {
+  background-color: #e3f2fd !important;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.fc-timegrid-slot[data-time^="08:"]:hover,
+.fc-timegrid-slot[data-time^="09:"]:hover,
+.fc-timegrid-slot[data-time^="21:"]:hover {
+  background-color: #fff3cd !important;
+}
+
+/* ==============================================
+   予約イベントの基本スタイル
+   ============================================== */
+.fc-timegrid-event {
+  border-radius: 8px !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+  transition: all 0.3s ease !important;
+  border: 2px solid transparent !important;
+  margin: 1px !important;
+  overflow: hidden !important;
+  position: relative !important;
+  height: auto !important;
+}
+
+.fc-timegrid-event::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.fc-timegrid-event:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25) !important;
+  transform: translateX(2px) !important;
+  z-index: 1000 !important;
+}
+
+/* ==============================================
+   イベントの高さ設定（30px base）
+   ============================================== */
+.fc-timegrid-event[data-duration="40"] { height: 120px !important; min-height: 120px !important; }
+.fc-timegrid-event[data-duration="45"] { height: 135px !important; min-height: 135px !important; }
+.fc-timegrid-event[data-duration="50"] { height: 150px !important; min-height: 150px !important; }
+.fc-timegrid-event[data-duration="55"] { height: 165px !important; min-height: 165px !important; }
+.fc-timegrid-event[data-duration="60"] { height: 180px !important; min-height: 180px !important; }
+.fc-timegrid-event[data-duration="65"] { height: 195px !important; min-height: 195px !important; }
+.fc-timegrid-event[data-duration="70"] { height: 210px !important; min-height: 210px !important; }
+.fc-timegrid-event[data-duration="75"] { height: 225px !important; min-height: 225px !important; }
+.fc-timegrid-event[data-duration="80"] { height: 240px !important; min-height: 240px !important; }
+.fc-timegrid-event[data-duration="85"] { height: 255px !important; min-height: 255px !important; }
+.fc-timegrid-event[data-duration="90"] { height: 270px !important; min-height: 270px !important; }
+.fc-timegrid-event[data-duration="95"] { height: 285px !important; min-height: 285px !important; }
+.fc-timegrid-event[data-duration="100"] { height: 300px !important; min-height: 300px !important; }
+
+/* ==============================================
+   タブ形式のイベント用スタイル
+   ============================================== */
+.fc-timegrid-event .event-tab-container {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+}
+
+.fc-timegrid-event .event-tab {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  transition: all 0.2s ease !important;
+  border: none !important;
+}
+
+.fc-timegrid-event .event-tab.course {
+  background: inherit !important;
+  color: inherit !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+.fc-timegrid-event .event-tab.interval {
+  color: white !important;
+  font-weight: 500 !important;
+}
+
+.fc-timegrid-event .event-tab.interval.individual {
+  background-color: #fd7e14 !important;
+  font-weight: 600 !important;
+}
+
+.fc-timegrid-event .event-tab.interval.system {
+  background-color: #6c757d !important;
+}
+
+/* ==============================================
+   ステータス別の色分け
+   ============================================== */
+.fc-timegrid-event.confirmed {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+  border: 2px solid #28a745 !important;
+  color: white !important;
+  box-shadow: 0 4px 16px rgba(40, 167, 69, 0.3) !important;
+}
+
+.fc-timegrid-event.tentative {
+  background: linear-gradient(135deg, #ffc107 0%, #ffb84d 100%) !important;
+  border: 2px solid #ffc107 !important;
+  color: #212529 !important;
+  box-shadow: 0 4px 16px rgba(255, 193, 7, 0.3) !important;
+}
+
+.fc-timegrid-event.cancelled {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+  border: 2px solid #dc3545 !important;
+  color: white !important;
+  box-shadow: 0 4px 16px rgba(220, 53, 69, 0.3) !important;
+}
+
+.fc-timegrid-event.completed {
+  background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%) !important;
+  border: 2px solid #6f42c1 !important;
+  color: white !important;
+  box-shadow: 0 4px 16px rgba(111, 66, 193, 0.3) !important;
+}
+
+.fc-timegrid-event.no_show {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
+  border: 2px solid #6c757d !important;
+  color: white !important;
+  box-shadow: 0 4px 16px rgba(108, 117, 125, 0.3) !important;
+}
+
+.fc-timegrid-event.break {
+  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+  border: 2px solid #17a2b8 !important;
+  color: white !important;
+  box-shadow: 0 4px 16px rgba(23, 162, 184, 0.3) !important;
+}
+
+/* ==============================================
+   インターバルタイプ別の視覚的区別
+   ============================================== */
+.fc-timegrid-event.has-interval .event-tab.interval.individual::before {
+  content: "⚙️ ";
+  font-size: 0.6em;
+  margin-right: 2px;
+}
+
+.fc-timegrid-event.has-interval .event-tab.interval.system::before {
+  content: "🔧 ";
+  font-size: 0.6em;
+  margin-right: 2px;
+}
+
+.fc-timegrid-event.has-interval:hover::after {
+  content: attr(data-interval-info);
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+/* ==============================================
+   レスポンシブ対応
+   ============================================== */
+@media (max-width: 1024px) {
+  .fc {
+    margin: 0px auto;
+    border-radius: 16px;
+  }
+  
+  .fc-toolbar {
+    padding: 8px 0;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .fc-toolbar-title {
+    font-size: 1.6rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .fc-timegrid-slot {
+    height: 35px !important;
+    min-height: 35px !important;
+    max-height: 35px !important;
+  }
+  
+  .fc-timegrid-axis-frame {
+    height: 35px !important;
+    min-height: 35px !important;
+  }
+  
+  .fc-timegrid-event[data-duration="40"] { height: 140px !important; min-height: 140px !important; }
+  .fc-timegrid-event[data-duration="45"] { height: 157px !important; min-height: 157px !important; }
+  .fc-timegrid-event[data-duration="50"] { height: 175px !important; min-height: 175px !important; }
+  .fc-timegrid-event[data-duration="55"] { height: 192px !important; min-height: 192px !important; }
+  .fc-timegrid-event[data-duration="60"] { height: 210px !important; min-height: 210px !important; }
+  .fc-timegrid-event[data-duration="65"] { height: 227px !important; min-height: 227px !important; }
+  .fc-timegrid-event[data-duration="70"] { height: 245px !important; min-height: 245px !important; }
+  .fc-timegrid-event[data-duration="75"] { height: 262px !important; min-height: 262px !important; }
+  .fc-timegrid-event[data-duration="80"] { height: 280px !important; min-height: 280px !important; }
+  .fc-timegrid-event[data-duration="85"] { height: 297px !important; min-height: 297px !important; }
+  .fc-timegrid-event[data-duration="90"] { height: 315px !important; min-height: 315px !important; }
+  .fc-timegrid-event[data-duration="95"] { height: 332px !important; min-height: 332px !important; }
+  .fc-timegrid-event[data-duration="100"] { height: 350px !important; min-height: 350px !important; }
+  
+  .fc-timegrid-event .event-tab {
+    font-size: 0.7rem !important;
+    padding: 1px 2px !important;
+  }
+  
+  .fc {
+    margin: 15px auto;
+    border-radius: 12px;
+  }
+  
+  .fc-toolbar {
+    padding: 8px 0;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .fc-toolbar-title {
+    font-size: 1.4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .fc-timegrid-slot {
+    height: 30px !important;
+    min-height: 30px !important;
+    max-height: 30px !important;
+  }
+  
+  .fc-timegrid-axis-frame {
+    height: 30px !important;
+    min-height: 30px !important;
+  }
+  
+  .fc-timegrid-event[data-duration="40"] { height: 120px !important; min-height: 120px !important; }
+  .fc-timegrid-event[data-duration="45"] { height: 135px !important; min-height: 135px !important; }
+  .fc-timegrid-event[data-duration="50"] { height: 150px !important; min-height: 150px !important; }
+  .fc-timegrid-event[data-duration="55"] { height: 165px !important; min-height: 165px !important; }
+  .fc-timegrid-event[data-duration="60"] { height: 180px !important; min-height: 180px !important; }
+  .fc-timegrid-event[data-duration="65"] { height: 195px !important; min-height: 195px !important; }
+  .fc-timegrid-event[data-duration="70"] { height: 210px !important; min-height: 210px !important; }
+  .fc-timegrid-event[data-duration="75"] { height: 225px !important; min-height: 225px !important; }
+  .fc-timegrid-event[data-duration="80"] { height: 240px !important; min-height: 240px !important; }
+  .fc-timegrid-event[data-duration="85"] { height: 255px !important; min-height: 255px !important; }
+  .fc-timegrid-event[data-duration="90"] { height: 270px !important; min-height: 270px !important; }
+  .fc-timegrid-event[data-duration="95"] { height: 285px !important; min-height: 285px !important; }
+  .fc-timegrid-event[data-duration="100"] { height: 300px !important; min-height: 300px !important; }
+  
+  .fc-timegrid-event .event-tab {
+    font-size: 0.65rem !important;
+    padding: 1px !important;
+  }
+
+  .fc {
+    margin: 10px auto;
+    border-radius: 10px;
+  }
+  
+  .fc-toolbar {
+    padding: 12px 15px;
+  }
+  
+  .fc-toolbar-title {
+    font-size: 1.2rem;
+  }
+}
+
+/* ==============================================
+   アニメーション効果
+   ============================================== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.calendar-container {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.fc {
+  animation: slideInUp 0.8s ease-out;
+}
+
+/* ==============================================
+   日付ヘッダーのスタイル
+   ============================================== */
+.fc-col-header-cell {
+  cursor: pointer !important;
+  transition: background-color 0.2s ease;
+}
+
+.fc-col-header-cell:hover {
+  background-color: #f8f9fa !important;
+}
+
+.fc-col-header-cell:active {
+  background-color: #e9ecef !important;
+}
+
+.fc-day-header {
+  cursor: pointer !important;
+  transition: background-color 0.2s ease;
+  user-select: none !important;
+}
+
+.fc-day-header:hover {
+  background-color: #f8f9fa !important;
+}
+
+.fc-day-header:active {
+  background-color: #e9ecef !important;
+}
+
+/* ==============================================
+   アクセシビリティとユーザビリティ
+   ============================================== */
+@media (prefers-contrast: high) {
+  .fc-timegrid-event {
+    border-width: 3px !important;
+  }
+  
+  .fc-button {
+    border: 2px solid currentColor !important;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .fc {
+    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%) !important;
+    border-color: #4a5568 !important;
+  }
+  
+  .fc-toolbar {
+    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%) !important;
+    border-bottom-color: #4a5568 !important;
+  }
+  
+  .fc-toolbar-title {
+    color: #e2e8f0 !important;
+  }
+}
+
+/* ==============================================
+   フォーカス状態のスタイル
+   ============================================== */
+.fc-timegrid-event:focus {
+  outline: 3px solid #007bff;
+  outline-offset: 2px;
+  z-index: 1001;
+}
+
+.fc-timegrid-event:focus-visible {
+  outline: 3px solid #007bff;
+  outline-offset: 2px;
+}
+
+/* ==============================================
+   パフォーマンス最適化
+   ============================================== */
+.fc-timegrid-event {
+  will-change: transform, opacity;
+}
+
+.fc-timegrid-event:hover {
+  will-change: transform, box-shadow;
+}
+
+.fc-timegrid-event,
+.fc-button {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* ==============================================
+   スクロールバーのカスタマイズ
+   ============================================== */
+.fc-timegrid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.fc-timegrid::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.fc-timegrid::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  border-radius: 4px;
+}
+
+.fc-timegrid::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+}
+
+/* ==============================================
+   セレクション状態のスタイル
+   ============================================== */
+.fc-timegrid-event.fc-event-selected {
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.3) !important;
+  z-index: 1002 !important;
+}
+
+/* ==============================================
+   ドラッグ状態のスタイル
+   ============================================== */
+.fc-timegrid-event.fc-event-dragging {
+  opacity: 0.7 !important;
+  transform: rotate(3deg) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+  z-index: 1003 !important;
+}
+
+.fc-timegrid-event.fc-event-resizing {
+  opacity: 0.8 !important;
+  box-shadow: 0 4px 20px rgba(0, 123, 255, 0.4) !important;
+}
+</style>
+
+<script>
+// カレンダー初期化の基本的なJavaScript
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🚀 Calendar initialization started');
+  
+  // カレンダー要素を取得
+  const calendarEl = document.getElementById('calendar');
+  if (!calendarEl) {
+    console.error('❌ Calendar element not found');
+    return;
+  }
+  
+  // FullCalendarが利用可能かチェック
+  if (typeof FullCalendar === 'undefined') {
+    console.error('❌ FullCalendar not available');
+    return;
+  }
+  
+  // カレンダーを初期化
+  const calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'timeGridWeek',
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek,timeGridDay'
+    },
+    locale: 'ja',
+    height: 'auto',
+    editable: true,
+    selectable: true,
+    selectMirror: true,
+    dayMaxEvents: true,
+    weekends: true,
+    businessHours: {
+      daysOfWeek: [1, 2, 3, 4, 5, 6],
+      startTime: '10:00',
+      endTime: '21:00'
+    },
+    slotMinTime: '08:00:00',
+    slotMaxTime: '22:00:00',
+    slotDuration: '00:10:00',
+    nowIndicator: true,
+    events: {
+      url: '/admin/reservations.json',
+      failure: function(error) {
+        console.error('❌ Error loading events:', error);
+      }
+    }
+  });
+  
+  // カレンダーをレンダリング
+  calendar.render();
+  window.pageCalendar = calendar;
+  
+  console.log('✅ Calendar initialized successfully');
+});
+</script> 

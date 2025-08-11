@@ -1,7 +1,7 @@
 // 既存カレンダーとの統合コード
 // app/javascript/calendar/shift_integration.js
 
-import { initializeDynamicShiftHighlight, changeBusinessHours } from './dynamic_shift_highlight.js';
+
 
 // 既存のカレンダー初期化関数を拡張
 export function enhanceCalendarWithShiftHighlight() {
@@ -36,8 +36,8 @@ export function enhanceCalendarWithShiftHighlight() {
 function setupShiftHighlightIntegration(calendar) {
   console.log('🎨 Setting up shift highlight integration...');
   
-  // 動的ハイライト機能を初期化
-  const highlighter = initializeDynamicShiftHighlight(calendar);
+  // 動的ハイライト機能は削除（CSSのみでグリッドライン表示）
+  const highlighter = null;
   
   // 既存のイベントハンドラーを拡張
   enhanceExistingEventHandlers(calendar, highlighter);
@@ -593,40 +593,31 @@ async function saveBusinessHoursToServer(startHour, endHour) {
   return data;
 }
 
-// クイックアクション関数群
+// クイックアクション関数群（動的機能は削除）
 export const ShiftQuickActions = {
   // 営業時間を1時間早める
   extendMorning: () => {
-    const newStart = Math.max(6, currentBusinessHours.start - 1);
-    changeBusinessHours(newStart, currentBusinessHours.end);
-    console.log('🌅 Extended morning hours');
+    console.log('🌅 Extended morning hours (functionality removed)');
   },
   
   // 営業時間を1時間延長
   extendEvening: () => {
-    const newEnd = Math.min(24, currentBusinessHours.end + 1);
-    changeBusinessHours(currentBusinessHours.start, newEnd);
-    console.log('🌙 Extended evening hours');
+    console.log('🌙 Extended evening hours (functionality removed)');
   },
   
   // 営業時間を1時間短縮（朝）
   reduceMorning: () => {
-    const newStart = Math.min(12, currentBusinessHours.start + 1);
-    changeBusinessHours(newStart, currentBusinessHours.end);
-    console.log('⏰ Reduced morning hours');
+    console.log('⏰ Reduced morning hours (functionality removed)');
   },
   
   // 営業時間を1時間短縮（夜）
   reduceEvening: () => {
-    const newEnd = Math.max(16, currentBusinessHours.end - 1);
-    changeBusinessHours(currentBusinessHours.start, newEnd);
-    console.log('🕰️ Reduced evening hours');
+    console.log('🕰️ Reduced evening hours (functionality removed)');
   },
   
   // 標準営業時間に戻す
   resetToDefault: () => {
-    changeBusinessHours(10, 21);
-    console.log('🔄 Reset to default business hours');
+    console.log('🔄 Reset to default business hours (functionality removed)');
   }
 };
 
