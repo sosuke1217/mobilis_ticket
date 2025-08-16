@@ -521,7 +521,6 @@
 
         // インターバル変更時に即座に更新
         function updateIntervalOnChange() {
-            console.log('🟦 [DEBUG] updateIntervalOnChange: currentReservation at start:', currentReservation);
             if (!currentReservation) {
                 showMessage('予約データが見つかりません。', 'error');
                 return;
@@ -4610,21 +4609,6 @@ function showMessage(message, type = 'info') {
         document.addEventListener('DOMContentLoaded', function() {
             setupUserSearch();
         });
-
-        // ... existing code ...
-  523|        function updateIntervalOnChange() {
-  524|            // Fallback: ensure currentReservation.date is set
-  525|            if (currentReservation && !currentReservation.date) {
-  526|                for (const dateKey of Object.keys(reservations)) {
-  527|                    const dayReservations = reservations[dateKey];
-  528|                    if (dayReservations.find(r => r.id === currentReservation.id)) {
-  529|                        currentReservation.date = dateKey;
-  530|                        console.log('🟩 [DEBUG] Fallback set currentReservation.date:', dateKey);
-  531|                        break;
-  532|                    }
-  533|                }
-  534|            }
-// ... existing code ...
 </script> 
 </body>
 </html> 
