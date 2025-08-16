@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_08_07_173854) do
+ActiveRecord::Schema[7.2].define(version: 2025_08_12_071654) do
   create_table "admin_users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -148,6 +148,17 @@ ActiveRecord::Schema[7.2].define(version: 2025_08_07_173854) do
     t.string "email"
     t.date "birth_date"
     t.index ["line_user_id"], name: "index_users_on_line_user_id", unique: true
+  end
+
+  create_table "weekly_schedules", force: :cascade do |t|
+    t.date "week_start_date", null: false
+    t.json "schedule_data", default: {}, null: false
+    t.boolean "is_recurring", default: false
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["is_recurring"], name: "index_weekly_schedules_on_is_recurring"
+    t.index ["week_start_date"], name: "index_weekly_schedules_on_week_start_date", unique: true
   end
 
   add_foreign_key "notification_logs", "tickets"

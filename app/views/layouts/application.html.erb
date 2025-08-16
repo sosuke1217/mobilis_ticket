@@ -84,13 +84,6 @@
           
           <!-- 右側のメニュー -->
           <ul class="navbar-nav">
-            <!-- システム設定リンク -->
-            <li class="nav-item">
-              <%= link_to admin_settings_path, class: "nav-link #{'active' if controller_name == 'settings'}" do %>
-                <i class="fas fa-cog me-1"></i>システム設定
-              <% end %>
-            </li>
-            
             <!-- ユーザー情報ドロップダウン -->
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -98,11 +91,6 @@
                 <%= current_admin_user&.email || "管理者" %>
               </a>
               <ul class="dropdown-menu dropdown-menu-end">
-                <li>
-                  <%= link_to admin_settings_path, class: "dropdown-item" do %>
-                    <i class="fas fa-cog me-2"></i>システム設定
-                  <% end %>
-                </li>
                 <li><hr class="dropdown-divider"></li>
                 <li>
                   <%= link_to destroy_admin_user_session_path, method: :delete, class: "dropdown-item" do %>

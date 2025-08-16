@@ -5,7 +5,7 @@ puts "🌱 Seeding database..."
 if ApplicationSetting.count == 0
   puts "📊 Creating ApplicationSetting..."
   ApplicationSetting.create!(
-    reservation_interval_minutes: 15,
+    reservation_interval_minutes: 10,
     business_hours_start: 10,
     business_hours_end: 20,
     slot_interval_minutes: 30,

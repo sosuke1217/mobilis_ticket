@@ -42,7 +42,7 @@ class Reservation < ApplicationRecord
   has_many :child_reservations, class_name: 'Reservation', foreign_key: 'parent_reservation_id', dependent: :destroy
   
   before_validation :set_name_from_user, if: -> { name.blank? && user.present? }
-  before_validation :set_end_time, if: -> { start_time.present? && course.present? && end_time.blank? }
+  before_validation :set_end_time, if: -> { start_time.present? && course.present? }
   after_create :schedule_confirmation_email
   after_update :handle_status_change
   after_create :log_reservation_created
@@ -400,21 +400,30 @@ class Reservation < ApplicationRecord
     return if start_time.blank? || end_time.blank?
     return if skip_overlap_validation
 
-    Reservation.transaction do
-      overlapping = Reservation.active
-        .where.not(id: id)
-        .select do |other|
-          # 本体同士の重複のみNG（端が一致する場合はOK）
-          times_overlap = (start_time < other.end_time && end_time > other.start_time)
-          times_overlap && !(end_time == other.start_time || start_time == other.end_time)
-        end
-
-      if overlapping.any?
-        overlapping_reservation = overlapping.first
-        errors.add(:base,
-          "#{overlapping_reservation.start_time.strftime('%H:%M')}〜#{overlapping_reservation.end_time.strftime('%H:%M')}の予約があります。"
-        )
+    # インターバルを含む重複チェック
+    overlapping = Reservation.active
+      .where.not(id: id)
+      .select do |other|
+        # 各予約のインターバル時間を取得
+        other_interval = other.effective_interval_minutes
+        other_end_with_interval = other.end_time + other_interval.minutes
+        
+        # 現在の予約のインターバル時間を取得
+        current_interval = effective_interval_minutes
+        current_end_with_interval = end_time + current_interval.minutes
+        
+        # 重複判定（インターバル時間も含む）
+        start_time < other_end_with_interval && current_end_with_interval > other.start_time
       end
+
+    if overlapping.any?
+      overlapping_reservation = overlapping.first
+      other_interval = overlapping_reservation.effective_interval_minutes
+      other_end_with_interval = overlapping_reservation.end_time + other_interval.minutes
+      
+      errors.add(:base,
+        "#{overlapping_reservation.start_time.strftime('%H:%M')}〜#{other_end_with_interval.strftime('%H:%M')}の予約があります。"
+      )
     end
   end
 
@@ -547,7 +556,10 @@ class Reservation < ApplicationRecord
 
   def set_end_time
     duration = get_duration_minutes
+    # Only set end_time to course duration, interval is handled separately
+    Rails.logger.info "🔄 set_end_time called: course=#{course}, duration=#{duration}, individual_interval=#{individual_interval_minutes}, effective_interval=#{effective_interval_minutes}"
     self.end_time = start_time + duration.minutes
+    Rails.logger.info "✅ end_time set to: #{self.end_time}"
   end
 
   def schedule_confirmation_email

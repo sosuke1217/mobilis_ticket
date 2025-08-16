@@ -4,7 +4,7 @@ class ApplicationSetting < ApplicationRecord
   # バリデーション
   validates :reservation_interval_minutes, 
             presence: true, 
-            numericality: { greater_than: 0 }
+            numericality: { greater_than_or_equal_to: 0 }
   validates :business_hours_start, 
             presence: true, 
             numericality: { in: 0..23 }
@@ -14,6 +14,10 @@ class ApplicationSetting < ApplicationRecord
   validates :slot_interval_minutes, 
             presence: true, 
             numericality: { greater_than: 0 }
+  
+  # カスタムバリデーション
+  validate :business_hours_logic
+  validate :check_reservations_before_hours_change, if: :business_hours_changing?
 
   # 現在の設定を取得（安全版）
   def self.current
@@ -26,7 +30,7 @@ class ApplicationSetting < ApplicationRecord
   # デフォルト設定を作成
   def self.create_default!
     create!(
-      reservation_interval_minutes: 15,
+      reservation_interval_minutes: 10,
       business_hours_start: 10,
       business_hours_end: 20,
       slot_interval_minutes: 30,
@@ -38,7 +42,7 @@ class ApplicationSetting < ApplicationRecord
     Rails.logger.error "❌ Failed to create default ApplicationSetting: #{e.message}"
     # フォールバック用のオブジェクトを返す
     new(
-      reservation_interval_minutes: 15,
+      reservation_interval_minutes: 10,
       business_hours_start: 10,
       business_hours_end: 20,
       slot_interval_minutes: 30,
@@ -66,6 +70,11 @@ class ApplicationSetting < ApplicationRecord
     business_hours_start_changed? || business_hours_end_changed?
   end
   
+  # 営業時間が変更中かチェック（バリデーション用）
+  def business_hours_changing?
+    business_hours_start_changed? || business_hours_end_changed?
+  end
+  
   # 現在営業中かチェック
   def currently_open?
     current_hour = Time.current.hour
@@ -75,6 +84,37 @@ class ApplicationSetting < ApplicationRecord
   # 営業時間の期間を取得
   def business_hours_duration
     business_hours_end - business_hours_start
+  end
+  
+  # 営業時間変更による影響をチェック（静的メソッド）
+  def self.check_hours_change_impact(new_start, new_end)
+    current = current()
+    current_start = current.business_hours_start
+    current_end = current.business_hours_end
+    
+    Rails.logger.info "🔍 Checking hours change impact: #{new_start}:00-#{new_end}:00 (current: #{current_start}:00-#{current_end}:00)"
+    
+    # 新しい営業時間外に予約があるかチェック
+    affected_reservations = Reservation.active.where(
+      "start_time >= ? AND (
+        EXTRACT(hour FROM start_time) < ? OR 
+        EXTRACT(hour FROM start_time) >= ?
+      )",
+      Date.current.beginning_of_day,
+      new_start,
+      new_end
+    ).includes(:user).limit(10)
+    
+    Rails.logger.info "🔍 Found #{affected_reservations.count} affected reservations"
+    affected_reservations.each do |reservation|
+      Rails.logger.info "🔍 Affected reservation: #{reservation.id} - #{reservation.start_time.strftime('%m/%d %H:%M')} (#{reservation.customer})"
+    end
+    
+    {
+      has_conflicts: affected_reservations.any?,
+      affected_count: affected_reservations.count,
+      affected_reservations: affected_reservations
+    }
   end
   
   # フォーマットされた営業時間
@@ -133,6 +173,45 @@ class ApplicationSetting < ApplicationRecord
         errors.add(:base, "営業時間が4時間未満です。十分な営業時間を確保してください。")
       end
     end
+  end
+  
+  # 営業時間変更前に既存予約との整合性をチェック
+  def check_reservations_before_hours_change
+    return unless business_hours_start.present? && business_hours_end.present?
+    
+    # 変更前の営業時間を取得
+    old_start = business_hours_start_was || business_hours_start
+    old_end = business_hours_end_was || business_hours_end
+    
+    # 新しい営業時間外に予約があるかチェック
+    affected_reservations = find_reservations_outside_new_hours(old_start, old_end)
+    
+    if affected_reservations.any?
+      reservation_details = affected_reservations.map do |reservation|
+        "#{reservation.start_time.strftime('%m/%d %H:%M')} (#{reservation.customer})"
+      end.join(', ')
+      
+      errors.add(:base, "営業時間の変更により影響を受ける予約があります: #{reservation_details}")
+    end
+  end
+  
+  # 新しい営業時間外にある予約を検索
+  def find_reservations_outside_new_hours(old_start, old_end)
+    # 営業時間が短縮される場合のみチェック
+    return [] if business_hours_start <= old_start && business_hours_end >= old_end
+    
+    # 新しい営業時間外に予約があるかチェック
+    # 予約の開始時間または終了時間（インターバル含む）が新しい営業時間外にある場合
+    Reservation.active.where(
+      "start_time >= ? AND (
+        EXTRACT(hour FROM start_time) < ? OR 
+        EXTRACT(hour FROM (end_time + INTERVAL ? MINUTE)) > ?
+      )",
+      Date.current.beginning_of_day,
+      business_hours_start,
+      Reservation.interval_minutes,
+      business_hours_end
+    ).limit(10) # 最初の10件のみ取得（パフォーマンス考慮）
   end
   
   def log_business_hours_change

@@ -17,6 +17,19 @@ Rails.application.routes.draw do
       collection do
         get 'calendar'
         get 'cancellation_stats'
+        post 'create_booking'
+        post 'save_shift_settings'
+        get 'load_shift_settings'
+        get 'load_reservations'
+        delete 'delete_reservation'
+        get 'search_users'
+        patch 'update_reservation_status'
+      end
+      member do
+        patch 'update_booking'
+        patch 'update_interval'
+        get 'tickets'
+        get 'history'
       end
     end
     
@@ -56,16 +69,7 @@ Rails.application.routes.draw do
       end
     end
     
-    # 設定
-    resources :settings, only: [:index, :show, :edit, :update] do
-      member do
-        patch :update_business_hours  # 営業時間のリアルタイム更新
-        get :business_status         # 現在の営業状態取得
-      end
-      collection do
-        get :test_shift_changes      # テスト用エンドポイント（開発環境のみ）
-      end
-    end
+
   end
   
   # 一般ユーザー用ルート
