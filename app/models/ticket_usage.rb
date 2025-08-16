@@ -2,6 +2,7 @@
 class TicketUsage < ApplicationRecord
   belongs_to :ticket
   belongs_to :user
+  belongs_to :reservation, optional: true
 
   validates :used_at, presence: true
   validate :used_at_cannot_be_in_future

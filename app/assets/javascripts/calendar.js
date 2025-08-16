@@ -1,240 +1,8 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="<%= form_authenticity_token %>">
-    <title>予約管理システム</title>
-    <%= stylesheet_link_tag 'calendar', media: 'all' %>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>📅 予約管理システム</h1>
-            <div class="header-controls">
-                <div class="week-nav">
-                    <button class="nav-btn" onclick="previousWeek()">← 前週</button>
-                    <div class="current-week" id="currentWeek">2025年 8月10日 - 8月16日</div>
-                    <button class="nav-btn" onclick="nextWeek()">次週 →</button>
-                </div>
-                <div class="mini-calendar-container">
-                    <button class="mini-calendar-btn" onclick="toggleMiniCalendar()">
-                        📅 週を選択
-                    </button>
-                    <div class="mini-calendar" id="miniCalendar">
-                        <div class="mini-calendar-header">
-                            <button class="mini-calendar-year-btn" onclick="previousMiniCalendarYear()" title="前年">‹‹</button>
-                            <button class="mini-calendar-nav-btn" onclick="previousMiniCalendarMonth()" title="前月">‹</button>
-                            <div class="mini-calendar-title" id="miniCalendarTitle">2025年 8月</div>
-                            <button class="mini-calendar-nav-btn" onclick="nextMiniCalendarMonth()" title="翌月">›</button>
-                            <button class="mini-calendar-year-btn" onclick="nextMiniCalendarYear()" title="翌年">››</button>
-                        </div>
-                        <div class="mini-calendar-weekdays">
-                            <div class="mini-calendar-weekday">日</div>
-                            <div class="mini-calendar-weekday">月</div>
-                            <div class="mini-calendar-weekday">火</div>
-                            <div class="mini-calendar-weekday">水</div>
-                            <div class="mini-calendar-weekday">木</div>
-                            <div class="mini-calendar-weekday">金</div>
-                            <div class="mini-calendar-weekday">土</div>
-                        </div>
-                        <div class="mini-calendar-days" id="miniCalendarDays">
-                            <!-- 動的に生成される -->
-                        </div>
-                    </div>
-                </div>
-                <button id="showCancellationsBtn" onclick="toggleCancellationDisplay()" class="cancellation-btn">
-                    ❌ キャンセル履歴 (<span id="cancellation-count">0</span>)
-                </button>
-                <button class="settings-btn" onclick="openSettingsModal()">
-                    ⚙️ 予約可能日時を編集
-                </button>
-            </div>
-        </div>
-        
-        <div id="cancellation-display" class="cancellation-display" style="display: none;">
-            <div class="cancellation-header">
-                <h3>❌ キャンセルされた予約</h3>
-                <button onclick="clearCancellationDisplay()" class="clear-btn">クリア</button>
-            </div>
-            <div id="cancellation-list" class="cancellation-list">
-                <!-- キャンセルされた予約がここに表示されます -->
-            </div>
-        </div>
-
-        <div class="schedule-container">
-            <div class="schedule-header">
-                <div class="time-column-header">時刻</div>
-                <div class="day-header sunday">日<br><span style="font-size: 12px;">8/10</span></div>
-                <div class="day-header">月<br><span style="font-size: 12px;">8/11</span></div>
-                <div class="day-header">火<br><span style="font-size: 12px;">8/12</span></div>
-                <div class="day-header">水<br><span style="font-size: 12px;">8/13</span></div>
-                <div class="day-header">木<br><span style="font-size: 12px;">8/14</span></div>
-                <div class="day-header">金<br><span style="font-size: 12px;">8/15</span></div>
-                <div class="day-header saturday">土<br><span style="font-size: 12px;">8/16</span></div>
-            </div>
-            
-            <div class="schedule-body" id="scheduleBody">
-                <!-- 時間スロットは動的に生成される -->
-            </div>
-        </div>
-    </div>
-
-    <!-- 設定モーダル -->
-    <div id="settingsModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>⚙️ 予約可能日時を編集</h2>
-                <span class="close" onclick="closeSettingsModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="settings-tabs">
-                    <button class="tab-button active" onclick="switchTab('general')">一回限りの変更</button>
-                    <button class="tab-button" onclick="switchTab('recurring')">定期的なスケジュール</button>
-                </div>
-
-                <!-- 一回限りの変更タブ -->
-                <div id="general-tab" class="tab-content active">
-                    <div id="week-info" style="margin-bottom: 20px; padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 4px solid #007bff;">
-                        <strong>現在の週:</strong> <span id="current-week-display"></span>
-                        <br><small id="schedule-type-info" style="color: #666;"></small>
-                    </div>
-                    
-                    <div id="daySettings">
-                        <!-- 曜日別設定が動的に生成される -->
-      </div>
-    </div>
-
-                <!-- 定期的なスケジュールタブ -->
-                <div id="recurring-tab" class="tab-content">
-                    <p style="margin-bottom: 20px; color: #666;">今後の週に適用するデフォルトスケジュールを設定</p>
-                    
-                    <div id="recurringDaySettings">
-                        <!-- 定期的な設定が動的に生成される -->
-        </div>
-        </div>
-        </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeSettingsModal()">キャンセル</button>
-                <button class="btn btn-success" onclick="saveSettings()">完了</button>
-          </div>
-        </div>
-        </div>
-
-    <!-- 予約作成モーダル -->
-    <div id="bookingModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>📅 新規予約作成</h2>
-                <span class="close" onclick="closeBookingModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form id="bookingForm">
-                    <div class="form-group mb-3">
-                        <label for="bookingDate" class="form-label">予約日時</label>
-                        <input type="text" id="bookingDate" class="form-control" readonly>
-                    </div>
-                    
-                    <div class="form-group mb-3">
-                        <label for="bookingTime" class="form-label">開始時間</label>
-                        <input type="text" id="bookingTime" class="form-control" readonly>
-      </div>
-                    
-                    <div class="form-group mb-3">
-                        <label for="bookingDuration" class="form-label">コース選択</label>
-                        <select id="bookingDuration" class="form-select" required>
-                            <option value="">コースを選択してください</option>
-                            <option value="40">40分コース</option>
-                            <option value="60">60分コース</option>
-                            <option value="80">80分コース</option>
-                        </select>
-    </div>
-                    
-                    <div class="form-group mb-3">
-                        <label for="customerName" class="form-label">お客様名</label>
-                        <div class="position-relative">
-                            <input type="text" id="customerName" class="form-control" required placeholder="山田太郎" autocomplete="off">
-                            <div id="userSearchResults" class="user-search-results" style="display: none;"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group mb-3">
-                        <label for="customerPhone" class="form-label">電話番号</label>
-                        <input type="tel" id="customerPhone" class="form-control" required placeholder="090-1234-5678">
-                    </div>
-                    
-                    <div class="form-group mb-3">
-                        <label for="customerEmail" class="form-label">メールアドレス</label>
-                        <input type="email" id="customerEmail" class="form-control" placeholder="example@email.com">
-        </div>
-                    
-                    <div class="form-group mb-3">
-                        <label for="bookingNote" class="form-label">備考</label>
-                        <textarea id="bookingNote" class="form-control" rows="3" placeholder="ご要望やご質問があればご記入ください"></textarea>
-        </div>
-                    
-                    <div class="form-group mb-3">
-                        <label for="bookingStatus" class="form-label">予約ステータス</label>
-                        <select id="bookingStatus" class="form-select">
-                            <option value="tentative">仮予約</option>
-                            <option value="confirmed">確定</option>
-                        </select>
-        </div>
-                </form>
-          </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeBookingModal()">キャンセル</button>
-                <button class="btn btn-success" onclick="createBooking()">予約作成</button>
-        </div>
-        </div>
-      </div>
-
-    <!-- 予約詳細モーダル -->
-    <div id="reservationDetailModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-body" id="reservationDetailContent">
-                <span class="close" onclick="closeReservationDetailModal()">&times;</span>
-                <!-- 動的に生成される -->
-            </div>
-            <div class="modal-footer">
-                                 <button type="submit" class="btn btn-primary" form="reservationEditForm" onclick="console.log('💾 Save button clicked')">保存</button>
-                 <button type="button" class="btn btn-warning" onclick="cancelReservation()">キャンセル</button>
-                 <button type="button" class="btn btn-danger" onclick="deleteReservation()">削除</button>
-                 <button type="button" class="btn btn-secondary" onclick="closeReservationDetailModal()">閉じる</button>
-            </div>
-        </div>
-    </div>
-
-
-
-    <!-- ユーザー選択モーダル -->
-    <div id="userSelectionModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-body">
-                <span class="close" onclick="closeUserSelectionModal()">&times;</span>
-                <h3>お客様の変更</h3>
-                <div class="user-selection-settings">
-                    <div class="form-group">
-                        <label for="userSearchInput" class="form-label">お客様を検索してください</label>
-                        <input type="text" id="userSearchInput" class="form-control" placeholder="お客様名を入力してください..." autocomplete="off">
-                    </div>
-                    <div class="user-search-results" id="userSelectionSearchResults">
-                        <!-- 検索結果がここに表示されます -->
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-secondary" onclick="closeUserSelectionModal()">キャンセル</button>
-                        <button class="btn btn-primary" onclick="saveUserSelection()" id="saveUserBtn" disabled>変更</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
+        // Use the global reservations object set by the ERB in calendar.html.erb
+        let reservations = window.reservations || {};
         let currentWeekStart = new Date(2025, 7, 10); // 2025年8月10日（日曜日）
         let weeklySchedules = {}; // 週別スケジュール（週のキーで保存）
         let defaultSchedule = {}; // デフォルトスケジュール
-        let reservations = {}; // 予約データ
         let miniCalendarMonth = new Date(2025, 7, 1); // ミニカレンダーの表示月（8月）
         let clickedDate = null; // クリックされた日付
         let currentReservation = null; // 現在表示中の予約
@@ -244,7 +12,6 @@
         let cancelledReservations = []; // キャンセルされた予約のリスト
         let cancellationDisplayReady = false; // キャンセル表示の準備完了フラグ
         let domReady = false; // DOMの準備完了フラグ
-
         // ローカルストレージからキャンセル履歴を読み込み
         function loadCancelledReservations() {
             try {
@@ -268,42 +35,6 @@
                 console.error('❌ Error saving cancelled reservations:', error);
             }
         }
-        
-        // バックエンドから予約データを読み込み
-        <% if @reservations.present? %>
-            console.log('🔄 Loading server-side reservations:', <%= @reservations.count %>);
-            <% @reservations.each do |reservation| %>
-                (function() {
-                    const reservationDateKey = '<%= reservation.start_time.strftime('%Y-%m-%d') %>';
-                    if (!reservations[reservationDateKey]) {
-                        reservations[reservationDateKey] = [];
-                    }
-                    const reservationData = {
-                        id: <%= reservation.id %>,
-                        time: '<%= reservation.start_time.strftime('%H:%M') %>',
-                        duration: <%= extract_course_duration(reservation.course) %>,
-                        customer: '<%= j(reservation.name || reservation.user&.name || '未設定') %>',
-                        phone: '<%= j(reservation.user&.phone_number || '') %>',
-                        email: '<%= j(reservation.user&.email || '') %>',
-                        note: '<%= j(reservation.note || '') %>',
-                        status: '<%= reservation.status %>',
-                        createdAt: '<%= reservation.created_at.iso8601 %>',
-                        updatedAt: '<%= reservation.updated_at.iso8601 %>',
-                        userId: <%= reservation.user_id || 'null' %>,
-                        effective_interval_minutes: <%= reservation.effective_interval_minutes || 0 %>
-                    };
-                    reservations[reservationDateKey].push(reservationData);
-                    console.log('📅 Server-side reservation loaded:', {
-                        date: reservationDateKey,
-                        id: reservationData.id,
-                        userId: reservationData.userId,
-                        customer: reservationData.customer
-                    });
-                })();
-            <% end %>
-        <% else %>
-            console.log('ℹ️ No server-side reservations found');
-        <% end %>
         
         // 曜日の名前
         const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
@@ -351,9 +82,7 @@
                 }, 300);
             }, 5000);
         }
-
-
-
+        
         // 予約変更を保存
         function saveReservationChanges(event) {
             event.preventDefault();
@@ -520,26 +249,13 @@
         }
 
         // インターバル変更時に即座に更新
-        function updateIntervalOnChange() {
-            console.log('🟦 [DEBUG] updateIntervalOnChange: currentReservation at start:', currentReservation);
+        function updateIntervalOnChange(newInterval, currentDuration, currentReservation, startTime, date) {
+            currentReservation = normalizeReservation(currentReservation);
             if (!currentReservation) {
                 showMessage('予約データが見つかりません。', 'error');
                 return;
             }
 
-            const newInterval = parseInt(document.getElementById('edit-interval').value);
-            const currentDuration = currentReservation.duration || 60;
-            
-            if (
-                !currentReservation.start_time &&
-                !currentReservation.date &&
-                !currentReservation.dateKey &&
-                currentReservation.time &&
-                typeof currentDateKey !== 'undefined'
-            ) {
-                currentReservation.date = currentDateKey;
-            }
-            
             console.log('🔍 updateIntervalOnChange called with:', {
                 newInterval,
                 currentDuration,
@@ -684,6 +400,8 @@
 
         // 予約時間が営業時間内に収まるかチェック
         function validateReservationTimeWithinBusinessHours(reservation, newDuration, newInterval) {
+            reservation = normalizeReservation(reservation);
+            const dayOfWeek = getReservationDayOfWeek(reservation);
             console.log('🔍 validateReservationTimeWithinBusinessHours called with:', {
                 reservation: reservation,
                 newDuration: newDuration,
@@ -715,21 +433,20 @@
             if (reservation.start_time) {
                 reservationDate = new Date(reservation.start_time);
             } else if (reservation.date) {
-                // 予約の日付フィールドを使用
-                reservationDate = new Date(reservation.date);
+                // Use parseLocalDate for YYYY-MM-DD format
+                reservationDate = parseLocalDate(reservation.date);
             } else if (reservation.dateKey) {
-                reservationDate = new Date(reservation.dateKey);
+                reservationDate = parseLocalDate(reservation.dateKey);
             } else {
                 // 現在の週の開始日を使用
                 reservationDate = new Date(currentWeekStart);
             }
-            const dayOfWeek = reservationDate.getDay();
             
             console.log('🔍 Date calculation debug:', {
                 start_time: reservation.start_time,
                 date: reservation.date,
                 dateKey: reservation.dateKey,
-                reservationDate: reservationDate.toISOString(),
+                reservationDate: reservationDate ? reservationDate.toISOString() : undefined,
                 dayOfWeek: dayOfWeek,
                 dayName: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek]
             });
@@ -1293,6 +1010,19 @@
                         
                         // 新しいデータで完全に置き換え（バックエンドの最新データを使用）
                         reservations = data.reservations;
+                        // PATCH: Ensure every reservation has its date property
+                        for (const dateKey of Object.keys(reservations)) {
+                            reservations[dateKey].forEach(reservation => {
+                                reservation.date = dateKey;
+                            });
+                        }
+                        // DEBUG: Print all reservations and their date keys
+                        console.log('🔍 All reservations after patch:');
+                        for (const dateKey of Object.keys(reservations)) {
+                            reservations[dateKey].forEach(reservation => {
+                                console.log(`  id: ${reservation.id}, date: ${reservation.date}, key: ${dateKey}`);
+                            });
+                        }
                         
                         console.log('📅 Final merged reservations:', reservations);
                         console.log('📅 Checking specific reservation 97:', reservations['2025-08-13']?.find(r => r.id === 97));
@@ -1366,7 +1096,15 @@
         function generateTimeSlots() {
             console.log('🔍 generateTimeSlots called - defaultSchedule:', defaultSchedule);
             console.log('🔍 generateTimeSlots - current reservations data:', reservations);
-            console.log('🔍 generateTimeSlots - reservation 97 data:', reservations['2025-08-13']?.find(r => r.id === 97));
+            // Helper to find reservation by id across all date keys
+            function findReservationById(resId) {
+                for (const dateKey of Object.keys(reservations)) {
+                    const found = reservations[dateKey].find(r => r.id === resId);
+                    if (found) return found;
+                }
+                return undefined;
+            }
+            console.log('🔍 generateTimeSlots - reservation 97 data:', findReservationById(97));
             const scheduleBody = document.getElementById('scheduleBody');
             scheduleBody.innerHTML = '';
             
@@ -1449,10 +1187,11 @@
                                     const block = createSpanningReservationBlock(reservation, dateKey, timeStr);
                                     cell.appendChild(block);
                                     // 予約詳細を表示するためのクリックイベント
+                                    reservation.date = dateKey; // PATCH: always set date
                                     cell.addEventListener('click', (e) => {
                                         // ドラッグ中でない場合のみクリックイベントを実行
                                         if (!isDragging) {
-                                        openReservationDetailModal(reservation);
+                                            openReservationDetailModal(reservation);
                                         }
                                     });
                                     
@@ -1540,7 +1279,7 @@
                     const startInMinutes = startHour * 60 + startMin;
                     const endInMinutes = endHour * 60 + endMin;
                     
-                    return timeInMinutes >= startInMinutes && timeInMinutes < endInMinutes;
+                    return timeInMinutes >= startInMinutes && timeInMinutes <= endInMinutes;
                 });
                 
                 // デバッグ用ログ（特定の時間のみ）
@@ -2780,23 +2519,41 @@ function showMessage(message, type = 'info') {
 
         // 予約詳細モーダルを開く
         function openReservationDetailModal(reservation) {
-
+            // Normalize reservation before using
+            reservation = normalizeReservation(reservation);
+            // Add detailed logging for all date-related fields
+            console.log('🕵️‍♂️ Reservation detail modal - raw reservation:', reservation);
+            if (reservation) {
+                console.log('🕵️‍♂️ reservation.date:', reservation.date);
+                console.log('🕵️‍♂️ reservation.dateKey:', reservation.dateKey);
+                console.log('🕵️‍♂️ reservation.start_time:', reservation.start_time);
+                if (reservation.start_time) {
+                    const parsed = new Date(reservation.start_time);
+                    console.log('🕵️‍♂️ Parsed start_time:', parsed, 'Locale:', parsed.toLocaleString());
+                }
+            }
             // 最新の予約データを取得
             let latestReservation = null;
+            let foundDateKey = null;
             for (const dateKey of Object.keys(reservations)) {
                 const dayReservations = reservations[dateKey];
                 const foundReservation = dayReservations.find(r => r.id === reservation.id);
                 if (foundReservation) {
                     latestReservation = foundReservation;
+                    foundDateKey = dateKey;
                     break;
                 }
             }
-            
             // 最新のデータが見つからない場合は元のデータを使用
             if (!latestReservation) {
                 latestReservation = reservation;
             }
-            
+            // 必ずcurrentReservationを最新の予約データ（date付き）にセット
+            currentReservation = latestReservation;
+            // もしdateがなければdateKeyをセット
+            if (!currentReservation.date && foundDateKey) {
+                currentReservation.date = foundDateKey;
+            }
             console.log('🔍 Opening modal with reservation data:', {
                 original: {
                     time: reservation.time,
@@ -3306,73 +3063,73 @@ function showMessage(message, type = 'info') {
 
 
         // 予約を編集
-        function editReservation() {
-            if (!currentReservation) {
-                showMessage('編集する予約が見つかりませんでした。', 'error');
-                return;
-            }
-            
-            console.log('✏️ Editing reservation:', currentReservation);
-            
-            // 編集モードフラグを設定
-            isEditingReservation = true;
-            
-            // 予約データを保存（モーダルを閉じる前に）
-            reservationToEdit = { ...currentReservation };
-            
-            // 予約の実際の日付を特定（reservationsオブジェクトから該当する日付キーを探す）
-            let actualReservationDate = null;
-            let foundDateKey = null;
-            
-            // すべての日付キーをチェックして該当する予約を探す
-            for (const dateKey of Object.keys(reservations)) {
-                const dayReservations = reservations[dateKey];
-                const foundReservation = dayReservations.find(r => r.id === currentReservation.id);
-                
-                if (foundReservation) {
-                    foundDateKey = dateKey;
-                    // 日付キーから実際の日付を計算
-                    const [year, month, day] = dateKey.split('-').map(Number);
-                    const [hours, minutes] = currentReservation.time.split(':').map(Number);
-                    actualReservationDate = new Date(year, month - 1, day, hours, minutes, 0, 0);
-                    break;
-                }
-            }
-            
-            // 見つからない場合はcreatedAtから計算（フォールバック）
-            if (!actualReservationDate) {
-                console.warn('⚠️ Could not find reservation in date keys, using createdAt as fallback');
-                actualReservationDate = new Date(reservationToEdit.createdAt);
-                const [hours, minutes] = reservationToEdit.time.split(':').map(Number);
-                actualReservationDate.setHours(hours, minutes, 0, 0);
-            }
-            
-            console.log('📅 Actual reservation date:', actualReservationDate, 'from date key:', foundDateKey);
-            
-            // 予約詳細モーダルを閉じる
-            closeReservationDetailModal();
-            
-            // 予約編集モーダルを開く
-            openBookingModal(actualReservationDate, reservationToEdit.time);
-            
-            // フォームフィールドを既存の予約データで埋める（モーダルが開いた後に実行）
-            setTimeout(() => {
-                const customerNameField = document.getElementById('customerName');
-                const customerPhoneField = document.getElementById('customerPhone');
-                const customerEmailField = document.getElementById('customerEmail');
-                const bookingDurationField = document.getElementById('bookingDuration');
-                const bookingNoteField = document.getElementById('bookingNote');
-                const bookingStatusField = document.getElementById('bookingStatus');
-                
-                if (customerNameField) customerNameField.value = reservationToEdit.customer;
-                if (customerPhoneField) customerPhoneField.value = reservationToEdit.phone;
-                if (customerEmailField) customerEmailField.value = reservationToEdit.email;
-                if (bookingDurationField) bookingDurationField.value = reservationToEdit.duration;
-                if (bookingNoteField) bookingNoteField.value = reservationToEdit.note;
-                if (bookingStatusField) bookingStatusField.value = reservationToEdit.status;
-            }, 200);
-            
-            showMessage('予約を編集できます。', 'info');
+        function editReservation(reservationId, dateKey) {
+          setCurrentReservationById(reservationId, dateKey);
+          if (!currentReservation) {
+            showMessage('編集する予約が見つかりませんでした。', 'error');
+            return;
+          }
+          console.log('✏️ Editing reservation:', currentReservation);
+          
+          // 編集モードフラグを設定
+          isEditingReservation = true;
+          
+          // 予約データを保存（モーダルを閉じる前に）
+          reservationToEdit = { ...currentReservation };
+          
+          // 予約の実際の日付を特定（reservationsオブジェクトから該当する日付キーを探す）
+          let actualReservationDate = null;
+          let foundDateKey = null;
+          
+          // すべての日付キーをチェックして該当する予約を探す
+          for (const dateKey of Object.keys(reservations)) {
+              const dayReservations = reservations[dateKey];
+              const foundReservation = dayReservations.find(r => r.id === currentReservation.id);
+              
+              if (foundReservation) {
+                  foundDateKey = dateKey;
+                  // 日付キーから実際の日付を計算
+                  const [year, month, day] = dateKey.split('-').map(Number);
+                  const [hours, minutes] = currentReservation.time.split(':').map(Number);
+                  actualReservationDate = new Date(year, month - 1, day, hours, minutes, 0, 0);
+                  break;
+              }
+          }
+          
+          // 見つからない場合はcreatedAtから計算（フォールバック）
+          if (!actualReservationDate) {
+              console.warn('⚠️ Could not find reservation in date keys, using createdAt as fallback');
+              actualReservationDate = new Date(reservationToEdit.createdAt);
+              const [hours, minutes] = reservationToEdit.time.split(':').map(Number);
+              actualReservationDate.setHours(hours, minutes, 0, 0);
+          }
+          
+          console.log('📅 Actual reservation date:', actualReservationDate, 'from date key:', foundDateKey);
+          
+          // 予約詳細モーダルを閉じる
+          closeReservationDetailModal();
+          
+          // 予約編集モーダルを開く
+          openBookingModal(actualReservationDate, reservationToEdit.time);
+          
+          // フォームフィールドを既存の予約データで埋める（モーダルが開いた後に実行）
+          setTimeout(() => {
+              const customerNameField = document.getElementById('customerName');
+              const customerPhoneField = document.getElementById('customerPhone');
+              const customerEmailField = document.getElementById('customerEmail');
+              const bookingDurationField = document.getElementById('bookingDuration');
+              const bookingNoteField = document.getElementById('bookingNote');
+              const bookingStatusField = document.getElementById('bookingStatus');
+              
+              if (customerNameField) customerNameField.value = reservationToEdit.customer;
+              if (customerPhoneField) customerPhoneField.value = reservationToEdit.phone;
+              if (customerEmailField) customerEmailField.value = reservationToEdit.email;
+              if (bookingDurationField) bookingDurationField.value = reservationToEdit.duration;
+              if (bookingNoteField) bookingNoteField.value = reservationToEdit.note;
+              if (bookingStatusField) bookingStatusField.value = reservationToEdit.status;
+          }, 200);
+          
+          showMessage('予約を編集できます。', 'info');
         }
 
         // 予約を削除
@@ -4611,20 +4368,98 @@ function showMessage(message, type = 'info') {
             setupUserSearch();
         });
 
-        // ... existing code ...
-  523|        function updateIntervalOnChange() {
-  524|            // Fallback: ensure currentReservation.date is set
-  525|            if (currentReservation && !currentReservation.date) {
-  526|                for (const dateKey of Object.keys(reservations)) {
-  527|                    const dayReservations = reservations[dateKey];
-  528|                    if (dayReservations.find(r => r.id === currentReservation.id)) {
-  529|                        currentReservation.date = dateKey;
-  530|                        console.log('🟩 [DEBUG] Fallback set currentReservation.date:', dateKey);
-  531|                        break;
-  532|                    }
-  533|                }
-  534|            }
-// ... existing code ...
-</script> 
-</body>
-</html> 
+        // Add this helper near the top of the file (or before validateReservationTimeWithinBusinessHours)
+        function parseLocalDate(dateStr) {
+          const [year, month, day] = dateStr.split('-').map(Number);
+          return new Date(year, month - 1, day);
+        }
+
+        if (currentReservation) {
+          if (!currentReservation.date) {
+            if (currentReservation.dateKey) {
+              currentReservation.date = currentReservation.dateKey;
+            } else if (currentReservation.original && currentReservation.original.date) {
+              currentReservation.date = currentReservation.original.date;
+            } else if (currentReservation.latest && currentReservation.latest.date) {
+              currentReservation.date = currentReservation.latest.date;
+            } else if (typeof selectedDateKey !== 'undefined') {
+              currentReservation.date = selectedDateKey;
+            } else if (typeof currentDateKey !== 'undefined') {
+              currentReservation.date = currentDateKey;
+            } else if (currentReservation.id) {
+              // Fallback: look up in loaded reservations
+              for (const key in reservations) {
+                const found = reservations[key]?.find(r => r.id === currentReservation.id);
+                if (found && found.date) {
+                  currentReservation.date = found.date;
+                  break;
+                }
+              }
+            }
+          }
+          console.log('AFTER PATCH: currentReservation.date =', currentReservation.date);
+        }
+
+        // Helper to set currentReservation by id (and optional dateKey)
+        function setCurrentReservationById(reservationId, dateKey) {
+          let found = null;
+          if (dateKey && reservations[dateKey]) {
+            found = reservations[dateKey].find(r => r.id === reservationId);
+          }
+          if (!found) {
+            for (const key in reservations) {
+              const r = reservations[key]?.find(r => r.id === reservationId);
+              if (r) {
+                found = r;
+                break;
+              }
+            }
+          }
+          if (found) {
+            currentReservation = found;
+            console.log('setCurrentReservationById: found reservation with date', currentReservation.date);
+          } else {
+            console.warn('setCurrentReservationById: reservation not found for id', reservationId);
+          }
+        }
+
+        // Example usage: Replace any direct assignment to currentReservation when opening the edit modal or starting to edit a reservation with:
+        // setCurrentReservationById(reservationId, dateKey);
+
+        // Normalize reservation object to ensure start_time is always set
+        function normalizeReservation(reservation) {
+            if (!reservation.start_time && reservation.reservationDate) {
+                reservation.start_time = reservation.reservationDate;
+                console.log('🛠️ Normalized reservation.start_time from reservationDate:', reservation.start_time);
+            }
+            // Always set reservation.date if missing
+            if (!reservation.date && (reservation.start_time || reservation.reservationDate)) {
+                const dateObj = new Date(reservation.start_time || reservation.reservationDate);
+                // Format as YYYY-MM-DD in local time
+                const yyyy = dateObj.getFullYear();
+                const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const dd = String(dateObj.getDate()).padStart(2, '0');
+                reservation.date = `${yyyy}-${mm}-${dd}`;
+                console.log('🛠️ Normalized reservation.date from start_time/reservationDate:', reservation.date);
+            }
+            return reservation;
+        }
+
+        // Example usage: when loading or processing reservations
+        // Wherever reservations are loaded from backend or processed, call normalizeReservation(reservation)
+        // For example, in loadReservationsFromBackend or similar functions:
+        // reservations.forEach(normalizeReservation);
+
+        // Helper to get correct day of week for reservation (local time)
+        function getReservationDayOfWeek(reservation) {
+            if (reservation.date) {
+                // Parse as local date
+                const [year, month, day] = reservation.date.split('-').map(Number);
+                const date = new Date(year, month - 1, day);
+                return date.getDay();
+            }
+            const dateStr = reservation.start_time || reservation.reservationDate;
+            if (!dateStr) return undefined;
+            const date = new Date(dateStr);
+            return date.getDay();
+        }
