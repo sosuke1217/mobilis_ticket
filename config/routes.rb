@@ -24,6 +24,8 @@ Rails.application.routes.draw do
         delete 'delete_reservation'
         get 'search_users'
         patch 'update_reservation_status'
+        get 'test_api'
+        get 'by_day_of_week'
       end
       member do
         patch 'update_booking'
@@ -92,6 +94,9 @@ Rails.application.routes.draw do
   # PWA
   get 'manifest.json', to: 'pwa#manifest'
   get 'service-worker.js', to: 'pwa#service_worker'
+  
+  # Test controller for debugging  
+  get '/admin/test/by_day_of_week', to: 'admin/test#by_day_of_week'
   
   # Devise
   devise_for :admin_users

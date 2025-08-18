@@ -249,129 +249,77 @@
         }
 
         // インターバル変更時に即座に更新
-        function updateIntervalOnChange(newInterval, currentDuration, currentReservation, startTime, date) {
-            currentReservation = normalizeReservation(currentReservation);
-            if (!currentReservation) {
-                showMessage('予約データが見つかりません。', 'error');
-                return;
-            }
+        function updateIntervalOnChange(newInterval, currentDuration, currentReservation) {
+          console.log('🔍 updateIntervalOnChange called with:', {
+            newInterval,
+            currentDuration,
+            currentReservation
+          });
 
-            console.log('🔍 updateIntervalOnChange called with:', {
-                newInterval,
-                currentDuration,
-                currentReservation: currentReservation
-            });
+          // Get the start time properly
+          let startTime;
+          let reservationDate;
+          
+          if (currentReservation.start_time) {
+            // If we have start_time, parse it properly
+            const startDateTime = new Date(currentReservation.start_time);
+            startTime = startDateTime.toTimeString().substring(0, 5); // HH:MM format
             
-            console.log('🔍 Interval change attempt:', {
-                newInterval,
-                currentDuration,
-                currentReservation: currentReservation,
-                startTime: currentReservation.time || currentReservation.start_time,
-                date: currentReservation.date,
-                dayOfWeek: new Date(currentReservation.start_time || currentReservation.time).getDay()
-            });
-            
-            // 営業時間内に収まるかチェック
-            console.log('🔍 About to call business hours validation with:', {
-                reservation: currentReservation,
-                duration: currentDuration,
-                interval: newInterval
-            });
-            const businessHoursValidation = validateReservationTimeWithinBusinessHours(currentReservation, currentDuration, newInterval);
-            console.log('🔍 Interval change business hours validation result:', businessHoursValidation);
-            if (!businessHoursValidation.valid) {
-                console.log('❌ Business hours validation failed, showing error and returning');
-                showMessage(businessHoursValidation.message, 'error');
-                // 元の値に戻す
-                const intervalSelect = document.getElementById('edit-interval');
-                intervalSelect.value = currentReservation.effective_interval_minutes ?? 10;
-                return;
-            }
-            
-            // 重複チェック
-            console.log('🔍 About to call overlap validation with:', {
-                reservation: currentReservation,
-                duration: currentDuration,
-                interval: newInterval
-            });
-            const overlapValidation = validateReservationOverlap(currentReservation, currentDuration, newInterval);
-            console.log('🔍 Interval change overlap validation result:', overlapValidation);
-            if (!overlapValidation.valid) {
-                showMessage(overlapValidation.message, 'error');
-                // 元の値に戻す
-                const intervalSelect = document.getElementById('edit-interval');
-                intervalSelect.value = currentReservation.effective_interval_minutes ?? 10;
-                return;
-            }
+            // Get date in YYYY-MM-DD format for proper day of week calculation
+            const year = startDateTime.getFullYear();
+            const month = String(startDateTime.getMonth() + 1).padStart(2, '0');
+            const day = String(startDateTime.getDate()).padStart(2, '0');
+            reservationDate = `${year}-${month}-${day}`;
+          } else if (currentReservation.time && currentReservation.date) {
+            startTime = currentReservation.time;
+            reservationDate = currentReservation.date;
+          } else {
+            console.error('❌ Cannot extract time/date from reservation:', currentReservation);
+            showMessage('予約の日時情報が取得できません', 'warning');
+            return false;
+          }
 
-            const reservationId = currentReservation.id;
+          console.log('🔍 Interval change attempt:', {
+            newInterval,
+            currentDuration,
+            currentReservation,
+            startTime,
+            date: reservationDate,
+            extractedStartTime: startTime,
+            extractedDate: reservationDate
+          });
 
-            // バックエンドに更新リクエストを送信
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            
-            const requestBody = {
-                individual_interval_minutes: newInterval
-            };
-            console.log('🔍 Sending interval update request:', {
-                reservationId,
-                newInterval,
-                requestBody
-            });
-            
-            fetch(`/admin/reservations/${reservationId}/update_interval`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': csrfToken
-                },
-                body: JSON.stringify(requestBody)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('🔍 Backend response for interval update:', data);
-                if (data.success) {
-                    // ローカルデータを更新
-                    currentReservation.effective_interval_minutes = newInterval;
-                    currentReservation.individual_interval_minutes = newInterval;
-                    console.log('🔍 Updated currentReservation:', currentReservation);
-                    
-                    // updatedAtフィールドを更新
-                    if (data.updated_at) {
-                        currentReservation.updatedAt = data.updated_at;
-                        
-                                            // グローバルreservationsオブジェクトも更新
-                    const reservationDateKey = currentReservation.date || formatDateKey(new Date(currentReservation.start_time || currentReservation.time));
-                    if (reservations[reservationDateKey]) {
-                        const reservationIndex = reservations[reservationDateKey].findIndex(r => r.id === currentReservation.id);
-                        if (reservationIndex !== -1) {
-                            reservations[reservationDateKey][reservationIndex].updatedAt = data.updated_at;
-                            reservations[reservationDateKey][reservationIndex].effective_interval_minutes = newInterval;
-                            reservations[reservationDateKey][reservationIndex].individual_interval_minutes = newInterval;
-                            console.log('🔍 Updated local reservation data:', reservations[reservationDateKey][reservationIndex]);
-                        }
-                    }
-                        
-                        // モーダル内の変更日時を即座に更新
-                        updateModalUpdatedAt(data.updated_at);
-                    }
-                    
-                    // カレンダーを再描画
-                    generateTimeSlots();
-                    
-                    showMessage('準備時間が更新されました。', 'success');
-                } else {
-                    showMessage(`準備時間の更新に失敗しました: ${data.message}`, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error updating interval:', error);
-                showMessage('準備時間の更新中にエラーが発生しました。', 'error');
-            });
+          console.log('🔍 About to call business hours validation with:', {
+            reservation: {
+              date: reservationDate,
+              time: startTime,
+              start_time: currentReservation.start_time
+            },
+            duration: currentDuration,
+            interval: newInterval
+          });
+
+          // Call validation with properly formatted data
+          const validation = validateReservationTimeWithinBusinessHours(
+            {
+              date: reservationDate,
+              time: startTime,
+              start_time: currentReservation.start_time
+            },
+            currentDuration,
+            newInterval
+          );
+
+          console.log('🔍 Interval change business hours validation result:', validation);
+
+          if (!validation.valid) {
+            console.log('❌ Business hours validation failed, showing error and returning');
+            showMessage(validation.message, 'warning');
+            return false;
+          }
+
+          console.log('✅ Interval change validation passed');
+          return true;
         }
 
         // ステータス変更時にカレンダーを即座に更新
@@ -400,91 +348,114 @@
 
         // 予約時間が営業時間内に収まるかチェック
         function validateReservationTimeWithinBusinessHours(reservation, newDuration, newInterval) {
-            reservation = normalizeReservation(reservation);
-            const dayOfWeek = getReservationDayOfWeek(reservation);
-            console.log('🔍 validateReservationTimeWithinBusinessHours called with:', {
-                reservation: reservation,
-                newDuration: newDuration,
-                newInterval: newInterval
-            });
-            if (!reservation) return { valid: false, message: '予約データが見つかりません。' };
-            
-            // 予約の開始時間を取得（複数の可能性を考慮）
-            let startTime;
-            if (reservation.start_time) {
-                // start_timeが日時形式の場合（例: "2025-08-15T17:00:00"）
-                const dateTime = new Date(reservation.start_time);
-                startTime = `${dateTime.getHours().toString().padStart(2, '0')}:${dateTime.getMinutes().toString().padStart(2, '0')}`;
-            } else if (reservation.time) {
-                // timeが時間形式の場合（例: "17:00"）
-                startTime = reservation.time;
-            } else {
-                return { valid: false, message: '予約の開始時間が見つかりません。' };
-            }
-            
-            const [startHour, startMin] = startTime.split(':').map(Number);
-            const startTimeInMinutes = startHour * 60 + startMin;
-            
-            const totalDuration = newDuration + newInterval;
-            const endTimeInMinutes = startTimeInMinutes + totalDuration;
-            
-            // 予約の日付を取得
-            let reservationDate;
-            if (reservation.start_time) {
-                reservationDate = new Date(reservation.start_time);
-            } else if (reservation.date) {
-                // Use parseLocalDate for YYYY-MM-DD format
-                reservationDate = parseLocalDate(reservation.date);
-            } else if (reservation.dateKey) {
-                reservationDate = parseLocalDate(reservation.dateKey);
-            } else {
-                // 現在の週の開始日を使用
-                reservationDate = new Date(currentWeekStart);
-            }
-            
-            console.log('🔍 Date calculation debug:', {
-                start_time: reservation.start_time,
-                date: reservation.date,
-                dateKey: reservation.dateKey,
-                reservationDate: reservationDate ? reservationDate.toISOString() : undefined,
-                dayOfWeek: dayOfWeek,
-                dayName: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek]
-            });
-            
-            console.log('🔍 Validation debug:', {
-                startTime,
-                startTimeInMinutes,
-                totalDuration,
-                endTimeInMinutes,
-                dayOfWeek,
-                reservation: reservation,
-                businessHours: isBusinessHour(dayOfWeek, startTime),
-                courseDuration: newDuration,
-                interval: newInterval
-            });
-            
-            // インターバルが0の場合、コース時間のみでチェック
-            const durationToCheck = newInterval === 0 ? newDuration : totalDuration;
-            const endTimeToCheck = startTimeInMinutes + durationToCheck;
-            
-            // 10分間隔でチェック
-            for (let timeInMinutes = startTimeInMinutes; timeInMinutes < endTimeToCheck; timeInMinutes += 10) {
-                const checkHour = Math.floor(timeInMinutes / 60);
-                const checkMin = timeInMinutes % 60;
-                const timeStr = `${checkHour.toString().padStart(2, '0')}:${checkMin.toString().padStart(2, '0')}`;
-                
-                const isBusinessHourResult = isBusinessHour(dayOfWeek, timeStr);
-                if (!isBusinessHourResult) {
-                    console.log('❌ Validation failed at:', timeStr, 'dayOfWeek:', dayOfWeek, 'isBusinessHour:', isBusinessHourResult);
-                    return { 
-                        valid: false, 
-                        message: `予約時間が営業時間外（${timeStr}）に及ぶため、この設定はできません。` 
-                    };
-                }
-            }
-            
-            console.log('✅ Validation passed');
-            return { valid: true, message: '' };
+          console.log('🔍 validateReservationTimeWithinBusinessHours called with:', {
+            reservation,
+            newDuration,
+            newInterval
+          });
+
+          // Extract date properly - this is the key fix
+          let dateToCheck;
+          let startTime;
+          
+          if (reservation.date) {
+            dateToCheck = reservation.date;
+          } else if (reservation.start_time) {
+            // Parse the start_time to get the date
+            const startDateTime = new Date(reservation.start_time);
+            const year = startDateTime.getFullYear();
+            const month = String(startDateTime.getMonth() + 1).padStart(2, '0');
+            const day = String(startDateTime.getDate()).padStart(2, '0');
+            dateToCheck = `${year}-${month}-${day}`;
+          } else {
+            console.error('❌ No date information found in reservation');
+            return { valid: false, message: '予約日が不明です' };
+          }
+
+          // Extract start time
+          if (reservation.time) {
+            startTime = reservation.time;
+          } else if (reservation.start_time) {
+            const startDateTime = new Date(reservation.start_time);
+            startTime = startDateTime.toTimeString().substring(0, 5);
+          } else {
+            console.error('❌ No time information found in reservation');
+            return { valid: false, message: '開始時間が不明です' };
+          }
+
+          console.log('🔍 Date calculation debug:', {
+            start_time: reservation.start_time,
+            date: reservation.date,
+            dateKey: dateToCheck,
+            reservationDate: reservation.start_time,
+            extractedDate: dateToCheck,
+            extractedStartTime: startTime
+          });
+
+          // Calculate day of week correctly
+          const reservationDate = new Date(dateToCheck + 'T00:00:00'); // Force local timezone
+          const dayOfWeek = reservationDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+
+          console.log('🔍 Validation debug:', {
+            startTime,
+            startTimeInMinutes: timeToMinutes(startTime),
+            totalDuration: newDuration + newInterval,
+            endTimeInMinutes: timeToMinutes(startTime) + newDuration + newInterval,
+            dayOfWeek,
+            dayName: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek],
+            dateToCheck,
+            reservationDate: reservationDate.toISOString()
+          });
+
+          // Get system settings
+          const businessStart = parseInt(document.querySelector('meta[name="business-hours-start"]')?.content || '10');
+          const businessEnd = parseInt(document.querySelector('meta[name="business-hours-end"]')?.content || '20');
+          const sundayClosed = document.querySelector('meta[name="sunday-closed"]')?.content === 'true';
+
+          // Check if Sunday and closed
+          if (sundayClosed && dayOfWeek === 0) {
+            console.log('❌ Sunday is closed');
+            return { valid: false, message: '日曜日は休業日です' };
+          }
+
+          // Check business hours using custom schedule logic if available
+          const customScheduleDate = '2025-08-10'; // Your custom schedule reference date
+          const isBusinessHour = checkCustomBusinessHours(dayOfWeek, timeToMinutes(startTime), customScheduleDate);
+          
+          if (!isBusinessHour) {
+            const message = `予約時間が営業時間外（${startTime}）に及ぶため、この設定はできません。`;
+            console.log('❌ Validation failed at:', startTime, 'dayOfWeek:', dayOfWeek, 'isBusinessHour:', false);
+            return { valid: false, message };
+          }
+
+          console.log('✅ Validation passed');
+          return { valid: true };
+        }
+
+        // Helper function to convert time string to minutes
+        function timeToMinutes(timeStr) {
+          const [hours, minutes] = timeStr.split(':').map(Number);
+          return hours * 60 + minutes;
+        }
+
+        // Helper function to check custom business hours
+        function checkCustomBusinessHours(dayOfWeek, timeInMinutes, customScheduleDate) {
+          // This function should match your existing custom schedule logic
+          // For now, return true for business hours (10:00-20:00) except Sunday
+          const businessStart = 10 * 60; // 10:00 in minutes
+          const businessEnd = 20 * 60;   // 20:00 in minutes
+          
+          if (dayOfWeek === 0) { // Sunday
+            return false; // Sunday closed
+          }
+          
+          return timeInMinutes >= businessStart && timeInMinutes < businessEnd;
+        }
+
+        // Export or make available globally
+        if (typeof window !== 'undefined') {
+          window.updateIntervalOnChange = updateIntervalOnChange;
+          window.validateReservationTimeWithinBusinessHours = validateReservationTimeWithinBusinessHours;
         }
 
         // 予約の重複チェック

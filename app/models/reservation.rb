@@ -234,7 +234,7 @@ class Reservation < ApplicationRecord
 
   # この予約で使用するインターバル時間を取得
   def effective_interval_minutes
-    individual_interval_minutes || ApplicationSetting.current.reservation_interval_minutes
+    individual_interval_minutes.nil? ? ApplicationSetting.current.reservation_interval_minutes : individual_interval_minutes
   end
 
   # 個別設定があるかどうか

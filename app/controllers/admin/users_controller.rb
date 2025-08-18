@@ -147,31 +147,13 @@ class Admin::UsersController < ApplicationController
   def history
     respond_to do |format|
       format.json do
-        # 予約履歴
-        reservations = Reservation.where(user: @user)
-          .order(start_time: :desc)
-          .limit(20)
-        
-        # 回数券使用履歴
+        # 回数券使用履歴のみ
         ticket_usages = TicketUsage.where(user: @user)
           .includes(:ticket, :reservation)
           .order(created_at: :desc)
           .limit(20)
         
         history_data = []
-        
-        # 予約履歴を追加
-        reservations.each do |reservation|
-          history_data << {
-            type: 'reservation',
-            date: reservation.start_time.strftime('%Y-%m-%d'),
-            time: reservation.start_time.strftime('%H:%M'),
-            status: reservation.status,
-            course: reservation.course,
-            staff: reservation.user&.name || '未設定',
-            note: reservation.note
-          }
-        end
         
         # 回数券使用履歴を追加
         ticket_usages.each do |usage|
@@ -189,7 +171,13 @@ class Admin::UsersController < ApplicationController
         # 日時でソート
         history_data.sort_by! { |h| [h[:date], h[:time]] }.reverse!
         
-        render json: history_data
+        # 最大10件に制限
+        limited_history = history_data.take(10)
+        
+        render json: {
+          success: true,
+          usages: limited_history
+        }
       end
     end
   end
