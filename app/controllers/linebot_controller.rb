@@ -1579,5 +1579,4 @@ class LinebotController < ApplicationController
 
     send_reply(reply_token, message)
   end
-
 end
