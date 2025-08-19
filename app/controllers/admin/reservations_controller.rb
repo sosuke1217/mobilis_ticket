@@ -285,6 +285,8 @@ class Admin::ReservationsController < ApplicationController
         reservations_data[date_key] << {
           id: reservation.id,
           time: reservation.start_time.strftime('%H:%M'),
+          start_time: reservation.start_time.iso8601, # Add start_time for validation
+          date: reservation.start_time.strftime('%Y-%m-%d'), # Add date for validation
           duration: extract_course_duration(reservation.course),
           customer: reservation.name || reservation.user&.name || '未設定',
           phone: reservation.user&.phone_number || '',
@@ -396,6 +398,9 @@ class Admin::ReservationsController < ApplicationController
     begin
       reservation_id = params[:reservation_id]
       @reservation = Reservation.find(reservation_id)
+      
+      # 削除前にキャンセル通知を送信
+      send_cancellation_notifications_before_delete(@reservation)
       
       if @reservation.destroy
         Rails.logger.info "✅ Reservation #{reservation_id} deleted successfully"
@@ -552,6 +557,8 @@ class Admin::ReservationsController < ApplicationController
         reservations_by_date[date_key] << {
           id: reservation.id,
           time: reservation.start_time.strftime('%H:%M'),
+          start_time: reservation.start_time.iso8601, # Add start_time for validation
+          date: reservation.start_time.strftime('%Y-%m-%d'), # Add date for validation
           duration: reservation.get_duration_minutes,
           customer: reservation.name || reservation.user&.name || '未設定',
           phone: reservation.user&.phone_number || '',
@@ -1155,9 +1162,12 @@ class Admin::ReservationsController < ApplicationController
   end
 
   def destroy
+    # 削除前にキャンセル通知を送信
+    send_cancellation_notifications_before_delete(@reservation)
+    
     @reservation.destroy
       
-      respond_to do |format|
+    respond_to do |format|
       format.html { redirect_to calendar_admin_reservations_path, notice: '予約を削除しました' }
       format.json { render json: { success: true } }
     end
@@ -1209,6 +1219,33 @@ class Admin::ReservationsController < ApplicationController
 
   def set_reservation
     @reservation = Reservation.find(params[:id])
+  end
+  
+  # 削除前にキャンセル通知を送信
+  def send_cancellation_notifications_before_delete(reservation)
+    Rails.logger.info "📧 Sending cancellation notifications before delete for reservation #{reservation.id}"
+    
+    begin
+      # 削除前にcancelled_atを設定（通知用）
+      reservation.update_column(:cancelled_at, Time.current) unless reservation.cancelled_at.present?
+      
+      # メール通知
+      if reservation.user&.email.present?
+        ReservationMailer.cancellation_notification(reservation).deliver_now
+        Rails.logger.info "✅ Cancellation email sent to: #{reservation.user.email}"
+      end
+      
+      # LINE通知
+      if reservation.user&.line_user_id.present?
+        LineBookingNotifier.send_cancellation_notification(reservation)
+        Rails.logger.info "✅ LINE cancellation notification sent to: #{reservation.user.line_user_id}"
+      end
+      
+      Rails.logger.info "📧 Cancellation notifications completed for reservation #{reservation.id}"
+    rescue => e
+      Rails.logger.error "❌ Error sending cancellation notifications: #{e.message}"
+      # 通知エラーでも削除処理は続行
+    end
   end
 
   def reservation_params
