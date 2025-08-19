@@ -725,14 +725,17 @@ class Admin::ReservationsController < ApplicationController
       end
       
       # バリデーション設定（休憩の場合は営業時間と重複をチェック）
+      Rails.logger.info "🔍 Setting validation flags for reservation #{@reservation.id}"
+      Rails.logger.info "🔍 Reservation is_break: #{@reservation.is_break?}"
+      
       if @reservation.is_break?
-        # 休憩の場合は営業時間と重複をチェック
+        # 要望に合わせて、通常予約と同様に管理者用の制限をスキップ
+        @reservation.skip_business_hours_validation = true
         @reservation.skip_advance_booking_validation = true
         @reservation.skip_advance_notice_validation = true
-        @reservation.skip_time_validation = false
-        @reservation.skip_business_hours_validation = false
-        @reservation.skip_overlap_validation = false
-        Rails.logger.info "🔄 Break validation enabled for reservation #{@reservation.id}"
+        @reservation.skip_time_validation = true
+        @reservation.skip_overlap_validation = true
+        Rails.logger.info "🔄 Break reservation will behave like regular: skipping admin validations"
       else
         # 通常予約の場合は管理者用の制限をスキップ
         @reservation.skip_business_hours_validation = true
@@ -740,16 +743,41 @@ class Admin::ReservationsController < ApplicationController
         @reservation.skip_advance_notice_validation = true
         @reservation.skip_time_validation = true
         @reservation.skip_overlap_validation = true
+        Rails.logger.info "🔄 Regular reservation validation flags: skip_time=#{@reservation.skip_time_validation}, skip_business_hours=#{@reservation.skip_business_hours_validation}, skip_overlap=#{@reservation.skip_overlap_validation}"
       end
+      
+      Rails.logger.info "🔍 Final validation flags: skip_time=#{@reservation.skip_time_validation}, skip_business_hours=#{@reservation.skip_business_hours_validation}, skip_overlap=#{@reservation.skip_overlap_validation}"
+      
+      # start_timeが更新される場合は、end_timeも再計算する必要がある
+      if reservation_attrs[:start_time].present?
+        Rails.logger.info "🔄 start_time update detected: #{reservation_attrs[:start_time]}"
+        Rails.logger.info "🔄 Current reservation course: #{@reservation.course}"
+        
+        # 既存のコース時間を使用してend_timeを計算
+        course_duration = extract_course_duration(@reservation.course)
+        new_start_time = Time.zone.parse(reservation_attrs[:start_time])
+        new_end_time = new_start_time + course_duration.minutes
+        
+        reservation_attrs[:end_time] = new_end_time
+        Rails.logger.info "🔄 Recalculated end_time: #{new_end_time} (course: #{course_duration}分)"
+        Rails.logger.info "🔄 Final reservation_attrs: #{reservation_attrs}"
+      else
+        Rails.logger.info "🔍 No start_time update, reservation_attrs: #{reservation_attrs}"
+      end
+      
+      Rails.logger.info "🔄 Attempting to update reservation with attributes: #{reservation_attrs}"
+      Rails.logger.info "🔄 Current reservation state: start_time=#{@reservation.start_time}, end_time=#{@reservation.end_time}, course=#{@reservation.course}"
       
       if @reservation.update(reservation_attrs)
         Rails.logger.info "✅ Reservation #{reservation_id} updated successfully"
+        Rails.logger.info "✅ Updated reservation state: start_time=#{@reservation.start_time}, end_time=#{@reservation.end_time}, course=#{@reservation.course}"
         render json: {
           success: true,
           message: '予約が更新されました',
           reservation: {
             id: @reservation.id,
             start_time: @reservation.start_time.iso8601,
+            end_time: @reservation.end_time.iso8601,
             course: @reservation.course,
             name: @reservation.name,
             note: @reservation.note,
@@ -765,6 +793,9 @@ class Admin::ReservationsController < ApplicationController
         }
       else
         Rails.logger.error "❌ Failed to update reservation: #{@reservation.errors.full_messages}"
+        Rails.logger.error "❌ Validation details: #{@reservation.errors.details}"
+        Rails.logger.error "❌ Reservation attributes: #{@reservation.attributes}"
+        Rails.logger.error "❌ Attempted attributes: #{reservation_attrs}"
         render json: {
           success: false,
           message: "予約の更新に失敗しました: #{@reservation.errors.full_messages.join(', ')}"
@@ -781,7 +812,7 @@ class Admin::ReservationsController < ApplicationController
       render json: {
         success: false,
         message: "予約の更新中にエラーが発生しました: #{e.message}"
-      }, status: :unprocessable_entity
+      }, status: :internal_server_error
     end
   end
 
@@ -1261,17 +1292,24 @@ class Admin::ReservationsController < ApplicationController
   end
 
   def extract_course_duration(course_string)
+    Rails.logger.info "🔍 extract_course_duration called: course_string='#{course_string}'"
+    
     return 60 unless course_string.present? # デフォルト
     
     case course_string.to_s.strip
-    when /40分/, '40分コース'
+    when "40分", "40分コース"
+      Rails.logger.info "🔍 Matched 40分 format"
       40
-    when /60分/, '60分コース'
+    when "60分", "60分コース"
+      Rails.logger.info "🔍 Matched 60分 format"
       60
-    when /80分/, '80分コース'
+    when "80分", "80分コース"
+      Rails.logger.info "🔍 Matched 80分 format"
       80
     when /(\d+)分/ # 数字+分の形式
-      $1.to_i
+      duration = $1.to_i
+      Rails.logger.info "🔍 Extracted duration from regex: #{duration} minutes"
+      duration
     else
       Rails.logger.warn "⚠️ Unknown course format: '#{course_string}', defaulting to 60 minutes"
       60

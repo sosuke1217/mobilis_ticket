@@ -18,7 +18,7 @@
                     <button class="nav-btn" onclick="nextWeek()">次週 →</button>
                 </div>
                 <div class="action-buttons">
-                    <button class="btn btn-orange" onclick="openBreakModalWithCurrentTime()">☕ 休憩作成</button>
+                    <button class="btn btn-primary" onclick="openBulkReservationModal()">📅 一括予約作成</button>
                 </div>
                 <div class="mini-calendar-container">
                     <button class="mini-calendar-btn" onclick="toggleMiniCalendar()">
@@ -105,24 +105,23 @@
                     
                     <div id="daySettings">
                         <!-- 曜日別設定が動的に生成される -->
-      </div>
-    </div>
+                    </div>
+                </div>
 
                 <!-- 定期的なスケジュールタブ -->
                 <div id="recurring-tab" class="tab-content">
                     <p style="margin-bottom: 20px; color: #666;">今後の週に適用するデフォルトスケジュールを設定</p>
-                    
                     <div id="recurringDaySettings">
                         <!-- 定期的な設定が動的に生成される -->
-        </div>
-        </div>
-        </div>
+                    </div>
+                </div>
+            </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeSettingsModal()">キャンセル</button>
                 <button class="btn btn-success" onclick="saveSettings()">完了</button>
-          </div>
+            </div>
         </div>
-        </div>
+    </div>
 
     <!-- 予約作成モーダル -->
     <div id="bookingModal" class="modal">
@@ -141,10 +140,9 @@
                     <div class="form-group mb-3">
                         <label for="bookingTime" class="form-label">開始時間</label>
                         <input type="text" id="bookingTime" class="form-control" readonly>
-      </div>
+                    </div>
                     
                     <!-- 予約モード用のフィールド -->
-                    
                     <div class="form-group mb-3">
                         <label for="bookingDuration" class="form-label">コース選択</label>
                         <select id="bookingDuration" class="form-select" required>
@@ -153,7 +151,7 @@
                             <option value="60">60分コース</option>
                             <option value="80">80分コース</option>
                         </select>
-    </div>
+                    </div>
                     
                     <div class="form-group mb-3">
                         <label for="customerName" class="form-label">お客様名</label>
@@ -172,14 +170,12 @@
                         <label for="customerEmail" class="form-label">メールアドレス</label>
                         <input type="email" id="customerEmail" class="form-control" placeholder="example@email.com">
                         </div>
-        </div>
+                    </div>
 
-                    
-                    
                     <div class="form-group mb-3">
                         <label for="bookingNote" class="form-label">備考</label>
                         <textarea id="bookingNote" class="form-control" rows="3" placeholder="ご要望やご質問があればご記入ください"></textarea>
-        </div>
+                    </div>
                     
                     <div class="form-group mb-3">
                         <label for="bookingStatus" class="form-label">予約ステータス</label>
@@ -187,15 +183,15 @@
                             <option value="tentative">仮予約</option>
                             <option value="confirmed">確定</option>
                         </select>
-        </div>
+                    </div>
                 </form>
-          </div>
+            </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeBookingModal()">キャンセル</button>
                 <button class="btn btn-success" id="submitBookingBtn" onclick="createBooking()">予約作成</button>
+            </div>
         </div>
-        </div>
-      </div>
+    </div>
 
     <!-- 休憩作成モーダル -->
     <div id="breakModal" class="break-modal">
@@ -313,11 +309,119 @@
                 <button type="button" class="break-detail-btn break-detail-btn-save" onclick="saveBreakChanges()">💾 保存</button>
                 <button type="button" class="break-detail-btn break-detail-btn-delete" onclick="deleteBreakReservation()">🗑️ 削除</button>
                 <button type="button" class="break-detail-btn break-detail-btn-cancel" onclick="closeBreakDetailModal()">キャンセル</button>
+            </div>
         </div>
-        </div>
-      </div>
+    </div>
 
-    <!-- 予約詳細モーダル -->
+    <!-- 一括予約作成モーダル -->
+    <div id="bulkReservationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📅 一括予約作成</h2>
+                <span class="close" onclick="closeBulkReservationModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="bulkReservationForm">
+                    <div class="form-group mb-3">
+                        <label for="bulkStartDate" class="form-label">開始日</label>
+                        <input type="date" id="bulkStartDate" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="bulkEndDate" class="form-label">終了日</label>
+                        <input type="date" id="bulkEndDate" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="bulkStartTime" class="form-label">開始時間</label>
+                        <input type="time" id="bulkStartTime" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="bulkDuration" class="form-label">コース選択</label>
+                        <select id="bulkDuration" class="form-select" required>
+                            <option value="">コースを選択してください</option>
+                            <option value="40">40分コース</option>
+                            <option value="60">60分コース</option>
+                            <option value="80">80分コース</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="bulkDaysOfWeek" class="form-label">対象曜日</label>
+                        <div class="checkbox-group" id="bulkDaysOfWeek">
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="bulkDay0" value="0" checked> 日
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="bulkDay1" value="1" checked> 月
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="bulkDay2" value="2" checked> 火
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="bulkDay3" value="3" checked> 水
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="bulkDay4" value="4" checked> 木
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="bulkDay5" value="5" checked> 金
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="bulkDay6" value="6" checked> 土
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="bulkCustomerName" class="form-label">お客様名</label>
+                        <div class="position-relative">
+                            <input type="text" id="bulkCustomerName" class="form-control" required placeholder="山田太郎" autocomplete="off">
+                            <div id="bulkUserSearchResults" class="user-search-results" style="display: none;"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="bulkCustomerPhone" class="form-label">電話番号</label>
+                        <input type="tel" id="bulkCustomerPhone" class="form-control" required placeholder="090-1234-5678">
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="bulkCustomerEmail" class="form-label">メールアドレス</label>
+                        <input type="email" id="bulkCustomerEmail" class="form-control" placeholder="example@email.com">
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="bulkNote" class="form-label">備考</label>
+                        <textarea id="bulkNote" class="form-control" rows="3" placeholder="ご要望やご質問があればご記入ください"></textarea>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="bulkStatus" class="form-label">予約ステータス</label>
+                        <select id="bulkStatus" class="form-select">
+                            <option value="tentative">仮予約</option>
+                            <option value="confirmed">確定</option>
+                        </select>
+                    </div>
+                    
+                    <div class="bulk-preview mb-3">
+                        <h4>作成予定の予約</h4>
+                        <div id="bulkPreviewList" class="bulk-preview-list">
+                            <!-- プレビューがここに表示されます -->
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeBulkReservationModal()">キャンセル</button>
+                <button class="btn btn-info" onclick="previewBulkReservations()">プレビュー</button>
+                <button class="btn btn-success" id="submitBulkBtn" onclick="createBulkReservations()" disabled>一括作成</button>
+            </div>
+        </div>
+    </div>
+
+     <!-- 予約詳細モーダル -->
     <div id="reservationDetailModal" class="modal">
         <div class="modal-content">
             <div class="modal-body" id="reservationDetailContent">
@@ -486,92 +590,7 @@
             }, 5000);
         }
 
-        // ユーザー検索結果表示関数
-        function displayUserSearchResultsForModal(users) {
-            console.log('🔍 displayUserSearchResultsForModal called with users:', users);
-            const resultsContainer = document.getElementById('userSelectionSearchResults');
-            
-            if (!users || users.length === 0) {
-                resultsContainer.innerHTML = '<div class="no-results">該当するお客様が見つかりません</div>';
-                resultsContainer.style.display = 'block';
-                return;
-            }
-            
-            const resultsHTML = users.map(user => `
-                <div class="user-result-item" onclick="selectUserForModal({userId: ${user.id}, name: '${user.name}', phone: '${user.phone_number}', email: '${user.email}'})">
-                    <div class="user-name">${user.name}</div>
-                    <div class="user-details">${user.phone_number} | ${user.email}</div>
-                </div>
-            `).join('');
-            
-            resultsContainer.innerHTML = resultsHTML;
-            resultsContainer.style.display = 'block';
-            console.log('🔍 Search results displayed:', users.length, 'users');
-        }
 
-        // ユーザー選択関数
-        function selectUserForModal(userData) {
-            console.log('🔍 selectUserForModal called with:', userData);
-            
-            // Set the global selectedUser that the existing saveUserSelection function expects
-            window.selectedUser = {
-                id: userData.userId,
-                name: userData.name,
-                phone_number: userData.phone,
-                email: userData.email
-            };
-            
-            console.log('✅ Set window.selectedUser:', window.selectedUser);
-            
-            // Hide search results and enable save button
-            hideUserSearchResults();
-            document.getElementById('saveUserBtn').disabled = false;
-        }
-
-        // ユーザー検索結果を隠す関数
-        function hideUserSearchResults() {
-            console.log('🔍 hideUserSearchResults called');
-            const resultsContainer = document.getElementById('userSelectionSearchResults');
-            resultsContainer.style.display = 'none';
-            resultsContainer.innerHTML = '';
-            console.log('🔍 Search results hidden and cleared');
-        }
-
-        function handleUserSearch(query) {
-            console.log('🔍 handleUserSearch called with query:', query);
-            
-            if (query.length < 2) {
-                console.log('🔍 Query too short, hiding results');
-                hideUserSearchResults();
-                return;
-            }
-            
-            console.log('🔍 Setting timeout for search');
-            clearTimeout(window.searchTimeout);
-            window.searchTimeout = setTimeout(() => {
-                console.log('🔍 Calling searchUsersForModal with:', query);
-                searchUsersForModal(query);
-            }, 300);
-        }
-
-        function searchUsersForModal(query) {
-            console.log('🔍 searchUsersForModal called with query:', query);
-            
-            fetch(`/admin/users/search?q=${encodeURIComponent(query)}`)
-                .then(response => {
-                    console.log('🔍 Search response status:', response.status);
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('🔍 Search response data:', data);
-                    if (data.success) {
-                        displayUserSearchResultsForModal(data.users);
-                    }
-                })
-                .catch(error => {
-                    console.error('❌ Search error:', error);
-                });
-        }
 
         // 予約変更を保存
         function saveReservationChanges(event) {
@@ -589,11 +608,7 @@
             const statusSelect = document.getElementById('edit-status');
             const noteTextarea = document.getElementById('edit-note');
             
-            console.log('📝 Form elements found:', {
-                courseSelect: courseSelect ? 'found' : 'not found',
-                statusSelect: statusSelect ? 'found' : 'not found',
-                noteTextarea: noteTextarea ? 'found' : 'not found'
-            });
+
             
             const newCourse = courseSelect ? courseSelect.value : `${currentReservation.duration}分`;
             const newDuration = extractDurationFromCourse(newCourse);
@@ -603,12 +618,11 @@
             let reservationDate = currentReservation.date;
             if (!reservationDate) {
                 // Fallback: search reservations object for this reservation's date
-                console.log('🔍 Save validation fallback: searching reservations object for reservation ID:', currentReservation.id);
                 for (const [dateKey, dayReservations] of Object.entries(reservations)) {
                     const foundReservation = dayReservations.find(r => r.id === currentReservation.id);
                     if (foundReservation) {
                         reservationDate = dateKey;
-                        console.log('🟩 Found reservation date in save validation fallback:', reservationDate);
+
                         break;
                     }
                 }
@@ -620,7 +634,7 @@
                 time: currentReservation.time || currentReservation.startTime
             };
             
-            console.log('🔍 Save validation reservation object:', validationReservation);
+
             
             const businessHoursValidation = validateReservationTimeWithinBusinessHours(validationReservation, newDuration, currentInterval);
             if (!businessHoursValidation.valid) {
@@ -682,8 +696,7 @@
                 if (data.success) {
                     // ローカルデータを更新
                     const reservationData = data.reservation;
-                    console.log('🔍 Backend response - reservationData.note:', reservationData.note);
-                    console.log('🔍 reservationForUpdates before update:', reservationForUpdates);
+
                     
                     const updatedReservation = {
                         ...reservationForUpdates,
@@ -697,7 +710,7 @@
                         userId: window.currentUserId || reservationForUpdates.userId // 新しいユーザーIDを設定
                     };
                     
-                    console.log('🔍 updatedReservation.note after construction:', updatedReservation.note);
+
                     
                     // グローバルreservationsオブジェクトを更新
                     // Fix date key calculation - use the date field directly if available
@@ -717,48 +730,30 @@
                     }
                     
                     const reservationDateKey = reservationDate ? formatDateKey(reservationDate) : null;
-                    console.log('🔍 Global update debug:', {
-                        reservationId: reservationId,
-                        reservationForUpdates_date: reservationForUpdates.date,
-                        reservationForUpdates_start_time: reservationForUpdates.start_time,
-                        reservationForUpdates_time: reservationForUpdates.time,
-                        calculatedDate: reservationDate,
-                        reservationDateKey: reservationDateKey,
-                        hasDateKey: reservations[reservationDateKey] ? 'yes' : 'no',
-                        availableKeys: Object.keys(reservations)
-                    });
+
                     
                     if (reservations[reservationDateKey]) {
                         const reservationIndex = reservations[reservationDateKey].findIndex(r => r.id === reservationId);
-                        console.log('🔍 Looking for reservation index:', reservationIndex, 'in array of length:', reservations[reservationDateKey].length);
+
                         if (reservationIndex !== -1) {
-                            console.log('🔄 BEFORE - Global reservation note:', reservations[reservationDateKey][reservationIndex].note);
                             reservations[reservationDateKey][reservationIndex] = updatedReservation;
-                            console.log('🔄 AFTER - Global reservation note:', reservations[reservationDateKey][reservationIndex].note);
-                        } else {
-                            console.log('❌ Reservation not found in global object!');
                         }
-                    } else {
-                        console.log('❌ Date key not found in global reservations object!');
-                    }
+
                     
                     // モーダル内の変更日時を更新
                     let updateTimestamp = reservationData.updated_at;
                     if (!updateTimestamp) {
                         // Backend doesn't provide updated_at, use current time
                         updateTimestamp = new Date().toISOString();
-                        console.log('🔍 Backend missing updated_at, using current time:', updateTimestamp);
+
                     }
-                    console.log('🔍 About to call updateModalUpdatedAt with:', updateTimestamp);
+
                     updateModalUpdatedAt(updateTimestamp);
                     
                     // モーダル内のメモフィールドを更新
                     const noteElement = document.getElementById('edit-note');
                     if (noteElement && reservationData.note !== undefined) {
-                        console.log('🔄 Before update - note element value:', noteElement.value);
-                        console.log('🔄 Setting note field to:', reservationData.note);
                         noteElement.value = reservationData.note || '';
-                        console.log('🔄 After update - note element value:', noteElement.value);
                         
                         // Force the textarea to reflect the new value
                         noteElement.defaultValue = reservationData.note || '';
@@ -768,23 +763,16 @@
                     }
                     
                     // ユーザーが変更された場合、モーダルのチケットと履歴を再読み込み
-                    console.log('🔍 User change check:', {
-                        windowCurrentUserId: window.currentUserId,
-                        originalUserId: originalUserId,
-                        updatedReservationCustomer: updatedReservation.customer,
-                        isUserChanged: window.currentUserId && window.currentUserId !== originalUserId
-                    });
+
                     
                     if (window.currentUserId && window.currentUserId !== originalUserId) {
-                        console.log('🔄 User changed, reloading modal data for new user:', window.currentUserId);
+
                         
                         // モーダルの顧客名を更新
                         const customerNameElement = document.querySelector('.customer-name-large');
-                        console.log('🔍 Customer name element found:', customerNameElement);
+
                         if (customerNameElement) {
-                            console.log('🔄 Updating customer name from:', customerNameElement.textContent, 'to:', updatedReservation.customer);
                             customerNameElement.textContent = updatedReservation.customer;
-                            console.log('🔄 Updated customer name display to:', updatedReservation.customer);
                         } else {
                             console.error('❌ Customer name element not found!');
                         }
@@ -794,9 +782,7 @@
                         
                         // 履歴情報を再読み込み
                         loadReservationHistoryForUser(window.currentUserId);
-                    } else {
-                        console.log('🔍 No user change detected or window.currentUserId not set');
-                    }
+
                     
                     // カレンダーを再描画
                     generateTimeSlots();
@@ -818,22 +804,21 @@
 
         // モーダル内の変更日時を即座に更新
         function updateModalUpdatedAt(updatedAt) {
-            console.log('🔍 updateModalUpdatedAt called with:', updatedAt);
             
             const modal = document.getElementById('reservationDetailModal');
-            console.log('🔍 Modal found:', modal ? 'yes' : 'no');
+
             if (!modal) {
                 console.log('❌ Modal not found, cannot update change date');
                 return;
             }
             
             const systemInfoSection = modal.querySelector('.system-info-section');
-            console.log('🔍 System info section found:', systemInfoSection ? 'yes' : 'no');
+
             if (!systemInfoSection) {
                 console.log('❌ System info section not found, cannot update change date');
                 // Let's try to find what sections do exist
                 const allSections = modal.querySelectorAll('div[class*="section"], div[class*="info"]');
-                console.log('🔍 Available sections in modal:', Array.from(allSections).map(s => s.className));
+    
                 return;
             }
             
@@ -875,7 +860,6 @@
             // Add event listener for course changes
             document.addEventListener('change', function(event) {
                 if (event.target && event.target.id === 'edit-course') {
-                    console.log('🔍 Course dropdown changed, updating change time');
                     const currentTime = new Date().toISOString();
                     updateModalUpdatedAt(currentTime);
                 }
@@ -894,13 +878,7 @@
             const newInterval = parseInt(document.getElementById('edit-interval').value);
             const currentDuration = currentReservation.duration || 60;
             
-            console.log('🔍 updateIntervalOnChange called with:', {
-                newInterval,
-                currentDuration,
-                currentReservation
-            });
-            
-            console.log('🔍 DEBUG: Full currentReservation object:', JSON.stringify(currentReservation, null, 2));
+
 
             // Extract time and date from the current reservation - this is the key fix
             let startTime;
@@ -941,43 +919,27 @@
             
             // Final fallback: search through reservations object to find the date key
             if (!reservationDate && currentReservation.id) {
-                console.log('🔍 Final fallback: searching reservations object for reservation ID:', currentReservation.id);
+
                 for (const dateKey of Object.keys(reservations)) {
                     const dayReservations = reservations[dateKey];
                     if (dayReservations && dayReservations.find(r => r.id === currentReservation.id)) {
                         reservationDate = dateKey;
-                        console.log('🟩 Found reservation date in fallback:', dateKey);
+
                         break;
                     }
                 }
             }
             
-            console.log('🔍 Interval change attempt:', {
-                newInterval,
-                currentDuration,
-                currentReservation,
-                startTime,
-                date: reservationDate,
-                extractedStartTime: startTime,
-                extractedDate: reservationDate
-            });
+
 
             // Validation - ensure we have required data
             if (!startTime || !reservationDate) {
-                console.error('❌ Missing required data for validation:', { startTime, reservationDate });
+
                 showMessage('予約の時間・日付情報が取得できません', 'warning');
                 return;
             }
 
-            console.log('🔍 About to call business hours validation with:', {
-                reservation: {
-                    date: reservationDate,
-                    time: startTime,
-                    start_time: currentReservation.start_time
-                },
-                duration: currentDuration,
-                interval: newInterval
-            });
+
 
             // Create a properly structured reservation object for validation
             const validationReservation = {
@@ -992,7 +954,7 @@
                 newInterval
             );
 
-            console.log('🔍 Interval change business hours validation result:', validation);
+
 
             if (!validation.valid) {
                 console.log('❌ Business hours validation failed, showing error and returning');
@@ -1004,13 +966,8 @@
             }
             
             // 重複チェック
-            console.log('🔍 About to call overlap validation with:', {
-                reservation: validationReservation,
-                duration: currentDuration,
-                interval: newInterval
-            });
             const overlapValidation = validateReservationOverlap(validationReservation, currentDuration, newInterval, currentReservation.id);
-            console.log('🔍 Interval change overlap validation result:', overlapValidation);
+
             if (!overlapValidation.valid) {
                 showMessage(overlapValidation.message, 'error');
                 // 元の値に戻す
@@ -1019,7 +976,7 @@
                 return;
             }
 
-            console.log('✅ Interval change validation passed');
+
 
             const reservationId = currentReservation.id;
 
@@ -1031,11 +988,7 @@
                 individual_interval_minutes: newInterval
                 }
             };
-            console.log('🔍 Sending interval update request:', {
-                reservationId,
-                newInterval,
-                requestBody
-            });
+
             
             fetch(`/admin/reservations/${reservationId}/update_interval`, {
                 method: 'PATCH',
@@ -1052,23 +1005,23 @@
                 return response.json();
             })
             .then(data => {
-                console.log('🔍 Backend response for interval update:', data);
+
                 if (data.success) {
                     // ローカルデータを更新
                     currentReservation.effective_interval_minutes = newInterval;
                     currentReservation.individual_interval_minutes = newInterval;
-                    console.log('🔍 Updated currentReservation:', currentReservation);
+
                     
                     // updatedAtフィールドを更新
                     let updateTimestamp = data.updated_at;
                     if (!updateTimestamp) {
                         // Backend doesn't provide updated_at, use current time
                         updateTimestamp = new Date().toISOString();
-                        console.log('🔍 Interval update: Backend missing updated_at, using current time:', updateTimestamp);
+
                     }
                     currentReservation.updatedAt = updateTimestamp;
                     // モーダル内の変更日時を更新
-                    console.log('🔍 Interval update: About to call updateModalUpdatedAt with:', updateTimestamp);
+
                     updateModalUpdatedAt(updateTimestamp);
                         
                                             // グローバルreservationsオブジェクトも更新
@@ -1079,7 +1032,7 @@
                             reservations[reservationDateKey][reservationIndex].updatedAt = updateTimestamp;
                             reservations[reservationDateKey][reservationIndex].effective_interval_minutes = newInterval;
                             reservations[reservationDateKey][reservationIndex].individual_interval_minutes = newInterval;
-                            console.log('🔍 Updated local reservation data:', reservations[reservationDateKey][reservationIndex]);
+
                         }
                     }
                     
@@ -1198,14 +1151,22 @@
                 reservationDate: reservationDate.toDateString()
             });
 
-            // Check using your existing custom schedule logic
-            const customScheduleDate = '2025-08-10'; // Your reference date for custom schedule
+            // Check using the existing isBusinessHour function
+            // Convert minutes back to time string for the isBusinessHour function
+            const startHour = Math.floor(startTimeInMinutes / 60);
+            const startMin = startTimeInMinutes % 60;
+            const startTimeStr = `${startHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}`;
+            
+            const endHour = Math.floor(endTimeInMinutes / 60);
+            const endMin = endTimeInMinutes % 60;
+            const endTimeStrForCheck = `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;
             
             // Check start time is within business hours
-            const isStartTimeValid = isBusinessHourForCustomSchedule(dayOfWeek, startTimeInMinutes, customScheduleDate);
+            const isStartTimeValid = isBusinessHour(dayOfWeek, startTimeStr, dateToCheck);
             console.log('🔍 Business hours check for start time:', {
                 dayOfWeek,
                 startTime,
+                startTimeStr,
                 startTimeInMinutes,
                 isValid: isStartTimeValid
             });
@@ -1217,10 +1178,11 @@
             }
             
             // Check end time is within business hours - allow ending exactly at closing time
-            const isEndTimeValid = isBusinessHourForEndTime(dayOfWeek, endTimeInMinutes, customScheduleDate);
+            const isEndTimeValid = isBusinessHour(dayOfWeek, endTimeStrForCheck, dateToCheck);
             console.log('🔍 Business hours check for end time:', {
                 dayOfWeek,
                 endTimeStr,
+                endTimeStrForCheck,
                 endTimeInMinutes,
                 isValid: isEndTimeValid
             });
@@ -1603,10 +1565,7 @@
             const newDuration = parseInt(newCourse);
             const currentInterval = currentReservation.effective_interval_minutes ?? 10;
             
-            console.log('🔄 Course changed to:', newCourse, 'Duration:', newDuration);
-            
-            // 営業時間内に収まるかチェック
-            console.log('🔍 Validating course change for reservation:', currentReservation);
+
             
             // Extract proper date and time from reservation for validation (same logic as interval change)
             let startTime = currentReservation.time || currentReservation.startTime;
@@ -1614,12 +1573,12 @@
             
             // Final fallback: search through reservations object to find the date key
             if (!reservationDate && currentReservation.id) {
-                console.log('🔍 Course change fallback: searching reservations object for reservation ID:', currentReservation.id);
+
                 for (const dateKey of Object.keys(reservations)) {
                     const dayReservations = reservations[dateKey];
                     if (dayReservations && dayReservations.find(r => r.id === currentReservation.id)) {
                         reservationDate = dateKey;
-                        console.log('🟩 Found reservation date in course change fallback:', dateKey);
+
                         break;
                     }
                 }
@@ -1632,10 +1591,10 @@
                 start_time: currentReservation.start_time
             };
             
-            console.log('🔍 Course change validation reservation:', validationReservation);
+
             
             const businessHoursValidation = validateReservationTimeWithinBusinessHours(validationReservation, newDuration, currentInterval);
-            console.log('🔍 Course change business hours validation result:', businessHoursValidation);
+
             if (!businessHoursValidation.valid) {
                 showMessage(businessHoursValidation.message, 'error');
                 // 元の値に戻す
@@ -1645,7 +1604,7 @@
             
             // 重複チェック - use the same properly structured reservation object and exclude current reservation
             const overlapValidation = validateReservationOverlap(validationReservation, newDuration, currentInterval, currentReservation.id);
-            console.log('🔍 Course change overlap validation result:', overlapValidation);
+
             if (!overlapValidation.valid) {
                 showMessage(overlapValidation.message, 'error');
                 // 元の値に戻す
@@ -1669,21 +1628,18 @@
             
             // カレンダーを即座に再描画
             generateTimeSlots();
-            
-            console.log('✅ Calendar updated immediately for course change');
         }
 
 
 
         // ユーザー選択モーダルを開く
         function openUserSelectionModal() {
-            console.log('🔍 openUserSelectionModal called');
             
             // 検索入力フィールドをクリア
             const searchInput = document.getElementById('userSearchInput');
             if (searchInput) {
                 searchInput.value = '';
-                console.log('🔍 Search input found and cleared');
+
             } else {
                 console.error('❌ Search input not found');
             }
@@ -1693,7 +1649,7 @@
             if (searchResults) {
                 searchResults.innerHTML = '';
                 searchResults.style.display = 'none';
-                console.log('🔍 Search results cleared and hidden');
+
             } else {
                 console.error('❌ Search results container not found');
             }
@@ -1711,7 +1667,7 @@
                 
                 // 入力イベント
                 searchInput.addEventListener('input', handleUserSearch);
-                console.log('🔍 Input event listener added');
+
                 
                 // フォーカスアウト時に結果を隠す
                 searchInput.addEventListener('blur', function() {
@@ -1732,19 +1688,14 @@
             }
             
             document.getElementById('userSelectionModal').style.display = 'block';
-            console.log('🔍 Modal displayed');
             
-            // Debug modal dimensions
-            const modal = document.getElementById('userSelectionModal');
-            const modalContent = modal.querySelector('.modal-content');
-            console.log('🔍 Modal dimensions:', modal.offsetWidth, 'x', modal.offsetHeight);
-            console.log('🔍 Modal content dimensions:', modalContent.offsetWidth, 'x', modalContent.offsetHeight);
+            
+
         }
 
         // ユーザー検索を処理
         function handleUserSearch(event) {
             const query = event.target.value.trim();
-            console.log('🔍 handleUserSearch called with query:', query);
             
             // デバウンス処理
             if (searchTimeout) {
@@ -1752,32 +1703,25 @@
             }
             
             if (query.length < 2) {
-                console.log('🔍 Query too short, hiding results');
                 hideUserSearchResults();
                 return;
             }
             
-            console.log('🔍 Setting timeout for search');
             searchTimeout = setTimeout(() => {
-                console.log('🔍 Calling searchUsersForModal with:', query);
                 searchUsersForModal(query);
             }, 300);
         }
 
         // モーダル用ユーザー検索
         function searchUsersForModal(query) {
-            console.log('🔍 searchUsersForModal called with query:', query);
             fetch(`/admin/reservations/search_users?query=${encodeURIComponent(query)}`)
                 .then(response => {
-                    console.log('🔍 Search response status:', response.status);
                     return response.json();
                 })
                 .then(data => {
-                    console.log('🔍 Search response data:', data);
                     if (data.success) {
                         displayUserSearchResultsForModal(data.users);
                     } else {
-                        console.error('❌ User search failed:', data.message);
                         hideUserSearchResults();
                     }
                 })
@@ -1789,17 +1733,14 @@
 
         // モーダル用検索結果表示
         function displayUserSearchResultsForModal(users) {
-            console.log('🔍 displayUserSearchResultsForModal called with users:', users);
             const searchResults = document.getElementById('userSelectionSearchResults');
             if (!searchResults) {
-                console.error('❌ Search results container not found');
                 return;
             }
             
             if (users.length === 0) {
                 searchResults.innerHTML = '<div class="user-search-item">該当するユーザーが見つかりません</div>';
                 searchResults.style.display = 'block';
-                console.log('🔍 No users found, showing message');
                 return;
             }
             
@@ -1816,23 +1757,12 @@
             
             searchResults.innerHTML = resultsHtml;
             searchResults.style.display = 'block';
-            
-            // Let the container size naturally based on content
             searchResults.style.height = 'auto';
-            
-            // Force a reflow to ensure the browser recalculates dimensions
             searchResults.offsetHeight;
-            
-            console.log('🔍 Search results displayed:', users.length, 'users');
-            
-
         }
 
         // モーダル用ユーザー選択
         function selectUserForModal(userId, name, phone, email) {
-            console.log('🔍 selectUserForModal called with:', { userId, name, phone, email });
-            console.log('🔍 Current reservation user ID:', currentReservation?.userId);
-            
             // 選択されたユーザーを保存
             window.selectedUser = {
                 id: userId,
@@ -1862,11 +1792,11 @@
                 saveBtn.disabled = false;
             }
             
-
-            
             // 成功メッセージ
             showMessage(`既存ユーザー「${name}」を選択しました`, 'success');
         }
+
+
 
         // ユーザー選択モーダルを閉じる
         function closeUserSelectionModal() {
@@ -1885,8 +1815,7 @@
             const newUserPhone = window.selectedUser.phone_number || '';
             const newUserEmail = window.selectedUser.email || '';
             
-            console.log('🔍 saveUserSelection - Selected user:', { newUserId, newUserName, newUserPhone, newUserEmail });
-            console.log('🔍 saveUserSelection - Current reservation user ID:', currentReservation?.userId);
+
             
             // 顧客情報を更新
             const customerNameElement = document.querySelector('.customer-name-large');
@@ -2031,10 +1960,7 @@
                         
 
                         
-                        // 週固有のスケジュールがない場合のログ
-                        if (!data.has_custom_schedule) {
-    
-                        }
+
   } else {
                         console.error('❌ Failed to load shift settings:', data.message);
                         // フォールバック: デフォルトスケジュールを初期化
@@ -2059,32 +1985,14 @@
 
                     if (data.success) {
                         // 新しい週の予約データで既存のデータを更新（既存データを保持）
-                        console.log('🔄 Loading reservations from backend');
-                        console.log('📅 Existing reservations:', reservations);
-                        console.log('📅 Backend reservations:', data.reservations);
+
                         
                         // 既存のデータと新しいデータをマージ（既存データを保持）
                         for (const [dateKey, newReservations] of Object.entries(data.reservations)) {
                             reservations[dateKey] = newReservations;
                         }
                         
-                        console.log('📅 Final merged reservations:', reservations);
-                        console.log('📅 Checking specific reservation 97:', reservations['2025-08-13']?.find(r => r.id === 97));
-                        
-                        // Debug: Check if AJAX reservations have timestamp fields and interval data
-                        if (data.reservations && Object.keys(data.reservations).length > 0) {
-                            const firstDateKey = Object.keys(data.reservations)[0];
-                            const firstReservation = data.reservations[firstDateKey][0];
-                            console.log('🔍 First AJAX reservation structure:', firstReservation);
-                            console.log('🔍 AJAX interval data:', {
-                                effective_interval_minutes: firstReservation.effective_interval_minutes,
-                                individual_interval_minutes: firstReservation.individual_interval_minutes,
-                                id: firstReservation.id
-                            });
-                        }
-                        
                         // カレンダーを即座に再描画して変更を反映
-                        console.log('🔄 Calling generateTimeSlots after data load');
                         generateTimeSlots();
     } else {
                         console.error('❌ Failed to load reservations:', data.message);
@@ -2150,9 +2058,7 @@
 
         // タイムスロットを生成
         function generateTimeSlots() {
-            console.log('🔍 generateTimeSlots called - defaultSchedule:', defaultSchedule);
-            console.log('🔍 generateTimeSlots - current reservations data:', reservations);
-            console.log('🔍 generateTimeSlots - reservation 97 data:', reservations['2025-08-13']?.find(r => r.id === 97));
+
             const scheduleBody = document.getElementById('scheduleBody');
             scheduleBody.innerHTML = '';
             
@@ -2210,14 +2116,7 @@
                             // 予約チェック
                             const reservation = findReservation(dateKey, timeStr);
                             
-                            // デバッグ用ログ（特定の時間のみ）
-                            if (timeStr === '10:00' && day === 1) {
-                                console.log(`🔍 Checking for reservation at ${dateKey} ${timeStr}:`, {
-                                    dayReservations: reservations[dateKey] || [],
-                                    foundReservation: reservation,
-                                    isReservationStart: reservation ? isReservationStart(dateKey, timeStr) : false
-                                });
-                            }
+                            
                             
                             if (reservation) {
                                 // 予約の開始スロットの場合のみブロックを表示
@@ -2253,10 +2152,7 @@
                                     // Also add drag over to the cell for visual feedback
                                     cell.addEventListener('dragover', handleDragOver);
                                     
-                                    // デバッグ用ログ（特定の予約のみ）
-                                    if (reservation.customer === '田中様') {
-                                        console.log(`🔍 Created reservation block for ${dateKey} ${timeStr}:`, reservation);
-                                    }
+                                    
                                 }
     } else {
                                 cell.classList.add('available', 'bookable');
@@ -2285,38 +2181,52 @@
         }
 
         // 現在の週のスケジュールを取得
-        function getCurrentWeekSchedule() {
+        function getCurrentWeekSchedule(specificDate = null) {
             // 安全チェック: デフォルトスケジュールが読み込まれているか確認
             if (!defaultSchedule) {
                 console.warn('⚠️ Default schedule not loaded, initializing fallback');
                 initializeDefaultSchedule();
             }
             
-            const weekKey = formatDateKey(currentWeekStart);
+            let weekKey;
+            if (specificDate) {
+                // 指定された日付の週の開始日（日曜日）を計算
+                const weekStart = new Date(specificDate);
+                weekStart.setDate(specificDate.getDate() - specificDate.getDay());
+                weekKey = formatDateKey(weekStart);
+
+            } else {
+                // 現在の週のスケジュールを使用
+                weekKey = formatDateKey(currentWeekStart);
+            }
+            
             if (!weeklySchedules[weekKey]) {
                 // 週固有のスケジュールがない場合はデフォルトを使用（コピーは作成しない）
-                console.log(`🔍 No custom schedule for ${weekKey}, using default schedule`);
+
                 return defaultSchedule;
             }
             
-            console.log(`🔍 Using custom schedule for ${weekKey}`);
+
             return weeklySchedules[weekKey];
         }
 
         // 営業時間かどうかチェック
-        function isBusinessHour(dayOfWeek, timeStr) {
-            // 現在の週のスケジュールをチェック
-            const currentWeekSchedule = getCurrentWeekSchedule();
+        function isBusinessHour(dayOfWeek, timeStr, specificDate = null) {
+            // 特定の日付が指定されている場合、その日付のスケジュールを使用
+            let currentWeekSchedule;
+            if (specificDate) {
+                // 指定された日付の週のスケジュールを取得
+                const dateKey = specificDate.toISOString().split('T')[0];
+
+                currentWeekSchedule = getCurrentWeekSchedule(specificDate);
+            } else {
+                // 現在の週のスケジュールを使用
+                currentWeekSchedule = getCurrentWeekSchedule();
+            }
+            
             const currentSchedule = currentWeekSchedule[dayOfWeek];
             
-            // デバッグ用ログ（18:20の時間のみ）
-            if (timeStr === '18:20') {
-                console.log('🔍 isBusinessHour debug for 18:20:', {
-                    dayOfWeek,
-                    currentSchedule,
-                    currentWeekSchedule: Object.keys(currentWeekSchedule)
-                });
-            }
+
             
             // スケジュールが有効で時間設定がある場合のみチェック
             if (currentSchedule && currentSchedule.enabled && currentSchedule.times.length > 0) {
@@ -2331,44 +2241,31 @@
                     
                     const slotMatch = timeInMinutes >= startInMinutes && timeInMinutes < endInMinutes;
                     
-                    // 問題のある時間のスロットチェック詳細ログ
-                    if ((timeStr === '10:00' && dayOfWeek === 1) || timeStr === '09:10' || timeStr === '09:50') {
-                        console.log(`🔍 Slot check for ${timeStr}: ${slot.start}-${slot.end} (${startInMinutes}-${endInMinutes}) vs ${timeInMinutes} = ${slotMatch}`);
-                    }
+
                     
                     return slotMatch;
                 });
                 
-                // デバッグ用ログ（営業時間境界と問題のある時間）
-                if ((timeStr === '10:00' && dayOfWeek === 1) || timeStr === '09:10' || timeStr === '09:50') {
-                    const businessSlots = currentSchedule.times.map(slot => `${slot.start}-${slot.end}`);
-                    console.log(`🔍 Business hour check for ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dayOfWeek]} ${timeStr}:`, {
-                        schedule: currentSchedule,
-                        timeInMinutes,
-                        isAvailable,
-                        scheduleType: currentWeekSchedule === defaultSchedule ? 'default' : 'custom',
-                        businessSlots: businessSlots
-                    });
-                    // businessSlotsの詳細を別途ログ出力
-                    console.log(`📋 Business slots details for ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dayOfWeek]}:`, currentSchedule.times);
-                }
+
+                
+
                 
                 return isAvailable;
             }
             
-    return false;
-  }
+            return false;
+        }
+        
+        // グローバルにisBusinessHour関数を公開（一括予約で使用）
+        window.isBusinessHour = isBusinessHour;
+        
+
   
         // 予約を検索
         function findReservation(dateKey, timeStr) {
             const dayReservations = reservations[dateKey] || [];
             
-            // デバッグ用：特定の予約をチェック
-            if (dateKey === '2025-08-13' && timeStr === '10:00') {
-                console.log('🔍 findReservation called for 2025-08-13 10:00');
-                console.log('🔍 dayReservations:', dayReservations);
-                console.log('🔍 Looking for reservation 97:', dayReservations.find(r => r.id === 97));
-            }
+
             return dayReservations.find(reservation => {
                 const reservationTime = reservation.time;
                 const [resHour, resMin] = reservationTime.split(':').map(Number);
@@ -2383,19 +2280,7 @@
                 const nextHourInMin = Math.ceil(endTimeInMin / 60) * 60; // 次の時間の開始
                 const adjustedEndTimeInMin = Math.min(endTimeInMin, nextHourInMin);
                 
-                // デバッグ用：時間計算を確認
-                if (timeStr === '15:00' && reservation.customer === '吉田') {
-                    console.log('🔍 Time calculation debug:', {
-                        reservationTime,
-                        timeStr,
-                        resTimeInMin,
-                        checkTimeInMin,
-                        duration: reservation.duration,
-                        preparationTime,
-                        endTimeInMin,
-                        isOverlapping: checkTimeInMin >= resTimeInMin && checkTimeInMin < endTimeInMin
-                    });
-                }
+
                 
                 return checkTimeInMin >= resTimeInMin && checkTimeInMin < adjustedEndTimeInMin;
             });
@@ -3568,8 +3453,6 @@ function showMessage(message, type = 'info') {
             document.getElementById('breakModal').style.display = 'block';
         }
 
-
-
         // 休憩作成モーダルを閉じる
         function closeBreakModal() {
             document.getElementById('breakModal').style.display = 'none';
@@ -3642,6 +3525,901 @@ function showMessage(message, type = 'info') {
                 customInput.value = '';
             }
         }
+
+        // 一括予約作成モーダルを開く
+        function openBulkReservationModal() {
+            
+            // フォームをリセット（最初に実行）
+            document.getElementById('bulkReservationForm').reset();
+            
+            // 現在の日付を設定
+            const today = new Date();
+            const startDateValue = today.toISOString().split('T')[0];
+            document.getElementById('bulkStartDate').value = startDateValue;
+            
+            // 1週間後を終了日として設定
+            const nextWeek = new Date(today);
+            nextWeek.setDate(today.getDate() + 7);
+            const endDateValue = nextWeek.toISOString().split('T')[0];
+            document.getElementById('bulkEndDate').value = endDateValue;
+            
+            // 現在時刻を設定
+            const currentTime = `${String(today.getHours()).padStart(2, '0')}:${String(Math.floor(today.getMinutes() / 10) * 10).padStart(2, '0')}`;
+            document.getElementById('bulkStartTime').value = currentTime;
+            
+            // 曜日チェックボックスを全てチェック
+            document.querySelectorAll('#bulkDaysOfWeek input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = true;
+            });
+            
+            // プレビューリストをクリア
+            document.getElementById('bulkPreviewList').innerHTML = '';
+            document.getElementById('submitBulkBtn').disabled = true;
+            document.getElementById('bulkReservationModal').style.display = 'block';
+        }
+        
+        // 一括予約作成モーダルを閉じる
+        function closeBulkReservationModal() {
+            document.getElementById('bulkReservationModal').style.display = 'none';
+        }
+
+        // 一括予約のプレビューを表示
+        async function previewBulkReservations() {
+            const startDateValue = document.getElementById('bulkStartDate').value;
+            const endDateValue = document.getElementById('bulkEndDate').value;
+            const startTime = document.getElementById('bulkStartTime').value;
+            const duration = parseInt(document.getElementById('bulkDuration').value);
+            const selectedDays = Array.from(document.querySelectorAll('#bulkDaysOfWeek input[type="checkbox"]:checked'))
+                .map(cb => parseInt(cb.value));
+            
+            // より厳密なバリデーション
+            if (!startDateValue || !endDateValue || !startTime || !duration || selectedDays.length === 0) {
+                // デバッグ用：どの項目が空かを特定
+                const missingFields = [];
+                if (!startDateValue) missingFields.push('開始日');
+                if (!endDateValue) missingFields.push('終了日');
+                if (!startTime) missingFields.push('開始時間');
+                if (!duration) missingFields.push('コース選択');
+                if (selectedDays.length === 0) missingFields.push('対象曜日');
+                
+                showMessage(`以下の項目が入力されていません: ${missingFields.join(', ')}`, 'error');
+                return;
+            }
+            
+            // 日付の妥当性チェック
+            const startDate = new Date(startDateValue);
+            const endDate = new Date(endDateValue);
+            
+            if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+                showMessage('日付が正しく入力されていません。', 'error');
+                return;
+            }
+            
+            if (startDate > endDate) {
+                showMessage('開始日は終了日より前の日付を選択してください。', 'error');
+                return;
+            }
+            
+            // ビジネスアワーの検証（各日付のシフト設定をチェック）
+            let businessHoursValid = true;
+            let invalidDates = [];
+            let businessHoursCheckDate = new Date(startDate);
+            
+            // 非同期で営業時間をチェック
+            const checkBusinessHours = async () => {
+                while (businessHoursCheckDate <= endDate) {
+                    if (selectedDays.includes(businessHoursCheckDate.getDay())) {
+                        const isValid = await isWithinBusinessHours(startTime, duration, businessHoursCheckDate);
+                        if (!isValid) {
+                            businessHoursValid = false;
+                            invalidDates.push(businessHoursCheckDate.toLocaleDateString('ja-JP'));
+                        }
+                    }
+                    businessHoursCheckDate.setDate(businessHoursCheckDate.getDate() + 1);
+                }
+                
+                if (!businessHoursValid) {
+                    showMessage(`選択された時間が営業時間外の日付があります: ${invalidDates.join(', ')}。シフト設定を確認してください。`, 'error');
+                    return false;
+                }
+                
+                return true;
+            };
+            
+            // 営業時間チェックを実行
+            const businessHoursOk = await checkBusinessHours();
+            if (!businessHoursOk) {
+                return;
+            }
+            
+            const previewList = document.getElementById('bulkPreviewList');
+            previewList.innerHTML = '';
+            
+            let currentDate = new Date(startDate);
+            let reservationCount = 0;
+            let conflictCount = 0;
+            
+            while (currentDate <= endDate) {
+                if (selectedDays.includes(currentDate.getDay())) {
+                    const dateStr = `${currentDate.getFullYear()}年${String(currentDate.getMonth() + 1).padStart(2, '0')}月${String(currentDate.getDate()).padStart(2, '0')}日`;
+                    const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+                    const dayName = dayNames[currentDate.getDay()];
+                    
+                    // 既存の予約との重複チェック
+                    const hasConflict = checkReservationConflict(currentDate, startTime, duration);
+                    
+                    const previewItem = document.createElement('div');
+                    previewItem.className = 'bulk-preview-item';
+                    if (hasConflict) {
+                        previewItem.classList.add('conflict');
+                        previewItem.innerHTML = `
+                            <span class="date">${dateStr}(${dayName})</span>
+                            <span class="time">${startTime} - ${calculateEndTime(startTime, duration)}</span>
+                            <span class="conflict-warning">⚠️ 既存予約と重複</span>
+                        `;
+                        conflictCount++;
+                    } else {
+                        previewItem.innerHTML = `
+                            <span class="date">${dateStr}(${dayName})</span>
+                            <span class="time">${startTime} - ${calculateEndTime(startTime, duration)}</span>
+                        `;
+                        reservationCount++;
+                    }
+                    previewList.appendChild(previewItem);
+                }
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            
+            if (conflictCount > 0) {
+                showMessage(`${conflictCount}件の重複があります。重複する日付は予約を作成できません。`, 'warning');
+                document.getElementById('submitBulkBtn').disabled = true;
+            } else if (reservationCount > 0) {
+                // 最終的な重複チェック（より厳密）
+                const finalConflictCheck = performFinalConflictCheck(startDate, endDate, startTime, duration, selectedDays);
+                if (finalConflictCheck.hasConflicts) {
+                    showMessage(`最終チェックで重複が見つかりました: ${finalConflictCheck.conflictDates.join(', ')}。予約を作成できません。`, 'error');
+                    document.getElementById('submitBulkBtn').disabled = true;
+                } else {
+                    document.getElementById('submitBulkBtn').disabled = false;
+                    showMessage(`${reservationCount}件の予約を作成します。`, 'info');
+                }
+            } else {
+                showMessage('選択された期間と曜日に該当する日付がありません。', 'error');
+                document.getElementById('submitBulkBtn').disabled = true;
+            }
+        }
+
+        // 終了時間を計算
+        function calculateEndTime(startTime, durationMinutes) {
+            const [hours, minutes] = startTime.split(':').map(Number);
+            const startDate = new Date();
+            startDate.setHours(hours, minutes, 0, 0);
+            
+            const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
+            return `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`;
+        }
+
+        // 営業時間内かチェック（シフト設定を考慮）
+        async function isWithinBusinessHours(startTime, durationMinutes, date = null) {
+            // 日付が指定されている場合、シフト設定をチェック
+            if (date) {
+                const dateKey = date.toISOString().split('T')[0];
+                const dayOfWeek = date.getDay();
+                
+                console.log(`🔍 Checking business hours for ${dateKey} (day ${dayOfWeek}) at ${startTime}`);
+                
+                // 方法1: カレンダーの既存のビジネスアワー関数を使用（通常の予約と同じ）
+                if (typeof window.isBusinessHour === 'function') {
+    
+                    
+                    // 時間を分に変換
+                    const [startHour, startMinute] = startTime.split(':').map(Number);
+                    const startMinutes = startHour * 60 + startMinute;
+                    
+                    // 終了時間を計算
+                    const endMinutes = startMinutes + durationMinutes;
+                    
+                    // 各時間スロットをチェック
+                    for (let timeInMinutes = startMinutes; timeInMinutes < endMinutes; timeInMinutes += 10) {
+                        const timeStr = `${Math.floor(timeInMinutes / 60).toString().padStart(2, '0')}:${(timeInMinutes % 60).toString().padStart(2, '0')}`;
+                        
+                        // 現在の日付のスケジュールを使用するため、日付を指定してisBusinessHourを呼び出し
+                        const isAvailable = window.isBusinessHour(dayOfWeek, timeStr, date);
+                        
+
+                    
+                    if (!isAvailable) {
+                        return false;
+                    }
+                    }
+                    
+                    return true;
+                }
+                
+                // 方法2: シフトAPIを使用（フォールバック）
+                try {
+                    const shiftSettings = await getShiftSettingsForDate(date);
+                    if (shiftSettings && shiftSettings.schedule) {
+                        const schedule = shiftSettings.schedule;
+                        console.log(`🔍 Found shift schedule:`, schedule);
+                        
+                        // シフト設定から営業時間を取得
+                        const businessSlots = schedule.business_slots || [];
+                        if (businessSlots.length > 0) {
+                            const [startHour, startMinute] = startTime.split(':').map(Number);
+                            const [endHour, endMinute] = calculateEndTime(startTime, durationMinutes).split(':').map(Number);
+                            
+                            const startMinutes = startHour * 60 + startMinute;
+                            const endMinutes = endHour * 60 + endMinute;
+                            
+                            // 各営業時間スロットをチェック
+                            for (const slot of businessSlots) {
+                                const slotStart = slot.start_time;
+                                const slotEnd = slot.end_time;
+                                
+                                if (slotStart && slotEnd) {
+                                    const [slotStartHour, slotStartMin] = slotStart.split(':').map(Number);
+                                    const [slotEndHour, slotEndMin] = slotEnd.split(':').map(Number);
+                                    
+                                    const slotStartMinutes = slotStartHour * 60 + slotStartMin;
+                                    const slotEndMinutes = slotEndHour * 60 + slotEndMin;
+                                    
+                                    console.log(`🔍 Checking slot: ${slotStart} - ${slotEnd} (${slotStartMinutes}-${slotEndMinutes}) vs ${startMinutes}-${endMinutes}`);
+                                    
+                                    // 予約時間が営業時間スロット内に収まっているかチェック
+                                    if (startMinutes >= slotStartMinutes && endMinutes <= slotEndMinutes) {
+                                        console.log(`✅ Time slot ${startTime}-${endMinutes} is within business hours ${slotStart}-${slotEnd}`);
+                                        return true;
+                                    }
+                                }
+                            }
+                            
+                            console.log(`❌ Time slot ${startTime} (${startMinutes}-${endMinutes}) is outside all business hours`);
+                            return false;
+                        }
+                    }
+                    
+                    // シフトが閉店の場合
+                    if (shiftSettings && shiftSettings.isClosed) {
+                        console.log(`🚫 Shift is closed for ${dateKey}`);
+                        return false;
+                    }
+                    
+                    console.log(`🔍 No shift schedule found, using calendar's business hour logic`);
+                    
+                } catch (error) {
+                    console.error(`🔍 Error checking shift settings:`, error);
+                    console.log(`🔍 Falling back to calendar's business hour logic`);
+                }
+            }
+            
+            // フォールバック: カレンダーの既存のビジネスアワーロジックを使用
+            
+            // カレンダーの既存の営業時間チェックを使用
+            if (typeof window.isBusinessHour === 'function') {
+                const [startHour, startMinute] = startTime.split(':').map(Number);
+                const startMinutes = startHour * 60 + startMinute;
+                const endMinutes = startMinutes + durationMinutes;
+                
+                // 現在の日付の曜日を取得（デフォルトは月曜日）
+                const dayOfWeek = date ? date.getDay() : 1;
+                
+                // 各時間スロットをチェック
+                for (let timeInMinutes = startMinutes; timeInMinutes < endMinutes; timeInMinutes += 10) {
+                    const timeStr = `${Math.floor(timeInMinutes / 60).toString().padStart(2, '0')}:${(timeInMinutes % 60).toString().padStart(2, '0')}`;
+                    const isAvailable = window.isBusinessHour(dayOfWeek, timeStr, date);
+                    
+                    if (!isAvailable) {
+                        console.log(`❌ Time ${timeStr} is not available on day ${dayOfWeek} for ${date ? date.toISOString().split('T')[0] : 'unknown date'}`);
+                        return false;
+                    }
+                }
+                
+                return true;
+            }
+            
+            // 最終フォールバック: 基本的な営業時間チェック
+            const businessHours = getBusinessHours();
+            const businessStart = businessHours.start;
+            const businessEnd = businessHours.end;
+            
+            const [startHour, startMinute] = startTime.split(':').map(Number);
+            const [endHour, endMinute] = calculateEndTime(startTime, durationMinutes).split(':').map(Number);
+            const [businessStartHour, businessStartMinute] = businessStart.split(':').map(Number);
+            const [businessEndHour, businessEndMinute] = businessEnd.split(':').map(Number);
+            
+            const startMinutes = startHour * 60 + startMinute;
+            const endMinutes = endHour * 60 + endMinute;
+            const businessStartMinutes = businessStartHour * 60 + businessStartMinute;
+            const businessEndMinutes = businessEndHour * 60 + businessEndMinute;
+            
+            const isWithin = startMinutes >= businessStartMinutes && endMinutes <= businessEndMinutes;
+            return isWithin;
+        }
+        
+        // 指定された日付のシフト設定を取得
+        async function getShiftSettingsForDate(date) {
+            try {
+                // カレンダーのシフト設定を取得する関数を呼び出し
+                if (typeof window.getBusinessHoursForDate === 'function') {
+                    return await window.getBusinessHoursForDate(date);
+                }
+                
+                // 代替方法: シフトAPIを直接呼び出し
+                const dateStr = date.toISOString().split('T')[0];
+                
+                const response = await fetch(`/admin/shifts/for_date?date=${dateStr}`);
+                const data = await response.json();
+                
+                if (data.success && data.shift) {
+                    return {
+                        schedule: {
+                            business_slots: [{
+                                start_time: data.shift.start_time,
+                                end_time: data.shift.end_time
+                            }]
+                        },
+                        shift: data.shift,
+                        isClosed: data.shift.shift_type === 'closed'
+                    };
+                }
+                
+                return null;
+                
+            } catch (error) {
+                return null;
+            }
+        }
+        
+        // 営業時間を取得（設定から動的に取得可能）
+        function getBusinessHours() {
+            // 現在の週の営業時間設定を取得
+            if (window.currentWeekSchedule && window.currentWeekSchedule.business_hours) {
+                return window.currentWeekSchedule.business_hours;
+            }
+            
+            // デフォルトの営業時間
+            return {
+                start: '10:00',
+                end: '21:00'
+            };
+        }
+
+        // 既存の予約との重複チェック
+        function checkReservationConflict(date, startTime, duration) {
+            const dateKey = date.toISOString().split('T')[0];
+            const dayReservations = reservations[dateKey] || [];
+            
+            const [startHour, startMinute] = startTime.split(':').map(Number);
+            const startMinutes = startHour * 60 + startMinute;
+            const endMinutes = startMinutes + duration;
+            
+
+            
+            // 方法1: reservationsオブジェクトからチェック
+            const conflictFromObject = dayReservations.some(reservation => {
+                if (reservation.is_break) return false; // 休憩は重複チェック対象外
+                
+                // start_timeとend_timeが存在する場合
+                if (reservation.start_time && reservation.end_time) {
+                    const reservationStart = new Date(reservation.start_time);
+                    const reservationEnd = new Date(reservation.end_time);
+                    
+                    const reservationStartMinutes = reservationStart.getHours() * 60 + reservationStart.getMinutes();
+                    const reservationEndMinutes = reservationEnd.getHours() * 60 + reservationEnd.getMinutes();
+                    
+
+                    
+                    // 時間の重複チェック
+                    return (startMinutes < reservationEndMinutes && endMinutes > reservationStartMinutes);
+                }
+                
+                // dateとtimeが存在する場合（古い形式）
+                if (reservation.date && reservation.time) {
+                    const [reservationHour, reservationMinute] = reservation.time.split(':').map(Number);
+                    const reservationStartMinutes = reservationHour * 60 + reservationMinute;
+                    const reservationEndMinutes = reservationStartMinutes + (reservation.duration || 60);
+                    
+
+                    
+                    return (startMinutes < reservationEndMinutes && endMinutes > reservationStartMinutes);
+                }
+                
+                return false;
+            });
+            
+            // 方法2: DOMから直接チェック（より確実）
+            const conflictFromDOM = checkConflictFromDOM(date, startTime, duration);
+            
+
+            
+            return conflictFromObject || conflictFromDOM;
+        }
+        
+        // DOMから直接重複をチェック（より確実な方法）
+        function checkConflictFromDOM(date, startTime, duration) {
+            const dateKey = date.toISOString().split('T')[0];
+            const [year, month, day] = dateKey.split('-').map(Number);
+            
+
+            
+            // 複数のセレクターを試す
+            let dayCell = document.querySelector(`[data-date="${dateKey}"]`);
+            if (!dayCell) {
+                // 別の形式を試す
+                dayCell = document.querySelector(`[data-date*="${dateKey}"]`);
+            }
+            if (!dayCell) {
+                // 日付文字列を含む要素を探す
+                dayCell = document.querySelector(`[data-date*="${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}"]`);
+            }
+            if (!dayCell) {
+                // より柔軟な検索
+                const allCells = document.querySelectorAll('[data-date]');
+
+                
+                dayCell = Array.from(allCells).find(cell => {
+                    const cellDate = cell.getAttribute('data-date');
+                    return cellDate && cellDate.includes(dateKey);
+                });
+            }
+            
+            if (!dayCell) {
+
+                
+                // 代替アプローチ: カレンダーの日付セルを直接探す
+                const calendarCells = document.querySelectorAll('.calendar-day, .day-cell, [class*="day"], [class*="date"]');
+
+                
+                // 日付テキストで検索
+                dayCell = Array.from(calendarCells).find(cell => {
+                    const cellText = cell.textContent || '';
+                    const datePattern = new RegExp(`${year}年?${month}月?${day}日?|${month}/${day}|${month}-${day}`);
+                    return datePattern.test(cellText);
+                });
+            }
+            
+            if (!dayCell) {
+
+                // フォールバック: 予約要素を直接検索
+                return checkConflictFromReservationElements(startTime, duration);
+            }
+            
+
+            
+            // その日の予約要素を取得
+            const reservationElements = dayCell.querySelectorAll('.reservation-item, .break-item, .reservation-block, [class*="reservation"]');
+            if (reservationElements.length === 0) {
+    
+                return checkConflictFromReservationElements(startTime, duration);
+            }
+            
+            const [startHour, startMinute] = startTime.split(':').map(Number);
+            const startMinutes = startHour * 60 + startMinute;
+            const endMinutes = startMinutes + duration;
+            
+
+            
+            return Array.from(reservationElements).some(element => {
+                // 休憩は除外
+                if (element.classList.contains('break-item') || element.classList.contains('break')) {
+                    return false;
+                }
+                
+                // 予約の時間を取得（複数の方法を試す）
+                let timeText = element.querySelector('.reservation-time')?.textContent;
+                if (!timeText) {
+                    timeText = element.querySelector('[class*="time"]')?.textContent;
+                }
+                if (!timeText) {
+                    timeText = element.textContent;
+                }
+                
+                if (!timeText) return false;
+                
+                console.log(`🔍 Checking element:`, element, `with time text:`, timeText);
+                
+                // 時間テキストをパース（複数の形式に対応）
+                let timeMatch = timeText.match(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/);
+                if (!timeMatch) {
+                    timeMatch = timeText.match(/(\d{1,2}):(\d{2})/);
+                }
+                if (!timeMatch) {
+                    timeMatch = timeText.match(/(\d{1,2}):(\d{2})\s*~(\d{1,2}):(\d{2})/);
+                }
+                
+                if (!timeMatch) {
+                    console.log(`🔍 Could not parse time from:`, timeText);
+                    return false;
+                }
+                
+                let startH, startM, endH, endM;
+                if (timeMatch.length === 3) {
+                    // 開始時刻のみの場合、durationから終了時刻を計算
+                    [_, startH, startM] = timeMatch;
+                    const startMinutes = parseInt(startH) * 60 + parseInt(startM);
+                    const endMinutes = startMinutes + duration;
+                    endH = Math.floor(endMinutes / 60);
+                    endM = endMinutes % 60;
+                } else {
+                    [_, startH, startM, endH, endM] = timeMatch;
+                }
+                
+                const reservationStartMinutes = parseInt(startH) * 60 + parseInt(startM);
+                const reservationEndMinutes = parseInt(endH) * 60 + parseInt(endM);
+                
+                const hasOverlap = (startMinutes < reservationEndMinutes && endMinutes > reservationStartMinutes);
+                
+                console.log(`🔍 DOM element check:`, {
+                    timeText: timeText,
+                    reservationStart: `${startH}:${startM}`,
+                    reservationEnd: `${endH}:${endM}`,
+                    reservationStartMinutes: reservationStartMinutes,
+                    reservationEndMinutes: reservationEndMinutes,
+                    hasOverlap: hasOverlap
+                });
+                
+                return hasOverlap;
+            });
+        }
+        
+        // 予約要素を直接検索して重複をチェック（フォールバック方法）
+        function checkConflictFromReservationElements(startTime, duration) {
+    
+            
+            const [startHour, startMinute] = startTime.split(':').map(Number);
+            const startMinutes = startHour * 60 + startMinute;
+            const endMinutes = startMinutes + duration;
+            
+            // すべての予約要素を検索
+            const allReservations = document.querySelectorAll('.reservation-block, .reservation-item, [class*="reservation"]');
+
+            
+            return Array.from(allReservations).some(element => {
+                // 休憩は除外
+                if (element.classList.contains('break') || element.classList.contains('break-item')) {
+                    return false;
+                }
+                
+                // 要素の日付を取得
+                const elementDate = element.getAttribute('data-original-date-key') || 
+                                  element.getAttribute('data-date') || 
+                                  element.closest('[data-date]')?.getAttribute('data-date');
+                
+                if (!elementDate) {
+                    return false;
+                }
+                
+                // 時間を取得
+                const timeText = element.textContent || '';
+                const timeMatch = timeText.match(/(\d{1,2}):(\d{2})/);
+                if (!timeMatch) return false;
+                
+                const [_, hour, minute] = timeMatch;
+                const reservationStartMinutes = parseInt(hour) * 60 + parseInt(minute);
+                const reservationEndMinutes = reservationStartMinutes + 60; // デフォルト60分
+                
+                const hasOverlap = (startMinutes < reservationEndMinutes && endMinutes > reservationStartMinutes);
+                
+
+                
+                return hasOverlap;
+            });
+        }
+        
+        // 時間をコース形式に変換
+        function getCourseFromDuration(duration) {
+            switch (duration) {
+                case 40:
+                    return '40分';
+                case 60:
+                    return '60分';
+                case 80:
+                    return '80分';
+                default:
+                    return '60分';
+            }
+        }
+        
+        // 最終的な重複チェック（より厳密）
+        function performFinalConflictCheck(startDate, endDate, startTime, duration, selectedDays) {
+            
+            const conflicts = [];
+            let currentDate = new Date(startDate);
+            
+            while (currentDate <= endDate) {
+                if (selectedDays.includes(currentDate.getDay())) {
+                    const hasConflict = checkReservationConflict(currentDate, startTime, duration);
+                    if (hasConflict) {
+                        conflicts.push(currentDate.toLocaleDateString('ja-JP'));
+                    }
+                }
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            
+            // 追加: カレンダー表示から直接重複をチェック
+            const visualConflicts = checkVisualConflicts(startDate, endDate, startTime, duration, selectedDays);
+            if (visualConflicts.length > 0) {
+                conflicts.push(...visualConflicts);
+            }
+            
+            const result = {
+                hasConflicts: conflicts.length > 0,
+                conflictDates: conflicts
+            };
+            
+            return result;
+        }
+        
+        // カレンダー表示から直接重複をチェック
+        function checkVisualConflicts(startDate, endDate, startTime, duration, selectedDays) {
+            
+            const conflicts = [];
+            const [startHour, startMinute] = startTime.split(':').map(Number);
+            const startMinutes = startHour * 60 + startMinute;
+            const endMinutes = startMinutes + duration;
+            
+            // すべての予約ブロックを取得
+            const allReservationBlocks = document.querySelectorAll('.reservation-block');
+            console.log(`🔍 Found ${allReservationBlocks.length} reservation blocks in calendar`);
+            
+            allReservationBlocks.forEach(block => {
+                // 休憩は除外
+                if (block.classList.contains('break') || block.classList.contains('break-item')) {
+                    return;
+                }
+                
+                // 予約の日付を取得
+                const blockDate = block.getAttribute('data-original-date-key') || 
+                                block.getAttribute('data-date') || 
+                                block.closest('[data-date]')?.getAttribute('data-date');
+                
+                if (!blockDate) {
+                    console.log(`🔍 Block has no date:`, block);
+                    return;
+                }
+                
+                // 選択された日付範囲内かチェック
+                const blockDateObj = new Date(blockDate);
+                if (blockDateObj < startDate || blockDateObj > endDate) {
+                    return;
+                }
+                
+                // 選択された曜日かチェック
+                if (!selectedDays.includes(blockDateObj.getDay())) {
+                    return;
+                }
+                
+                // 予約の時間を取得
+                const blockText = block.textContent || '';
+                const timeMatch = blockText.match(/(\d{1,2}):(\d{2})/);
+                if (!timeMatch) {
+                    console.log(`🔍 Could not parse time from block:`, blockText);
+                    return;
+                }
+                
+                const [_, blockHour, blockMinute] = timeMatch;
+                const blockStartMinutes = parseInt(blockHour) * 60 + parseInt(blockMinute);
+                const blockEndMinutes = blockStartMinutes + 60; // デフォルト60分
+                
+                // 重複チェック
+                const hasOverlap = (startMinutes < blockEndMinutes && endMinutes > blockStartMinutes);
+                
+                if (hasOverlap) {
+                    const conflictDate = blockDateObj.toLocaleDateString('ja-JP');
+                    if (!conflicts.includes(conflictDate)) {
+                        conflicts.push(conflictDate);
+                        console.log(`🔍 Visual conflict detected:`, {
+                            date: blockDate,
+                            blockTime: `${blockHour}:${blockMinute}`,
+                            newTime: startTime,
+                            duration: duration,
+                            hasOverlap: hasOverlap
+                        });
+                    }
+                }
+            });
+            
+            console.log(`🔍 Visual conflicts found:`, conflicts);
+            return conflicts;
+        }
+
+        // 一括予約を作成
+        async function createBulkReservations() {
+            const startDateValue = document.getElementById('bulkStartDate').value;
+            const endDateValue = document.getElementById('bulkEndDate').value;
+            const startTime = document.getElementById('bulkStartTime').value;
+            const duration = parseInt(document.getElementById('bulkDuration').value);
+            const selectedDays = Array.from(document.querySelectorAll('#bulkDaysOfWeek input[type="checkbox"]:checked'))
+                .map(cb => parseInt(cb.value));
+            const customerName = document.getElementById('bulkCustomerName').value;
+            const customerPhone = document.getElementById('bulkCustomerPhone').value;
+            const customerEmail = document.getElementById('bulkCustomerEmail').value;
+            const note = document.getElementById('bulkNote').value;
+            const status = document.getElementById('bulkStatus').value;
+            
+
+            
+            // より厳密なバリデーション
+            if (!startDateValue || !endDateValue || !startTime || !duration || selectedDays.length === 0 || !customerName || !customerPhone) {
+                // デバッグ用：どの項目が空かを特定
+                const missingFields = [];
+                if (!startDateValue) missingFields.push('開始日');
+                if (!endDateValue) missingFields.push('終了日');
+                if (!startTime) missingFields.push('開始時間');
+                if (!duration) missingFields.push('コース選択');
+                if (selectedDays.length === 0) missingFields.push('対象曜日');
+                if (!customerName) missingFields.push('お客様名');
+                if (!customerPhone) missingFields.push('電話番号');
+                
+
+                showMessage(`以下の項目が入力されていません: ${missingFields.join(', ')}`, 'error');
+                return;
+            }
+            
+            // 日付の妥当性チェック
+            const startDate = new Date(startDateValue);
+            const endDate = new Date(endDateValue);
+            
+            if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+                showMessage('日付が正しく入力されていません。', 'error');
+                return;
+            }
+            
+            if (startDate > endDate) {
+                showMessage('開始日は終了日より前の日付を選択してください。', 'error');
+                return;
+            }
+            
+            // ビジネスアワーの検証（各日付のシフト設定をチェック）
+            let businessHoursValid = true;
+            let invalidDates = [];
+            let businessHoursCheckDate = new Date(startDate);
+            
+            // 非同期で営業時間をチェック
+            const checkBusinessHours = async () => {
+                while (businessHoursCheckDate <= endDate) {
+                    if (selectedDays.includes(businessHoursCheckDate.getDay())) {
+                        const isValid = await isWithinBusinessHours(startTime, duration, businessHoursCheckDate);
+                        if (!isValid) {
+                            businessHoursValid = false;
+                            invalidDates.push(businessHoursCheckDate.toLocaleDateString('ja-JP'));
+                        }
+                    }
+                    businessHoursCheckDate.setDate(businessHoursCheckDate.getDate() + 1);
+                }
+                
+                if (!businessHoursValid) {
+                    showMessage(`選択された時間が営業時間外の日付があります: ${invalidDates.join(', ')}。シフト設定を確認してください。`, 'error');
+                    return false;
+                }
+                
+                return true;
+            };
+            
+            // 営業時間チェックを実行
+            const businessHoursOk = await checkBusinessHours();
+            if (!businessHoursOk) {
+                return;
+            }
+            
+            // 重複チェック（既存の予約との重複）
+            let hasConflicts = false;
+            let conflictDetails = [];
+            let conflictCheckDate = new Date(startDate);
+            while (conflictCheckDate <= endDate) {
+                if (selectedDays.includes(conflictCheckDate.getDay())) {
+                    if (checkReservationConflict(conflictCheckDate, startTime, duration)) {
+                        hasConflicts = true;
+                        conflictDetails.push(conflictCheckDate.toLocaleDateString('ja-JP'));
+                    }
+                }
+                conflictCheckDate.setDate(conflictCheckDate.getDate() + 1);
+            }
+            
+            if (hasConflicts) {
+                showMessage(`既存の予約と重複する日付があります: ${conflictDetails.join(', ')}。プレビューを確認してください。`, 'error');
+                return;
+            }
+            
+            // 新規作成予定の予約同士の重複チェック（同じ日付に複数の予約を作成する場合）
+            const plannedDates = [];
+            let plannedDatesCheckDate = new Date(startDate);
+            while (plannedDatesCheckDate <= endDate) {
+                if (selectedDays.includes(plannedDatesCheckDate.getDay())) {
+                    plannedDates.push(new Date(plannedDatesCheckDate));
+                }
+                plannedDatesCheckDate.setDate(plannedDatesCheckDate.getDate() + 1);
+            }
+            
+            // 同じ日付に複数の予約を作成しようとしている場合はエラー
+            const dateCounts = {};
+            plannedDates.forEach(date => {
+                const dateKey = date.toISOString().split('T')[0];
+                dateCounts[dateKey] = (dateCounts[dateKey] || 0) + 1;
+            });
+            
+            const duplicateDates = Object.entries(dateCounts).filter(([date, count]) => count > 1);
+            if (duplicateDates.length > 0) {
+                const duplicateDateList = duplicateDates.map(([date]) => new Date(date).toLocaleDateString('ja-JP')).join(', ');
+                showMessage(`同じ日付（${duplicateDateList}）に複数の予約を作成することはできません。日付を調整してください。`, 'error');
+                return;
+            }
+            
+            const submitBtn = document.getElementById('submitBulkBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '作成中...';
+            
+            let createReservationsDate = new Date(startDate);
+            let createdCount = 0;
+            let failedCount = 0;
+            
+            const createReservations = async () => {
+                while (createReservationsDate <= endDate) {
+                    if (selectedDays.includes(createReservationsDate.getDay())) {
+                        try {
+                            const reservationData = {
+                                reservation: {
+                                    start_time: `${createReservationsDate.toISOString().split('T')[0]} ${startTime}`,
+                                    course: getCourseFromDuration(duration),
+                                    name: customerName,
+                                    note: note,
+                                    status: status,
+                                    user_attributes: {
+                                        name: customerName,
+                                        phone_number: customerPhone,
+                                        email: customerEmail
+                                    }
+                                }
+                            };
+                            
+                            // デバッグ用：送信データをログ
+                            console.log(`🔍 Sending reservation data for ${createReservationsDate.toLocaleDateString('ja-JP')}:`, reservationData);
+                            
+                            const response = await fetch('/admin/reservations/create_booking', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                },
+                                body: JSON.stringify(reservationData)
+                            });
+                            
+                            if (response.ok) {
+                                createdCount++;
+                                showMessage(`${createReservationsDate.toLocaleDateString('ja-JP')}の予約を作成しました。`, 'success');
+                            } else {
+                                failedCount++;
+                                // エラーの詳細を取得
+                                const errorData = await response.json().catch(() => ({}));
+                                const errorMessage = errorData.error || response.statusText;
+                                console.error(`Failed to create reservation for ${createReservationsDate.toLocaleDateString('ja-JP')}:`, response.status, errorMessage);
+                                showMessage(`${createReservationsDate.toLocaleDateString('ja-JP')}の予約作成に失敗: ${errorMessage}`, 'error');
+                            }
+                        } catch (error) {
+                            failedCount++;
+                            console.error(`Error creating reservation for ${createReservationsDate.toLocaleDateString('ja-JP')}:`, error);
+                        }
+                    }
+                    createReservationsDate.setDate(createReservationsDate.getDate() + 1);
+                }
+                
+                // 完了後の処理
+                submitBtn.disabled = false;
+                submitBtn.textContent = '一括作成';
+                
+                if (failedCount === 0) {
+                    showMessage(`${createdCount}件の予約を正常に作成しました。`, 'success');
+                    closeBulkReservationModal();
+                    // カレンダーを更新
+                    loadReservationsFromBackend();
+                } else {
+                    showMessage(`${createdCount}件作成、${failedCount}件失敗しました。`, 'warning');
+                }
+            };
+            
+            createReservations();
+                }
 
         // 休憩の変更を保存
         function saveBreakChanges() {
@@ -5564,22 +6342,41 @@ function showMessage(message, type = 'info') {
             const reservationBlock = document.querySelector(`[data-reservation-id="${reservationId}"]`);
             const reservationData = reservationBlock ? JSON.parse(reservationBlock.dataset.reservationData) : null;
             
+            // より完全な予約データを送信
+            const updateData = {
+                reservation: {
+                    start_time: newStartTime,
+                    course: reservationData ? `${reservationData.duration}分` : undefined
+                }
+            };
+            
+            // 休憩予約の場合はis_breakフラグも送信
+            if (reservationData && reservationData.is_break) {
+                updateData.reservation.is_break = true;
+                console.log('🔄 Break reservation detected, adding is_break flag');
+            }
+            
+            console.log('🔄 Sending update request:', updateData);
+            console.log('🔄 Original reservation data:', reservationData);
+            console.log('🔄 Course duration:', reservationData ? reservationData.duration : 'undefined');
+            console.log('🔄 Is break:', reservationData ? reservationData.is_break : 'undefined');
+            console.log('🔄 Course string being sent:', updateData.reservation.course);
+            
             fetch(`/admin/reservations/${reservationId}/update_booking`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-Token': csrfToken
                 },
-                body: JSON.stringify({
-                    reservation: {
-                        start_time: newStartTime,
-                        course: reservationData ? `${reservationData.duration}分` : undefined
-                    }
-                })
+                body: JSON.stringify(updateData)
             })
             .then(response => {
+                console.log('🔄 Response received:', response.status, response.statusText);
                 if (!response.ok) {
                     return response.json().then(errorData => {
+                        console.error('❌ Server error response:', errorData);
+                        console.error('❌ Response status:', response.status);
+                        console.error('❌ Response headers:', response.headers);
                         throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.message || 'Unknown error'}`);
                     }).catch(() => {
                         throw new Error(`HTTP error! status: ${response.status}`);
@@ -5588,7 +6385,9 @@ function showMessage(message, type = 'info') {
                 return response.json();
             })
             .then(data => {
+                console.log('🔄 Response data received:', data);
                 if (data.success) {
+                    console.log('✅ Update successful, updating local data');
                     // ローカルデータを更新
                     updateLocalReservationData(reservationId, newDateKey, newTime);
                     
@@ -5598,9 +6397,13 @@ function showMessage(message, type = 'info') {
                         const reservationIndex = reservations[newDateKey].findIndex(r => r.id === parseInt(reservationId));
                         if (reservationIndex !== -1) {
                             reservations[newDateKey][reservationIndex].updatedAt = data.reservation.updated_at;
+                            console.log('✅ Updated updatedAt in global reservations object');
+                        } else {
+                            console.warn('⚠️ Reservation not found in global reservations object for update');
                         }
                         
-                        // 現在開いているモーダルの変更日時を即座に更新
+                                                // 現在開いているモーダルの変更日時を即座に更新
+                        console.log('🔍 Checking if currentReservation matches updated reservation');
                         if (currentReservation && currentReservation.id === parseInt(reservationId)) {
                             console.log('🔄 Updating currentReservation after drag-and-drop:', {
                                 before: {
@@ -5630,46 +6433,67 @@ function showMessage(message, type = 'info') {
                                 }
                             });
                             
-                            updateModalUpdatedAt(data.reservation.updated_at);
+                            try {
+                                updateModalUpdatedAt(data.reservation.updated_at);
+                                console.log('✅ Modal updated at timestamp updated successfully');
+                            } catch (error) {
+                                console.error('❌ Error updating modal timestamp:', error);
+                            }
                         } else {
                             console.log('❌ currentReservation not found or ID mismatch:', {
                                 currentReservation: currentReservation ? currentReservation.id : 'null',
                                 reservationId: reservationId
                             });
+                            console.log('🔍 currentReservation details:', currentReservation);
                             
                             // モーダルが開いている場合は、最新のデータでcurrentReservationを更新
                             const modal = document.getElementById('reservationDetailModal');
                             console.log('🔍 Modal display status:', modal ? modal.style.display : 'modal not found');
+                            console.log('🔍 Modal element:', modal);
                             
                             if (modal && modal.style.display === 'block') {
                                 console.log('🔍 Modal is open, updating currentReservation...');
+                                console.log('🔍 Searching through reservations for ID:', reservationId);
                                 // 最新の予約データを取得してcurrentReservationを更新
                                 for (const dateKey of Object.keys(reservations)) {
                                     const dayReservations = reservations[dateKey];
                                     const foundReservation = dayReservations.find(r => r.id === parseInt(reservationId));
-                                    if (foundReservation) {
-                                        currentReservation = foundReservation;
-                                        console.log('🔄 Updated currentReservation from reservations data:', {
-                                            time: currentReservation.time,
-                                            date: currentReservation.date,
-                                            dateKey: currentReservation.dateKey,
-                                            start_time: currentReservation.start_time
-                                        });
-                                        break;
-                                    }
+                                                                    if (foundReservation) {
+                                    currentReservation = foundReservation;
+                                    console.log('🔄 Updated currentReservation from reservations data:', {
+                                        time: currentReservation.time,
+                                        date: currentReservation.date,
+                                        dateKey: currentReservation.dateKey,
+                                        start_time: currentReservation.start_time
+                                    });
+                                    console.log('🔄 currentReservation object after update:', currentReservation);
+                                    console.log('🔄 Found reservation details:', foundReservation);
+                                    console.log('🔄 Updated currentReservation successfully');
+                                    break;
+                                } else {
+                                    console.log('🔍 No matching reservation found in dayReservations for ID:', reservationId);
+                                    console.log('🔍 Available reservations in this day:', dayReservations.map(r => ({ id: r.id, time: r.time, date: r.date })));
+                                }
                                 }
                             } else {
                                 console.log('🔍 Modal is not open, skipping currentReservation update');
+                                console.log('🔍 Modal display value:', modal ? modal.style.display : 'N/A');
                             }
                         }
                     }
                     
                     // カレンダーを再描画
                     console.log('🔄 Regenerating calendar after reservation move');
-                    generateTimeSlots();
+                    try {
+                        generateTimeSlots();
+                        console.log('✅ Calendar regenerated successfully');
+                    } catch (error) {
+                        console.error('❌ Error regenerating calendar:', error);
+                    }
                     
                     showMessage('予約時間が更新されました。', 'success');
                 } else {
+                    console.error('❌ Update failed:', data.message);
                     showMessage(`予約の更新に失敗しました: ${data.message}`, 'error');
                 }
                 
@@ -5677,16 +6501,24 @@ function showMessage(message, type = 'info') {
                 const reservationBlock = document.querySelector(`[data-reservation-id="${reservationId}"]`);
                 if (reservationBlock) {
                     reservationBlock.dataset.updating = 'false';
+                    console.log('✅ Updating flag reset to false');
+                } else {
+                    console.warn('⚠️ Reservation block element not found for updating flag reset');
                 }
             })
             .catch(error => {
-                console.error('Error updating reservation:', error);
+                console.error('❌ Error updating reservation:', error);
+                console.error('❌ Error details:', error.message);
+                console.error('❌ Error stack:', error.stack);
                 showMessage('予約の更新中にエラーが発生しました。', 'error');
                 
                 // Reset updating flag on error
                 const reservationBlock = document.querySelector(`[data-reservation-id="${reservationId}"]`);
                 if (reservationBlock) {
                     reservationBlock.dataset.updating = 'false';
+                    console.log('✅ Updating flag reset to false after error');
+                } else {
+                    console.warn('⚠️ Reservation block element not found for updating flag reset after error');
                 }
             });
         }
@@ -5698,17 +6530,22 @@ function showMessage(message, type = 'info') {
                 newDateKey: newDateKey,
                 newTime: newTime
             });
+            console.log('🔄 Current reservations object:', reservations);
             
             // 元の予約データを取得
             let originalReservationData = null;
             let originalDateKey = null;
             
+            console.log('🔍 Searching for original reservation in reservations object');
             // 元の予約を見つけて削除
             for (const dateKey of Object.keys(reservations)) {
                 const reservationIndex = reservations[dateKey].findIndex(r => r.id === parseInt(reservationId));
                 if (reservationIndex !== -1) {
                     originalReservationData = { ...reservations[dateKey][reservationIndex] };
                     originalDateKey = dateKey;
+                    console.log('🔍 Found original reservation:', originalReservationData);
+                    console.log('🔍 Original date key:', originalDateKey);
+                    
                     reservations[dateKey].splice(reservationIndex, 1);
                     
                     // 空の配列の場合は日付キーを削除
@@ -5739,14 +6576,19 @@ function showMessage(message, type = 'info') {
                 start_time: new Date(`${newDateKey}T${newTime}:00+09:00`).toISOString()
             };
             
+            console.log('🔄 Updated reservation data:', updatedReservationData);
             reservations[newDateKey].push(updatedReservationData);
             
             // DOM要素のデータ属性も更新
             const reservationBlock = document.querySelector(`[data-reservation-id="${reservationId}"]`);
             if (reservationBlock) {
+                console.log('🔄 Updating DOM element data attributes');
                 reservationBlock.dataset.originalDateKey = newDateKey;
                 reservationBlock.dataset.originalTimeStr = newTime;
                 reservationBlock.dataset.reservationData = JSON.stringify(updatedReservationData);
+                console.log('🔄 DOM element updated successfully');
+            } else {
+                console.warn('⚠️ Reservation block element not found for DOM update');
             }
             
             console.log('✅ Local reservation data updated:', {
@@ -5754,6 +6596,7 @@ function showMessage(message, type = 'info') {
                 to: newDateKey,
                 reservationId: reservationId
             });
+            console.log('✅ Final reservations object state:', reservations);
         }
 
         // 予約データの妥当性をチェックする関数
@@ -5780,13 +6623,26 @@ function showMessage(message, type = 'info') {
 
                 // ユーザー検索機能
         function setupUserSearch() {
+            // 通常の予約作成モーダル用
             const customerNameInput = document.getElementById('customerName');
             const searchResults = document.getElementById('userSearchResults');
             
-            if (!customerNameInput || !searchResults) return;
+            if (customerNameInput && searchResults) {
+                setupUserSearchForInput(customerNameInput, searchResults, 'customerName', 'customerPhone', 'customerEmail');
+            }
             
+            // 一括予約作成モーダル用
+            const bulkCustomerNameInput = document.getElementById('bulkCustomerName');
+            const bulkSearchResults = document.getElementById('bulkUserSearchResults');
+            
+            if (bulkCustomerNameInput && bulkSearchResults) {
+                setupUserSearchForInput(bulkCustomerNameInput, bulkSearchResults, 'bulkCustomerName', 'bulkCustomerPhone', 'bulkCustomerEmail');
+            }
+        }
+        
+        function setupUserSearchForInput(inputElement, resultsElement, nameFieldId, phoneFieldId, emailFieldId) {
             // 入力イベント
-            customerNameInput.addEventListener('input', function() {
+            inputElement.addEventListener('input', function() {
                 const query = this.value.trim();
                 
                 // デバウンス処理
@@ -5795,62 +6651,59 @@ function showMessage(message, type = 'info') {
                 }
                 
                 if (query.length < 2) {
-                    hideUserSearchResults();
+                    hideUserSearchResults(resultsElement);
                     return;
                 }
                 
                 searchTimeout = setTimeout(() => {
-                    searchUsers(query);
+                    searchUsers(query, resultsElement, nameFieldId, phoneFieldId, emailFieldId);
                 }, 300);
             });
             
             // フォーカスアウト時に結果を隠す
-            customerNameInput.addEventListener('blur', function() {
+            inputElement.addEventListener('blur', function() {
                 setTimeout(() => {
-                    hideUserSearchResults();
+                    hideUserSearchResults(resultsElement);
                 }, 200);
             });
             
             // フォーカス時に結果を表示（入力がある場合）
-            customerNameInput.addEventListener('focus', function() {
+            inputElement.addEventListener('focus', function() {
                 const query = this.value.trim();
                 if (query.length >= 2) {
-                    searchUsers(query);
+                    searchUsers(query, resultsElement, nameFieldId, phoneFieldId, emailFieldId);
                 }
             });
         }
         
-        function searchUsers(query) {
-
-            
+        function searchUsers(query, resultsElement, nameFieldId, phoneFieldId, emailFieldId) {
             fetch(`/admin/reservations/search_users?query=${encodeURIComponent(query)}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        displayUserSearchResults(data.users);
-    } else {
+                        displayUserSearchResults(data.users, resultsElement, nameFieldId, phoneFieldId, emailFieldId);
+                    } else {
                         console.error('❌ User search failed:', data.message);
-                        hideUserSearchResults();
-    }
-  })
-  .catch(error => {
+                        hideUserSearchResults(resultsElement);
+                    }
+                })
+                .catch(error => {
                     console.error('❌ Error searching users:', error);
-                    hideUserSearchResults();
+                    hideUserSearchResults(resultsElement);
                 });
         }
         
-        function displayUserSearchResults(users) {
-            const searchResults = document.getElementById('userSearchResults');
-            if (!searchResults) return;
+        function displayUserSearchResults(users, resultsElement, nameFieldId, phoneFieldId, emailFieldId) {
+            if (!resultsElement) return;
             
             if (users.length === 0) {
-                searchResults.innerHTML = '<div class="user-search-item">該当するユーザーが見つかりません</div>';
-                searchResults.style.display = 'block';
+                resultsElement.innerHTML = '<div class="user-search-item">該当するユーザーが見つかりません</div>';
+                resultsElement.style.display = 'block';
                 return;
             }
             
             const resultsHtml = users.map(user => `
-                <div class="user-search-item" onclick="selectUser(${user.id}, '${user.name}', '${user.phone_number}', '${user.email}')">
+                <div class="user-search-item" onclick="selectUser(${user.id}, '${user.name}', '${user.phone_number}', '${user.email}', '${nameFieldId}', '${phoneFieldId}', '${emailFieldId}')">
                     <div class="user-name">${user.name}</div>
                     <div class="user-details">
                         📞 ${user.phone_number || '未設定'} | 📧 ${user.email || '未設定'}
@@ -5860,34 +6713,39 @@ function showMessage(message, type = 'info') {
                 </div>
             `).join('');
             
-            searchResults.innerHTML = resultsHtml;
-            searchResults.style.display = 'block';
+            resultsElement.innerHTML = resultsHtml;
+            resultsElement.style.display = 'block';
         }
         
-        function selectUser(userId, name, phone, email) {
-
-            
+        function selectUser(userId, name, phone, email, nameFieldId, phoneFieldId, emailFieldId) {
             // フォームフィールドを更新
-            document.getElementById('customerName').value = name;
-            document.getElementById('customerPhone').value = phone;
-            document.getElementById('customerEmail').value = email;
+            document.getElementById(nameFieldId).value = name;
+            document.getElementById(phoneFieldId).value = phone;
+            document.getElementById(emailFieldId).value = email;
             
             // 検索結果を隠す
-            hideUserSearchResults();
+            hideUserSearchResults(document.getElementById(nameFieldId).closest('.position-relative').querySelector('.user-search-results'));
             
             // 成功メッセージ
             showMessage(`既存ユーザー「${name}」を選択しました`, 'success');
         }
         
-        function hideUserSearchResults() {
+        function hideUserSearchResults(resultsElement) {
             console.log('🔍 hideUserSearchResults called');
-            const searchResults = document.getElementById('userSelectionSearchResults');
-            if (searchResults) {
-                searchResults.style.display = 'none';
-                searchResults.innerHTML = ''; // Also clear the content
+            if (resultsElement) {
+                resultsElement.style.display = 'none';
+                resultsElement.innerHTML = ''; // Also clear the content
                 console.log('🔍 Search results hidden and cleared');
             } else {
-                console.log('🔍 Search results element not found for hiding');
+                // Fallback for backward compatibility
+                const searchResults = document.getElementById('userSelectionSearchResults');
+                if (searchResults) {
+                    searchResults.style.display = 'none';
+                    searchResults.innerHTML = '';
+                    console.log('🔍 Fallback search results hidden and cleared');
+                } else {
+                    console.log('🔍 Search results element not found for hiding');
+                }
             }
         }
 

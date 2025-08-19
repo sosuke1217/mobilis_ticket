@@ -543,6 +543,77 @@
             box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
         }
 
+        /* Bulk Reservation Modal Styles */
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin: 0;
+        }
+
+        .bulk-preview {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .bulk-preview h4 {
+            margin: 0 0 15px 0;
+            color: #495057;
+            font-size: 16px;
+        }
+
+        .bulk-preview-list {
+            max-height: 200px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 10px;
+        }
+
+        .bulk-preview-item {
+            padding: 8px;
+            border-bottom: 1px solid #f1f3f4;
+            font-size: 14px;
+        }
+
+        .bulk-preview-item:last-child {
+            border-bottom: none;
+        }
+
+        .bulk-preview-item .date {
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .bulk-preview-item .time {
+            color: #6c757d;
+        }
+
+        .bulk-preview-item.conflict {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+
+        .conflict-warning {
+            color: #856404;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
         body {
             font-family: 'Hiragino Kaku Gothic Pro', 'ヒラギノ角ゴ Pro W3', Meiryo, sans-serif;
             background-color: #f8f9fa;
