@@ -37,7 +37,7 @@ class Admin::DashboardController < ApplicationController
   
     # セレクトタグ用の月リスト
     @available_months = TicketUsage.distinct
-      .pluck(Arel.sql("strftime('%Y-%m', used_at)"))
+      .pluck(Arel.sql("to_char(used_at, 'YYYY-MM')"))
       .compact
       .map { |m| Date.strptime(m, "%Y-%m") }
       .uniq
