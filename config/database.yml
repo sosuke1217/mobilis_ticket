@@ -30,17 +30,16 @@ test:
 production:
   <<: *default
   database: storage/production.sqlite3
-  # Heroku用の設定
-  # 本番環境ではPostgreSQLの使用を推奨
-  # adapter: postgresql
-  # encoding: unicode
-  # pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-  # url: <%= ENV['DATABASE_URL'] %>
-
-# Heroku用の設定
-heroku:
-  <<: *default
-  adapter: postgresql
+  # Heroku環境ではPostgreSQLを使用
+  adapter: <%= ENV['DATABASE_URL'] ? 'postgresql' : 'sqlite3' %>
   encoding: unicode
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-  url: <%= ENV['DATABASE_URL'] %>
+  url: <%= ENV['DATABASE_URL'] if ENV['DATABASE_URL'] %>
+
+# Heroku用の設定（環境変数で自動選択）
+# heroku:
+#   <<: *default
+#   adapter: postgresql
+#   encoding: unicode
+#   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+#   url: <%= ENV['DATABASE_URL'] %>
