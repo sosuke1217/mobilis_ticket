@@ -93,7 +93,7 @@
               <ul class="dropdown-menu dropdown-menu-end">
                 <li><hr class="dropdown-divider"></li>
                 <li>
-                  <%= link_to destroy_admin_user_session_path, method: :delete, class: "dropdown-item" do %>
+                  <%= button_to destroy_admin_user_session_path, method: :delete, class: "dropdown-item border-0 bg-transparent text-start w-100", style: "padding: 0.25rem 1rem;" do %>
                     <i class="fas fa-sign-out-alt me-2"></i>ログアウト
                   <% end %>
                 </li>

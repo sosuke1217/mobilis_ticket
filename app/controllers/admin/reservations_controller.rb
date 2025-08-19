@@ -289,6 +289,7 @@ class Admin::ReservationsController < ApplicationController
           customer: reservation.name || reservation.user&.name || '未設定',
           phone: reservation.user&.phone_number || '',
           email: reservation.user&.email || '',
+          is_break: reservation.is_break || false,
           note: reservation.note || '',
           status: reservation.status,
           createdAt: reservation.created_at.iso8601,
@@ -374,7 +375,9 @@ class Admin::ReservationsController < ApplicationController
     if @reservation.save
       render json: {
         success: true,
-        reservation: @reservation.as_json(include: :user),
+        reservation: @reservation.as_json(include: :user).merge({
+          is_break: @reservation.is_break || false
+        }),
         message: '予約が作成されました'
       }
     else
@@ -555,6 +558,7 @@ class Admin::ReservationsController < ApplicationController
           email: reservation.user&.email || '',
           note: reservation.note || '',
           status: reservation.status,
+          is_break: reservation.is_break || false,
           createdAt: reservation.created_at.iso8601,
           updatedAt: reservation.updated_at.iso8601,
           userId: reservation.user_id,
@@ -714,14 +718,29 @@ class Admin::ReservationsController < ApplicationController
       
       # 予約パラメータを準備
       reservation_attrs = reservation_params.except(:user_attributes, :user_id)
-      reservation_attrs[:user_id] = user.id if user
+      if user
+        reservation_attrs[:user_id] = user.id
+        reservation_attrs[:name] = user.name  # 予約のnameフィールドも更新
+        Rails.logger.info "🔄 Updating reservation name to: #{user.name}"
+      end
       
-      # 管理者用のバリデーションスキップ
-      @reservation.skip_business_hours_validation = true
-      @reservation.skip_advance_booking_validation = true
-      @reservation.skip_advance_notice_validation = true
-      @reservation.skip_time_validation = true
-      @reservation.skip_overlap_validation = true
+      # バリデーション設定（休憩の場合は営業時間と重複をチェック）
+      if @reservation.is_break?
+        # 休憩の場合は営業時間と重複をチェック
+        @reservation.skip_advance_booking_validation = true
+        @reservation.skip_advance_notice_validation = true
+        @reservation.skip_time_validation = false
+        @reservation.skip_business_hours_validation = false
+        @reservation.skip_overlap_validation = false
+        Rails.logger.info "🔄 Break validation enabled for reservation #{@reservation.id}"
+      else
+        # 通常予約の場合は管理者用の制限をスキップ
+        @reservation.skip_business_hours_validation = true
+        @reservation.skip_advance_booking_validation = true
+        @reservation.skip_advance_notice_validation = true
+        @reservation.skip_time_validation = true
+        @reservation.skip_overlap_validation = true
+      end
       
       if @reservation.update(reservation_attrs)
         Rails.logger.info "✅ Reservation #{reservation_id} updated successfully"
@@ -1164,7 +1183,7 @@ class Admin::ReservationsController < ApplicationController
   def reservation_params
     params.require(:reservation).permit(
       :start_time, :end_time, :course, :status, :cancellation_reason, :note, :user_id,
-      :name, :date, :time, :ticket_id, :individual_interval_minutes,
+      :name, :date, :time, :ticket_id, :individual_interval_minutes, :is_break,
       user_attributes: [:name, :phone_number, :email]
     )
   end
@@ -1383,9 +1402,5 @@ class Admin::ReservationsController < ApplicationController
   end
 
   private
-
-  def reservation_params
-    params.require(:reservation).permit(:start_time, :course, :status, :note, :name, :user_id, user_attributes: [:name, :phone_number, :email])
-  end
 
 end
