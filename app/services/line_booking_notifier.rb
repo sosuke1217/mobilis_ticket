@@ -140,8 +140,7 @@ class LineBookingNotifier
               contents: [
                 create_info_row("コース", reservation.course),
                 create_info_row("希望日時", reservation.start_time&.strftime('%m/%d %H:%M')),
-                create_info_row("お名前", user.name),
-                create_info_row("ご住所", truncate_address(user.address))
+                create_info_row("お名前", user.name)
               ],
               margin: "md"
             },
@@ -219,8 +218,7 @@ class LineBookingNotifier
               layout: "vertical",
               contents: [
                 create_info_row("日時", reservation.start_time.strftime('%m/%d(%a) %H:%M〜')),
-                create_info_row("コース", reservation.course),
-                create_info_row("場所", truncate_address(reservation.user.address))
+                create_info_row("コース", reservation.course)
               ],
               margin: "md"
             },
@@ -299,8 +297,7 @@ class LineBookingNotifier
               layout: "vertical",
               contents: [
                 create_info_row("日時", reservation.start_time.strftime('%m/%d(%a) %H:%M〜%H:%M')),
-                create_info_row("コース", reservation.course),
-                create_info_row("場所", truncate_address(reservation.user.address))
+                create_info_row("コース", reservation.course)
               ],
               margin: "md"
             },
@@ -379,14 +376,13 @@ class LineBookingNotifier
               layout: "vertical",
               contents: [
                 create_info_row("日時", reservation.start_time.strftime('%m/%d(%a) %H:%M〜')),
-                create_info_row("コース", reservation.course),
-                create_info_row("理由", reservation.cancellation_reason || "未記載")
+                create_info_row("コース", reservation.course)
               ],
               margin: "md"
             },
             {
               type: "text",
-              text: "またのご利用をお待ちしております。\n再予約をご希望の場合はメニューから「予約」をお選びください。",
+              text: "またのご利用をお待ちしております。\n再予約をご希望の場合は、ご連絡ください。",
               size: "sm",
               color: "#666666",
               wrap: true,

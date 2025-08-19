@@ -35,30 +35,30 @@ class LineRichMenuSetup
           bounds: { x: 0, y: 0, width: 833, height: 843 }, 
           action: { type: "postback", data: "booking" } 
         },
-        # 上段中央：チケット確認
+        # 上段中央：ホームページ
         { 
           bounds: { x: 834, y: 0, width: 833, height: 843 }, 
-          action: { type: "postback", data: "check_tickets" } 
-        },
-        # 上段右：使用履歴
-        { 
-          bounds: { x: 1667, y: 0, width: 833, height: 843 }, 
-          action: { type: "postback", data: "usage_history" } 
-        },
-        # 下段左：予約確認
-        { 
-          bounds: { x: 0, y: 843, width: 833, height: 843 }, 
-          action: { type: "postback", data: "my_reservations" } 
-        },
-        # 下段中央：ウェブサイト
-        { 
-          bounds: { x: 834, y: 843, width: 833, height: 843 }, 
           action: { type: "uri", uri: "https://mobilis-stretch.com/" } 
         },
-        # 下段右：設定
+        # 上段右：最新情報
+        { 
+          bounds: { x: 1667, y: 0, width: 833, height: 843 }, 
+          action: { type: "postback", data: "news" } 
+        },
+        # 下段左：口コミ
+        { 
+          bounds: { x: 0, y: 843, width: 833, height: 843 }, 
+          action: { type: "postback", data: "reviews" } 
+        },
+        # 下段中央：チケット確認
+        { 
+          bounds: { x: 834, y: 843, width: 833, height: 843 }, 
+          action: { type: "postback", data: "check_tickets" } 
+        },
+        # 下段右：履歴
         { 
           bounds: { x: 1667, y: 843, width: 833, height: 843 }, 
-          action: { type: "postback", data: "settings" } 
+          action: { type: "postback", data: "usage_history" } 
         }
       ]
     }

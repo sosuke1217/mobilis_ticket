@@ -96,16 +96,10 @@ class LinebotController < ApplicationController
       send_booking_options(user, reply_token)
 
     when "news"
-      send_reply(reply_token, {
-        type: "text",
-        text: "📰 最新情報はこちら：https://mobilis-stretch.com/news"
-      })
+      send_news_menu(reply_token)
 
     when "reviews"
-      send_reply(reply_token, {
-        type: "text",
-        text: "⭐️ ご感想はこちら：https://mobilis-stretch.com/reviews"
-      })
+      send_reviews_menu(reply_token)
 
     when /^select_time_period_(.+)_(.+)_(.+)$/
       course = $1
@@ -158,6 +152,20 @@ class LinebotController < ApplicationController
     when /^urgent_cancel_(\d+)$/
       reservation_id = $1.to_i
       send_cancellation_reason_options(user, reply_token, reservation_id)
+
+    when "post_review"
+      # Googleレビューに変更したため、このアクションは不要
+      send_reply(reply_token, {
+        type: "text",
+        text: "Googleレビュー機能に変更されました。メニューから「Googleレビュー」をお選びください。"
+      })
+
+    when "view_reviews"
+      # Googleレビューに変更したため、このアクションは不要
+      send_reply(reply_token, {
+        type: "text",
+        text: "Googleレビュー機能に変更されました。メニューから「Googleレビュー」をお選びください。"
+      })
 
     else
       send_reply(reply_token, {
@@ -1153,4 +1161,423 @@ class LinebotController < ApplicationController
     
     available_slots
   end
+
+  # 🆕 Googleレビューメニュー送信
+  def send_reviews_menu(reply_token)
+    message = {
+      type: "flex",
+      altText: "Googleレビュー",
+      contents: {
+        type: "bubble",
+        header: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "⭐️ Googleレビュー",
+              weight: "bold",
+              size: "xl",
+              color: "#4285F4"
+            },
+            {
+              type: "text",
+              text: "Googleでレビューを投稿してください",
+              size: "sm",
+              color: "#666666"
+            }
+          ],
+          paddingAll: "20px"
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "📝 Googleレビュー投稿",
+              weight: "bold",
+              size: "md",
+              margin: "md"
+            },
+            {
+              type: "text",
+              text: "ご利用いただいた感想やご意見をGoogleで共有してください。",
+              size: "sm",
+              color: "#666666",
+              wrap: true,
+              margin: "sm"
+            },
+            {
+              type: "separator",
+              margin: "md"
+            },
+            {
+              type: "text",
+              text: "📊 現在の評価",
+              weight: "bold",
+              size: "md",
+              margin: "md"
+            },
+            {
+              type: "text",
+              text: "現在のGoogleレビューの評価をご確認いただけます。",
+              size: "sm",
+              color: "#666666",
+              wrap: true,
+              margin: "sm"
+            }
+          ]
+        },
+        footer: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "button",
+              style: "primary",
+              action: {
+                type: "uri",
+                label: "📝 Googleレビューを投稿",
+                uri: "https://search.google.com/local/writereview?placeid=YOUR_PLACE_ID"
+              }
+            },
+            {
+              type: "button",
+              style: "secondary",
+              action: {
+                type: "uri",
+                label: "📊 Googleレビューを見る",
+                uri: "https://www.google.com/maps/place/mobilis-stretch"
+              }
+            },
+            {
+              type: "button",
+              style: "secondary",
+              action: {
+                type: "postback",
+                label: "🔙 戻る",
+                data: "reviews"
+              }
+            }
+          ]
+        }
+      }
+    }
+
+    send_reply(reply_token, message)
+  end
+
+
+    message = {
+      type: "flex",
+      altText: "口コミ投稿フォーム",
+      contents: {
+        type: "bubble",
+        header: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "📝 口コミ投稿",
+              weight: "bold",
+              size: "xl",
+              color: "#FF6B35"
+            },
+            {
+              type: "text",
+              text: "ご感想をお聞かせください",
+              size: "sm",
+              color: "#666666"
+            }
+          ],
+          paddingAll: "20px"
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "⭐️ 評価",
+              weight: "bold",
+              size: "md",
+              margin: "md"
+            },
+            {
+              type: "box",
+              layout: "horizontal",
+              contents: [
+                create_star_button(1),
+                create_star_button(2),
+                create_star_button(3),
+                create_star_button(4),
+                create_star_button(5)
+              ],
+              spacing: "sm",
+              margin: "sm"
+            },
+            {
+              type: "separator",
+              margin: "md"
+            },
+            {
+              type: "text",
+              text: "💬 コメント",
+              weight: "bold",
+              size: "md",
+              margin: "md"
+            },
+            {
+              type: "text",
+              text: "「口コミを書く」ボタンを押して、ご感想をお聞かせください。",
+              size: "sm",
+              color: "#666666",
+              wrap: true,
+              margin: "sm"
+            }
+          ]
+        },
+        footer: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "button",
+              style: "primary",
+              action: {
+                type: "postback",
+                label: "📝 口コミを書く",
+                data: "write_review"
+              }
+            },
+            {
+              type: "button",
+              style: "secondary",
+              action: {
+                type: "postback",
+                label: "🔙 戻る",
+                data: "reviews"
+              }
+            }
+          ]
+        }
+      }
+    }
+
+    send_reply(reply_token, message)
+  end
+
+  # 🆕 口コミ一覧表示
+  def send_reviews_list(reply_token)
+    # サンプルの口コミデータ（実際の実装ではデータベースから取得）
+    sample_reviews = [
+      { name: "田中さん", rating: 5, comment: "とても気持ちよかったです！また利用したいと思います。", date: "2024/01/15" },
+      { name: "佐藤さん", rating: 5, comment: "スタッフの方も親切で、リラックスできました。", date: "2024/01/10" },
+      { name: "鈴木さん", rating: 4, comment: "整体の技術が高く、体が軽くなりました。", date: "2024/01/05" }
+    ]
+
+    message = {
+      type: "flex",
+      altText: "口コミ一覧",
+      contents: {
+        type: "bubble",
+        header: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "📊 口コミ一覧",
+              weight: "bold",
+              size: "xl",
+              color: "#FF6B35"
+            },
+            {
+              type: "text",
+              text: "お客様の声",
+              size: "sm",
+              color: "#666666"
+            }
+          ],
+          paddingAll: "20px"
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: sample_reviews.map { |review|
+            {
+              type: "box",
+              layout: "vertical",
+              contents: [
+                {
+                  type: "box",
+                  layout: "horizontal",
+                  contents: [
+                    {
+                      type: "text",
+                      text: review[:name],
+                      weight: "bold",
+                      size: "sm"
+                    },
+                    {
+                      type: "text",
+                      text: review[:date],
+                      size: "xs",
+                      color: "#999999",
+                      align: "end"
+                    }
+                  ]
+                },
+                {
+                  type: "box",
+                  layout: "horizontal",
+                  contents: Array.new(review[:rating]) { |i|
+                    { type: "text", text: "⭐", size: "sm", color: "#FFD700" }
+                  }
+                },
+                {
+                  type: "text",
+                  text: review[:comment],
+                  size: "sm",
+                  color: "#333333",
+                  wrap: true,
+                  margin: "sm"
+                }
+              ],
+              margin: "md"
+            }
+          }
+        },
+        footer: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "button",
+              style: "secondary",
+              action: {
+                type: "postback",
+                label: "🔙 戻る",
+                data: "reviews"
+              }
+            }
+          ]
+        }
+      }
+    }
+
+    send_reply(reply_token, message)
+  end
+
+  # 🆕 最新情報メニュー送信
+  def send_news_menu(reply_token)
+    # 設定ファイルから最新情報を読み込み
+    news_items = load_news_items
+
+    message = {
+      type: "flex",
+      altText: "最新情報・お知らせ",
+      contents: {
+        type: "bubble",
+        header: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "📰 最新情報・お知らせ",
+              weight: "bold",
+              size: "xl",
+              color: "#FF6B35"
+            },
+            {
+              type: "text",
+              text: "Mobilis Stretchからのお知らせ",
+              size: "sm",
+              color: "#666666"
+            }
+          ],
+          paddingAll: "20px"
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: news_items.map { |news|
+            {
+              type: "box",
+              layout: "vertical",
+              contents: [
+                {
+                  type: "box",
+                  layout: "horizontal",
+                  contents: [
+                    {
+                      type: "text",
+                      text: news[:category],
+                      size: "xs",
+                      color: "#FFFFFF",
+                      backgroundColor: get_category_color(news[:category]),
+                      cornerRadius: "4px"
+                    },
+                    {
+                      type: "text",
+                      text: news[:date],
+                      size: "xs",
+                      color: "#999999",
+                      align: "end"
+                    }
+                  ]
+                },
+                {
+                  type: "text",
+                  text: news[:title],
+                  weight: "bold",
+                  size: "md",
+                  margin: "sm"
+                },
+                {
+                  type: "text",
+                  text: news[:content],
+                  size: "sm",
+                  color: "#333333",
+                  wrap: true,
+                  margin: "sm"
+                }
+              ],
+              margin: "md"
+            }
+          }
+        },
+        footer: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "button",
+              style: "secondary",
+              action: {
+                type: "uri",
+                label: "🌐 ウェブサイトで詳しく見る",
+                uri: "https://mobilis-stretch.com/news"
+              }
+            },
+            {
+              type: "button",
+              style: "secondary",
+              action: {
+                type: "postback",
+                label: "🔙 戻る",
+                data: "news"
+              }
+            }
+          ]
+        }
+      }
+    }
+
+    send_reply(reply_token, message)
+  end
+
 end
