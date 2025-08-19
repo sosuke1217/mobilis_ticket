@@ -15,6 +15,7 @@ class Admin::ReservationsController < ApplicationController
       format.json do
         if request.format.json?
           Rails.logger.info "🔍 JSON request received for calendar events"
+          Rails.logger.info "📋 All params: #{params.inspect}"
 
           begin
             # システム設定を取得
@@ -28,10 +29,32 @@ class Admin::ReservationsController < ApplicationController
               .where.not(status: :cancelled)
             .order(:start_time)
 
+                      # シフトデータを取得
+          begin
+            Rails.logger.info "🔍 Shift params: start=#{params[:start]}, end=#{params[:end]}"
+            
+            if params[:start].present? && params[:end].present?
+              shifts = Shift.where(date: params[:start].to_date..params[:end].to_date)
+                .order(:date)
+              Rails.logger.info "📋 Found #{shifts.count} shifts"
+              shifts.each do |shift|
+                Rails.logger.info "  - Shift #{shift.id}: #{shift.date} (#{shift.shift_type})"
+              end
+            else
+              Rails.logger.warn "⚠️ Missing start/end params for shifts, using default range"
+              shifts = Shift.where(date: Date.current..Date.current + 7.days).order(:date)
+              Rails.logger.info "📋 Found #{shifts.count} shifts (default range)"
+            end
+          rescue => e
+            Rails.logger.error "❌ Error loading shifts: #{e.message}"
+            shifts = []
+          end
+
           Rails.logger.info "📋 Found #{reservations.count} reservations"
 
           events = []
 
+            # 予約イベントを生成
             reservations.each do |reservation|
               Rails.logger.info "🔍 Processing reservation ID=#{reservation.id}"
               
@@ -105,6 +128,10 @@ class Admin::ReservationsController < ApplicationController
                   status: reservation.status,
                   note: reservation.note,
                   cancellation_reason: reservation.cancellation_reason,
+                  created_at: reservation.created_at.iso8601,
+                  updated_at: reservation.updated_at.iso8601,
+                  createdAt: reservation.created_at.iso8601,
+                  updatedAt: reservation.updated_at.iso8601,
                   # 計算検証用
                   calculated_slots: total_duration_minutes / 10.0,
                   expected_height_px: (total_duration_minutes / 10.0) * 40,
@@ -133,12 +160,73 @@ class Admin::ReservationsController < ApplicationController
               
               Rails.logger.info "✅ Event created: #{course_type} + #{interval_type} = #{total_duration_minutes}分 (#{total_duration_minutes/10.0}スロット)"
             end
+
+            # シフトイベントを生成（無効化）
+            # Rails.logger.info "🎯 Starting shift event generation for #{shifts.count} shifts"
+            # shifts.each do |shift|
+            #   begin
+            #     Rails.logger.info "🔍 Processing shift ID=#{shift.id} for date=#{shift.date}"
+                
+                # シフトの開始時間と終了時間を設定
+                # shift_start_time = if shift.start_time.present?
+                #   shift.date.to_time.change(hour: shift.start_time.hour, min: shift.start_time.min)
+                # else
+                #   shift.date.to_time.change(hour: 9, min: 0) # デフォルト9:00
+                # end
+                # 
+                # shift_end_time = if shift.end_time.present?
+                #   shift.date.to_time.change(hour: shift.end_time.hour, min: shift.end_time.min)
+                # else
+                #   shift.date.to_time.change(hour: 18, min: 0) # デフォルト18:00
+                # end
+              
+                # シフトタイプに応じた色設定
+                # シフトイベントを作成（表示しない）
+                # shift_event = {
+                #   id: "shift_#{shift.id}",
+                #   title: "#{shift.shift_type_display} - #{shift.business_hours}",
+                #   start: shift_start_time.strftime('%Y-%m-%dT%H:%M:%S'),
+                #   end: shift_end_time.strftime('%Y-%m-%dT%H:%M:%S'),
+                #   backgroundColor: '#6c757d',
+                #   borderColor: '#545b62',
+                #   textColor: 'white',
+                #   classNames: ['fc-timegrid-event', 'shift-event', shift.shift_type],
+                #   extendedProps: {
+                #     type: 'shift',
+                #     shift_id: shift.id,
+                #     shift_type: shift.shift_type,
+                #     shift_type_display: shift.shift_type_display,
+                #     business_hours: shift.business_hours,
+                #     breaks: shift.breaks,
+                #     notes: shift.notes
+                #   }
+                # }
+                
+                # Rails.logger.info "✅ Shift event created: #{shift.shift_type_display} (#{shift.business_hours})"
+                
+                # events << shift_event
+              # rescue => e
+              #   Rails.logger.error "❌ Error processing shift #{shift.id}: #{e.message}"
+              #   Rails.logger.error e.backtrace.first(5).join("\n")
+              # end
+              # end
+              
+              # Rails.logger.info "🎯 Shift event generation completed. Total events: #{events.count}"
             
             # 🎯 全体のサマリーログ
             Rails.logger.info "📊 Event creation summary:"
             events.group_by { |e| e[:extendedProps][:total_duration] }.each do |duration, events_group|
-              slots = duration / 10.0
-              Rails.logger.info "  #{duration}分 (#{slots}スロット): #{events_group.length}件"
+              # nil チェックを追加
+              if duration.present? && duration.is_a?(Numeric)
+                slots = duration / 10.0
+                Rails.logger.info "  #{duration}分 (#{slots}スロット): #{events_group.length}件"
+              else
+                Rails.logger.warn "⚠️ Invalid duration found: #{duration.inspect} for #{events_group.length} events"
+                # デバッグ用に最初のイベントの詳細を出力
+                if events_group.first
+                  Rails.logger.warn "  Sample event: #{events_group.first[:extendedProps].inspect}"
+                end
+              end
             end
             
             render json: events, content_type: 'application/json'
@@ -160,7 +248,653 @@ class Admin::ReservationsController < ApplicationController
   end
 
   def calendar
-    # カレンダーページを表示
+    # 現在の週の予約データを取得（デフォルト）
+    start_date = Date.current.beginning_of_week
+    end_date = start_date + 6.days
+    
+    @reservations = Reservation.includes(:user)
+      .where(start_time: start_date.beginning_of_day..end_date.end_of_day)
+      .where.not(status: :cancelled)
+      .order(:start_time)
+  end
+
+  def load_reservations
+    Rails.logger.info "🔄 Load reservations called"
+    
+    begin
+      week_start_date = params[:week_start_date]
+      Rails.logger.info "📅 Loading reservations for week: #{week_start_date}"
+      
+      # 指定された週の予約データを取得
+      start_date = Date.parse(week_start_date)
+      end_date = start_date + 6.days
+      
+      reservations = Reservation.includes(:user)
+        .where(start_time: start_date.beginning_of_day..end_date.end_of_day)
+        .where.not(status: :cancelled)
+        .order(:start_time)
+      
+      # JavaScript用の形式に変換
+      reservations_data = {}
+      reservations.each do |reservation|
+        date_key = reservation.start_time.strftime('%Y-%m-%d')
+        if !reservations_data[date_key]
+          reservations_data[date_key] = []
+        end
+        
+        reservations_data[date_key] << {
+          id: reservation.id,
+          time: reservation.start_time.strftime('%H:%M'),
+          start_time: reservation.start_time.iso8601, # Add start_time for validation
+          date: reservation.start_time.strftime('%Y-%m-%d'), # Add date for validation
+          duration: extract_course_duration(reservation.course),
+          customer: reservation.name || reservation.user&.name || '未設定',
+          phone: reservation.user&.phone_number || '',
+          email: reservation.user&.email || '',
+          is_break: reservation.is_break || false,
+          note: reservation.note || '',
+          status: reservation.status,
+          createdAt: reservation.created_at.iso8601,
+          userId: reservation.user_id
+        }
+      end
+      
+      Rails.logger.info "✅ Loaded #{reservations.count} reservations for week #{week_start_date}"
+      
+      render json: {
+        success: true,
+        reservations: reservations_data,
+        week_start_date: week_start_date
+      }
+    rescue => e
+      Rails.logger.error "❌ Error loading reservations: #{e.message}"
+      render json: {
+        success: false,
+        message: "予約データの読み込みに失敗しました: #{e.message}"
+      }, status: :unprocessable_entity
+    end
+  end
+
+  def create_booking
+    Rails.logger.info "🔄 Create booking called"
+    Rails.logger.info "📝 Params: #{params.inspect}"
+    
+    # パラメータの検証
+    if params[:reservation].blank?
+      Rails.logger.error "❌ Missing reservation parameters"
+      render json: {
+        success: false,
+        errors: ['予約パラメータが不足しています'],
+        message: '予約の作成に失敗しました'
+      }, status: :unprocessable_entity
+      return
+    end
+    
+    # ユーザーを検索または作成
+    user = nil
+    if params[:reservation][:user_id].present?
+      user = User.find_by(id: params[:reservation][:user_id])
+      Rails.logger.info "🔍 Found user by ID: #{user&.name} (ID: #{user&.id})"
+    elsif params[:reservation][:user_attributes].present?
+      user_attrs = params[:reservation][:user_attributes]
+      user = User.find_by(phone_number: user_attrs[:phone_number])
+      
+      if user.nil?
+        user = User.create!(
+          name: user_attrs[:name],
+          phone_number: user_attrs[:phone_number],
+          email: user_attrs[:email]
+        )
+        Rails.logger.info "🔄 Created new user: #{user.name} (ID: #{user.id})"
+      else
+        Rails.logger.info "🔍 Found existing user: #{user.name} (ID: #{user.id})"
+      end
+    end
+
+    if user.nil?
+      Rails.logger.error "❌ No user found or created"
+      render json: {
+        success: false,
+        errors: ['ユーザー情報が不足しています'],
+        message: '予約の作成に失敗しました'
+      }, status: :unprocessable_entity
+      return
+    end
+
+    # 予約パラメータを準備
+    reservation_attrs = reservation_params.except(:user_attributes, :user_id)
+    reservation_attrs[:user_id] = user.id
+
+    @reservation = Reservation.new(reservation_attrs)
+    @reservation.status = params[:reservation][:status] || :tentative
+    
+    # 管理者用の制限をスキップ
+    @reservation.skip_business_hours_validation = true
+    @reservation.skip_advance_booking_validation = true
+    @reservation.skip_advance_notice_validation = true
+    @reservation.skip_overlap_validation = true
+    
+    if @reservation.save
+      render json: {
+        success: true,
+        reservation: @reservation.as_json(include: :user).merge({
+          is_break: @reservation.is_break || false
+        }),
+        message: '予約が作成されました'
+      }
+    else
+      render json: {
+        success: false,
+        errors: @reservation.errors.full_messages,
+        message: '予約の作成に失敗しました'
+      }, status: :unprocessable_entity
+    end
+  end
+
+  def delete_reservation
+    Rails.logger.info "🔄 Delete reservation called"
+    Rails.logger.info "📝 Params: #{params.inspect}"
+    
+    begin
+      reservation_id = params[:reservation_id]
+      @reservation = Reservation.find(reservation_id)
+      
+      # 削除前にキャンセル通知を送信
+      send_cancellation_notifications_before_delete(@reservation)
+      
+      if @reservation.destroy
+        Rails.logger.info "✅ Reservation #{reservation_id} deleted successfully"
+        render json: {
+          success: true,
+          message: '予約が削除されました'
+        }
+      else
+        Rails.logger.error "❌ Failed to delete reservation #{reservation_id}"
+        render json: {
+          success: false,
+          message: '予約の削除に失敗しました'
+        }, status: :unprocessable_entity
+      end
+    rescue ActiveRecord::RecordNotFound
+      Rails.logger.error "❌ Reservation #{reservation_id} not found"
+      render json: {
+        success: false,
+        message: '予約が見つかりませんでした'
+      }, status: :not_found
+    rescue => e
+      Rails.logger.error "❌ Error deleting reservation: #{e.message}"
+      render json: {
+        success: false,
+        message: "予約の削除中にエラーが発生しました: #{e.message}"
+      }, status: :unprocessable_entity
+    end
+  end
+
+  def search_users
+    Rails.logger.info "🔍 Search users called"
+    Rails.logger.info "📝 Params: #{params.inspect}"
+    
+    begin
+      query = params[:query]&.strip
+      
+      if query.blank?
+        render json: {
+          success: true,
+          users: []
+        }
+        return
+      end
+      
+      # 名前、電話番号、メールアドレスで検索（SQLite対応）
+      users = User.where(
+        "name LIKE ? COLLATE NOCASE OR phone_number LIKE ? COLLATE NOCASE OR email LIKE ? COLLATE NOCASE",
+        "%#{query}%", "%#{query}%", "%#{query}%"
+      ).limit(10).order(:name)
+      
+      user_data = users.map do |user|
+        {
+          id: user.id,
+          name: user.name,
+          phone_number: user.phone_number || '',
+          email: user.email || '',
+          active_tickets: user.active_ticket_count,
+          last_visit: user.last_usage_date&.strftime('%Y-%m-%d') || 'なし'
+        }
+      end
+      
+      Rails.logger.info "✅ Found #{users.count} users matching '#{query}'"
+      
+      render json: {
+        success: true,
+        users: user_data
+      }
+    rescue => e
+      Rails.logger.error "❌ Error searching users: #{e.message}"
+      render json: {
+        success: false,
+        message: "ユーザー検索中にエラーが発生しました: #{e.message}"
+      }, status: :unprocessable_entity
+    end
+  end
+
+  def update_reservation_status
+    Rails.logger.info "🔄 Update reservation status called"
+    Rails.logger.info "📝 Params: #{params.inspect}"
+    
+    begin
+      reservation_id = params[:reservation_id]
+      new_status = params[:status]
+      cancellation_reason = params[:cancellation_reason]
+      
+      @reservation = Reservation.find(reservation_id)
+      @reservation.status = new_status
+      @reservation.cancellation_reason = cancellation_reason if cancellation_reason.present?
+      
+      # 管理者用のバリデーションスキップ
+      @reservation.skip_business_hours_validation = true
+      @reservation.skip_advance_booking_validation = true
+      @reservation.skip_advance_notice_validation = true
+      @reservation.skip_time_validation = true
+      @reservation.skip_overlap_validation = true
+      
+      if @reservation.save
+        Rails.logger.info "✅ Reservation #{reservation_id} status updated to #{new_status}"
+        render json: {
+          success: true,
+          message: '予約ステータスが更新されました',
+          reservation: {
+            id: @reservation.id,
+            status: @reservation.status
+          }
+        }
+      else
+        Rails.logger.error "❌ Failed to update reservation status: #{@reservation.errors.full_messages}"
+        render json: {
+          success: false,
+          message: "予約ステータスの更新に失敗しました: #{@reservation.errors.full_messages.join(', ')}"
+        }, status: :unprocessable_entity
+      end
+    rescue ActiveRecord::RecordNotFound
+      Rails.logger.error "❌ Reservation #{reservation_id} not found"
+      render json: {
+        success: false,
+        message: '予約が見つかりませんでした'
+      }, status: :not_found
+    rescue => e
+      Rails.logger.error "❌ Error updating reservation status: #{e.message}"
+      render json: {
+        success: false,
+        message: "予約ステータスの更新中にエラーが発生しました: #{e.message}"
+      }, status: :unprocessable_entity
+    end
+  end
+
+  def load_reservations
+    Rails.logger.info "🔄 load_reservations called with params: #{params}"
+    week_start_date = params[:week_start_date]
+    
+    if week_start_date.blank?
+      render json: { success: false, message: 'Week start date is required' }
+      return
+    end
+    
+    begin
+      start_date = Date.parse(week_start_date)
+      end_date = start_date + 6.days
+      
+      reservations = Reservation.includes(:user)
+        .where(start_time: start_date.beginning_of_day..end_date.end_of_day)
+        .where.not(status: :cancelled)
+        .order(:start_time)
+      
+      # Format reservations by date with full timestamp data
+      reservations_by_date = {}
+      
+      reservations.each do |reservation|
+        date_key = reservation.start_time.strftime('%Y-%m-%d')
+        reservations_by_date[date_key] ||= []
+        
+        reservations_by_date[date_key] << {
+          id: reservation.id,
+          time: reservation.start_time.strftime('%H:%M'),
+          start_time: reservation.start_time.iso8601, # Add start_time for validation
+          date: reservation.start_time.strftime('%Y-%m-%d'), # Add date for validation
+          duration: reservation.get_duration_minutes,
+          customer: reservation.name || reservation.user&.name || '未設定',
+          phone: reservation.user&.phone_number || '',
+          email: reservation.user&.email || '',
+          note: reservation.note || '',
+          status: reservation.status,
+          is_break: reservation.is_break || false,
+          createdAt: reservation.created_at.iso8601,
+          updatedAt: reservation.updated_at.iso8601,
+          userId: reservation.user_id,
+          effective_interval_minutes: reservation.effective_interval_minutes,
+          individual_interval_minutes: reservation.individual_interval_minutes.presence
+        }
+      end
+      
+      render json: {
+        success: true,
+        reservations: reservations_by_date
+      }
+    rescue Date::Error
+      render json: { success: false, message: 'Invalid date format' }
+    rescue => e
+      Rails.logger.error "❌ Error in load_reservations: #{e.message}"
+      render json: { success: false, message: 'Server error' }
+    end
+  end
+
+  def history
+    Rails.logger.info "🔄 history called for reservation #{params[:id]}"
+    
+    begin
+      @reservation = Reservation.find(params[:id])
+      
+      if @reservation.user_id
+        # Get ticket usages for this user
+        usages = TicketUsage.includes(ticket: :ticket_template)
+          .where(user_id: @reservation.user_id)
+          .order(used_at: :desc)
+          .limit(10)
+        
+        usages_data = usages.map do |usage|
+          {
+            id: usage.id,
+            usage_date: usage.used_at.iso8601,
+            ticket_name: usage.ticket&.ticket_template&.name || '不明なチケット',
+            quantity: 1, # TicketUsage doesn't seem to have quantity field
+            note: usage.note || ''
+          }
+        end
+        
+        Rails.logger.info "✅ Found #{usages_data.length} usages for user #{@reservation.user_id}"
+        
+        render json: {
+          success: true,
+          usages: usages_data
+        }
+      else
+        Rails.logger.warn "⚠️ No user ID for reservation #{params[:id]}"
+        render json: {
+          success: false,
+          message: 'ユーザー情報がありません'
+        }
+      end
+    rescue ActiveRecord::RecordNotFound
+      Rails.logger.error "❌ Reservation #{params[:id]} not found"
+      render json: {
+        success: false,
+        message: '予約が見つかりませんでした'
+      }, status: :not_found
+    rescue => e
+      Rails.logger.error "❌ Error in history: #{e.message}"
+      render json: {
+        success: false,
+        message: "履歴の取得中にエラーが発生しました: #{e.message}"
+      }, status: :unprocessable_entity
+    end
+  end
+
+  def update_interval
+    Rails.logger.info "🔄 update_interval called"
+    Rails.logger.info "📝 Params: #{params.inspect}"
+    
+    begin
+      reservation_id = params[:id]
+      @reservation = Reservation.find(reservation_id)
+      new_interval = params[:reservation][:individual_interval_minutes]
+      
+      Rails.logger.info "🔄 Updating interval for reservation #{reservation_id} to #{new_interval} minutes"
+      
+      # Admin can bypass validations
+      @reservation.skip_business_hours_validation = true
+      @reservation.skip_advance_booking_validation = true
+      @reservation.skip_advance_notice_validation = true
+      @reservation.skip_time_validation = true
+      @reservation.skip_overlap_validation = true
+      
+      if @reservation.update(individual_interval_minutes: new_interval)
+        Rails.logger.info "✅ Interval updated successfully to #{new_interval} minutes"
+        render json: {
+          success: true,
+          message: '予約が更新されました',
+          reservation: {
+            id: @reservation.id,
+            individual_interval_minutes: @reservation.individual_interval_minutes,
+            effective_interval_minutes: @reservation.effective_interval_minutes,
+            updated_at: @reservation.updated_at.iso8601
+          }
+        }
+      else
+        Rails.logger.error "❌ Failed to update interval: #{@reservation.errors.full_messages}"
+        render json: {
+          success: false,
+          message: "インターバルの更新に失敗しました: #{@reservation.errors.full_messages.join(', ')}"
+        }, status: :unprocessable_entity
+      end
+    rescue ActiveRecord::RecordNotFound
+      Rails.logger.error "❌ Reservation #{reservation_id} not found"
+      render json: {
+        success: false,
+        message: '予約が見つかりませんでした'
+      }, status: :not_found
+    rescue => e
+      Rails.logger.error "❌ Error updating interval: #{e.message}"
+      render json: {
+        success: false,
+        message: "インターバルの更新中にエラーが発生しました: #{e.message}"
+      }, status: :unprocessable_entity
+    end
+  end
+
+  def update_booking
+    Rails.logger.info "🔄 Update booking called"
+    Rails.logger.info "📝 Params: #{params.inspect}"
+    
+    begin
+      reservation_id = params[:id]
+      @reservation = Reservation.find(reservation_id)
+      
+      # ユーザーを検索または作成
+      user = nil
+      
+      # 直接user_idが指定された場合の処理を追加
+      if params[:reservation][:user_id].present?
+        user = User.find(params[:reservation][:user_id])
+        Rails.logger.info "🔄 Found user by ID: #{user.name} (ID: #{user.id})"
+      elsif params[:reservation][:user_attributes].present?
+        user_attrs = params[:reservation][:user_attributes]
+        user = User.find_by(phone_number: user_attrs[:phone_number])
+        
+        if user.nil?
+          user = User.create!(
+            name: user_attrs[:name],
+            phone_number: user_attrs[:phone_number],
+            email: user_attrs[:email]
+          )
+        else
+          # 既存ユーザーの情報を更新
+          user.update!(
+            name: user_attrs[:name],
+            email: user_attrs[:email]
+          )
+        end
+      end
+      
+      # 予約パラメータを準備
+      reservation_attrs = reservation_params.except(:user_attributes, :user_id)
+      if user
+        reservation_attrs[:user_id] = user.id
+        reservation_attrs[:name] = user.name  # 予約のnameフィールドも更新
+        Rails.logger.info "🔄 Updating reservation name to: #{user.name}"
+      end
+      
+      # バリデーション設定（休憩の場合は営業時間と重複をチェック）
+      Rails.logger.info "🔍 Setting validation flags for reservation #{@reservation.id}"
+      Rails.logger.info "🔍 Reservation is_break: #{@reservation.is_break?}"
+      
+      if @reservation.is_break?
+        # 要望に合わせて、通常予約と同様に管理者用の制限をスキップ
+        @reservation.skip_business_hours_validation = true
+        @reservation.skip_advance_booking_validation = true
+        @reservation.skip_advance_notice_validation = true
+        @reservation.skip_time_validation = true
+        @reservation.skip_overlap_validation = true
+        Rails.logger.info "🔄 Break reservation will behave like regular: skipping admin validations"
+      else
+        # 通常予約の場合は管理者用の制限をスキップ
+        @reservation.skip_business_hours_validation = true
+        @reservation.skip_advance_booking_validation = true
+        @reservation.skip_advance_notice_validation = true
+        @reservation.skip_time_validation = true
+        @reservation.skip_overlap_validation = true
+        Rails.logger.info "🔄 Regular reservation validation flags: skip_time=#{@reservation.skip_time_validation}, skip_business_hours=#{@reservation.skip_business_hours_validation}, skip_overlap=#{@reservation.skip_overlap_validation}"
+      end
+      
+      Rails.logger.info "🔍 Final validation flags: skip_time=#{@reservation.skip_time_validation}, skip_business_hours=#{@reservation.skip_business_hours_validation}, skip_overlap=#{@reservation.skip_overlap_validation}"
+      
+      # start_timeが更新される場合は、end_timeも再計算する必要がある
+      if reservation_attrs[:start_time].present?
+        Rails.logger.info "🔄 start_time update detected: #{reservation_attrs[:start_time]}"
+        Rails.logger.info "🔄 Current reservation course: #{@reservation.course}"
+        
+        # 既存のコース時間を使用してend_timeを計算
+        course_duration = extract_course_duration(@reservation.course)
+        new_start_time = Time.zone.parse(reservation_attrs[:start_time])
+        new_end_time = new_start_time + course_duration.minutes
+        
+        reservation_attrs[:end_time] = new_end_time
+        Rails.logger.info "🔄 Recalculated end_time: #{new_end_time} (course: #{course_duration}分)"
+        Rails.logger.info "🔄 Final reservation_attrs: #{reservation_attrs}"
+      else
+        Rails.logger.info "🔍 No start_time update, reservation_attrs: #{reservation_attrs}"
+      end
+      
+      Rails.logger.info "🔄 Attempting to update reservation with attributes: #{reservation_attrs}"
+      Rails.logger.info "🔄 Current reservation state: start_time=#{@reservation.start_time}, end_time=#{@reservation.end_time}, course=#{@reservation.course}"
+      
+      if @reservation.update(reservation_attrs)
+        Rails.logger.info "✅ Reservation #{reservation_id} updated successfully"
+        Rails.logger.info "✅ Updated reservation state: start_time=#{@reservation.start_time}, end_time=#{@reservation.end_time}, course=#{@reservation.course}"
+        render json: {
+          success: true,
+          message: '予約が更新されました',
+          reservation: {
+            id: @reservation.id,
+            start_time: @reservation.start_time.iso8601,
+            end_time: @reservation.end_time.iso8601,
+            course: @reservation.course,
+            name: @reservation.name,
+            note: @reservation.note,
+            status: @reservation.status,
+            created_at: @reservation.created_at.iso8601,
+            updated_at: @reservation.updated_at.iso8601,
+            user: {
+              name: @reservation.user&.name,
+              phone_number: @reservation.user&.phone_number,
+              email: @reservation.user&.email
+            }
+          }
+        }
+      else
+        Rails.logger.error "❌ Failed to update reservation: #{@reservation.errors.full_messages}"
+        Rails.logger.error "❌ Validation details: #{@reservation.errors.details}"
+        Rails.logger.error "❌ Reservation attributes: #{@reservation.attributes}"
+        Rails.logger.error "❌ Attempted attributes: #{reservation_attrs}"
+        render json: {
+          success: false,
+          message: "予約の更新に失敗しました: #{@reservation.errors.full_messages.join(', ')}"
+        }, status: :unprocessable_entity
+      end
+    rescue ActiveRecord::RecordNotFound
+      Rails.logger.error "❌ Reservation #{reservation_id} not found"
+      render json: {
+        success: false,
+        message: '予約が見つかりませんでした'
+      }, status: :not_found
+    rescue => e
+      Rails.logger.error "❌ Error updating reservation: #{e.message}"
+      render json: {
+        success: false,
+        message: "予約の更新中にエラーが発生しました: #{e.message}"
+      }, status: :internal_server_error
+    end
+  end
+
+  def save_shift_settings
+    Rails.logger.info "🔄 Save shift settings called"
+    Rails.logger.info "📝 Params: #{params.inspect}"
+    
+    begin
+      schedule_data = params[:schedule_data]
+      is_recurring = params[:is_recurring] || false
+      week_start_date = params[:week_start_date]
+      
+      if is_recurring
+        # デフォルトスケジュールを保存
+        weekly_schedule = WeeklySchedule.default_schedule
+        weekly_schedule.update!(schedule_data: schedule_data)
+      else
+        # 特定の週のスケジュールを保存
+        weekly_schedule = WeeklySchedule.find_or_initialize_by(week_start_date: week_start_date)
+        weekly_schedule.update!(
+          schedule_data: schedule_data,
+          is_recurring: false
+        )
+      end
+      
+      render json: {
+        success: true,
+        message: 'シフト設定が保存されました'
+      }
+    rescue => e
+      Rails.logger.error "❌ Error saving shift settings: #{e.message}"
+      render json: {
+        success: false,
+        message: "シフト設定の保存に失敗しました: #{e.message}"
+      }, status: :unprocessable_entity
+    end
+  end
+
+  def load_shift_settings
+    Rails.logger.info "🔄 Load shift settings called"
+    
+    begin
+      week_start_date = params[:week_start_date]
+      Rails.logger.info "📅 Loading settings for week: #{week_start_date}"
+      
+      # デフォルトスケジュールを取得
+      default_schedule = WeeklySchedule.default_schedule.schedule_for_javascript
+      
+      # 特定の週のスケジュールを取得
+      weekly_schedule = WeeklySchedule.find_by(week_start_date: week_start_date)
+      
+      if weekly_schedule
+        # 既存の週固有スケジュールがある場合
+        current_week_schedule = weekly_schedule.schedule_for_javascript
+        Rails.logger.info "✅ Found custom schedule for week #{week_start_date}"
+      else
+        # 週固有スケジュールがない場合、デフォルトを使用
+        current_week_schedule = default_schedule
+        Rails.logger.info "ℹ️ No custom schedule for week #{week_start_date}, using default"
+      end
+      
+      render json: {
+        success: true,
+        default_schedule: default_schedule,
+        current_week_schedule: current_week_schedule,
+        has_custom_schedule: weekly_schedule.present?,
+        week_start_date: week_start_date
+      }
+    rescue => e
+      Rails.logger.error "❌ Error loading shift settings: #{e.message}"
+      render json: {
+        success: false,
+        message: "シフト設定の読み込みに失敗しました: #{e.message}"
+      }, status: :unprocessable_entity
+    end
   end
 
   def show
@@ -428,9 +1162,12 @@ class Admin::ReservationsController < ApplicationController
   end
 
   def destroy
+    # 削除前にキャンセル通知を送信
+    send_cancellation_notifications_before_delete(@reservation)
+    
     @reservation.destroy
       
-      respond_to do |format|
+    respond_to do |format|
       format.html { redirect_to calendar_admin_reservations_path, notice: '予約を削除しました' }
       format.json { render json: { success: true } }
     end
@@ -483,11 +1220,39 @@ class Admin::ReservationsController < ApplicationController
   def set_reservation
     @reservation = Reservation.find(params[:id])
   end
+  
+  # 削除前にキャンセル通知を送信
+  def send_cancellation_notifications_before_delete(reservation)
+    Rails.logger.info "📧 Sending cancellation notifications before delete for reservation #{reservation.id}"
+    
+    begin
+      # 削除前にcancelled_atを設定（通知用）
+      reservation.update_column(:cancelled_at, Time.current) unless reservation.cancelled_at.present?
+      
+      # メール通知
+      if reservation.user&.email.present?
+        ReservationMailer.cancellation_notification(reservation).deliver_now
+        Rails.logger.info "✅ Cancellation email sent to: #{reservation.user.email}"
+      end
+      
+      # LINE通知
+      if reservation.user&.line_user_id.present?
+        LineBookingNotifier.send_cancellation_notification(reservation)
+        Rails.logger.info "✅ LINE cancellation notification sent to: #{reservation.user.line_user_id}"
+      end
+      
+      Rails.logger.info "📧 Cancellation notifications completed for reservation #{reservation.id}"
+    rescue => e
+      Rails.logger.error "❌ Error sending cancellation notifications: #{e.message}"
+      # 通知エラーでも削除処理は続行
+    end
+  end
 
   def reservation_params
     params.require(:reservation).permit(
       :start_time, :end_time, :course, :status, :cancellation_reason, :note, :user_id,
-      :name, :date, :time, :ticket_id, :individual_interval_minutes
+      :name, :date, :time, :ticket_id, :individual_interval_minutes, :is_break,
+      user_attributes: [:name, :phone_number, :email]
     )
   end
 
@@ -507,6 +1272,8 @@ class Admin::ReservationsController < ApplicationController
       { bg: '#17a2b8', border: '#138496', text: 'white' }
     end
   end
+
+  
 
   def process_reservation_params(params)
     processed_params = params.permit(
@@ -562,22 +1329,31 @@ class Admin::ReservationsController < ApplicationController
   end
 
   def extract_course_duration(course_string)
+    Rails.logger.info "🔍 extract_course_duration called: course_string='#{course_string}'"
+    
     return 60 unless course_string.present? # デフォルト
     
     case course_string.to_s.strip
-    when /40分/, '40分コース'
+    when "40分", "40分コース"
+      Rails.logger.info "🔍 Matched 40分 format"
       40
-    when /60分/, '60分コース'
+    when "60分", "60分コース"
+      Rails.logger.info "🔍 Matched 60分 format"
       60
-    when /80分/, '80分コース'
+    when "80分", "80分コース"
+      Rails.logger.info "🔍 Matched 80分 format"
       80
     when /(\d+)分/ # 数字+分の形式
-      $1.to_i
+      duration = $1.to_i
+      Rails.logger.info "🔍 Extracted duration from regex: #{duration} minutes"
+      duration
     else
       Rails.logger.warn "⚠️ Unknown course format: '#{course_string}', defaulting to 60 minutes"
       60
     end
   end
+
+  helper_method :extract_course_duration
 
   def build_event_classes(reservation, has_interval)
     classes = ['fc-timegrid-event', reservation.status]
@@ -585,5 +1361,121 @@ class Admin::ReservationsController < ApplicationController
     classes << 'individual-interval' if reservation.individual_interval_minutes.present?
     classes
   end
+
+  # チケット情報を取得
+  def tickets
+    Rails.logger.info "🔍 Tickets request for reservation ID: #{params[:id]}"
+    
+    @reservation = Reservation.find(params[:id])
+    Rails.logger.info "📋 Found reservation: #{@reservation.inspect}"
+    Rails.logger.info "👤 User ID: #{@reservation.user_id}"
+    
+    if @reservation.user_id.present?
+      user = @reservation.user
+      Rails.logger.info "👤 Found user: #{user.name} (ID: #{user.id})"
+      
+      tickets = user.tickets.includes(:ticket_template)
+        .order(created_at: :desc)
+      
+      Rails.logger.info "🎫 Found #{tickets.count} tickets for user"
+      
+      ticket_data = tickets.map do |ticket|
+        ticket_info = {
+          id: ticket.id,
+          ticket_template_name: ticket.ticket_template.name,
+          remaining_count: ticket.remaining_count,
+          total_count: ticket.total_count,
+          expiry_date: ticket.expiry_date,
+          unit_type: ticket.ticket_template.name.include?('分') ? '分' : '枚'
+        }
+        Rails.logger.info "🎫 Ticket: #{ticket_info}"
+        ticket_info
+      end
+      
+      Rails.logger.info "✅ Returning #{ticket_data.length} tickets"
+      render json: { success: true, tickets: ticket_data }
+    else
+      Rails.logger.warn "⚠️ No user ID for reservation #{@reservation.id}"
+      render json: { success: false, message: 'ユーザー情報がありません' }
+    end
+  end
+
+  # 予約履歴を取得
+  def history
+    @reservation = Reservation.find(params[:id])
+    
+    if @reservation.user_id.present?
+      reservations = @reservation.user.reservations
+        .where.not(id: @reservation.id) # 現在の予約を除外
+        .order(start_time: :desc)
+        .limit(10) # 最新10件
+        .map do |reservation|
+          {
+            id: reservation.id,
+            start_time: reservation.start_time,
+            course: reservation.course,
+            status: reservation.status
+          }
+        end
+      
+      render json: { success: true, reservations: reservations }
+    else
+      render json: { success: false, message: 'ユーザー情報がありません' }
+    end
+  end
+
+  # テスト
+  def test_api
+    render json: { message: "test works" }
+  end
+
+  # 特定の曜日の全予約を取得（定期的なスケジュール変更の影響チェック用）
+  def by_day_of_week
+    Rails.logger.info "🔍 by_day_of_week called"
+    Rails.logger.info "📝 Params: #{params.inspect}"
+    
+    begin
+      day_of_week = params[:day_of_week].to_i
+      from_date = Date.parse(params[:from_date])
+      
+      Rails.logger.info "🔍 Searching for reservations: day_of_week=#{day_of_week}, from_date=#{from_date}"
+      
+      # 指定日以降の全予約を取得してフィルタリング
+      all_reservations = Reservation.includes(:user)
+                                   .where('start_time >= ?', from_date.beginning_of_day)
+                                   .where.not(status: :cancelled)
+                                   .order(:start_time)
+      
+      # 曜日でフィルタリング
+      matching_reservations = all_reservations.select { |r| r.start_time.wday == day_of_week }
+      
+      Rails.logger.info "📊 Found #{matching_reservations.count} reservations for day #{day_of_week} from #{from_date}"
+      
+      reservations_data = matching_reservations.map do |reservation|
+        {
+          id: reservation.id,
+          customer: reservation.name || reservation.user&.name || '未設定',
+          date: reservation.start_time.strftime('%Y-%m-%d'),
+          time: reservation.start_time.strftime('%H:%M'),
+          duration: extract_course_duration(reservation.course),
+          effective_interval_minutes: reservation.individual_interval_minutes || 
+                                     ApplicationSetting.current&.reservation_interval_minutes || 10
+        }
+      end
+      
+      Rails.logger.info "✅ Returning #{reservations_data.count} reservations for validation"
+      
+      render json: reservations_data
+    rescue Date::Error => e
+      Rails.logger.error "❌ Invalid date format: #{e.message}"
+      render json: { error: 'Invalid date format' }, status: :bad_request
+    rescue => e
+      Rails.logger.error "❌ Error fetching reservations by day of week: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      render json: { error: 'Internal server error' }, status: :internal_server_error
+    end
+  end
+
+  private
 
 end

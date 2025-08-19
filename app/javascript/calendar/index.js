@@ -1,9 +1,9 @@
 // app/javascript/calendar/index.js
-import { initializeCalendar } from 'calendar/calendar_core';
-import { setupReservationModal, openReservationModal } from 'calendar/modal';
-import { setupIntervalControls } from 'calendar/interval_settings';
-import { setupReservationForm } from 'calendar/reservation_form';
-import { setupGlobalUtils } from 'calendar/utils';
+import { initializeCalendar } from './calendar_core.js';
+import { setupReservationModal, openReservationModal } from './modal.js';
+import { setupIntervalControls } from './interval_settings.js';
+import { setupReservationForm } from './reservation_form.js';
+import { setupGlobalUtils } from './utils.js';
 
 console.log('📅 Calendar module loading...');
 

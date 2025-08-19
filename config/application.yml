@@ -1,0 +1,27 @@
+# 開発環境用設定ファイル
+# このファイルは.gitignoreに含まれているため、機密情報が漏洩しません
+
+defaults: &defaults
+  # Gmail設定（メール通知用）
+  gmail_username: <%= ENV['GMAIL_USERNAME'] || 'your-email@gmail.com' %>
+  gmail_app_password: <%= ENV['GMAIL_APP_PASSWORD'] || 'your-16-digit-app-password' %>
+  
+  # LINE Bot設定（LINE通知用）
+  line_channel_secret: <%= ENV['LINE_CHANNEL_SECRET'] || 'your-channel-secret' %>
+  line_channel_token: <%= ENV['LINE_CHANNEL_TOKEN'] || 'your-channel-token' %>
+  
+  # 管理者メール設定
+  admin_email: <%= ENV['ADMIN_EMAIL'] || 'admin@mobilis-stretch.com' %>
+  
+  # アプリケーション設定
+  mail_from: <%= ENV['MAIL_FROM'] || 'noreply@mobilis-stretch.com' %>
+  app_host: <%= ENV['APP_HOST'] || 'localhost:3000' %>
+
+development:
+  <<: *defaults
+
+test:
+  <<: *defaults
+
+production:
+  <<: *defaults

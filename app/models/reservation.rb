@@ -42,11 +42,20 @@ class Reservation < ApplicationRecord
   has_many :child_reservations, class_name: 'Reservation', foreign_key: 'parent_reservation_id', dependent: :destroy
   
   before_validation :set_name_from_user, if: -> { name.blank? && user.present? }
-  before_validation :set_end_time, if: -> { start_time.present? && course.present? && end_time.blank? }
+  before_validation :set_end_time, if: -> { start_time.present? && course.present? }
   after_create :schedule_confirmation_email
   after_update :handle_status_change
   after_create :log_reservation_created
   after_update :log_reservation_updated, if: :saved_change_to_status?
+  
+  # デバッグ用：バリデーション前の状態をログ出力
+  before_validation :log_validation_state
+  
+  # start_timeが変更された場合もend_timeを再計算
+  before_save :recalculate_end_time_if_start_time_changed
+  
+  # start_timeが変更された場合のコールバック
+  after_update :recalculate_end_time_after_update, if: :saved_change_to_start_time?
 
   # スコープ定義
   scope :active, -> { where.not(status: :cancelled) }
@@ -97,13 +106,77 @@ class Reservation < ApplicationRecord
     !cancelled? && start_time > Time.current
   end
 
+  # 休憩予約かどうかを判定
+  def is_break?
+    is_break == true
+  end
+  
+  # デバッグ用：バリデーション前の状態をログ出力
+  def log_validation_state
+    Rails.logger.info "🔍 Validation state for reservation #{id}:"
+    Rails.logger.info "  start_time: #{start_time} (#{start_time.class})"
+    Rails.logger.info "  end_time: #{end_time} (#{end_time.class})"
+    Rails.logger.info "  course: #{course}"
+    Rails.logger.info "  is_break: #{is_break}"
+    Rails.logger.info "  skip_flags: time=#{skip_time_validation}, business_hours=#{skip_business_hours_validation}, overlap=#{skip_overlap_validation}"
+    Rails.logger.info "  validation_context: #{validation_context}"
+  end
+  
+  # start_timeが変更された場合もend_timeを再計算
+  def recalculate_end_time_if_start_time_changed
+    Rails.logger.info "🔍 recalculate_end_time_if_start_time_changed called for reservation #{id}"
+    Rails.logger.info "🔍 start_time_changed?: #{start_time_changed?}, course.present?: #{course.present?}"
+    
+    if start_time_changed? && course.present?
+      Rails.logger.info "🔄 start_time changed, recalculating end_time"
+      Rails.logger.info "🔄 Old start_time: #{start_time_previous_change&.first}, New start_time: #{start_time}"
+      duration = get_duration_minutes
+      self.end_time = start_time + duration.minutes
+      Rails.logger.info "✅ New end_time calculated: #{self.end_time}"
+    else
+      Rails.logger.info "🔍 No recalculation needed: start_time_changed?=#{start_time_changed?}, course.present?=#{course.present?}"
+    end
+  end
+  
+  # start_timeが変更された後のコールバック
+  def recalculate_end_time_after_update
+    Rails.logger.info "🔍 recalculate_end_time_after_update called for reservation #{id}"
+    Rails.logger.info "🔍 course.present?: #{course.present?}, current end_time: #{end_time}"
+    
+    if course.present?
+      Rails.logger.info "🔄 start_time updated, recalculating end_time in after_update"
+      duration = get_duration_minutes
+      new_end_time = start_time + duration.minutes
+      Rails.logger.info "🔄 Calculated new end_time: #{new_end_time}"
+      
+      unless end_time == new_end_time
+        update_column(:end_time, new_end_time)
+        Rails.logger.info "✅ end_time updated to: #{new_end_time}"
+      else
+        Rails.logger.info "🔍 end_time unchanged, no update needed"
+      end
+    else
+      Rails.logger.info "🔍 No course present, skipping end_time recalculation"
+    end
+  end
+
   # コースの分数を取得
   def get_duration_minutes
-    case course
+    Rails.logger.info "🔍 get_duration_minutes called for reservation #{id}: course='#{course}'"
+    
+    return 60 unless course.present? # デフォルト
+    
+    case course.to_s.strip
     when "40分", "40分コース" then 40
     when "60分", "60分コース" then 60
     when "80分", "80分コース" then 80
-    else 60
+    when /(\d+)分/ # 数字+分の形式
+      duration = $1.to_i
+      Rails.logger.info "🔍 Extracted duration from regex: #{duration} minutes"
+      duration
+    else
+      Rails.logger.warn "⚠️ Unknown course format: '#{course}', defaulting to 60 minutes"
+      60
     end
   end
 
@@ -234,7 +307,7 @@ class Reservation < ApplicationRecord
 
   # この予約で使用するインターバル時間を取得
   def effective_interval_minutes
-    individual_interval_minutes || ApplicationSetting.current.reservation_interval_minutes
+    individual_interval_minutes.nil? ? ApplicationSetting.current.reservation_interval_minutes : individual_interval_minutes
   end
 
   # 個別設定があるかどうか
@@ -400,21 +473,48 @@ class Reservation < ApplicationRecord
     return if start_time.blank? || end_time.blank?
     return if skip_overlap_validation
 
-    Reservation.transaction do
-      overlapping = Reservation.active
-        .where.not(id: id)
-        .select do |other|
-          # 本体同士の重複のみNG（端が一致する場合はOK）
-          times_overlap = (start_time < other.end_time && end_time > other.start_time)
-          times_overlap && !(end_time == other.start_time || start_time == other.end_time)
-        end
+    Rails.logger.info "🔍 Checking time overlap for reservation #{id} (is_break: #{is_break})"
+    Rails.logger.info "🔍 Time range: #{start_time.strftime('%H:%M')} - #{end_time.strftime('%H:%M')}"
 
-      if overlapping.any?
-        overlapping_reservation = overlapping.first
-        errors.add(:base,
-          "#{overlapping_reservation.start_time.strftime('%H:%M')}〜#{overlapping_reservation.end_time.strftime('%H:%M')}の予約があります。"
-        )
+    # インターバルを含む重複チェック
+    overlapping = Reservation.active
+      .where.not(id: id)
+      .select do |other|
+        # 各予約のインターバル時間を取得
+        other_interval = other.effective_interval_minutes
+        other_end_with_interval = other.end_time + other_interval.minutes
+        
+        # 現在の予約のインターバル時間を取得
+        current_interval = effective_interval_minutes
+        current_end_with_interval = end_time + current_interval.minutes
+        
+        # 重複判定（インターバル時間も含む）
+        overlap = start_time < other_end_with_interval && current_end_with_interval > other.start_time
+        
+        if overlap
+          Rails.logger.info "🔍 Overlap detected with reservation #{other.id}: #{other.start_time.strftime('%H:%M')} - #{other_end_with_interval.strftime('%H:%M')}"
+        end
+        
+        overlap
       end
+
+    if overlapping.any?
+      overlapping_reservation = overlapping.first
+      other_interval = overlapping_reservation.effective_interval_minutes
+      other_end_with_interval = overlapping_reservation.end_time + other_interval.minutes
+      
+      # 休憩予約の場合は特別なメッセージ
+      if is_break?
+        error_msg = "休憩時間が他の予約と重複しています: #{overlapping_reservation.start_time.strftime('%H:%M')}〜#{other_end_with_interval.strftime('%H:%M')}"
+        Rails.logger.error "❌ Break overlap error: #{error_msg}"
+        errors.add(:base, error_msg)
+      else
+        error_msg = "#{overlapping_reservation.start_time.strftime('%H:%M')}〜#{other_end_with_interval.strftime('%H:%M')}の予約があります。"
+        Rails.logger.error "❌ Regular overlap error: #{error_msg}"
+        errors.add(:base, error_msg)
+      end
+    else
+      Rails.logger.info "✅ No overlaps detected"
     end
   end
 
@@ -422,16 +522,36 @@ class Reservation < ApplicationRecord
     return unless start_time && end_time
     
     if start_time.min % 10 != 0 || end_time.min % 10 != 0
-      Rails.logger.warn "⚠️ Time validation failed: start=#{start_time}, end=#{end_time}"
-      errors.add(:base, "開始時間と終了時間は10分刻みで入力してください")
+      error_msg = "開始時間と終了時間は10分刻みで入力してください"
+      Rails.logger.error "❌ 10-minute interval validation failed: #{error_msg}"
+      
+      if is_break?
+        errors.add(:base, "休憩時間は10分刻みで設定してください")
+      else
+        errors.add(:base, error_msg)
+      end
+    else
+      Rails.logger.info "✅ 10-minute interval validation passed"
     end
   end
   
   def end_time_after_start_time
     return unless start_time && end_time
     
+    Rails.logger.info "🔍 End time after start time validation for reservation #{id} (is_break: #{is_break})"
+    Rails.logger.info "🔍 Time check: start=#{start_time.strftime('%H:%M')}, end=#{end_time.strftime('%H:%M')}"
+    
     if end_time <= start_time
-      errors.add(:end_time, "は開始時間より後に設定してください")
+      error_msg = "終了時間は開始時間より後に設定してください"
+      Rails.logger.error "❌ End time validation failed: #{error_msg}"
+      
+      if is_break?
+        errors.add(:end_time, "休憩時間の終了時間は開始時間より後に設定してください")
+      else
+        errors.add(:end_time, error_msg)
+      end
+    else
+      Rails.logger.info "✅ End time validation passed"
     end
   end
 
@@ -445,10 +565,18 @@ class Reservation < ApplicationRecord
   def booking_within_business_hours
     return unless start_time && end_time
     
-    # システム設定から営業時間を取得
-    settings = ApplicationSetting.current
-    business_start = settings.business_hours_start
-    business_end = settings.business_hours_end
+    Rails.logger.info "🔍 Business hours validation for reservation #{id} (is_break: #{is_break})"
+    
+    # 指定日のシフトを取得
+    shift = Shift.for_date(start_time.to_date).first
+    
+    # 営業時間を決定（シフト設定があればそれを使用、なければシステム設定）
+    business_start, business_end = if shift&.requires_time?
+      [shift.start_time.hour, shift.end_time.hour]
+    else
+      settings = ApplicationSetting.current
+      [settings.business_hours_start, settings.business_hours_end]
+    end
     
     # end_timeは既にコース時間＋インターバル時間を含んでいるため、そのまま使用
     actual_end_time = end_time
@@ -458,9 +586,21 @@ class Reservation < ApplicationRecord
     end_minute = actual_end_time.min
     
     Rails.logger.info "🕐 Business hours check: start=#{start_time.strftime('%H:%M')}, end=#{actual_end_time.strftime('%H:%M')}, business=#{business_start}:00-#{business_end}:00"
+    Rails.logger.info "🕐 Shift info: #{shift&.shift_type_display || 'No shift'} (#{shift&.business_hours || 'Default hours'})"
     
     if start_hour < business_start || end_hour > business_end || (end_hour == business_end && end_minute > 0)
-      errors.add(:start_time, "営業時間内（#{business_start}:00-#{business_end}:00）でご予約ください。終了時刻: #{actual_end_time.strftime('%H:%M')}")
+      shift_info = shift ? " (#{shift.shift_type_display})" : ""
+      error_msg = "営業時間内（#{business_start}:00-#{business_end}:00#{shift_info}）でご予約ください。終了時刻: #{actual_end_time.strftime('%H:%M')}"
+      
+      if is_break?
+        Rails.logger.error "❌ Break business hours error: #{error_msg}"
+        errors.add(:start_time, "休憩時間は営業時間内に設定してください: #{error_msg}")
+      else
+        Rails.logger.error "❌ Regular business hours error: #{error_msg}"
+        errors.add(:start_time, error_msg)
+      end
+    else
+      Rails.logger.info "✅ Business hours validation passed"
     end
   end
 
@@ -538,8 +678,21 @@ class Reservation < ApplicationRecord
   end
 
   def set_end_time
+    return unless start_time.present? && course.present?
+    
+    Rails.logger.info "🔄 set_end_time called for reservation #{id}: course=#{course}, duration=#{get_duration_minutes}"
+    Rails.logger.info "🔄 start_time: #{start_time} (#{start_time.class})"
+    
     duration = get_duration_minutes
-    self.end_time = start_time + duration.minutes
+    # Only set end_time to course duration, interval is handled separately
+    Rails.logger.info "🔄 set_end_time processing: course=#{course}, duration=#{duration}, individual_interval=#{individual_interval_minutes}, effective_interval=#{effective_interval_minutes}"
+    
+    if start_time.is_a?(Time) || start_time.is_a?(DateTime)
+      self.end_time = start_time + duration.minutes
+      Rails.logger.info "✅ end_time set to: #{self.end_time}"
+    else
+      Rails.logger.error "❌ start_time is not a valid time object: #{start_time.class} - #{start_time}"
+    end
   end
 
   def schedule_confirmation_email

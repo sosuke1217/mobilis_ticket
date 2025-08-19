@@ -1256,7 +1256,7 @@ class LinebotController < ApplicationController
               style: "secondary",
               action: {
                 type: "postback",
-                label: "�� 戻る",
+                label: "🔙 戻る",
                 data: "reviews"
               }
             }
@@ -1264,7 +1264,108 @@ class LinebotController < ApplicationController
         }
       }
     }
-  
+
+    send_reply(reply_token, message)
+  end
+
+
+    message = {
+      type: "flex",
+      altText: "口コミ投稿フォーム",
+      contents: {
+        type: "bubble",
+        header: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "📝 口コミ投稿",
+              weight: "bold",
+              size: "xl",
+              color: "#FF6B35"
+            },
+            {
+              type: "text",
+              text: "ご感想をお聞かせください",
+              size: "sm",
+              color: "#666666"
+            }
+          ],
+          paddingAll: "20px"
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "⭐️ 評価",
+              weight: "bold",
+              size: "md",
+              margin: "md"
+            },
+            {
+              type: "box",
+              layout: "horizontal",
+              contents: [
+                create_star_button(1),
+                create_star_button(2),
+                create_star_button(3),
+                create_star_button(4),
+                create_star_button(5)
+              ],
+              spacing: "sm",
+              margin: "sm"
+            },
+            {
+              type: "separator",
+              margin: "md"
+            },
+            {
+              type: "text",
+              text: "💬 コメント",
+              weight: "bold",
+              size: "md",
+              margin: "md"
+            },
+            {
+              type: "text",
+              text: "「口コミを書く」ボタンを押して、ご感想をお聞かせください。",
+              size: "sm",
+              color: "#666666",
+              wrap: true,
+              margin: "sm"
+            }
+          ]
+        },
+        footer: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "button",
+              style: "primary",
+              action: {
+                type: "postback",
+                label: "📝 口コミを書く",
+                data: "write_review"
+              }
+            },
+            {
+              type: "button",
+              style: "secondary",
+              action: {
+                type: "postback",
+                label: "🔙 戻る",
+                data: "reviews"
+              }
+            }
+          ]
+        }
+      }
+    }
+
     send_reply(reply_token, message)
   end
 
@@ -1478,4 +1579,5 @@ class LinebotController < ApplicationController
 
     send_reply(reply_token, message)
   end
+
 end

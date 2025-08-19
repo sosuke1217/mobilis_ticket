@@ -69,10 +69,10 @@ class ReservationAnalytics
     reservations = base_reservations.active
     
     weekday_data = reservations
-      .group("EXTRACT(DOW FROM start_time)")
+      .group("strftime('%w', start_time)")
       .count
     
-    # 曜日名に変換（PostgreSQL: 0=日曜日, 1=月曜日, ..., 6=土曜日）
+    # 曜日名に変換
     weekday_names = %w[日 月 火 水 木 金 土]
     weekday_data.transform_keys { |key| weekday_names[key.to_i] }
   end
