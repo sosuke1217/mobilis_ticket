@@ -1,26 +1,52 @@
-<h2>Log in</h2>
-
-<%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
-  <div class="field">
-    <%= f.label :email %><br />
-    <%= f.email_field :email, autofocus: true, autocomplete: "email" %>
-  </div>
-
-  <div class="field">
-    <%= f.label :password %><br />
-    <%= f.password_field :password, autocomplete: "current-password" %>
-  </div>
-
-  <% if devise_mapping.rememberable? %>
-    <div class="field">
-      <%= f.check_box :remember_me %>
-      <%= f.label :remember_me %>
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="logo">
+        <i class="fas fa-spa"></i>
+        <h1>Mobilis Stretch</h1>
+      </div>
+      <p class="subtitle">管理者ログイン</p>
     </div>
-  <% end %>
 
-  <div class="actions">
-    <%= f.submit "Log in" %>
+    <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "login-form" }) do |f| %>
+      <div class="form-group">
+        <div class="input-wrapper">
+          <i class="fas fa-envelope input-icon"></i>
+          <%= f.email_field :email, 
+              autofocus: true, 
+              autocomplete: "email", 
+              placeholder: "メールアドレス",
+              class: "form-input" %>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="input-wrapper">
+          <i class="fas fa-lock input-icon"></i>
+          <%= f.password_field :password, 
+              autocomplete: "current-password", 
+              placeholder: "パスワード",
+              class: "form-input" %>
+        </div>
+      </div>
+
+      <% if devise_mapping.rememberable? %>
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <%= f.check_box :remember_me, class: "checkbox-input" %>
+            <span class="checkmark"></span>
+            ログイン状態を保持
+          </label>
+        </div>
+      <% end %>
+
+      <div class="form-group">
+        <%= f.submit "ログイン", class: "login-button" %>
+      </div>
+    <% end %>
+
+    <div class="login-footer">
+      <%= render "devise/shared/links" %>
+    </div>
   </div>
-<% end %>
-
-<%= render "devise/shared/links" %>
+</div>
