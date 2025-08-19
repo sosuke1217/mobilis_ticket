@@ -7,4 +7,11 @@ pin_all_from "app/javascript/controllers", under: "controllers"
 
 # FullCalendar
 pin "fullcalendar", to: "fullcalendar.js", preload: true
-pin_all_from "app/javascript/calendar", under: "calendar"
+
+# Calendar modules
+pin "calendar", to: "calendar/index.js", preload: true
+pin "calendar/calendar_core", to: "calendar/calendar_core.js", preload: true
+pin "calendar/modal", to: "calendar/modal.js", preload: true
+pin "calendar/interval_settings", to: "calendar/interval_settings.js", preload: true
+pin "calendar/reservation_form", to: "calendar/reservation_form.js", preload: true
+pin "calendar/utils", to: "calendar/utils.js", preload: true
