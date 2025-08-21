@@ -165,6 +165,8 @@ end
 if __FILE__ == $0
   puts "🔧 LINEリッチメニュー設定を開始します..."
   puts "📱 アクセストークン: #{ENV['LINE_CHANNEL_TOKEN'] ? '設定済み' : '未設定'}"
+  puts "🔑 トークンの値: #{ENV['LINE_CHANNEL_TOKEN']}"
+  puts "🔑 トークンの長さ: #{ENV['LINE_CHANNEL_TOKEN']&.length || 0}"
   
   if ENV['LINE_CHANNEL_TOKEN'].nil?
     puts "❌ LINE_CHANNEL_TOKENが設定されていません"
