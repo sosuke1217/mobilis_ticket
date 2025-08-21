@@ -65,10 +65,11 @@ Rails.application.routes.draw do
   resources :users, only: [:edit, :update]
   
   # LINE Bot
-  post 'linebot', to: 'linebot#webhook'
+  post 'linebot/callback', to: 'linebot#callback'
   
   # ヘルスチェック
   get 'health', to: 'health#check'
+  get 'up', to: 'health#check'
   
   # PWA
   get 'manifest.json', to: 'pwa#manifest'
