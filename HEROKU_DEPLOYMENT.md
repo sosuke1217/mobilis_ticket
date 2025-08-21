@@ -1,231 +1,302 @@
-# 🚀 Herokuでのデプロイ手順書
+# Herokuデプロイ手順書
 
-## 📋 事前準備
+## 🚀 クイックスタート
 
-### ✅ 必要なツール
-- [x] Heroku CLI
-- [x] Git
-- [x] Ruby 3.3.x
-- [x] Rails 7.2.2.1
+### 1. Heroku CLIのインストール
 
-### 🔑 必要な認証情報
-- [x] Gmailアプリパスワード
-- [x] LINE Bot Channel Secret
-- [x] LINE Bot Channel Token
-
-## 🔧 Herokuアプリの準備
-
-### 1. Heroku CLIのインストールとログイン
 ```bash
-# Heroku CLIのインストール（macOS）
-brew tap heroku/brew && brew install heroku
+# macOS
+brew install heroku/brew/heroku
 
-# ログイン
+# Windows
+# https://devcenter.heroku.com/articles/heroku-cli からダウンロード
+
+# Linux
+curl https://cli-assets.heroku.com/install.sh | sh
+```
+
+### 2. ログイン
+
+```bash
 heroku login
 ```
 
-### 2. 新しいHerokuアプリの作成
+### 3. アプリの作成
+
 ```bash
 # アプリの作成
-heroku create mobilis-ticket-app
+heroku create mobilis-stretch-bot
 
-# または既存のアプリを使用
-heroku git:remote -a your-existing-app-name
+# リモートの確認
+git remote -v
 ```
 
-### 3. 必要なアドオンの追加
+## 📦 アドオンの追加
+
+### PostgreSQLデータベース
+
 ```bash
-# PostgreSQLデータベースの追加
+# 無料プラン（開発用）
 heroku addons:create heroku-postgresql:mini
 
-# Redisの追加（必要に応じて）
-# heroku addons:create heroku-redis:mini
-
-# ログ監視の追加
-heroku addons:create papertrail:choklad
+# 有料プラン（本番用）
+heroku addons:create heroku-postgresql:basic
 ```
 
-## 📦 アプリケーションのデプロイ
+### Redis（必要に応じて）
 
-### 1. コードの準備
 ```bash
-# 現在のディレクトリで
-git add .
-git commit -m "Herokuデプロイ用の設定追加"
+# 無料プラン
+heroku addons:create heroku-redis:mini
 
-# Herokuリモートの追加
-heroku git:remote -a your-app-name
+# 有料プラン
+heroku addons:create heroku-redis:basic
 ```
 
-### 2. 環境変数の設定
-```bash
-# Gmail設定
-heroku config:set GMAIL_USERNAME="mobilis.stretch@gmail.com"
-heroku config:set GMAIL_APP_PASSWORD="xtjg clst hbpw rsho"
+## 🔧 環境変数の設定
 
-# LINE Bot設定
+### LINE Bot設定
+
+```bash
 heroku config:set LINE_CHANNEL_SECRET="360b1b477e3025114f7ecde7f4f05f79"
 heroku config:set LINE_CHANNEL_TOKEN="hojBYvKt8rfBN4+/gRMdMyzofkMCb7HlJhaOFufi/hRGPPG/AGzeJZde3CLoxLoNCaei7wa92TO4xIt+kyviaS6SUS5Q9Hrj+WSJFN8ySGxFFIRICA5hU0Ha2tONO6YcLrXgbJOqmD6Y1SwbmGKEhgdB04t89/1O/w1cDnyilFU="
+```
 
-# 管理者設定
+### Gmail設定
+
+```bash
+heroku config:set GMAIL_USERNAME="mobilis.stretch@gmail.com"
+heroku config:set GMAIL_APP_PASSWORD="xtjg clst hbpw rsho"
+```
+
+### 管理者設定
+
+```bash
 heroku config:set ADMIN_EMAIL="mobilis.stretch@gmail.com"
 heroku config:set MAIL_FROM="mobilis.stretch@gmail.com"
+```
 
-# アプリケーション設定
-heroku config:set APP_HOST="https://your-app-name.herokuapp.com"
+### アプリケーション設定
+
+```bash
+# アプリ名を実際の名前に変更
+heroku config:set APP_HOST="https://mobilis-stretch-bot.herokuapp.com"
 heroku config:set RAILS_ENV="production"
 ```
 
-### 3. デプロイの実行
+### セキュリティ設定
+
 ```bash
-# Herokuにプッシュ
-git push heroku main
-
-# データベースのセットアップ
-heroku run rails db:create
-heroku run rails db:migrate
-heroku run rails db:seed
-
-# アセットのプリコンパイル
-heroku run rails assets:precompile
+# master.keyファイルから設定
+heroku config:set RAILS_MASTER_KEY="$(cat config/master.key)"
 ```
 
-## 🔍 デプロイ後の確認
+## 🗄️ データベースの準備
 
-### 1. アプリケーションの起動確認
+### マイグレーション
+
 ```bash
-# アプリの起動確認
+# データベースのマイグレーション
+heroku run rails db:migrate
+
+# シードデータ投入（必要に応じて）
+heroku run rails db:seed
+```
+
+### データベースの確認
+
+```bash
+# データベース情報
+heroku pg:info
+
+# データベース接続
+heroku pg:psql
+```
+
+## 🎨 アセットの準備
+
+### プリコンパイル
+
+```bash
+# アセットのプリコンパイル
+heroku run rails assets:precompile
+
+# アセットのクリーンアップ
+heroku run rails assets:clean
+```
+
+## 📱 LINEリッチメニューの設定
+
+```bash
+# リッチメニューの設定
+heroku run ruby lib/line_rich_menu_setup.rb
+```
+
+## 🚀 デプロイ
+
+### コードのプッシュ
+
+```bash
+# 変更をコミット
+git add .
+git commit -m "Heroku本番環境用設定"
+
+# Herokuにプッシュ
+git push heroku main
+```
+
+### アプリケーションの起動
+
+```bash
+# アプリケーションの起動確認
 heroku open
 
 # ログの確認
 heroku logs --tail
 ```
 
-### 2. 基本機能の動作確認
-- [ ] アプリケーションが正常に起動する
-- [ ] データベースにアクセスできる
-- [ ] メール送信が正常に動作する
-- [ ] LINE Botが正常に応答する
+## 📊 監視と管理
 
-### 3. LINE Bot設定の更新
-```bash
-# LINE Developersコンソールで以下を更新
-- Webhook URL: https://your-app-name.herokuapp.com/linebot/callback
-- リッチメニューの設定
-```
+### ログの確認
 
-## 🚨 よくある問題と対処法
-
-### 1. データベース接続エラー
-```bash
-# データベースの状態確認
-heroku pg:info
-
-# データベースのリセット（注意：データが消えます）
-heroku pg:reset DATABASE_URL
-```
-
-### 2. メール送信エラー
-```bash
-# 環境変数の確認
-heroku config:get GMAIL_USERNAME
-heroku config:get GMAIL_APP_PASSWORD
-
-# ログの確認
-heroku logs --tail | grep "mail"
-```
-
-### 3. LINE Bot応答エラー
-```bash
-# 環境変数の確認
-heroku config:get LINE_CHANNEL_SECRET
-heroku config:get LINE_CHANNEL_TOKEN
-
-# Webhook URLの確認
-curl -X POST https://your-app-name.herokuapp.com/linebot/callback
-```
-
-## 🔄 更新・再デプロイ
-
-### 1. コードの更新
-```bash
-# コードを変更後
-git add .
-git commit -m "機能更新"
-git push heroku main
-```
-
-### 2. 環境変数の更新
-```bash
-# 環境変数を変更後
-heroku config:set VARIABLE_NAME="new_value"
-```
-
-### 3. データベースの更新
-```bash
-# マイグレーションの実行
-heroku run rails db:migrate
-```
-
-## 📊 監視・メンテナンス
-
-### 1. ログの監視
 ```bash
 # リアルタイムログ
 heroku logs --tail
 
 # 特定の時間のログ
-heroku logs --since "1 hour ago"
+heroku logs --since 1h
+
+# エラーログのみ
+heroku logs --tail --source app --level error
 ```
 
-### 2. パフォーマンスの監視
+### アプリケーションの状態
+
 ```bash
-# アプリの状態確認
+# dynoの状態
 heroku ps
 
-# データベースの状態確認
-heroku pg:info
+# アプリケーションの情報
+heroku info
 ```
 
-### 3. バックアップ
+### スケーリング
+
 ```bash
-# データベースのバックアップ
-heroku pg:backups:capture
+# Web dynoのスケーリング
+heroku ps:scale web=1
 
-# バックアップのダウンロード
-heroku pg:backups:download
+# Worker dynoの追加（必要に応じて）
+heroku ps:scale worker=1
 ```
+
+## 🔍 トラブルシューティング
+
+### よくある問題
+
+1. **H10 - App Crashed**
+   ```bash
+   # ログの確認
+   heroku logs --tail
+   
+   # アプリケーションの再起動
+   heroku restart
+   ```
+
+2. **H14 - No Web Processes Running**
+   ```bash
+   # Web dynoの起動
+   heroku ps:scale web=1
+   ```
+
+3. **R10 - Boot Timeout**
+   ```bash
+   # アプリケーションの起動時間を確認
+   heroku logs --tail
+   ```
+
+4. **R15 - Memory Quota Exceeded**
+   ```bash
+   # より大きなdynoにアップグレード
+   heroku ps:type standard-1x
+   ```
+
+## 💰 コスト管理
+
+### 料金プラン
+
+- **Free**: 開発・テスト用（非推奨）
+- **Basic**: $7/月 - 本番環境推奨
+- **Standard**: $25/月 - 高負荷環境
+- **Performance**: $250/月 - エンタープライズ
+
+### アドオン料金
+
+- **PostgreSQL Mini**: $5/月
+- **PostgreSQL Basic**: $9/月
+- **Redis Mini**: $15/月
+
+### コスト削減のヒント
+
+1. 不要なアドオンの削除
+2. 適切なdynoサイズの選択
+3. 定期的な使用量の確認
 
 ## 🎯 次のステップ
 
-### 1. カスタムドメインの設定
+### カスタムドメイン
+
 ```bash
 # カスタムドメインの追加
-heroku domains:add www.yourdomain.com
+heroku domains:add mobilis-stretch.com
 
-# SSL証明書の自動更新
-heroku certs:auto:enable
+# DNSレコードの設定
+# CNAME: mobilis-stretch.com → your-app.herokuapp.com
 ```
 
-### 2. スケーリング
-```bash
-# 動的スケーリングの有効化
-heroku ps:scale web=1
-```
+### SSL証明書
 
-### 3. 監視ツールの追加
+Herokuで自動管理されます。
+
+### 監視・アラート
+
 ```bash
-# New Relicの追加
+# ログ監視
+heroku addons:create papertrail:choklad
+
+# パフォーマンス監視
 heroku addons:create newrelic:wayne
 ```
 
-## 📞 サポート情報
+### バックアップ
 
-### 緊急時の連絡先
-- Herokuサポート: https://help.heroku.com/
-- LINE Botサポート: https://developers.line.biz/ja/docs/
+```bash
+# 手動バックアップ
+heroku pg:backups capture
 
-### ログファイルの場所
-- アプリケーションログ: `heroku logs --tail`
-- データベースログ: `heroku pg:logs`
-- アドオンログ: `heroku addons:open papertrail`
+# 自動バックアップ（毎日2:00 UTC）
+heroku pg:backups schedule DATABASE_URL --at '02:00 UTC'
+```
+
+## 📞 サポート
+
+### Herokuサポート
+
+- [Heroku Dev Center](https://devcenter.heroku.com/)
+- [Heroku Status](https://status.heroku.com/)
+- [Heroku Support](https://help.heroku.com/)
+
+### アプリケーション固有の問題
+
+1. ログの確認（`heroku logs --tail`）
+2. 環境変数の確認（`heroku config`）
+3. データベースの状態確認（`heroku pg:info`）
+4. LINE Bot APIの設定確認
+
+## 🚨 重要な注意事項
+
+- **環境変数**: 機密情報は必ず`heroku config:set`で設定
+- **データベース**: 本番環境でのデータ操作は慎重に行う
+- **ログ**: 機密情報がログに出力されていないか確認
+- **バックアップ**: 定期的なバックアップを設定
+- **コスト**: 無料プランは本番環境には適していません

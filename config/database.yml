@@ -20,26 +20,14 @@ test:
   <<: *default
   database: storage/test.sqlite3
 
-
-# SQLite3 write its data on the local filesystem, as such it requires
-# persistent disks. If you are deploying to a managed service, you should
-# make sure it provides disk persistence, as many don't.
-#
-# Similarly, if you deploy your application as a Docker container, you must
-# ensure the database is located in a persisted volume.
+# Heroku本番環境用の設定
 production:
-  <<: *default
-  database: storage/production.sqlite3
-  # Heroku環境ではPostgreSQLを使用
-  adapter: <%= ENV['DATABASE_URL'] ? 'postgresql' : 'sqlite3' %>
+  adapter: postgresql
   encoding: unicode
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-  url: <%= ENV['DATABASE_URL'] if ENV['DATABASE_URL'] %>
-
-# Heroku用の設定（環境変数で自動選択）
-# heroku:
-#   <<: *default
-#   adapter: postgresql
-#   encoding: unicode
-#   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-#   url: <%= ENV['DATABASE_URL'] %>
+  url: <%= ENV['DATABASE_URL'] %>
+  # Heroku環境での追加設定
+  min_messages: warning
+  variables:
+    statement_timeout: 5000
+    lock_timeout: 10000

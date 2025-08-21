@@ -122,17 +122,6 @@ class LinebotController < ApplicationController
       course = "#{$1}分コース"
       start_booking_flow(user, reply_token, course)
 
-    when /^select_date_(.+)_(.+)$/
-      course = $1
-      date = $2
-      send_available_times(user, reply_token, course, date)
-
-    when /^confirm_booking_(.+)_(.+)_(.+)$/
-      course = $1
-      date = $2
-      time = $3
-      create_booking(user, reply_token, course, date, time)
-
     when /^cancel_booking_(\d+)$/
       reservation_id = $1.to_i
       handle_booking_cancellation(user, reply_token, reservation_id, "お客様都合によるキャンセル")
@@ -146,9 +135,6 @@ class LinebotController < ApplicationController
       reason = $2
       handle_booking_cancellation(user, reply_token, reservation_id, reason)
     
-    when "check_tickets"
-      send_ticket_status(user, reply_token)
-
     when /^urgent_cancel_(\d+)$/
       reservation_id = $1.to_i
       send_cancellation_reason_options(user, reply_token, reservation_id)
@@ -363,39 +349,6 @@ class LinebotController < ApplicationController
     }
 
     send_reply(reply_token, message)
-  end
-
-  def get_available_time_slots(date, duration)
-    business_hours = {
-      start: 10, # 10:00
-      end: 20    # 20:00
-    }
-    
-    interval_minutes = Reservation.interval_minutes
-    slots = []
-    current_time = Time.zone.parse("#{date} #{business_hours[:start]}:00")
-    end_time = Time.zone.parse("#{date} #{business_hours[:end]}:00")
-    
-    while current_time + duration.minutes <= end_time
-      slot_end = current_time + duration.minutes
-      
-      # インターバルを考慮した重複チェック
-      conflicting = Reservation.active.where(
-        '(start_time - INTERVAL ? MINUTE) < ? AND (end_time + INTERVAL ? MINUTE) > ?',
-        interval_minutes, slot_end, interval_minutes, current_time
-      ).exists?
-      
-      unless conflicting
-        slots << {
-          start_time: current_time,
-          end_time: slot_end
-        }
-      end
-      
-      current_time += 30.minutes # 30分間隔
-    end
-    
-    slots
   end
 
   # 🆕 利用可能な時間を送信
@@ -963,8 +916,7 @@ class LinebotController < ApplicationController
     send_reply(reply_token, message)
   end
 
-  # 既存のメソッドは保持...
-    if tickets.any?  def send_ticket_status(user, reply_token)
+  def send_ticket_status(user, reply_token)
     tickets = user.tickets.where("remaining_count > 0 AND expiry_date >= ?", Time.zone.today)
     if tickets.any?
       bubbles = tickets.map do |t|
@@ -1059,109 +1011,6 @@ class LinebotController < ApplicationController
     })
   end
 
-  # ヘルパーメソッド
-  def send_reply(reply_token, message)
-    client.reply_message(reply_token, message)
-  end
-
-  def create_course_button(course_name, price, data)
-    {
-      type: "button",
-      style: "secondary",
-      action: {
-        type: "postback",
-        label: "#{course_name} #{price}",
-        data: data
-      }
-    }
-  end
-
-  def create_info_row(label, value)
-    {
-      type: "box",
-      layout: "baseline",
-      contents: [
-        {
-          type: "text",
-          text: label,
-          size: "sm",
-          color: "#666666",
-          flex: 2
-        },
-        {
-          type: "text",
-          text: value.to_s,
-          size: "sm",
-          wrap: true,
-          flex: 3
-        }
-      ],
-      margin: "sm"
-    }
-  end
-
-  def truncate_address(address)
-    return "" unless address
-    address.length > 20 ? "#{address[0..20]}..." : address
-  end
-
-  def get_duration_from_course(course)
-    case course
-    when "40分コース" then 40
-    when "60分コース" then 60
-    when "80分コース" then 80
-    else 60
-    end
-  end
-
-  def get_available_dates(days_ahead)
-    dates = []
-    (1..days_ahead).each do |i|
-      date = Date.current + i.days
-      # 営業日チェック（例：日曜日は休み）
-      next if date.sunday?
-      
-      # その日に空きがあるかチェック
-      if has_available_slots_on_date(date)
-        dates << date
-      end
-    end
-    dates
-  end
-
-  def has_available_slots_on_date(date)
-    # 簡単なチェック：その日の予約数が一定数以下なら空きありとする
-    reservations_count = Reservation.active
-      .where(start_time: date.beginning_of_day..date.end_of_day)
-      .count
-    
-    reservations_count < 8 # 1日最大8枠と仮定
-  end
-
-  def get_available_time_slots(date, duration)
-    # 営業時間を統一（10:00-20:00、19:30最終受付想定）
-    opening_time = Time.zone.parse("#{date} 10:00")
-    closing_time = Time.zone.parse("#{date} 20:00")  # 20:00に統一
-    slot_interval = 30.minutes
-    available_slots = []
-    
-    current_time = opening_time
-    while current_time + duration.minutes <= closing_time
-      end_time = current_time + duration.minutes
-      
-      unless Reservation.active.where('start_time < ? AND end_time > ?', end_time, current_time).exists?
-        available_slots << {
-          start_time: current_time,
-          end_time: end_time
-        }
-      end
-      
-      current_time += slot_interval
-    end
-    
-    available_slots
-  end
-
   # 🆕 Googleレビューメニュー送信
   def send_reviews_menu(reply_token)
     message = {
@@ -1251,209 +1100,6 @@ class LinebotController < ApplicationController
                 uri: "https://www.google.com/maps/place/mobilis-stretch"
               }
             },
-            {
-              type: "button",
-              style: "secondary",
-              action: {
-                type: "postback",
-                label: "🔙 戻る",
-                data: "reviews"
-              }
-            }
-          ]
-        }
-      }
-    }
-
-    send_reply(reply_token, message)
-  end
-
-
-    message = {
-      type: "flex",
-      altText: "口コミ投稿フォーム",
-      contents: {
-        type: "bubble",
-        header: {
-          type: "box",
-          layout: "vertical",
-          contents: [
-            {
-              type: "text",
-              text: "📝 口コミ投稿",
-              weight: "bold",
-              size: "xl",
-              color: "#FF6B35"
-            },
-            {
-              type: "text",
-              text: "ご感想をお聞かせください",
-              size: "sm",
-              color: "#666666"
-            }
-          ],
-          paddingAll: "20px"
-        },
-        body: {
-          type: "box",
-          layout: "vertical",
-          contents: [
-            {
-              type: "text",
-              text: "⭐️ 評価",
-              weight: "bold",
-              size: "md",
-              margin: "md"
-            },
-            {
-              type: "box",
-              layout: "horizontal",
-              contents: [
-                create_star_button(1),
-                create_star_button(2),
-                create_star_button(3),
-                create_star_button(4),
-                create_star_button(5)
-              ],
-              spacing: "sm",
-              margin: "sm"
-            },
-            {
-              type: "separator",
-              margin: "md"
-            },
-            {
-              type: "text",
-              text: "💬 コメント",
-              weight: "bold",
-              size: "md",
-              margin: "md"
-            },
-            {
-              type: "text",
-              text: "「口コミを書く」ボタンを押して、ご感想をお聞かせください。",
-              size: "sm",
-              color: "#666666",
-              wrap: true,
-              margin: "sm"
-            }
-          ]
-        },
-        footer: {
-          type: "box",
-          layout: "vertical",
-          contents: [
-            {
-              type: "button",
-              style: "primary",
-              action: {
-                type: "postback",
-                label: "📝 口コミを書く",
-                data: "write_review"
-              }
-            },
-            {
-              type: "button",
-              style: "secondary",
-              action: {
-                type: "postback",
-                label: "🔙 戻る",
-                data: "reviews"
-              }
-            }
-          ]
-        }
-      }
-    }
-
-    send_reply(reply_token, message)
-  end
-
-  # 🆕 口コミ一覧表示
-  def send_reviews_list(reply_token)
-    # サンプルの口コミデータ（実際の実装ではデータベースから取得）
-    sample_reviews = [
-      { name: "田中さん", rating: 5, comment: "とても気持ちよかったです！また利用したいと思います。", date: "2024/01/15" },
-      { name: "佐藤さん", rating: 5, comment: "スタッフの方も親切で、リラックスできました。", date: "2024/01/10" },
-      { name: "鈴木さん", rating: 4, comment: "整体の技術が高く、体が軽くなりました。", date: "2024/01/05" }
-    ]
-
-    message = {
-      type: "flex",
-      altText: "口コミ一覧",
-      contents: {
-        type: "bubble",
-        header: {
-          type: "box",
-          layout: "vertical",
-          contents: [
-            {
-              type: "text",
-              text: "📊 口コミ一覧",
-              weight: "bold",
-              size: "xl",
-              color: "#FF6B35"
-            },
-            {
-              type: "text",
-              text: "お客様の声",
-              size: "sm",
-              color: "#666666"
-            }
-          ],
-          paddingAll: "20px"
-        },
-        body: {
-          type: "box",
-          layout: "vertical",
-          contents: sample_reviews.map { |review|
-            {
-              type: "box",
-              layout: "vertical",
-              contents: [
-                {
-                  type: "box",
-                  layout: "horizontal",
-                  contents: [
-                    {
-                      type: "text",
-                      text: review[:name],
-                      weight: "bold",
-                      size: "sm"
-                    },
-                    {
-                      type: "text",
-                      text: review[:date],
-                      size: "xs",
-                      color: "#999999",
-                      align: "end"
-                    }
-                  ]
-                },
-                {
-                  type: "box",
-                  layout: "horizontal",
-                  contents: Array.new(review[:rating]) { |i|
-                    { type: "text", text: "⭐", size: "sm", color: "#FFD700" }
-                  }
-                },
-                {
-                  type: "text",
-                  text: review[:comment],
-                  size: "sm",
-                  color: "#333333",
-                  wrap: true,
-                  margin: "sm"
-                }
-              ],
-              margin: "md"
-            }
-          }
-        },
-        footer: {
-          type: "box",
-          layout: "vertical",
-          contents: [
             {
               type: "button",
               style: "secondary",
@@ -1578,5 +1224,147 @@ class LinebotController < ApplicationController
     }
 
     send_reply(reply_token, message)
+  end
+
+  # ヘルパーメソッド
+  def send_reply(reply_token, message)
+    client.reply_message(reply_token, message)
+  end
+
+  def create_course_button(course_name, price, data)
+    {
+      type: "button",
+      style: "secondary",
+      action: {
+        type: "postback",
+        label: "#{course_name} #{price}",
+        data: data
+      }
+    }
+  end
+
+  def create_info_row(label, value)
+    {
+      type: "box",
+      layout: "baseline",
+      contents: [
+        {
+          type: "text",
+          text: label,
+          size: "sm",
+          color: "#666666",
+          flex: 2
+        },
+        {
+          type: "text",
+          text: value.to_s,
+          size: "sm",
+          wrap: true,
+          flex: 3
+        }
+      ],
+      margin: "sm"
+    }
+  end
+
+  def truncate_address(address)
+    return "" unless address
+    address.length > 20 ? "#{address[0..20]}..." : address
+  end
+
+  def get_duration_from_course(course)
+    case course
+    when "40分コース" then 40
+    when "60分コース" then 60
+    when "80分コース" then 80
+    else 60
+    end
+  end
+
+  def get_available_dates(days_ahead)
+    dates = []
+    (1..days_ahead).each do |i|
+      date = Date.current + i.days
+      # 営業日チェック（例：日曜日は休み）
+      next if date.sunday?
+      
+      # その日に空きがあるかチェック
+      if has_available_slots_on_date(date)
+        dates << date
+      end
+    end
+    dates
+  end
+
+  def has_available_slots_on_date(date)
+    # 簡単なチェック：その日の予約数が一定数以下なら空きありとする
+    reservations_count = Reservation.active
+      .where(start_time: date.beginning_of_day..date.end_of_day)
+      .count
+    
+    reservations_count < 8 # 1日最大8枠と仮定
+  end
+
+  def get_available_time_slots(date, duration)
+    # 営業時間を統一（10:00-20:00、19:30最終受付想定）
+    opening_time = Time.zone.parse("#{date} 10:00")
+    closing_time = Time.zone.parse("#{date} 20:00")  # 20:00に統一
+    slot_interval = 30.minutes
+    available_slots = []
+    
+    current_time = opening_time
+    while current_time + duration.minutes <= closing_time
+      end_time = current_time + duration.minutes
+      
+      unless Reservation.active.where('start_time < ? AND end_time > ?', end_time, current_time).exists?
+        available_slots << {
+          start_time: current_time,
+          end_time: end_time
+        }
+      end
+      
+      current_time += slot_interval
+    end
+    
+    available_slots
+  end
+
+  # 最新情報を読み込むヘルパーメソッド
+  def load_news_items
+    # 設定ファイルから最新情報を読み込み
+    news_file = Rails.root.join('config', 'news_items.yml')
+    if File.exist?(news_file)
+      YAML.load_file(news_file) || []
+    else
+      # デフォルトの最新情報
+      [
+        {
+          category: "お知らせ",
+          date: "2024/01/15",
+          title: "新年のご挨拶",
+          content: "本年もよろしくお願いいたします。"
+        },
+        {
+          category: "営業時間",
+          date: "2024/01/10",
+          title: "営業時間変更のお知らせ",
+          content: "1月15日より営業時間を10:00-20:00に変更いたします。"
+        }
+      ]
+    end
+  rescue => e
+    Rails.logger.error "最新情報読み込みエラー: #{e.message}"
+    []
+  end
+
+  # カテゴリ別の色を取得
+  def get_category_color(category)
+    case category
+    when "お知らせ" then "#1976d2"
+    when "営業時間" then "#ff9800"
+    when "キャンペーン" then "#e91e63"
+    when "メンテナンス" then "#9c27b0"
+    else "#666666"
+    end
   end
 end

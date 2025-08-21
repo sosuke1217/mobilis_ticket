@@ -1,4 +1,4 @@
-# config/application.yml.production - 本番環境用設定
+# config/application.yml.production - Heroku本番環境用設定
 
 # Gmail設定
 gmail_username: "mobilis.stretch@gmail.com"
@@ -13,16 +13,14 @@ admin_email: "mobilis.stretch@gmail.com"
 mail_from: "mobilis.stretch@gmail.com"
 
 # アプリケーション設定
-app_host: "https://your-production-domain.com"  # 本番ドメインに変更してください
+app_host: "https://your-heroku-app-name.herokuapp.com"  # Herokuアプリ名に変更してください
 
-# データベース設定（本番環境に応じて設定）
-# database_url: "postgresql://username:password@host:port/database_name"
-
-# Redis設定（本番環境に応じて設定）
-# redis_url: "redis://host:port"
+# Heroku環境設定
+# DATABASE_URL: Heroku Postgresアドオンで自動設定
+# REDIS_URL: Heroku Redisアドオンで自動設定（必要に応じて）
 
 # セキュリティ設定
-secret_key_base: "<%= ENV['SECRET_KEY_BASE'] %>"  # 本番環境で自動生成
+secret_key_base: "<%= ENV['SECRET_KEY_BASE'] %>"  # Herokuで自動生成
 
 # ログレベル
 log_level: "info"
