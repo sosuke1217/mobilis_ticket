@@ -38,7 +38,7 @@ class LineRichMenuSetup
         # 上段中央：ホームページ
         { 
           bounds: { x: 834, y: 0, width: 833, height: 843 }, 
-          action: { type: "uri", uri: "https://mobilis-stretch.com/" } 
+          action: { type: "uri", uri: "https://mobilis-8008d58dd542.herokuapp.com/" } 
         },
         # 上段右：最新情報
         { 
@@ -163,5 +163,13 @@ end
 
 # 実行用スクリプト
 if __FILE__ == $0
+  puts "🔧 LINEリッチメニュー設定を開始します..."
+  puts "📱 アクセストークン: #{ENV['LINE_CHANNEL_TOKEN'] ? '設定済み' : '未設定'}"
+  
+  if ENV['LINE_CHANNEL_TOKEN'].nil?
+    puts "❌ LINE_CHANNEL_TOKENが設定されていません"
+    exit 1
+  end
+  
   LineRichMenuSetup.setup_main_menu
 end
