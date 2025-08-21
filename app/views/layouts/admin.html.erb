@@ -13,39 +13,13 @@
 <body>
   <header>
     <h1>管理ダッシュボード</h1>
-    <button type="button" class="btn btn-outline-danger" onclick="performLogout()">ログアウト</button>
-    
-    <script>
-    function performLogout() {
-      if (confirm('本当にログアウトしますか？')) {
-        // フォームを作成
-        var form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '<%= destroy_admin_user_session_path %>';
-        form.style.display = 'none';
-        
-        // _method フィールドを追加
-        var methodField = document.createElement('input');
-        methodField.type = 'hidden';
-        methodField.name = '_method';
-        methodField.value = 'DELETE';
-        
-        // CSRF トークンを追加
-        var csrfField = document.createElement('input');
-        csrfField.type = 'hidden';
-        csrfField.name = 'authenticity_token';
-        csrfField.value = '<%= form_authenticity_token %>';
-        
-        // フォームにフィールドを追加
-        form.appendChild(methodField);
-        form.appendChild(csrfField);
-        
-        // フォームを送信
-        document.body.appendChild(form);
-        form.submit();
-      }
-    }
-    </script>
+    <%= link_to "ログアウト", destroy_admin_user_session_path, 
+        method: :delete, 
+        class: "btn btn-outline-danger",
+        data: { 
+          turbo: false,
+          confirm: "本当にログアウトしますか？"
+        } %>
   </header>
   <main>
     <%= yield %>
