@@ -13,32 +13,11 @@
 <body>
   <header>
     <h1>管理ダッシュボード</h1>
-    <button type="button" class="btn btn-outline-danger" onclick="logout()">ログアウト</button>
-    
-    <script>
-    function logout() {
-      if (confirm('本当にログアウトしますか？')) {
-        var form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '<%= destroy_admin_user_session_path %>';
-        
-        var methodInput = document.createElement('input');
-        methodInput.type = 'hidden';
-        methodInput.name = '_method';
-        methodInput.value = 'DELETE';
-        
-        var csrfInput = document.createElement('input');
-        csrfInput.type = 'hidden';
-        csrfInput.name = 'authenticity_token';
-        csrfInput.value = '<%= form_authenticity_token %>';
-        
-        form.appendChild(methodInput);
-        form.appendChild(csrfInput);
-        document.body.appendChild(form);
-        form.submit();
-      }
-    }
-    </script>
+    <form action="<%= destroy_admin_user_session_path %>" method="post" style="display: inline;">
+      <input name="_method" type="hidden" value="delete" />
+      <input name="authenticity_token" type="hidden" value="<%= form_authenticity_token %>" />
+      <button type="submit" class="btn btn-outline-danger" onclick="return confirm('本当にログアウトしますか？')">ログアウト</button>
+    </form>
   </header>
   <main>
     <%= yield %>
