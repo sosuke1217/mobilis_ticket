@@ -69,7 +69,7 @@ class ReservationAnalytics
     reservations = base_reservations.active
     
     weekday_data = reservations
-      .group("strftime('%w', start_time)")
+      .group("EXTRACT(DOW FROM start_time)")
       .count
     
     # 曜日名に変換
