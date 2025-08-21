@@ -34,7 +34,9 @@ class LinebotController < ApplicationController
         Rails.logger.info "[LINE POSTBACK] data=#{event['postback']['data']}, user=#{event['source']['userId']}"
 
         user_id = event['source']['userId']
-        user = User.find_or_create_by!(line_user_id: user_id)
+        user = User.find_or_create_by!(line_user_id: user_id) do |u|
+          u.name = "LINEユーザー#{user_id[-4..-1]}" # 末尾4文字を使用
+        end
         
         data = event['postback']['data']
         handle_postback_action(user, data, event['replyToken'])
