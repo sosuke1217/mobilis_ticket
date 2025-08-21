@@ -13,7 +13,9 @@
 <body>
   <header>
     <h1>管理ダッシュボード</h1>
-    <%= button_to "ログアウト", destroy_admin_user_session_path, method: :delete, data: { confirm: "本当にログアウトしますか？", turbo: false }, class: "btn btn-outline-danger" %>
+    <%= form_tag destroy_admin_user_session_path, method: :delete, style: "display: inline;" do %>
+      <%= submit_tag "ログアウト", class: "btn btn-outline-danger", data: { confirm: "本当にログアウトしますか？" } %>
+    <% end %>
   </header>
   <main>
     <%= yield %>
