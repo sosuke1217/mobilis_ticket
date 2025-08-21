@@ -13,13 +13,14 @@
 <body>
   <header>
     <h1>管理ダッシュボード</h1>
-    <%= link_to "ログアウト", destroy_admin_user_session_path, 
+    <%= button_to "ログアウト", destroy_admin_user_session_path, 
         method: :delete, 
         class: "btn btn-outline-danger",
         data: { 
           turbo: false,
           confirm: "本当にログアウトしますか？"
-        } %>
+        },
+        style: "display: inline;" %>
   </header>
   <main>
     <%= yield %>
