@@ -14,132 +14,99 @@
     </div>
   </div>
 
-  <div class="card mb-4">
-    <div class="card-header bg-light">
-      <h5 class="card-title mb-0">
-        <i class="fas fa-link me-2"></i>LINE連携状況
-      </h5>
-    </div>
-    <div class="card-body">
-      <div class="row align-items-center">
-        <div class="col-md-8">
-          <% if @user.line_user_id.present? && @user.line_user_id != '' %>
-            <div class="d-flex align-items-center mb-3">
-              <span class="badge bg-success fs-6 me-3">
-                <i class="fas fa-link me-2"></i>連携済み
-              </span>
-              <span class="text-muted">
-                <strong>LINE ID:</strong> <%= @user.line_user_id %>
-              </span>
-            </div>
-            <div class="btn-group" role="group">
-              <%= link_to update_line_profile_admin_user_path(@user), 
-                  method: :patch, 
-                  class: "btn btn-outline-primary",
-                  data: { confirm: "LINEから最新のユーザー情報を取得しますか？" } do %>
-                <i class="fas fa-sync-alt me-2"></i>LINE情報を更新
-              <% end %>
-              <button type="button" class="btn btn-outline-danger" onclick="removeLineLink()">
-                <i class="fas fa-unlink me-2"></i>連携解除
-              </button>
-            </div>
-          <% else %>
-            <div class="d-flex align-items-center mb-3">
-              <span class="badge bg-danger fs-6 me-3">
-                <i class="fas fa-unlink me-2"></i>未連携
-              </span>
-              <span class="text-muted">LINEボットとの連携が設定されていません</span>
-            </div>
-            <button type="button" class="btn btn-success" onclick="showLineLinkForm()">
-              <i class="fas fa-link me-2"></i>LINE連携を作成
-            </button>
-          <% end %>
-        </div>
-        <div class="col-md-4 text-end">
-          <% if @user.line_user_id.present? && @user.line_user_id != '' %>
-            <div class="text-success">
-              <i class="fas fa-check-circle me-1"></i>
-              <small>LINE通知が有効です</small>
-            </div>
-          <% else %>
-            <div class="text-muted">
-              <i class="fas fa-info-circle me-1"></i>
-              <small>LINE通知は無効です</small>
-            </div>
-          <% end %>
-        </div>
+  <p>
+    <strong>LINE連携状況:</strong>
+    <% if @user.line_user_id.present? && @user.line_user_id != '' %>
+      <span class="badge bg-success"><i class="fas fa-link me-1"></i>連携済み</span>
+      <div class="btn-group ms-2" role="group">
+        <%= link_to update_line_profile_admin_user_path(@user), 
+            method: :patch, 
+            class: "btn btn-sm btn-outline-primary",
+            data: { confirm: "LINEから最新のユーザー情報を取得しますか？" } do %>
+          <i class="fas fa-sync-alt me-1"></i>LINE情報を更新
+        <% end %>
+        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeLineLink()">
+          <i class="fas fa-unlink me-1"></i>連携解除
+        </button>
       </div>
-    </div>
-  </div>
+    <% else %>
+      <span class="badge bg-danger"><i class="fas fa-unlink me-1"></i>未連携</span>
+      <button type="button" class="btn btn-sm btn-outline-success ms-2" onclick="showLineLinkForm()">
+        <i class="fas fa-link me-1"></i>LINE連携作成
+      </button>
+    <% end %>
+  </p>
 
   <!-- LINE連携フォーム（モーダル） -->
   <div class="modal fade" id="lineLinkModal" tabindex="-1" aria-labelledby="lineLinkModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header bg-primary text-white">
-          <h4 class="modal-title" id="lineLinkModalLabel">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header bg-primary text-white border-0">
+          <h5 class="modal-title" id="lineLinkModalLabel">
             <i class="fas fa-link me-2"></i>LINE連携作成
-          </h4>
+          </h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body p-4">
-          <div class="row">
-            <div class="col-12">
-              <div class="alert alert-info">
-                <i class="fas fa-info-circle me-2"></i>
-                <strong>LINE連携について</strong><br>
-                ユーザーがLINEボットと友達になると、自動的にLINEユーザーIDが取得されます。<br>
-                そのIDを入力することで、LINEからの通知やプロフィール情報の自動更新が可能になります。
-              </div>
+          <div class="text-center mb-4">
+            <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+              <i class="fas fa-link fa-2x text-primary"></i>
             </div>
+            <h6 class="text-muted">ユーザーとLINEアカウントを連携します</h6>
           </div>
           
           <form id="lineLinkForm">
-            <div class="row">
-              <div class="col-12">
-                <div class="mb-4">
-                  <label for="lineUserId" class="form-label fw-bold fs-5">
-                    <i class="fas fa-user-circle me-2"></i>LINEユーザーID
-                  </label>
-                  <input type="text" class="form-control form-control-lg" id="lineUserId" name="line_user_id" 
-                         placeholder="例: U1234567890abcdef" required>
-                  <div class="form-text fs-6">
-                    <i class="fas fa-lightbulb me-1"></i>
-                    LINEボットから取得したユーザーIDを入力してください。<br>
-                    通常は「U」で始まる英数字の文字列です。
-                  </div>
-                </div>
+            <div class="mb-4">
+              <label for="lineUserId" class="form-label fw-bold">
+                <i class="fas fa-user-circle me-2 text-primary"></i>LINEユーザーID
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0">
+                  <i class="fas fa-id-card text-muted"></i>
+                </span>
+                <input type="text" 
+                       class="form-control border-start-0" 
+                       id="lineUserId" 
+                       name="line_user_id" 
+                       placeholder="例: U1234567890abcdef" 
+                       required
+                       pattern="U[a-zA-Z0-9]{32}"
+                       title="LINEユーザーIDは「U」で始まる33文字の英数字です">
+              </div>
+              <div class="form-text">
+                <i class="fas fa-info-circle me-1 text-info"></i>
+                LINEボットから取得したユーザーIDを入力してください
+              </div>
+              <div class="mt-2">
+                <small class="text-muted">
+                  <i class="fas fa-lightbulb me-1 text-warning"></i>
+                  <strong>ヒント:</strong> LINEユーザーIDは通常「U」で始まり、32文字の英数字で構成されています
+                </small>
               </div>
             </div>
             
-            <div class="row">
-              <div class="col-12">
-                <div class="card bg-light">
-                  <div class="card-body">
-                    <h6 class="card-title">
-                      <i class="fas fa-question-circle me-2"></i>LINEユーザーIDの確認方法
-                    </h6>
-                    <ol class="mb-0">
-                      <li>LINEボットと友達になる</li>
-                      <li>何かメッセージを送信する</li>
-                      <li>管理者がLINEボットの管理画面でユーザーIDを確認</li>
-                      <li>そのIDを上記の入力欄に入力</li>
-                    </ol>
-                  </div>
+            <div class="alert alert-info border-0 bg-light">
+              <div class="d-flex align-items-start">
+                <i class="fas fa-shield-alt text-info me-2 mt-1"></i>
+                <div>
+                  <strong class="d-block mb-1">セキュリティについて</strong>
+                  <small class="text-muted">
+                    ・LINEユーザーIDは他のユーザーと重複できません<br>
+                    ・連携後はLINEからの自動更新が有効になります<br>
+                    ・必要に応じて連携解除も可能です
+                  </small>
                 </div>
               </div>
             </div>
           </form>
         </div>
-        <div class="modal-footer bg-light p-4">
-          <div class="d-flex justify-content-between w-100">
-            <button type="button" class="btn btn-secondary btn-lg px-4" data-bs-dismiss="modal">
-              <i class="fas fa-times me-2"></i>キャンセル
-            </button>
-            <button type="button" class="btn btn-primary btn-lg px-5" onclick="createLineLink()">
-              <i class="fas fa-link me-2"></i>連携作成
-            </button>
-          </div>
+        <div class="modal-footer border-0 bg-light">
+          <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>キャンセル
+          </button>
+          <button type="button" class="btn btn-primary px-4" onclick="createLineLink()">
+            <i class="fas fa-link me-2"></i>連携作成
+          </button>
         </div>
       </div>
     </div>
@@ -150,7 +117,10 @@
       const modal = new bootstrap.Modal(document.getElementById('lineLinkModal'));
       modal.show();
       
-      // フォーカスを入力フィールドに設定
+      // フォームをリセット
+      document.getElementById('lineLinkForm').reset();
+      
+      // 入力フィールドにフォーカス
       setTimeout(() => {
         document.getElementById('lineUserId').focus();
       }, 500);
@@ -158,9 +128,20 @@
 
     function createLineLink() {
       const lineUserId = document.getElementById('lineUserId').value.trim();
+      const lineUserIdInput = document.getElementById('lineUserId');
+      
+      // バリデーション
       if (!lineUserId) {
-        alert('LINEユーザーIDを入力してください');
-        document.getElementById('lineUserId').focus();
+        showError('LINEユーザーIDを入力してください');
+        lineUserIdInput.focus();
+        return;
+      }
+      
+      // LINEユーザーIDの形式チェック
+      const lineIdPattern = /^U[a-zA-Z0-9]{32}$/;
+      if (!lineIdPattern.test(lineUserId)) {
+        showError('LINEユーザーIDの形式が正しくありません。\n「U」で始まる33文字の英数字で入力してください。');
+        lineUserIdInput.focus();
         return;
       }
 
@@ -168,7 +149,7 @@
       const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
       
       if (!token) {
-        alert('セキュリティトークンが見つかりません。ページを再読み込みしてください。');
+        showError('セキュリティトークンが見つかりません。ページを再読み込みしてください。');
         return;
       }
 
@@ -195,43 +176,14 @@
         }
       })
       .then(data => {
-        // 成功メッセージを表示
-        const successAlert = document.createElement('div');
-        successAlert.className = 'alert alert-success alert-dismissible fade show';
-        successAlert.innerHTML = `
-          <i class="fas fa-check-circle me-2"></i>
-          <strong>成功！</strong> LINE連携を作成しました。
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        
-        // アラートを表示
-        const container = document.querySelector('.container-lg');
-        container.insertBefore(successAlert, container.firstChild);
-        
-        // モーダルを閉じる
-        const modal = bootstrap.Modal.getInstance(document.getElementById('lineLinkModal'));
-        modal.hide();
-        
-        // 3秒後にページをリロード
+        showSuccess('LINE連携を作成しました');
         setTimeout(() => {
           window.location.reload();
-        }, 3000);
+        }, 1500);
       })
       .catch(error => {
         console.error('Error:', error);
-        
-        // エラーメッセージを表示
-        const errorAlert = document.createElement('div');
-        errorAlert.className = 'alert alert-danger alert-dismissible fade show';
-        errorAlert.innerHTML = `
-          <i class="fas fa-exclamation-triangle me-2"></i>
-          <strong>エラー！</strong> LINE連携の作成に失敗しました: ${error.message}
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        
-        // アラートを表示
-        const container = document.querySelector('.container-lg');
-        container.insertBefore(errorAlert, container.firstChild);
+        showError(`LINE連携の作成に失敗しました: ${error.message}`);
       })
       .finally(() => {
         // ボタンを元に戻す
@@ -246,7 +198,7 @@
         const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
         
         if (!token) {
-          alert('セキュリティトークンが見つかりません。ページを再読み込みしてください。');
+          showError('セキュリティトークンが見つかりません。ページを再読み込みしてください。');
           return;
         }
 
@@ -272,39 +224,14 @@
           }
         })
         .then(data => {
-          // 成功メッセージを表示
-          const successAlert = document.createElement('div');
-          successAlert.className = 'alert alert-success alert-dismissible fade show';
-          successAlert.innerHTML = `
-            <i class="fas fa-check-circle me-2"></i>
-            <strong>成功！</strong> LINE連携を解除しました。
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-          `;
-          
-          // アラートを表示
-          const container = document.querySelector('.container-lg');
-          container.insertBefore(successAlert, container.firstChild);
-          
-          // 3秒後にページをリロード
+          showSuccess('LINE連携を解除しました');
           setTimeout(() => {
             window.location.reload();
-          }, 3000);
+          }, 1500);
         })
         .catch(error => {
           console.error('Error:', error);
-          
-          // エラーメッセージを表示
-          const errorAlert = document.createElement('div');
-          errorAlert.className = 'alert alert-danger alert-dismissible fade show';
-          errorAlert.innerHTML = `
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            <strong>エラー！</strong> LINE連携の解除に失敗しました: ${error.message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-          `;
-          
-          // アラートを表示
-          const container = document.querySelector('.container-lg');
-          container.insertBefore(errorAlert, container.firstChild);
+          showError(`LINE連携の解除に失敗しました: ${error.message}`);
         })
         .finally(() => {
           // ボタンを元に戻す
@@ -312,6 +239,44 @@
           button.innerHTML = originalText;
         });
       }
+    }
+
+    // 成功メッセージ表示
+    function showSuccess(message) {
+      const alertDiv = document.createElement('div');
+      alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed';
+      alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+      alertDiv.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      document.body.appendChild(alertDiv);
+      
+      // 3秒後に自動で消す
+      setTimeout(() => {
+        if (alertDiv.parentNode) {
+          alertDiv.remove();
+        }
+      }, 3000);
+    }
+
+    // エラーメッセージ表示
+    function showError(message) {
+      const alertDiv = document.createElement('div');
+      alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+      alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+      alertDiv.innerHTML = `
+        <i class="fas fa-exclamation-triangle me-2"></i>${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      document.body.appendChild(alertDiv);
+      
+      // 5秒後に自動で消す
+      setTimeout(() => {
+        if (alertDiv.parentNode) {
+          alertDiv.remove();
+        }
+      }, 5000);
     }
   </script>
 
