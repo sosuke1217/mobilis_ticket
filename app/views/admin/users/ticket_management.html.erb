@@ -557,40 +557,69 @@ function handleTicketUse(e) {
 
 // チケット削除処理
 function handleTicketDelete(e) {
-  const deleteBtn = e.target.classList.contains('delete-ticket-btn') ? e.target : e.target.closest('.delete-ticket-btn');
-  const ticketId = deleteBtn.getAttribute('data-ticket-id');
-  const ticketName = deleteBtn.getAttribute('data-ticket-name');
-  
-  // チケット行から残り回数を取得
-  const ticketRow = deleteBtn.closest('tr');
-  const remainingCount = ticketRow.querySelector('td:nth-child(2) .badge').textContent.split('/')[0].trim();
-  
-  // モーダル要素の存在チェック
-  const deleteTicketName = document.getElementById('deleteTicketName');
-  const deleteTicketRemaining = document.getElementById('deleteTicketRemaining');
-  
-  if (!deleteTicketName || !deleteTicketRemaining) {
-    console.error('❌ 削除確認モーダルの要素が見つかりません');
-    alert('削除確認モーダルの準備に失敗しました');
-    return;
-  }
-  
-  // モーダルにデータを設定
-  deleteTicketName.textContent = ticketName;
-  deleteTicketRemaining.textContent = remainingCount;
-  
-  // モーダルを表示
-  const deleteModal = new bootstrap.Modal(document.getElementById('deleteTicketModal'));
-  deleteModal.show();
-  
-  // 削除実行ボタンのイベントリスナー
-  document.getElementById('confirmDeleteTicketBtn').onclick = function() {
-    deleteTicket(ticketId, ticketRow);
-    deleteModal.hide();
+  try {
+    console.log('🗑️ チケット削除処理開始');
     
-    // 即座に背景をクリーンアップ
-    cleanupModalBackground();
-  };
+    const deleteBtn = e.target.classList.contains('delete-ticket-btn') ? e.target : e.target.closest('.delete-ticket-btn');
+    if (!deleteBtn) {
+      console.error('❌ 削除ボタンが見つかりません');
+      return;
+    }
+    
+    const ticketId = deleteBtn.getAttribute('data-ticket-id');
+    const ticketName = deleteBtn.getAttribute('data-ticket-name');
+    
+    console.log('🎫 削除対象:', { ticketId, ticketName });
+    
+    // チケット行から残り回数を取得（安全な検索）
+    const ticketRow = deleteBtn.closest('tr');
+    if (!ticketRow) {
+      console.error('❌ チケット行が見つかりません');
+      return;
+    }
+    
+    const remainingCountElement = ticketRow.querySelector('td:nth-child(2) .badge');
+    if (!remainingCountElement) {
+      console.error('❌ 残り回数要素が見つかりません');
+      return;
+    }
+    
+    const remainingCount = remainingCountElement.textContent.split('/')[0].trim();
+    console.log('📊 残り回数:', remainingCount);
+    
+    // モーダル要素の存在チェック
+    const deleteTicketName = document.getElementById('deleteTicketName');
+    const deleteTicketRemaining = document.getElementById('deleteTicketRemaining');
+    
+    if (!deleteTicketName || !deleteTicketRemaining) {
+      console.error('❌ 削除確認モーダルの要素が見つかりません');
+      alert('削除確認モーダルの準備に失敗しました');
+      return;
+    }
+    
+    // モーダルにデータを設定
+    deleteTicketName.textContent = ticketName;
+    deleteTicketRemaining.textContent = remainingCount;
+    
+    // モーダルを表示
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteTicketModal'));
+    deleteModal.show();
+    
+    // 削除実行ボタンのイベントリスナー
+    document.getElementById('confirmDeleteTicketBtn').onclick = function() {
+      deleteTicket(ticketId, ticketRow);
+      deleteModal.hide();
+      
+      // 即座に背景をクリーンアップ
+      cleanupModalBackground();
+    };
+    
+    console.log('✅ 削除確認モーダル表示完了');
+    
+  } catch (error) {
+    console.error('❌ チケット削除処理中にエラーが発生しました:', error);
+    alert('チケット削除の準備中にエラーが発生しました: ' + error.message);
+  }
 }
 
 // チケット削除実行
@@ -722,7 +751,8 @@ function deleteTicket(ticketId, ticketRow) {
             <i class="fas fa-ticket-alt me-1"></i>使用
           </button>
           <button class="btn btn-sm btn-outline-danger delete-ticket-btn ms-1" 
-                  data-ticket-id="${ticket.id}">
+                  data-ticket-id="${ticket.id}"
+                  data-ticket-name="${ticket.ticket_template.name}">
             <i class="fas fa-trash me-1"></i>削除
           </button>
         </td>
