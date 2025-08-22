@@ -379,6 +379,10 @@ function handleTicketSubmit(e) {
       tbody.innerHTML = '';
       // 新しく作成されたチケットを追加
       addNewTicketToList(data.ticket);
+      // 再度残額を更新（新チケット追加後）
+      setTimeout(() => {
+        updateTicketCounts();
+      }, 100);
     }
     
     // 成功メッセージを3秒後に自動で消す
@@ -626,7 +630,9 @@ function deleteTicket(ticketId, ticketRow) {
         `;
         
         // 残りチケット数と残額を即座に更新（0件状態）
-        updateTicketCounts();
+        setTimeout(() => {
+          updateTicketCounts();
+        }, 100);
       }
       
       // 成功メッセージを3秒後に自動で消す
@@ -759,11 +765,15 @@ function deleteTicket(ticketId, ticketRow) {
           if (badge && priceElement) {
             const count = parseInt(badge.textContent.split('/')[0].trim());
             const price = parseInt(priceElement.textContent.replace('¥', '').replace(/,/g, ''));
-            return total + (isNaN(count) ? 0 : count) * (isNaN(price) ? 0 : price);
+            if (!isNaN(count) && !isNaN(price)) {
+              console.log(`💰 チケット計算: 残り回数=${count}, 価格=${price}, 小計=${count * price}`);
+              return total + (count * price);
+            }
           }
           return total;
         }, 0);
         
+        console.log(`💰 最終残額合計: ${totalValue}`);
         remainingValueElement.innerHTML = `<strong>残額合計:</strong> ¥${totalValue.toLocaleString()}`;
         console.log('✅ 残額合計表示を更新しました:', totalValue);
       }
