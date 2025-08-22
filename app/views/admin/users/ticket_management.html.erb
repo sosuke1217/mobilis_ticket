@@ -1,13 +1,15 @@
 <style>
   /* 削除モーダルのカスタムスタイル */
   #deleteTicketModal .modal-content {
-    max-height: 600px;
-    overflow: hidden;
+    /* 高さ制限を完全に削除 */
+    max-height: none;
+    overflow: visible;
   }
   
   #deleteTicketModal .modal-body {
-    overflow: hidden;
-    padding: 1.5rem 1.5rem 1.5rem 1.5rem;
+    /* スクロール制限を完全に削除 */
+    overflow: visible;
+    padding: 1.5rem;
   }
   
   #deleteTicketModal .modal-footer {
@@ -544,10 +546,8 @@ function handleTicketDelete(e) {
     deleteTicket(ticketId, ticketRow);
     deleteModal.hide();
     
-    // モーダルが完全に閉じた後に背景をクリーンアップ
-    setTimeout(() => {
-      cleanupModalBackground();
-    }, 300);
+    // 即座に背景をクリーンアップ
+    cleanupModalBackground();
   };
 }
 
@@ -820,20 +820,37 @@ function deleteTicket(ticketId, ticketRow) {
   
   // モーダル背景のクリーンアップ関数
   function cleanupModalBackground() {
+    // 即座に背景をクリーンアップ
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    backdrops.forEach(backdrop => {
+      backdrop.style.opacity = '0';
+      backdrop.style.transition = 'opacity 0.2s ease';
+      setTimeout(() => {
+        if (backdrop.parentNode) {
+          backdrop.parentNode.removeChild(backdrop);
+        }
+      }, 200);
+    });
+    
+    // bodyの状態を即座にリセット
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+    
+    // 追加のクリーンアップを少し遅れて実行
     setTimeout(() => {
-      const backdrop = document.querySelector('.modal-backdrop');
-      if (backdrop) {
-        backdrop.style.opacity = '0';
-        backdrop.style.transition = 'opacity 0.3s ease';
-        setTimeout(() => {
-          if (backdrop.parentNode) {
-            backdrop.parentNode.removeChild(backdrop);
-          }
-        }, 300);
-      }
+      // 残っている背景要素を強制的に削除
+      const remainingBackdrops = document.querySelectorAll('.modal-backdrop');
+      remainingBackdrops.forEach(backdrop => {
+        if (backdrop.parentNode) {
+          backdrop.parentNode.removeChild(backdrop);
+        }
+      });
+      
+      // 再度bodyの状態を確認
       document.body.classList.remove('modal-open');
       document.body.style.overflow = '';
       document.body.style.paddingRight = '';
-    }, 300);
+    }, 100);
   }
 </script>
