@@ -8,7 +8,7 @@ pin_all_from "app/javascript/controllers", under: "controllers"
 # FullCalendar
 pin "fullcalendar", to: "fullcalendar.js", preload: true
 
-# Calendar modules - individual pins
+# Calendar modules - vendor directory
 pin "calendar", to: "calendar/index.js", preload: true
 pin "calendar_core", to: "calendar/calendar_core.js", preload: true
 pin "modal", to: "calendar/modal.js", preload: true
