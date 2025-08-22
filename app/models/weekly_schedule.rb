@@ -49,7 +49,11 @@ class WeeklySchedule < ApplicationRecord
     
     (0..6).each do |day_of_week|
       day_schedule = default_schedule[day_of_week]
-      schedule_data[day_of_week] = day_schedule
+      # フロントエンドが期待する形式に変換
+      schedule_data[day_of_week] = {
+        enabled: true,
+        times: day_schedule[:business_hours].map { |h| { start: h[:start], end: h[:end] } }
+      }
     end
     
     schedule_data
@@ -66,7 +70,20 @@ class WeeklySchedule < ApplicationRecord
       else
         day_schedule = self.class.default_schedule[day_of_week]
       end
-      schedule_data[day_of_week] = day_schedule
+      
+      # フロントエンドが期待する形式に変換
+      if day_schedule[:business_hours]
+        schedule_data[day_of_week] = {
+          enabled: true,
+          times: day_schedule[:business_hours].map { |h| { start: h[:start], end: h[:end] } }
+        }
+      else
+        # フォールバック: デフォルト形式
+        schedule_data[day_of_week] = {
+          enabled: true,
+          times: [{ start: '09:00', end: '18:00' }]
+        }
+      end
     end
     
     schedule_data

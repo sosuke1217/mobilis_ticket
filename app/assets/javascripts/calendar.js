@@ -718,6 +718,12 @@
 
         // 時間スロットを描画
         function renderTimeSlots(day, times, isRecurring = false) {
+            // timesがundefinedまたは配列でない場合は空文字を返す
+            if (!times || !Array.isArray(times)) {
+                console.warn(`⚠️ renderTimeSlots: times is not an array for day ${day}:`, times);
+                return '';
+            }
+            
             return times.map((time, index) => `
                 <div class="time-slot-input">
                     <input type="time" class="time-input" value="${time.start}" 
