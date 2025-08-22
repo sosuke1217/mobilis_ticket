@@ -793,8 +793,7 @@ function deleteTicket(ticketId, ticketRow) {
         console.warn('⚠️ デバッグ情報コンテナが見つかりません');
       }
       
-      // 残額合計の詳細ログ
-      const remainingValueElement = document.getElementById('remainingTicketValue');
+      // 残額合計の詳細ログ（既存の要素を使用）
       if (remainingValueElement) {
         console.log('💰 残額合計要素を発見:', remainingValueElement.textContent);
       } else {
