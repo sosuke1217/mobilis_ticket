@@ -672,13 +672,53 @@ function handleTicketDelete(e) {
     const remainingCount = remainingCountElement.textContent.split('/')[0].trim();
     console.log('📊 残り回数:', remainingCount);
     
-    // モーダル要素の存在チェック
+    // モーダル要素の存在チェック（再試行ロジック付き）
+    let deleteTicketName = document.getElementById('deleteTicketName');
+    let deleteTicketRemaining = document.getElementById('deleteTicketRemaining');
+    
+    // 要素が見つからない場合の再試行
+    if (!deleteTicketName || !deleteTicketRemaining) {
+      console.warn('⚠️ モーダル要素が見つかりません。再試行を実行します...');
+      
+      // 少し待ってから再試行
+      setTimeout(() => {
+        deleteTicketName = document.getElementById('deleteTicketName');
+        deleteTicketRemaining = document.getElementById('deleteTicketRemaining');
+        
+        if (!deleteTicketName || !deleteTicketRemaining) {
+          console.error('❌ 再試行後もモーダル要素が見つかりません');
+          alert('削除確認モーダルの準備に失敗しました。ページを再読み込みしてください。');
+          return;
+        }
+        
+        // 再試行成功後、モーダルを表示
+        showDeleteModal(ticketId, ticketName, remainingCount, ticketRow);
+      }, 100);
+      
+      return;
+    }
+    
+    // モーダル表示関数を呼び出し
+    showDeleteModal(ticketId, ticketName, remainingCount, ticketRow);
+    
+  } catch (error) {
+    console.error('❌ チケット削除処理中にエラーが発生しました:', error);
+    alert('削除処理の準備中にエラーが発生しました: ' + error.message);
+  }
+}
+
+// 削除確認モーダルを表示する関数
+function showDeleteModal(ticketId, ticketName, remainingCount, ticketRow) {
+  try {
+    console.log('🎭 モーダル表示開始:', { ticketId, ticketName, remainingCount });
+    
+    // モーダル要素の最終確認
     const deleteTicketName = document.getElementById('deleteTicketName');
     const deleteTicketRemaining = document.getElementById('deleteTicketRemaining');
     
     if (!deleteTicketName || !deleteTicketRemaining) {
-      console.error('❌ 削除確認モーダルの要素が見つかりません');
-      alert('削除確認モーダルの準備に失敗しました');
+      console.error('❌ モーダル表示時に要素が見つかりません');
+      alert('削除確認モーダルの準備に失敗しました。ページを再読み込みしてください。');
       return;
     }
     
@@ -691,19 +731,22 @@ function handleTicketDelete(e) {
     deleteModal.show();
     
     // 削除実行ボタンのイベントリスナー
-    document.getElementById('confirmDeleteTicketBtn').onclick = function() {
-      deleteTicket(ticketId, ticketRow);
-      deleteModal.hide();
-      
-      // 即座に背景をクリーンアップ
-      cleanupModalBackground();
-    };
+    const confirmBtn = document.getElementById('confirmDeleteTicketBtn');
+    if (confirmBtn) {
+      confirmBtn.onclick = function() {
+        deleteTicket(ticketId, ticketRow);
+        deleteModal.hide();
+        
+        // 即座に背景をクリーンアップ
+        cleanupModalBackground();
+      };
+    }
     
     console.log('✅ 削除確認モーダル表示完了');
     
   } catch (error) {
-    console.error('❌ チケット削除処理中にエラーが発生しました:', error);
-    alert('チケット削除の準備中にエラーが発生しました: ' + error.message);
+    console.error('❌ モーダル表示中にエラーが発生しました:', error);
+    alert('モーダル表示中にエラーが発生しました: ' + error.message);
   }
 }
 
@@ -1083,10 +1126,17 @@ function deleteTicket(ticketId, ticketRow) {
   }
   
   // ページ読み込み時に初期化を実行
-  document.addEventListener('DOMContentLoaded', initializeTicketManagement);
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('🎫 DOMContentLoaded イベント発生');
+    // 少し遅れて初期化を実行（DOMの完全な準備を待つ）
+    setTimeout(initializeTicketManagement, 50);
+  });
   
   // ページが完全に読み込まれた後に初期化を実行
-  window.addEventListener('load', initializeTicketManagement);
+  window.addEventListener('load', function() {
+    console.log('🎫 load イベント発生');
+    initializeTicketManagement();
+  });
   
   // 少し遅れて初期化を実行（Turboなどの問題に対応）
   setTimeout(initializeTicketManagement, 100);
@@ -1094,9 +1144,13 @@ function deleteTicket(ticketId, ticketRow) {
   
   // ページが表示された後に初期化を実行
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeTicketManagement);
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('🎫 readyState loading - DOMContentLoaded イベント発生');
+      setTimeout(initializeTicketManagement, 100);
+    });
   } else {
-    initializeTicketManagement();
+    console.log('🎫 readyState 既に完了 - 即座に初期化');
+    setTimeout(initializeTicketManagement, 100);
   }
   
   // ページ読み込み直後の背景クリーンアップ
