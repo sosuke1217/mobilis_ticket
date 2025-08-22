@@ -4,6 +4,6 @@ import "@hotwired/stimulus"
 import "@hotwired/stimulus-loading"
 import "controllers"
 import "fullcalendar"
-import "calendar"
+import "javascript/calendar"
 
 console.log("🚀 Application.js loaded successfully");

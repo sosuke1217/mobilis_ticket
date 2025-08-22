@@ -7,4 +7,4 @@ pin_all_from "app/javascript/controllers", under: "controllers"
 
 # FullCalendar
 pin "fullcalendar", to: "fullcalendar.js", preload: true
-pin_all_from "app/javascript/calendar", under: "calendar"
+pin_all_from "app/javascript/calendar", under: "javascript/calendar"
