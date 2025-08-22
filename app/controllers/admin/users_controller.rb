@@ -197,21 +197,36 @@ class Admin::UsersController < ApplicationController
   def update_line_profile
     if @user.line_user_id.present?
       begin
+        Rails.logger.info "LINE情報更新開始: ユーザーID #{@user.id}, LINE ID #{@user.line_user_id}"
+        
         # LINEボットコントローラーのメソッドを使用
         linebot_controller = LinebotController.new
-        linebot_controller.update_user_profile(@user, @user.line_user_id)
+        result = linebot_controller.update_user_profile(@user, @user.line_user_id)
         
-        respond_to do |format|
-          format.html { redirect_to admin_user_path(@user), notice: 'LINEユーザー情報を更新しました' }
-          format.json { render json: { success: true, message: 'LINEユーザー情報を更新しました' } }
+        if result
+          Rails.logger.info "LINE情報更新成功: ユーザーID #{@user.id}"
+          respond_to do |format|
+            format.html { redirect_to admin_user_path(@user), notice: 'LINEユーザー情報を更新しました' }
+            format.json { render json: { success: true, message: 'LINEユーザー情報を更新しました' } }
+          end
+        else
+          Rails.logger.error "LINE情報更新失敗: ユーザーID #{@user.id}"
+          respond_to do |format|
+            format.html { redirect_to admin_user_path(@user), alert: 'LINEユーザー情報の更新に失敗しました' }
+            format.json { render json: { success: false, error: 'LINEユーザー情報の更新に失敗しました' }, status: :unprocessable_entity }
+          end
         end
       rescue => e
+        Rails.logger.error "LINE情報更新例外: ユーザーID #{@user.id} - #{e.class}: #{e.message}"
+        Rails.logger.error "バックトレース: #{e.backtrace.first(5).join("\n")}"
+        
         respond_to do |format|
           format.html { redirect_to admin_user_path(@user), alert: "LINEユーザー情報の更新に失敗しました: #{e.message}" }
           format.json { render json: { success: false, error: e.message }, status: :unprocessable_entity }
         end
       end
     else
+      Rails.logger.warn "LINE情報更新試行: LINE連携されていないユーザー ID #{@user.id}"
       respond_to do |format|
         format.html { redirect_to admin_user_path(@user), alert: 'LINE連携されていないユーザーです' }
         format.json { render json: { success: false, error: 'LINE連携されていないユーザーです' }, status: :unprocessable_entity }

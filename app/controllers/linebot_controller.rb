@@ -1390,15 +1390,32 @@ class LinebotController < ApplicationController
   # 既存ユーザーのLINEプロフィール情報を更新
   def update_user_profile(user, user_id)
     begin
+      Rails.logger.info "LINEプロフィール更新開始: #{user_id}"
+      
+      # LINEからプロフィール情報を取得
       profile = client.get_profile(user_id)
-      user.update!(
+      Rails.logger.info "LINEプロフィール取得成功: #{profile.inspect}"
+      
+      # ユーザー情報を更新
+      update_params = {
         display_name: profile['displayName'],
         status_message: profile['statusMessage'],
         language: profile['language']
-      )
-      Rails.logger.info "LINEプロフィール更新完了: #{user_id} - #{profile['displayName']}"
+      }
+      
+      Rails.logger.info "更新パラメータ: #{update_params.inspect}"
+      
+      if user.update!(update_params)
+        Rails.logger.info "LINEプロフィール更新完了: #{user_id} - #{profile['displayName']}"
+        return true
+      else
+        Rails.logger.error "LINEプロフィール更新失敗: #{user.errors.full_messages}"
+        return false
+      end
     rescue => e
-      Rails.logger.error "LINEプロフィール更新エラー: #{user_id} - #{e.message}"
+      Rails.logger.error "LINEプロフィール更新エラー: #{user_id} - #{e.class}: #{e.message}"
+      Rails.logger.error "バックトレース: #{e.backtrace.first(5).join("\n")}"
+      raise e
     end
   end
 end
