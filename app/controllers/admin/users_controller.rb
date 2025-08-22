@@ -201,12 +201,21 @@ class Admin::UsersController < ApplicationController
         linebot_controller = LinebotController.new
         linebot_controller.update_user_profile(@user, @user.line_user_id)
         
-        redirect_to admin_user_path(@user), notice: 'LINEユーザー情報を更新しました'
+        respond_to do |format|
+          format.html { redirect_to admin_user_path(@user), notice: 'LINEユーザー情報を更新しました' }
+          format.json { render json: { success: true, message: 'LINEユーザー情報を更新しました' } }
+        end
       rescue => e
-        redirect_to admin_user_path(@user), alert: "LINEユーザー情報の更新に失敗しました: #{e.message}"
+        respond_to do |format|
+          format.html { redirect_to admin_user_path(@user), alert: "LINEユーザー情報の更新に失敗しました: #{e.message}" }
+          format.json { render json: { success: false, error: e.message }, status: :unprocessable_entity }
+        end
       end
     else
-      redirect_to admin_user_path(@user), alert: 'LINE連携されていないユーザーです'
+      respond_to do |format|
+        format.html { redirect_to admin_user_path(@user), alert: 'LINE連携されていないユーザーです' }
+        format.json { render json: { success: false, error: 'LINE連携されていないユーザーです' }, status: :unprocessable_entity }
+      end
     end
   end
 

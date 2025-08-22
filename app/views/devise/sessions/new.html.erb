@@ -151,27 +151,44 @@
   }
 </style>
 
-<!-- シンプルなJavaScript修正 -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // 入力フィールドを取得
     const emailInput = document.querySelector('input[type="email"]');
     const passwordInput = document.querySelector('input[type="password"]');
     
-    // シンプルな左寄せ関数
-    function alignLeft(input) {
+    function forceLeftAlign(input) {
       if (input) {
         input.style.textAlign = 'left';
+        input.style.textAlignLast = 'left';
         input.style.direction = 'ltr';
+        input.style.textIndent = '0';
+        input.style.marginLeft = '0';
+        input.style.marginRight = '0';
       }
     }
     
+    function applyLeftAlign() {
+      forceLeftAlign(emailInput);
+      forceLeftAlign(passwordInput);
+    }
+    
     // 初期設定
-    alignLeft(emailInput);
-    alignLeft(passwordInput);
+    applyLeftAlign();
     
     // フォーカス時に適用
-    if (emailInput) emailInput.addEventListener('focus', () => alignLeft(emailInput));
-    if (passwordInput) passwordInput.addEventListener('focus', () => alignLeft(passwordInput));
+    if (emailInput) {
+      emailInput.addEventListener('focus', applyLeftAlign);
+      emailInput.addEventListener('input', applyLeftAlign);
+      emailInput.addEventListener('click', applyLeftAlign);
+    }
+    
+    if (passwordInput) {
+      passwordInput.addEventListener('focus', applyLeftAlign);
+      passwordInput.addEventListener('input', applyLeftAlign);
+      passwordInput.addEventListener('click', applyLeftAlign);
+    }
+    
+    // 定期的に適用（他のCSSが上書きした場合の対策）
+    setInterval(applyLeftAlign, 100);
   });
 </script>

@@ -30,25 +30,46 @@
     function updateLineProfile() {
       if (confirm('LINEから最新のユーザー情報を取得しますか？')) {
         const userId = '<%= @user.id %>';
-        const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        
+        if (!token) {
+          alert('セキュリティトークンが見つかりません。ページを再読み込みしてください。');
+          return;
+        }
+        
+        // ボタンを無効化
+        const button = event.target;
+        const originalText = button.textContent;
+        button.disabled = true;
+        button.textContent = '更新中...';
         
         fetch(`/admin/users/${userId}/update_line_profile`, {
           method: 'PATCH',
           headers: {
             'X-CSRF-Token': token,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
           }
         })
         .then(response => {
           if (response.ok) {
-            window.location.reload();
+            return response.json();
           } else {
-            alert('LINE情報の更新に失敗しました');
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
           }
+        })
+        .then(data => {
+          alert('LINEユーザー情報を更新しました');
+          window.location.reload();
         })
         .catch(error => {
           console.error('Error:', error);
-          alert('LINE情報の更新中にエラーが発生しました');
+          alert(`LINE情報の更新に失敗しました: ${error.message}`);
+        })
+        .finally(() => {
+          // ボタンを元に戻す
+          button.disabled = false;
+          button.textContent = originalText;
         });
       }
     }
