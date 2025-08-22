@@ -294,71 +294,27 @@
   }
 </style>
 
+<!-- シンプルなJavaScript修正 -->
 <script>
-  // ページ読み込み時にプレースホルダーとテキスト位置を強制修正
   document.addEventListener('DOMContentLoaded', function() {
+    // 入力フィールドを取得
     const emailInput = document.querySelector('input[type="email"]');
     const passwordInput = document.querySelector('input[type="password"]');
     
-    // スタイルを強制的に適用
-    function forceLeftAlign(input) {
+    // シンプルな左寄せ関数
+    function alignLeft(input) {
       if (input) {
         input.style.textAlign = 'left';
         input.style.direction = 'ltr';
-        input.style.textAlignLast = 'left';
-        
-        // プレースホルダーのスタイルも強制適用
-        input.style.setProperty('text-align', 'left', 'important');
-        input.style.setProperty('direction', 'ltr', 'important');
-        input.style.setProperty('text-align-last', 'left', 'important');
-        
-        // 入力中のテキストも強制左寄せ
-        if (input.value.length > 0) {
-          input.style.textAlign = 'left';
-          input.style.direction = 'ltr';
-          input.style.textAlignLast = 'left';
-        }
       }
     }
     
     // 初期設定
-    forceLeftAlign(emailInput);
-    forceLeftAlign(passwordInput);
+    alignLeft(emailInput);
+    alignLeft(passwordInput);
     
-    // フォーカス時にも強制適用
-    emailInput.addEventListener('focus', () => forceLeftAlign(emailInput));
-    passwordInput.addEventListener('focus', () => forceLeftAlign(passwordInput));
-    
-    // 入力時にも強制適用
-    emailInput.addEventListener('input', () => forceLeftAlign(emailInput));
-    passwordInput.addEventListener('input', () => forceLeftAlign(passwordInput));
-    
-    // キー入力時にも強制適用
-    emailInput.addEventListener('keydown', () => forceLeftAlign(emailInput));
-    passwordInput.addEventListener('keydown', () => forceLeftAlign(passwordInput));
-    
-    // キー入力後にも強制適用
-    emailInput.addEventListener('keyup', () => forceLeftAlign(emailInput));
-    passwordInput.addEventListener('keyup', () => forceLeftAlign(passwordInput));
-    
-    // 変更時にも強制適用
-    emailInput.addEventListener('change', () => forceLeftAlign(emailInput));
-    passwordInput.addEventListener('change', () => forceLeftAlign(passwordInput));
-    
-    // 定期的にチェックして強制適用（より頻繁に）
-    setInterval(() => {
-      forceLeftAlign(emailInput);
-      forceLeftAlign(passwordInput);
-    }, 50);
-    
-    // 入力フィールドの値が変更されたときの監視
-    const observer = new MutationObserver(() => {
-      forceLeftAlign(emailInput);
-      forceLeftAlign(passwordInput);
-    });
-    
-    // 入力フィールドの属性変更を監視
-    if (emailInput) observer.observe(emailInput, { attributes: true, attributeFilter: ['style'] });
-    if (passwordInput) observer.observe(passwordInput, { attributes: true, attributeFilter: ['style'] });
+    // フォーカス時に適用
+    if (emailInput) emailInput.addEventListener('focus', () => alignLeft(emailInput));
+    if (passwordInput) passwordInput.addEventListener('focus', () => alignLeft(passwordInput));
   });
 </script>
