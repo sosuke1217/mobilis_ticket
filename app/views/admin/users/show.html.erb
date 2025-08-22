@@ -39,28 +39,28 @@
 
   <!-- LINE連携フォーム（モーダル） -->
   <div class="modal fade" id="lineLinkModal" tabindex="-1" aria-labelledby="lineLinkModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
       <div class="modal-content border-0 shadow-lg">
-        <div class="modal-header bg-primary text-white border-0">
-          <h5 class="modal-title" id="lineLinkModalLabel">
+        <div class="modal-header bg-primary text-white border-0 py-3">
+          <h6 class="modal-title mb-0" id="lineLinkModalLabel">
             <i class="fas fa-link me-2"></i>LINE連携作成
-          </h5>
+          </h6>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body p-4">
-          <div class="text-center mb-4">
-            <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-              <i class="fas fa-link fa-2x text-primary"></i>
+        <div class="modal-body p-3">
+          <div class="text-center mb-3">
+            <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
+              <i class="fas fa-link fa-lg text-primary"></i>
             </div>
-            <h6 class="text-muted">ユーザーとLINEアカウントを連携します</h6>
+            <p class="text-muted small mb-0">ユーザーとLINEアカウントを連携します</p>
           </div>
           
           <form id="lineLinkForm">
-            <div class="mb-4">
-              <label for="lineUserId" class="form-label fw-bold">
-                <i class="fas fa-user-circle me-2 text-primary"></i>LINEユーザーID
+            <div class="mb-3">
+              <label for="lineUserId" class="form-label fw-bold small mb-2">
+                <i class="fas fa-user-circle me-1 text-primary"></i>LINEユーザーID
               </label>
-              <div class="input-group">
+              <div class="input-group input-group-sm">
                 <span class="input-group-text bg-light border-end-0">
                   <i class="fas fa-id-card text-muted"></i>
                 </span>
@@ -68,44 +68,36 @@
                        class="form-control border-start-0" 
                        id="lineUserId" 
                        name="line_user_id" 
-                       placeholder="例: U1234567890abcdef" 
+                       placeholder="U1234567890abcdef" 
                        required
                        pattern="U[a-zA-Z0-9]{32}"
                        title="LINEユーザーIDは「U」で始まる33文字の英数字です">
               </div>
-              <div class="form-text">
+              <div class="form-text small">
                 <i class="fas fa-info-circle me-1 text-info"></i>
-                LINEボットから取得したユーザーIDを入力してください
-              </div>
-              <div class="mt-2">
-                <small class="text-muted">
-                  <i class="fas fa-lightbulb me-1 text-warning"></i>
-                  <strong>ヒント:</strong> LINEユーザーIDは通常「U」で始まり、32文字の英数字で構成されています
-                </small>
+                LINEボットから取得したユーザーIDを入力
               </div>
             </div>
             
-            <div class="alert alert-info border-0 bg-light">
+            <div class="alert alert-info border-0 bg-light py-2 mb-0">
               <div class="d-flex align-items-start">
-                <i class="fas fa-shield-alt text-info me-2 mt-1"></i>
+                <i class="fas fa-shield-alt text-info me-2 mt-1 small"></i>
                 <div>
-                  <strong class="d-block mb-1">セキュリティについて</strong>
+                  <strong class="d-block small mb-1">セキュリティ</strong>
                   <small class="text-muted">
-                    ・LINEユーザーIDは他のユーザーと重複できません<br>
-                    ・連携後はLINEからの自動更新が有効になります<br>
-                    ・必要に応じて連携解除も可能です
+                    ・重複不可・自動更新・解除可能
                   </small>
                 </div>
               </div>
             </div>
           </form>
         </div>
-        <div class="modal-footer border-0 bg-light">
-          <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
-            <i class="fas fa-times me-2"></i>キャンセル
+        <div class="modal-footer border-0 bg-light py-2">
+          <button type="button" class="btn btn-outline-secondary btn-sm px-3" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i>キャンセル
           </button>
-          <button type="button" class="btn btn-primary px-4" onclick="createLineLink()">
-            <i class="fas fa-link me-2"></i>連携作成
+          <button type="button" class="btn btn-primary btn-sm px-3" onclick="createLineLink()">
+            <i class="fas fa-link me-1"></i>連携作成
           </button>
         </div>
       </div>
@@ -245,9 +237,9 @@
     function showSuccess(message) {
       const alertDiv = document.createElement('div');
       alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed';
-      alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+      alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 250px; max-width: 300px;';
       alertDiv.innerHTML = `
-        <i class="fas fa-check-circle me-2"></i>${message}
+        <i class="fas fa-check-circle me-2"></i><small>${message}</small>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
       `;
       document.body.appendChild(alertDiv);
@@ -264,9 +256,9 @@
     function showError(message) {
       const alertDiv = document.createElement('div');
       alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed';
-      alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+      alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 250px; max-width: 300px;';
       alertDiv.innerHTML = `
-        <i class="fas fa-exclamation-triangle me-2"></i>${message}
+        <i class="fas fa-exclamation-triangle me-2"></i><small>${message}</small>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
       `;
       document.body.appendChild(alertDiv);
