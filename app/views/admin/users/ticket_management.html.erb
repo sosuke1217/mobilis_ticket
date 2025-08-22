@@ -43,7 +43,17 @@
                         総チケット数: <%= @user.tickets.count %><br>
                         有効チケット数: <%= @user.tickets.where("remaining_count > 0").count %><br>
                         残り回数合計: <%= @user.tickets.sum(:remaining_count) %><br>
-                        キャッシュキー: user_<%= @user.id %>_active_tickets
+                        active_ticket_count: <%= @user.active_ticket_count %><br>
+                        cached_active_ticket_count: <%= @user.cached_active_ticket_count %><br>
+                        キャッシュキー: user_<%= @user.id %>_active_tickets<br>
+                        <br>
+                        <strong>チケット詳細:</strong><br>
+                        <% @user.tickets.includes(:ticket_template).each_with_index do |ticket, index| %>
+                          <%= index + 1 %>. <%= ticket.ticket_template&.name %> - 
+                          残り: <%= ticket.remaining_count %> / 
+                          総数: <%= ticket.total_count %> - 
+                          ステータス: <%= ticket.remaining_count > 0 ? '有効' : '無効' %><br>
+                        <% end %>
                       </small>
                     </div>
                   <% end %>

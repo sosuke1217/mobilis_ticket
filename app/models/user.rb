@@ -39,6 +39,12 @@ class User < ApplicationRecord
 
   # ✅ 残チケット枚数の合計
   def active_ticket_count
+    # キャッシュを無効化して、常に最新の値を取得
+    tickets.where("remaining_count > 0").sum(:remaining_count)
+  end
+
+  # キャッシュ付きの残チケット数（必要に応じて使用）
+  def cached_active_ticket_count
     Rails.cache.fetch("user_#{id}_active_tickets", expires_in: 1.hour) do
       tickets.where("remaining_count > 0").sum(:remaining_count)
     end
