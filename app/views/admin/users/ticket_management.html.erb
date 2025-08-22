@@ -156,6 +156,14 @@
                   <% else %>
                     <span class="text-muted">使用不可</span>
                   <% end %>
+                  
+                  <!-- 削除ボタン -->
+                  <button type="button" 
+                          class="btn btn-sm btn-outline-danger delete-ticket-btn ms-1"
+                          data-ticket-id="<%= ticket.id %>"
+                          data-ticket-name="<%= ticket.ticket_template.name %>">
+                    <i class="fas fa-trash"></i>
+                  </button>
                 </td>
               </tr>
             <% end %>
@@ -169,6 +177,34 @@
           <p class="text-muted">保有チケットがありません</p>
         </div>
       <% end %>
+    </div>
+  </div>
+</div>
+
+<!-- チケット削除確認モーダル -->
+<div class="modal fade" id="deleteTicketModal" tabindex="-1" aria-labelledby="deleteTicketModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="deleteTicketModalLabel">
+          <i class="fas fa-exclamation-triangle me-2"></i>チケット削除の確認
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>以下のチケットを削除しますか？</p>
+        <div class="alert alert-warning">
+          <strong>チケット名:</strong> <span id="deleteTicketName"></span><br>
+          <strong>残り回数:</strong> <span id="deleteTicketRemaining"></span><br>
+          <strong>注意:</strong> この操作は取り消せません。
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteTicketBtn">
+          <i class="fas fa-trash me-1"></i>削除を実行
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -319,6 +355,140 @@ document.addEventListener('DOMContentLoaded', function() {
         e.target.innerHTML = originalText;
       });
     }
+    
+    // チケット削除ボタンクリック時
+    if (e.target.classList.contains('delete-ticket-btn') || e.target.closest('.delete-ticket-btn')) {
+      const deleteBtn = e.target.classList.contains('delete-ticket-btn') ? e.target : e.target.closest('.delete-ticket-btn');
+      const ticketId = deleteBtn.getAttribute('data-ticket-id');
+      const ticketName = deleteBtn.getAttribute('data-ticket-name');
+      
+      // チケット行から残り回数を取得
+      const ticketRow = deleteBtn.closest('tr');
+      const remainingCount = ticketRow.querySelector('td:nth-child(2) .badge').textContent.split('/')[0].trim();
+      
+      // モーダルにデータを設定
+      document.getElementById('deleteTicketName').textContent = ticketName;
+      document.getElementById('deleteTicketRemaining').textContent = remainingCount;
+      
+      // モーダルを表示
+      const deleteModal = new bootstrap.Modal(document.getElementById('deleteTicketModal'));
+      deleteModal.show();
+      
+      // 削除実行ボタンのイベントリスナー
+      document.getElementById('confirmDeleteTicketBtn').onclick = function() {
+        deleteTicket(ticketId, ticketRow);
+        deleteModal.hide();
+      };
+    }
   });
+  
+  // チケット削除実行
+  function deleteTicket(ticketId, ticketRow) {
+    // 削除ボタンを無効化
+    const deleteBtn = ticketRow.querySelector('.delete-ticket-btn');
+    const originalText = deleteBtn.innerHTML;
+    deleteBtn.disabled = true;
+    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    
+    // CSRF トークンを取得
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    
+    // チケット削除APIを呼び出し
+    fetch(`/admin/tickets/${ticketId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRF-Token': csrfToken
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      return response;
+    })
+    .then(() => {
+      console.log('✅ Ticket deleted:', ticketId);
+      
+      // 成功メッセージを表示
+      const alertDiv = document.createElement('div');
+      alertDiv.className = 'alert alert-success alert-dismissible fade show';
+      alertDiv.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>
+        チケットを削除しました
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      document.querySelector('.container-lg').insertBefore(alertDiv, document.querySelector('.card'));
+      
+      // チケット行を即座に削除
+      ticketRow.remove();
+      
+      // 残りチケット数と残額を更新
+      updateTicketCounts();
+      
+      // チケットが0件になった場合の処理
+      if (document.querySelectorAll('tbody tr').length === 0) {
+        const tbody = document.querySelector('tbody');
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="text-center py-4">
+              <i class="fas fa-ticket-alt fa-3x text-muted mb-3"></i>
+              <p class="text-muted">保有チケットがありません</p>
+            </td>
+          </tr>
+        `;
+      }
+    })
+    .catch(error => {
+      console.error('❌ Error deleting ticket:', error);
+      alert('チケット削除エラー: ' + error.message);
+      
+      // ボタンを元に戻す
+      deleteBtn.disabled = false;
+      deleteBtn.innerHTML = originalText;
+    });
+  }
+  
+  // チケット数と残額を更新
+  function updateTicketCounts() {
+    // 残りチケット数を再計算
+    const remainingTickets = document.querySelectorAll('tbody tr').length;
+    const remainingCount = Array.from(document.querySelectorAll('tbody tr')).reduce((total, row) => {
+      const badge = row.querySelector('td:nth-child(2) .badge');
+      if (badge) {
+        const count = parseInt(badge.textContent.split('/')[0].trim());
+        return total + (isNaN(count) ? 0 : count);
+      }
+      return total;
+    }, 0);
+    
+    // 表示を更新
+    const ticketCountElement = document.querySelector('p:contains("残チケット:")');
+    if (ticketCountElement) {
+      ticketCountElement.innerHTML = ticketCountElement.innerHTML.replace(
+        /残チケット: \d+ 回/,
+        `残チケット: ${remainingCount} 回`
+      );
+    }
+    
+    // デバッグ情報も更新
+    const debugElement = document.querySelector('.bg-light.border.rounded');
+    if (debugElement) {
+      const totalTicketsElement = debugElement.querySelector('small');
+      if (totalTicketsElement) {
+        totalTicketsElement.innerHTML = totalTicketsElement.innerHTML.replace(
+          /総チケット数: \d+/,
+          `総チケット数: ${remainingTickets}`
+        );
+        totalTicketsElement.innerHTML = totalTicketsElement.innerHTML.replace(
+          /有効チケット数: \d+/,
+          `有効チケット数: ${remainingTickets}`
+        );
+        totalTicketsElement.innerHTML = totalTicketsElement.innerHTML.replace(
+          /残り回数合計: \d+/,
+          `残り回数合計: ${remainingCount}`
+        );
+      }
+    }
+  }
 });
 </script> 
