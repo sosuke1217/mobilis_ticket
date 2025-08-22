@@ -201,20 +201,35 @@ class Admin::TicketsController < ApplicationController
     @count = params[:count].to_i || 1
 
     begin
+      created_tickets = []
       @count.times do
-        @user.tickets.create!(
+        ticket = @user.tickets.create!(
           ticket_template: @ticket_template,
           total_count: @ticket_template.total_count,
           remaining_count: @ticket_template.total_count,
           purchase_date: Date.current,
           expiry_date: @ticket_template.expiry_days ? Date.current + @ticket_template.expiry_days.days : nil
         )
+        created_tickets << ticket
       end
 
+      # 最新のチケットの詳細情報を返す
+      latest_ticket = created_tickets.last
       render json: { 
         success: true, 
         message: "#{@count}枚のチケットを発行しました",
-        tickets_count: @user.tickets.count
+        tickets_count: @user.tickets.count,
+        ticket: {
+          id: latest_ticket.id,
+          ticket_template: {
+            name: latest_ticket.ticket_template.name,
+            price: latest_ticket.ticket_template.price
+          },
+          remaining_count: latest_ticket.remaining_count,
+          total_count: latest_ticket.total_count,
+          purchase_date: latest_ticket.purchase_date,
+          expiry_date: latest_ticket.expiry_date
+        }
       }
     rescue => e
       render json: { 

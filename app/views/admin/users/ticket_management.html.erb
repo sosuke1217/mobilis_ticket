@@ -263,21 +263,30 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // 成功メッセージを表示
       const alertDiv = document.createElement('div');
-      alertDiv.className = 'alert alert-success alert-dismissible fade show';
       alertDiv.innerHTML = `
-        <i class="fas fa-check-circle me-2"></i>
-        ${data.message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div class="alert alert-success alert-dismissible fade show">
+          <i class="fas fa-check-circle me-2"></i>
+          ${data.message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
       `;
       document.querySelector('.container-lg').insertBefore(alertDiv, document.querySelector('.card'));
       
       // フォームをリセット
       newTicketForm.reset();
       
-      // ページをリロード
+      // 新しく作成されたチケットを一覧に追加
+      addNewTicketToList(data.ticket);
+      
+      // 残りチケット数と残額を更新
+      updateTicketCounts();
+      
+      // 成功メッセージを3秒後に自動で消す
       setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+        if (alertDiv.firstElementChild) {
+          alertDiv.firstElementChild.remove();
+        }
+      }, 3000);
     })
     .catch(error => {
       console.error('❌ Error creating ticket:', error);
@@ -448,6 +457,65 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
+  // 新しく作成されたチケットを一覧に追加する関数
+  function addNewTicketToList(newTicket) {
+    const tbody = document.querySelector('tbody');
+    const newRow = document.createElement('tr');
+    
+    // 日付フォーマット関数
+    function formatDate(dateString) {
+      if (!dateString) return 'なし';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('ja-JP');
+    }
+    
+    // 現在の日付を取得
+    const currentDate = new Date();
+    
+    newRow.innerHTML = `
+      <td>
+        <strong>${newTicket.ticket_template.name}</strong>
+        <br>
+        <small class="text-muted">¥${newTicket.ticket_template.price.toLocaleString()}</small>
+      </td>
+      <td>
+        <span class="badge bg-success">
+          ${newTicket.remaining_count} / ${newTicket.total_count}
+        </span>
+      </td>
+      <td>${formatDate(newTicket.purchase_date)}</td>
+      <td>
+        ${formatDate(newTicket.expiry_date)}
+        ${newTicket.expiry_date && new Date(newTicket.expiry_date) < currentDate ? '<span class="badge bg-danger">期限切れ</span>' : ''}
+      </td>
+      <td>
+        ${newTicket.expiry_date && new Date(newTicket.expiry_date) < currentDate ? '<span class="badge bg-danger">期限切れ</span>' : ''}
+        ${newTicket.remaining_count <= 0 ? '<span class="badge bg-secondary">使用済み</span>' : ''}
+        ${newTicket.remaining_count <= 2 ? '<span class="badge bg-warning">残り少ない</span>' : ''}
+        ${newTicket.remaining_count > 0 && (!newTicket.expiry_date || new Date(newTicket.expiry_date) >= currentDate) ? '<span class="badge bg-success">利用可能</span>' : ''}
+      </td>
+      <td>
+        ${newTicket.remaining_count > 0 && (!newTicket.expiry_date || new Date(newTicket.expiry_date) >= currentDate) ? `
+          <button type="button" 
+                  class="btn btn-sm btn-outline-primary use-ticket-btn"
+                  data-ticket-id="${newTicket.id}"
+                  data-ticket-name="${newTicket.ticket_template.name}">
+            使用
+          </button>
+        ` : '<span class="text-muted">使用不可</span>'}
+        
+        <!-- 削除ボタン -->
+        <button type="button" 
+                class="btn btn-sm btn-outline-danger delete-ticket-btn ms-1"
+                data-ticket-id="${newTicket.id}"
+                data-ticket-name="${newTicket.ticket_template.name}">
+          <i class="fas fa-trash"></i>
+        </button>
+      </td>
+    `;
+    tbody.appendChild(newRow);
+  }
+
   // チケット数と残額を更新
   function updateTicketCounts() {
     // 残りチケット数を再計算
