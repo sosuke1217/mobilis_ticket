@@ -8,7 +8,7 @@
             <div class="text-center mb-4">
               <div class="mb-3">
                 <div class="logo-container">
-                  <%= image_tag "mobilis-logo.svg", alt: "Mobilis Logo", class: "logo-image" %>
+                  <%= image_tag "mobilis-logo.png", alt: "Mobilis Logo", class: "logo-image" %>
                 </div>
               </div>
               <h2 class="h3 text-dark mb-2">Mobilis</h2>
@@ -98,6 +98,7 @@
   .logo-image {
     width: 80px;
     height: 80px;
+    object-fit: contain;
     filter: drop-shadow(0 4px 8px rgba(0, 212, 255, 0.3));
     transition: all 0.3s ease;
   }

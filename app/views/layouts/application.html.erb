@@ -43,7 +43,7 @@
         <div class="container-fluid">
           <a class="navbar-brand d-flex align-items-center" href="<%= root_path %>">
             <div class="logo-container me-2">
-              <%= image_tag "mobilis-logo.svg", alt: "Mobilis Logo", class: "navbar-logo" %>
+              <%= image_tag "mobilis-logo.png", alt: "Mobilis Logo", class: "navbar-logo" %>
             </div>
             <span class="brand-text">Mobilis</span>
           </a>
@@ -152,6 +152,7 @@
       .navbar-logo {
         width: 32px;
         height: 32px;
+        object-fit: contain;
         filter: brightness(0) invert(1);
         transition: all 0.3s ease;
       }

@@ -8,7 +8,7 @@
             <div class="text-center mb-4">
               <div class="mb-3">
                 <div class="logo-container">
-                  <%= image_tag "mobilis-logo.svg", alt: "Mobilis Logo", class: "logo-image" %>
+                  <%= image_tag "mobilis-logo.png", alt: "Mobilis Logo", class: "logo-image" %>
                 </div>
               </div>
               <h2 class="h3 text-dark mb-2">パスワードリセット</h2>
@@ -75,13 +75,14 @@
   .logo-image {
     width: 80px;
     height: 80px;
+    object-fit: contain;
     filter: drop-shadow(0 4px 8px rgba(255, 193, 7, 0.3));
     transition: all 0.3s ease;
   }
   
   .logo-container:hover .logo-image {
     transform: scale(1.1);
-    filter: drop-shadow(0 6px 12px rgba(255, 193, 7, 0.4));
+    filter: drop-shadow(0 6px 12px rgba(0, 193, 7, 0.4));
   }
   
   .card {
