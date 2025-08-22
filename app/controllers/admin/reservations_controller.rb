@@ -377,9 +377,7 @@ class Admin::ReservationsController < ApplicationController
     if @reservation.save
       render json: {
         success: true,
-        reservation: @reservation.as_json(include: :user).merge({
-          is_break: @reservation.is_break || false
-        }),
+        reservation: @reservation.as_json(include: :user),
         message: '予約が作成されました'
       }
     else

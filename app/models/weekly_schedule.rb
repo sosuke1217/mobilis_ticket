@@ -1,7 +1,7 @@
 class WeeklySchedule < ApplicationRecord
   validates :week_start_date, presence: true, uniqueness: true
   
-  # デフォルトスケジュールを取得
+  # デフォルトスケジュールを取得（クラスメソッド）
   def self.default_schedule
     # デフォルトの営業時間設定
     {
@@ -43,26 +43,32 @@ class WeeklySchedule < ApplicationRecord
     }
   end
   
-  # JavaScript用のスケジュール形式に変換
-  def schedule_for_javascript
+  # JavaScript用のスケジュール形式に変換（クラスメソッド）
+  def self.schedule_for_javascript
     schedule_data = {}
     
     (0..6).each do |day_of_week|
-      # schedule属性がnilの場合はデフォルトスケジュールを使用
-      if schedule.present? && schedule.is_a?(Hash)
-        day_schedule = schedule[day_of_week.to_s] || default_schedule[day_of_week]
-      else
-        day_schedule = default_schedule[day_of_week]
-      end
+      day_schedule = default_schedule[day_of_week]
       schedule_data[day_of_week] = day_schedule
     end
     
     schedule_data
   end
   
-  private
-  
-  def default_schedule
-    self.class.default_schedule
+  # インスタンス用のJavaScript用スケジュール形式に変換
+  def schedule_for_javascript
+    schedule_data = {}
+    
+    (0..6).each do |day_of_week|
+      # schedule属性がnilの場合はデフォルトスケジュールを使用
+      if schedule.present? && schedule.is_a?(Hash)
+        day_schedule = schedule[day_of_week.to_s] || self.class.default_schedule[day_of_week]
+      else
+        day_schedule = self.class.default_schedule[day_of_week]
+      end
+      schedule_data[day_of_week] = day_schedule
+    end
+    
+    schedule_data
   end
 end
