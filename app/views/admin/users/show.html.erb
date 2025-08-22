@@ -40,7 +40,7 @@
   <style>
     /* LINE連携モーダルのカスタムスタイル */
     #lineLinkModal .modal-dialog {
-      max-width: 350px;
+      max-width: 500px;
     }
     
     #lineLinkModal .modal-content {
@@ -52,11 +52,13 @@
     }
     
     #lineLinkModal .modal-body {
-      min-height: 200px;
+      min-height: 300px;
     }
     
     #lineLinkModal .modal-footer {
       min-height: 45px;
+      max-height: 60px;
+      padding: 0.5rem;
     }
     
     #lineLinkModal .input-group-sm > .form-control,
@@ -68,6 +70,22 @@
     #lineLinkModal .btn-sm {
       font-size: 0.875rem;
       padding: 0.25rem 0.5rem;
+    }
+    
+    /* フッターがボディ内に収まるように調整 */
+    #lineLinkModal .modal-content {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    #lineLinkModal .modal-body {
+      flex: 1;
+      overflow: hidden;
+    }
+    
+    #lineLinkModal .modal-footer {
+      flex-shrink: 0;
+      margin-top: auto;
     }
   </style>
 
@@ -125,10 +143,10 @@
           </form>
         </div>
         <div class="modal-footer border-0 bg-light py-2">
-          <button type="button" class="btn btn-outline-secondary btn-sm px-2" data-bs-dismiss="modal">
+          <button type="button" class="btn btn-outline-secondary btn-sm px-3" data-bs-dismiss="modal">
             <i class="fas fa-times me-1"></i>キャンセル
           </button>
-          <button type="button" class="btn btn-primary btn-sm px-2" onclick="createLineLink()">
+          <button type="button" class="btn btn-primary btn-sm px-3" onclick="createLineLink()">
             <i class="fas fa-link me-1"></i>連携作成
           </button>
         </div>
