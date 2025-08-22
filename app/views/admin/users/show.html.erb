@@ -37,35 +37,69 @@
     <% end %>
   </p>
 
+  <style>
+    /* LINE連携モーダルのカスタムスタイル */
+    #lineLinkModal .modal-dialog {
+      max-width: 350px;
+    }
+    
+    #lineLinkModal .modal-content {
+      max-height: 400px;
+    }
+    
+    #lineLinkModal .modal-header {
+      min-height: 40px;
+    }
+    
+    #lineLinkModal .modal-body {
+      min-height: 200px;
+    }
+    
+    #lineLinkModal .modal-footer {
+      min-height: 45px;
+    }
+    
+    #lineLinkModal .input-group-sm > .form-control,
+    #lineLinkModal .input-group-sm > .input-group-text {
+      font-size: 0.875rem;
+      line-height: 1.2;
+    }
+    
+    #lineLinkModal .btn-sm {
+      font-size: 0.875rem;
+      padding: 0.25rem 0.5rem;
+    }
+  </style>
+
   <!-- LINE連携フォーム（モーダル） -->
   <div class="modal fade" id="lineLinkModal" tabindex="-1" aria-labelledby="lineLinkModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
       <div class="modal-content border-0 shadow-lg">
-        <div class="modal-header bg-primary text-white border-0 py-3">
-          <h6 class="modal-title mb-0" id="lineLinkModalLabel">
-            <i class="fas fa-link me-2"></i>LINE連携作成
+        <div class="modal-header bg-primary text-white border-0 py-2">
+          <h6 class="modal-title mb-0 small" id="lineLinkModalLabel">
+            <i class="fas fa-link me-1"></i>LINE連携作成
           </h6>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body p-3">
-          <div class="text-center mb-3">
-            <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
-              <i class="fas fa-link fa-lg text-primary"></i>
+        <div class="modal-body p-2">
+          <div class="text-center mb-2">
+            <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-1" style="width: 40px; height: 40px;">
+              <i class="fas fa-link text-primary"></i>
             </div>
-            <p class="text-muted small mb-0">ユーザーとLINEアカウントを連携します</p>
+            <p class="text-muted small mb-0">ユーザーとLINEアカウントを連携</p>
           </div>
           
           <form id="lineLinkForm">
-            <div class="mb-3">
-              <label for="lineUserId" class="form-label fw-bold small mb-2">
+            <div class="mb-2">
+              <label for="lineUserId" class="form-label fw-bold small mb-1">
                 <i class="fas fa-user-circle me-1 text-primary"></i>LINEユーザーID
               </label>
               <div class="input-group input-group-sm">
-                <span class="input-group-text bg-light border-end-0">
-                  <i class="fas fa-id-card text-muted"></i>
+                <span class="input-group-text bg-light border-end-0 py-1">
+                  <i class="fas fa-id-card text-muted small"></i>
                 </span>
                 <input type="text" 
-                       class="form-control border-start-0" 
+                       class="form-control border-start-0 py-1" 
                        id="lineUserId" 
                        name="line_user_id" 
                        placeholder="U1234567890abcdef" 
@@ -75,28 +109,26 @@
               </div>
               <div class="form-text small">
                 <i class="fas fa-info-circle me-1 text-info"></i>
-                LINEボットから取得したユーザーIDを入力
+                LINEボットから取得したユーザーID
               </div>
             </div>
             
-            <div class="alert alert-info border-0 bg-light py-2 mb-0">
+            <div class="alert alert-info border-0 bg-light py-1 mb-0 small">
               <div class="d-flex align-items-start">
-                <i class="fas fa-shield-alt text-info me-2 mt-1 small"></i>
+                <i class="fas fa-shield-alt text-info me-1 mt-1"></i>
                 <div>
-                  <strong class="d-block small mb-1">セキュリティ</strong>
-                  <small class="text-muted">
-                    ・重複不可・自動更新・解除可能
-                  </small>
+                  <strong class="d-block small mb-0">セキュリティ</strong>
+                  <small class="text-muted">重複不可・自動更新・解除可能</small>
                 </div>
               </div>
             </div>
           </form>
         </div>
         <div class="modal-footer border-0 bg-light py-2">
-          <button type="button" class="btn btn-outline-secondary btn-sm px-3" data-bs-dismiss="modal">
+          <button type="button" class="btn btn-outline-secondary btn-sm px-2" data-bs-dismiss="modal">
             <i class="fas fa-times me-1"></i>キャンセル
           </button>
-          <button type="button" class="btn btn-primary btn-sm px-3" onclick="createLineLink()">
+          <button type="button" class="btn btn-primary btn-sm px-2" onclick="createLineLink()">
             <i class="fas fa-link me-1"></i>連携作成
           </button>
         </div>
