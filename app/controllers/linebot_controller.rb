@@ -1401,7 +1401,18 @@ class LinebotController < ApplicationController
       
       # LINEからプロフィール情報を取得
       begin
-        profile = client.get_profile(user_id)
+        response = client.get_profile(user_id)
+        Rails.logger.info "LINE APIレスポンス: #{response.inspect}"
+        
+        # レスポンスのステータスコードを確認
+        unless response.is_a?(Net::HTTPSuccess)
+          error_msg = "LINE API呼び出しに失敗しました: #{response.code} #{response.message}"
+          Rails.logger.error error_msg
+          return false
+        end
+        
+        # レスポンスボディをJSONとして解析
+        profile = JSON.parse(response.body)
         Rails.logger.info "LINEプロフィール取得成功: #{profile.inspect}"
       rescue => e
         error_msg = "LINE API呼び出しに失敗しました: #{e.class}: #{e.message}"
