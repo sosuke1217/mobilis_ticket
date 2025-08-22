@@ -18,14 +18,41 @@
     <strong>LINE連携状況:</strong>
     <% if @user.line_user_id.present? %>
       <span class="badge bg-success"><i class="fas fa-link me-1"></i>連携済み</span>
-      <%= link_to "LINE情報を更新", update_line_profile_admin_user_path(@user), 
-          method: :patch, 
-          class: "btn btn-sm btn-outline-primary ms-2",
-          data: { confirm: "LINEから最新のユーザー情報を取得しますか？" } %>
+      <button type="button" class="btn btn-sm btn-outline-primary ms-2" onclick="updateLineProfile()">
+        LINE情報を更新
+      </button>
     <% else %>
       <span class="badge bg-danger"><i class="fas fa-unlink me-1"></i>未連携</span>
     <% end %>
   </p>
+
+  <script>
+    function updateLineProfile() {
+      if (confirm('LINEから最新のユーザー情報を取得しますか？')) {
+        const userId = '<%= @user.id %>';
+        const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        fetch(`/admin/users/${userId}/update_line_profile`, {
+          method: 'PATCH',
+          headers: {
+            'X-CSRF-Token': token,
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => {
+          if (response.ok) {
+            window.location.reload();
+          } else {
+            alert('LINE情報の更新に失敗しました');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('LINE情報の更新中にエラーが発生しました');
+        });
+      }
+    }
+  </script>
 
   <!-- 🧑‍💼 顧客情報セクション -->
   <div class="card mb-5 shadow-sm">
