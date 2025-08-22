@@ -516,7 +516,7 @@
                         email: '<%= j(reservation.user&.email || '') %>',
                         note: '<%= j(reservation.note || '') %>',
                         status: '<%= reservation.status %>',
-                        is_break: <%= reservation.is_break || false %>,
+                        is_break: false,
                         createdAt: '<%= reservation.created_at.iso8601 %>',
                         updatedAt: '<%= reservation.updated_at.iso8601 %>',
                         userId: <%= reservation.user_id || 'null' %>,
@@ -2336,7 +2336,7 @@
                                     const block = createSpanningReservationBlock(reservation, dateKey, timeStr);
                                     cell.appendChild(block);
                                     // 予約詳細を表示するためのクリックイベント（休憩ブロック以外）
-                                    if (!reservation.is_break) {
+                                    if (true) { // 常に実行（is_break属性は無効化）
                                     cell.addEventListener('click', (e) => {
                                         // ドラッグ中でない場合のみクリックイベントを実行
                                         if (!isDragging) {
@@ -2625,12 +2625,12 @@
                 effective_interval_minutes: reservation.effective_interval_minutes,
                 individual_interval_minutes: reservation.individual_interval_minutes,
                 duration: reservation.duration,
-                is_break: reservation.is_break
+                is_break: false
             });
             const block = document.createElement('div');
             
             // 休憩かどうかで異なるクラスを設定
-            if (reservation.is_break) {
+            if (false) { // 休憩機能は無効化
                 block.className = `reservation-block spanning break-block`;
             } else {
             block.className = `reservation-block spanning ${reservation.status}`;
@@ -2652,7 +2652,7 @@
             // 予約の継続時間に基づいて高さを計算
             const durationInMinutes = reservation.duration;
             // 休憩の場合は準備時間なし
-            const preparationTime = reservation.is_break ? 0 : (reservation.effective_interval_minutes ?? 10);
+            const preparationTime = (reservation.effective_interval_minutes ?? 10); // 休憩機能は無効化
             const totalTime = durationInMinutes + preparationTime;
                          const rowHeight = 20; // 各時間スロットの高さ（10分間）
             const exactHeight = (totalTime / 10) * rowHeight; // 正確な高さを計算
@@ -2672,8 +2672,8 @@
             const startTime = `${String(Math.floor(startTimeInMinutes / 60)).padStart(2, '0')}:${String(startTimeInMinutes % 60).padStart(2, '0')}`;
             const endTime = `${String(Math.floor(endTimeInMinutes / 60)).padStart(2, '0')}:${String(endTimeInMinutes % 60).padStart(2, '0')}`;
             
-            // 休憩ブロックの場合は異なるスタイルで表示
-            if (reservation.is_break) {
+            // 休憩ブロックの場合は異なるスタイルで表示            
+            if (false) { // 休憩機能は無効化
                 // 休憩タイプに応じたアイコンを選択
                 const breakIcons = {
                     '休憩': '☕',
@@ -4306,7 +4306,7 @@ function showMessage(message, type = 'info') {
             
             // 方法1: reservationsオブジェクトからチェック
             const conflictFromObject = dayReservations.some(reservation => {
-                if (reservation.is_break) return false; // 休憩は重複チェック対象外
+                // 休憩機能は無効化
                 
                 // start_timeとend_timeが存在する場合
                 if (reservation.start_time && reservation.end_time) {
@@ -5465,7 +5465,7 @@ function showMessage(message, type = 'info') {
                     name: breakTitle,
                     note: bookingNote || '',
                     status: 'confirmed', // 休憩は確定状態にする
-                    is_break: true,      // 休憩フラグ
+                    is_break: false,     // 休憩機能は無効化
                     individual_interval_minutes: 0, // 休憩にはインターバルなし
                     user_attributes: {
                         name: 'スタッフ',
@@ -5519,7 +5519,7 @@ function showMessage(message, type = 'info') {
                         email: '',
                         note: breakReservation.note || '',
                         status: breakReservation.status || 'confirmed',
-                        is_break: breakReservation.is_break || true,
+                        is_break: false, // 休憩機能は無効化
                         createdAt: breakReservation.created_at,
                         updatedAt: breakReservation.updated_at,
                         effective_interval_minutes: 0
@@ -6835,16 +6835,13 @@ function showMessage(message, type = 'info') {
                 }
             };
             
-            // 休憩予約の場合はis_breakフラグも送信
-            if (reservationData && reservationData.is_break) {
-                updateData.reservation.is_break = true;
-                console.log('🔄 Break reservation detected, adding is_break flag');
-            }
+            // 休憩機能は無効化
+            // 休憩予約の場合はis_breakフラグも送信（無効化）
             
             console.log('🔄 Sending update request:', updateData);
             console.log('🔄 Original reservation data:', reservationData);
             console.log('🔄 Course duration:', reservationData ? reservationData.duration : 'undefined');
-            console.log('🔄 Is break:', reservationData ? reservationData.is_break : 'undefined');
+            console.log('🔄 Is break: false (休憩機能は無効化)');
             console.log('🔄 Course string being sent:', updateData.reservation.course);
             
             fetch(`/admin/reservations/${reservationId}/update_booking`, {
