@@ -363,42 +363,39 @@ function handleTicketSubmit(e) {
       // フォームをリセット
       newTicketForm.reset();
       
-    // 新しく作成されたチケットを一覧に追加
-    addNewTicketToList(data.ticket);
-    
-    // 残りチケット数と残額を即座に更新
-    updateTicketCounts();
-    
-    // チケットがない状態の表示を更新
-    const tbody = document.querySelector('tbody');
-    const noTicketsRow = tbody.querySelector('tr td[colspan="6"]');
-    
-    if (noTicketsRow) {
-      console.log('🗑️ 「保有チケットがありません」の行を削除中...');
-      // 「保有チケットがありません」の行を削除
-      tbody.innerHTML = '';
-      // 新しく作成されたチケットを追加（既にaddNewTicketToListで追加済み）
-      console.log('✅ 新チケットを追加完了');
+      // 新しく作成されたチケットを一覧に追加
+      addNewTicketToList(data.ticket);
       
-      // 残額を更新（新チケット追加後）
-      setTimeout(() => {
-        updateTicketCounts();
-        console.log('🔄 遅延後の残額更新完了');
-      }, 200);
-    } else {
-      // 既存のチケットがある場合は、残額を更新
-      setTimeout(() => {
-        updateTicketCounts();
-        console.log('🔄 既存チケットありの場合の残額更新完了');
-      }, 100);
-    }
-    
-    // 成功メッセージを3秒後に自動で消す
-    setTimeout(() => {
-      if (alertDiv && alertDiv.parentNode) {
-        alertDiv.remove();
+      // チケットがない状態の表示を更新
+      const tbody = document.querySelector('tbody');
+      const noTicketsRow = tbody.querySelector('tr td[colspan="6"]');
+      
+      if (noTicketsRow) {
+        console.log('🗑️ 「保有チケットがありません」の行を削除中...');
+        // 「保有チケットがありません」の行を削除
+        tbody.innerHTML = '';
+        // 新しく作成されたチケットを追加（既にaddNewTicketToListで追加済み）
+        console.log('✅ 新チケットを追加完了');
+        
+        // 残額を更新（新チケット追加後）
+        setTimeout(() => {
+          updateTicketCounts();
+          console.log('🔄 遅延後の残額更新完了');
+        }, 200);
+      } else {
+        // 既存のチケットがある場合は、残額を更新
+        setTimeout(() => {
+          updateTicketCounts();
+          console.log('🔄 既存チケットありの場合の残額更新完了');
+        }, 100);
       }
-    }, 3000);
+      
+      // 成功メッセージを3秒後に自動で消す
+      setTimeout(() => {
+        if (alertDiv && alertDiv.parentNode) {
+          alertDiv.remove();
+        }
+      }, 3000);
     })
     .catch(error => {
       console.error('❌ Error creating ticket:', error);
@@ -740,8 +737,25 @@ function deleteTicket(ticketId, ticketRow) {
         rows: Array.from(allRows).map((row, index) => ({
           index: index + 1,
           hasColspan: row.querySelector('td[colspan]') !== null,
-          content: row.textContent.trim()
+          content: row.textContent.trim(),
+          badge: row.querySelector('td:nth-child(2) .badge')?.textContent,
+          price: row.querySelector('td:nth-child(1) small')?.textContent
         }))
+      });
+      
+      // 重複行のチェック
+      const duplicateCheck = new Map();
+      allRows.forEach((row, index) => {
+        const badge = row.querySelector('td:nth-child(2) .badge');
+        const priceElement = row.querySelector('td:nth-child(1) small');
+        if (badge && priceElement) {
+          const key = `${badge.textContent}-${priceElement.textContent}`;
+          if (duplicateCheck.has(key)) {
+            console.warn(`⚠️ 重複行を発見: 行${index + 1}と行${duplicateCheck.get(key) + 1}`);
+          } else {
+            duplicateCheck.set(key, index);
+          }
+        }
       });
       
       // 残りチケット数を再計算
@@ -780,6 +794,9 @@ function deleteTicket(ticketId, ticketRow) {
           console.log(`行${index + 1}:`, row.innerHTML);
         });
         
+        // 重複チェック用の配列
+        const processedTickets = new Set();
+        
         ticketRows.forEach((row, index) => {
           const badge = row.querySelector('td:nth-child(2) .badge');
           const priceElement = row.querySelector('td:nth-child(1) small');
@@ -795,6 +812,14 @@ function deleteTicket(ticketId, ticketRow) {
             const price = parseInt(priceElement.textContent.replace('¥', '').replace(/,/g, ''));
             
             if (!isNaN(count) && !isNaN(price)) {
+              // 重複チェック（同じ価格と回数の組み合わせが既に処理済みかチェック）
+              const ticketKey = `${price}-${count}`;
+              if (processedTickets.has(ticketKey)) {
+                console.warn(`⚠️ 重複チケットをスキップ: 価格=${price}, 回数=${count}`);
+                return;
+              }
+              processedTickets.add(ticketKey);
+              
               const rowValue = count * price;
               totalValue += rowValue;
               console.log(`💰 チケット${index + 1}: 残り回数=${count}, 価格=${price}, 小計=${rowValue}, 累計=${totalValue}`);
