@@ -184,8 +184,8 @@
             <% else %>
               <% @tickets.each do |ticket| %>
                 <tr data-ticket-id="<%= ticket.id %>">
-                  <td>
-                    <strong><%= ticket.ticket_template.name %></strong>
+                <td>
+                  <strong><%= ticket.ticket_template.name %></strong>
                     <br><small class="text-muted">¥<%= number_with_delimiter(ticket.ticket_template.price) %></small>
                 </td>
                 <td>
@@ -243,7 +243,7 @@
 
 <!-- チケット削除確認モーダル -->
 <div class="modal fade" id="deleteTicketModal" tabindex="-1" aria-labelledby="deleteTicketModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-sm">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header bg-danger text-white">
         <h5 class="modal-title" id="deleteTicketModalLabel">
@@ -252,21 +252,21 @@
         </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body p-4">
+      <div class="modal-body">
         <div class="text-center">
           <i class="fas fa-trash-alt fa-3x text-danger mb-3"></i>
-          <p class="mb-3">以下のチケットを削除しますか？</p>
-          <div class="alert alert-warning mb-3">
+          <p class="mb-2">以下のチケットを削除しますか？</p>
+          <div class="alert alert-warning">
             <strong>チケット名:</strong> <span id="deleteTicketName"></span><br>
             <strong>残り回数:</strong> <span id="deleteTicketRemaining"></span> 回
           </div>
-          <p class="text-muted small mb-0">
+          <p class="text-muted small mt-2 mb-0">
             <i class="fas fa-info-circle me-1"></i>
             この操作は取り消すことができません
           </p>
         </div>
       </div>
-      <div class="modal-footer justify-content-center p-3">
+      <div class="modal-footer justify-content-center">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="cleanupModalBackground()">
           <i class="fas fa-times me-1"></i>キャンセル
         </button>
@@ -1142,26 +1142,8 @@ function deleteTicket(ticketId, ticketRow) {
   
   // モーダル背景のクリーンアップ関数
   function cleanupModalBackground() {
-    try {
-      console.log('🔄 モーダル背景クリーンアップ開始');
-      
-      // モーダル背景要素を削除
-      const modalBackdrops = document.querySelectorAll('.modal-backdrop');
-      modalBackdrops.forEach(backdrop => {
-        backdrop.remove();
-        console.log('🗑️ モーダル背景要素を削除しました');
-      });
-      
-      // bodyの状態をリセット
-      document.body.classList.remove('modal-open');
-      document.body.style.overflow = '';
-      document.body.style.paddingRight = '';
-      
-      console.log('✅ モーダル背景クリーンアップ完了');
-    } catch (error) {
-      console.error('❌ モーダル背景クリーンアップ中にエラーが発生しました:', error);
-    }
-  }
-  
-  console.log('🎫 チケット管理初期化完了');
-</script>
+    console.log('🔄 背景クリーンアップ開始');
+    
+    // 即座に背景をクリーンアップ
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    console.log(`
