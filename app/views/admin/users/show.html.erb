@@ -46,26 +46,29 @@
     
     #lineLinkModal .modal-content {
       height: auto;
-      max-height: 90vh;
+      max-height: none;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
     
     #lineLinkModal .modal-header {
       flex-shrink: 0;
-      padding: 1rem;
+      padding: 0.75rem;
+      min-height: auto;
     }
     
     #lineLinkModal .modal-body {
       flex: 1;
-      padding: 1rem;
-      overflow: visible;
+      padding: 0.75rem;
+      overflow: hidden;
       min-height: 0;
+      max-height: none;
     }
     
     #lineLinkModal .modal-footer {
       flex-shrink: 0;
-      padding: 1rem;
+      padding: 0.75rem;
       width: 100%;
       justify-content: flex-end;
       border-top: 1px solid #dee2e6;
@@ -75,15 +78,15 @@
     
     #lineLinkModal .input-group > .form-control,
     #lineLinkModal .input-group > .input-group-text {
-      font-size: 1rem;
-      line-height: 1.4;
-      padding: 0.5rem 0.75rem;
+      font-size: 0.9rem;
+      line-height: 1.3;
+      padding: 0.4rem 0.6rem;
     }
     
     #lineLinkModal .btn-sm {
-      font-size: 1rem;
-      padding: 0.5rem 1rem;
-      min-width: 100px;
+      font-size: 0.9rem;
+      padding: 0.4rem 0.8rem;
+      min-width: 90px;
     }
     
     /* ボタンが確実に表示されるように */
@@ -94,32 +97,111 @@
     
     /* アイコンとテキストのサイズ調整 */
     #lineLinkModal .modal-header .modal-title {
-      font-size: 1.25rem;
+      font-size: 1.1rem;
     }
     
     #lineLinkModal .modal-body .fa-link {
-      font-size: 1.5rem;
+      font-size: 1.3rem;
     }
     
     #lineLinkModal .modal-body .bg-light.rounded-circle {
-      width: 80px;
-      height: 80px;
+      width: 50px;
+      height: 50px;
     }
     
     /* モーダルの全体的なレイアウト調整 */
     #lineLinkModal .modal-content {
       height: auto;
-      max-height: 90vh;
+      max-height: none;
     }
     
     /* コンテンツの高さを最適化 */
     #lineLinkModal .modal-body .text-center {
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
     }
     
     #lineLinkModal .modal-body .alert {
       margin-bottom: 0;
-      padding: 0.75rem;
+      padding: 0.5rem;
+    }
+    
+    /* スクロールを完全に無効化 */
+    #lineLinkModal * {
+      overflow: visible !important;
+      overflow-x: visible !important;
+      overflow-y: visible !important;
+    }
+    
+    /* フォーム要素の間隔を最小化 */
+    #lineLinkModal .form-label {
+      margin-bottom: 0.25rem;
+    }
+    
+    #lineLinkModal .form-text {
+      margin-top: 0.25rem;
+    }
+    
+    #lineLinkModal .mb-2 {
+      margin-bottom: 0.5rem !important;
+    }
+    
+    #lineLinkModal .mb-1 {
+      margin-bottom: 0.25rem !important;
+    }
+    
+    /* スクロールバーを完全に非表示 */
+    #lineLinkModal *::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+    
+    #lineLinkModal * {
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+    
+    /* Bootstrapモーダルのスクロール機能を無効化 */
+    #lineLinkModal .modal {
+      overflow: hidden !important;
+    }
+    
+    #lineLinkModal .modal-dialog {
+      overflow: hidden !important;
+    }
+    
+    #lineLinkModal .modal-content {
+      overflow: hidden !important;
+    }
+    
+    /* モーダル内のすべての要素でスクロールを無効化 */
+    #lineLinkModal .modal-header,
+    #lineLinkModal .modal-body,
+    #lineLinkModal .modal-footer {
+      overflow: hidden !important;
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+    
+    /* モーダル全体のスクロールを無効化 */
+    body.modal-open {
+      overflow: hidden !important;
+    }
+    
+    /* 強制的にスクロールを無効化 */
+    #lineLinkModal,
+    #lineLinkModal *,
+    #lineLinkModal .modal,
+    #lineLinkModal .modal-dialog,
+    #lineLinkModal .modal-content,
+    #lineLinkModal .modal-header,
+    #lineLinkModal .modal-body,
+    #lineLinkModal .modal-footer {
+      overflow: hidden !important;
+      overflow-x: hidden !important;
+      overflow-y: hidden !important;
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
     }
   </style>
 
@@ -133,18 +215,18 @@
           </h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body p-2">
-          <div class="text-center mb-2">
-            <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px;">
+        <div class="modal-body p-1">
+          <div class="text-center mb-1">
+            <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-1" style="width: 40px; height: 40px;">
               <i class="fas fa-link text-primary"></i>
             </div>
-            <h6 class="text-muted mb-1">ユーザーとLINEアカウントを連携</h6>
+            <h6 class="text-muted mb-1 small">ユーザーとLINEアカウントを連携</h6>
             <p class="text-muted small mb-0">LINEボットから取得したユーザーIDを入力してください</p>
           </div>
           
           <form id="lineLinkForm">
-            <div class="mb-2">
-              <label for="lineUserId" class="form-label fw-bold mb-1">
+            <div class="mb-1">
+              <label for="lineUserId" class="form-label fw-bold mb-1 small">
                 <i class="fas fa-user-circle me-1 text-primary"></i>LINEユーザーID
               </label>
               <div class="input-group">
@@ -166,7 +248,7 @@
               </div>
             </div>
             
-            <div class="alert alert-info border-0 bg-light py-2">
+            <div class="alert alert-info border-0 bg-light py-1">
               <div class="d-flex align-items-start">
                 <i class="fas fa-shield-alt text-info me-2 mt-1"></i>
                 <div>
