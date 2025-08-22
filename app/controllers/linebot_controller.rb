@@ -1376,9 +1376,7 @@ class LinebotController < ApplicationController
       user = User.create!(
         line_user_id: user_id,
         name: profile['displayName'],
-        display_name: profile['displayName'],
-        status_message: profile['statusMessage'],
-        language: profile['language']
+        display_name: profile['displayName']
       )
     else
       # 既存ユーザーの情報を更新
@@ -1429,9 +1427,7 @@ class LinebotController < ApplicationController
       
       # ユーザー情報を更新
       update_params = {
-        display_name: profile['displayName'],
-        status_message: profile['statusMessage'],
-        language: profile['language']
+        display_name: profile['displayName']
       }
       
       Rails.logger.info "更新パラメータ: #{update_params.inspect}"

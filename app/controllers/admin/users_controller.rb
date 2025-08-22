@@ -318,9 +318,7 @@ class Admin::UsersController < ApplicationController
       if @user.update(line_user_id: '')
         # LINEプロフィール情報もクリア（空文字列を使用）
         @user.update(
-          display_name: '',
-          status_message: '',
-          language: ''
+          display_name: ''
         )
         
         Rails.logger.info "LINE連携削除成功: ユーザーID #{@user.id}, LINE ID #{line_user_id}"
