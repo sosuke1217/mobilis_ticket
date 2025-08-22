@@ -5,7 +5,7 @@
 <div class="container-lg my-5">
   <div class="d-flex align-items-center mb-4">
     <div>
-      <h1 class="mb-1" style="margin-left: 1rem;">
+      <h1 class="mb-1">
         <%= @user.display_name_or_name || @user.line_user_id %> さんの詳細
       </h1>
       <% if @user.display_name.present? && @user.name.present? && @user.display_name != @user.name %>
@@ -526,26 +526,6 @@
             <td>
               <% if @user.display_name.present? %>
                 <%= @user.display_name %>
-              <% else %>
-                <%= content_tag(:span, "未取得", class: "text-muted") %>
-              <% end %>
-            </td>
-          </tr>
-          <tr>
-            <th class="bg-light">LINEステータスメッセージ</th>
-            <td>
-              <% if @user.status_message.present? %>
-                <%= @user.status_message %>
-              <% else %>
-                <%= content_tag(:span, "未設定", class: "text-muted") %>
-              <% end %>
-            </td>
-          </tr>
-          <tr>
-            <th class="bg-light">LINE言語設定</th>
-            <td>
-              <% if @user.language.present? %>
-                <%= @user.language %>
               <% else %>
                 <%= content_tag(:span, "未取得", class: "text-muted") %>
               <% end %>
