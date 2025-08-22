@@ -59,7 +59,13 @@
                     </div>
                   </div>
                 </td>
-                <td><%= user.line_user_id || content_tag(:span, "未連携", class: "text-muted") %></td>
+                <td>
+                  <% if user.line_user_id.present? && user.line_user_id != '' %>
+                    <span class="badge bg-success"><%= user.line_user_id %></span>
+                  <% else %>
+                    <span class="badge bg-danger">未連携</span>
+                  <% end %>
+                </td>
                 <td><%= l(user.created_at.to_date) %></td>
                 <td><%= user.active_ticket_count %> 回</td>
                 <td><%= user.last_usage_date&.strftime("%Y/%m/%d") || "未使用" %></td>

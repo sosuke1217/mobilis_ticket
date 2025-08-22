@@ -16,7 +16,7 @@
 
   <p>
     <strong>LINE連携状況:</strong>
-    <% if @user.line_user_id.present? %>
+    <% if @user.line_user_id.present? && @user.line_user_id != '' %>
       <span class="badge bg-success"><i class="fas fa-link me-1"></i>連携済み</span>
       <div class="btn-group ms-2" role="group">
         <%= link_to "LINE情報を更新", update_line_profile_admin_user_path(@user), 
