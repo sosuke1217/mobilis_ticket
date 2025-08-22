@@ -9,7 +9,7 @@
         <%= @user.display_name_or_name || @user.line_user_id %> さんの詳細
       </h1>
       <% if @user.display_name.present? && @user.name.present? && @user.display_name != @user.name %>
-        <p class="text-muted mb-0" style="margin-left: 1rem;">登録名: <%= @user.name %></p>
+        <p class="text-muted mb-0">登録名: <%= @user.name %></p>
       <% end %>
     </div>
   </div>
@@ -635,38 +635,69 @@
     const confirmationText = document.getElementById('confirmationText');
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
     
-    if (!deleteBtn || !modal) return;
+    console.log('削除ボタン初期化開始');
+    console.log('deleteBtn:', deleteBtn);
+    console.log('modal:', modal);
+    
+    if (!deleteBtn || !modal) {
+      console.error('必要な要素が見つかりません');
+      return;
+    }
     
     let currentUserId = null;
     let currentUserName = null;
     
     // 削除ボタンクリック時
-    deleteBtn.addEventListener('click', function() {
+    deleteBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      console.log('削除ボタンがクリックされました');
+      
       currentUserId = this.getAttribute('data-user-id');
       currentUserName = this.getAttribute('data-user-name');
       const activeTickets = this.getAttribute('data-active-tickets');
       const totalUsages = this.getAttribute('data-total-usages');
       const remainingValue = this.getAttribute('data-remaining-value');
       
+      console.log('ユーザー情報:', { currentUserId, currentUserName, activeTickets, totalUsages, remainingValue });
+      
       // モーダルにデータを設定
-      document.getElementById('deleteUserName').textContent = currentUserName;
-      document.getElementById('deleteUserId').textContent = currentUserId;
-      document.getElementById('deleteActiveTickets').textContent = activeTickets;
-      document.getElementById('deleteTotalUsages').textContent = totalUsages;
-      document.getElementById('deleteRemainingValue').textContent = remainingValue;
-      document.getElementById('confirmUserName').textContent = currentUserName;
+      const userNameElement = document.getElementById('deleteUserName');
+      const userIdElement = document.getElementById('deleteUserId');
+      const activeTicketsElement = document.getElementById('deleteActiveTickets');
+      const totalUsagesElement = document.getElementById('deleteTotalUsages');
+      const remainingValueElement = document.getElementById('deleteRemainingValue');
+      const confirmUserNameElement = document.getElementById('confirmUserName');
+      
+      if (userNameElement) userNameElement.textContent = currentUserName;
+      if (userIdElement) userIdElement.textContent = currentUserId;
+      if (activeTicketsElement) activeTicketsElement.textContent = activeTickets;
+      if (totalUsagesElement) totalUsagesElement.textContent = totalUsages;
+      if (remainingValueElement) remainingValueElement.textContent = remainingValue;
+      if (confirmUserNameElement) confirmUserNameElement.textContent = currentUserName;
       
       // フォームをリセット
-      confirmCheck.checked = false;
-      confirmationText.value = '';
-      confirmDeleteBtn.disabled = true;
+      if (confirmCheck) confirmCheck.checked = false;
+      if (confirmationText) confirmationText.value = '';
+      if (confirmDeleteBtn) confirmDeleteBtn.disabled = true;
       
       // モーダルを表示
-      new bootstrap.Modal(modal).show();
+      try {
+        const bootstrapModal = new bootstrap.Modal(modal);
+        bootstrapModal.show();
+        console.log('モーダルを表示しました');
+      } catch (error) {
+        console.error('モーダル表示エラー:', error);
+        // フォールバック: 直接スタイルを変更
+        modal.style.display = 'block';
+        modal.classList.add('show');
+        document.body.classList.add('modal-open');
+      }
     });
     
     // バリデーション関数
     function validateForm() {
+      if (!confirmCheck || !confirmationText || !confirmDeleteBtn) return;
+      
       const isChecked = confirmCheck.checked;
       const textMatches = confirmationText.value.trim() === currentUserName;
       
@@ -683,53 +714,82 @@
     }
     
     // バリデーション実行
-    confirmCheck.addEventListener('change', validateForm);
-    confirmationText.addEventListener('input', validateForm);
+    if (confirmCheck) confirmCheck.addEventListener('change', validateForm);
+    if (confirmationText) confirmationText.addEventListener('input', validateForm);
     
     // 最終削除実行
-    confirmDeleteBtn.addEventListener('click', function() {
-      if (this.disabled) return;
-      
-      this.disabled = true;
-      this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>削除中...';
-      
-      // CSRF トークンを取得
-      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-      
-      // 削除リクエストを送信
-      fetch(`/admin/users/${currentUserId}`, {
-        method: 'DELETE',
-        headers: {
-          'X-CSRF-Token': csrfToken,
-          'Content-Type': 'application/json'
-        }
-      })
-      .then(response => {
-        if (response.redirected) {
-          // 成功時はリダイレクトされる
-          window.location.href = response.url;
-        } else if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-      })
-      .catch(error => {
-        console.error('削除エラー:', error);
-        alert('削除中にエラーが発生しました: ' + error.message);
+    if (confirmDeleteBtn) {
+      confirmDeleteBtn.addEventListener('click', function() {
+        if (this.disabled) return;
         
-        // ボタンを元に戻す
-        this.disabled = false;
-        this.innerHTML = '<i class="fas fa-trash me-1"></i>削除を実行';
+        console.log('削除実行開始');
+        
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>削除中...';
+        
+        // CSRF トークンを取得
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        
+        if (!csrfToken) {
+          console.error('CSRFトークンが見つかりません');
+          alert('セキュリティトークンが見つかりません。ページを再読み込みしてください。');
+          this.disabled = false;
+          this.innerHTML = '<i class="fas fa-trash me-1"></i>削除を実行';
+          return;
+        }
+        
+        console.log('削除リクエスト送信:', `/admin/users/${currentUserId}`);
+        
+        // 削除リクエストを送信
+        fetch(`/admin/users/${currentUserId}`, {
+          method: 'DELETE',
+          headers: {
+            'X-CSRF-Token': csrfToken,
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => {
+          console.log('削除レスポンス:', response);
+          
+          if (response.redirected) {
+            // 成功時はリダイレクトされる
+            console.log('削除成功、リダイレクト:', response.url);
+            window.location.href = response.url;
+          } else if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          } else {
+            // 成功時は手動でリダイレクト
+            console.log('削除成功');
+            window.location.href = '/admin/users';
+          }
+        })
+        .catch(error => {
+          console.error('削除エラー:', error);
+          alert('削除中にエラーが発生しました: ' + error.message);
+          
+          // ボタンを元に戻す
+          this.disabled = false;
+          this.innerHTML = '<i class="fas fa-trash me-1"></i>削除を実行';
+        });
       });
-    });
+    }
     
     // モーダルが閉じられたときのクリーンアップ
-    modal.addEventListener('hidden.bs.modal', function() {
-      confirmCheck.checked = false;
-      confirmationText.value = '';
-      confirmationText.className = 'form-control';
-      confirmDeleteBtn.disabled = true;
-      confirmDeleteBtn.innerHTML = '<i class="fas fa-trash me-1"></i>削除を実行';
-    });
+    if (modal) {
+      modal.addEventListener('hidden.bs.modal', function() {
+        if (confirmCheck) confirmCheck.checked = false;
+        if (confirmationText) {
+          confirmationText.value = '';
+          confirmationText.className = 'form-control';
+        }
+        if (confirmDeleteBtn) {
+          confirmDeleteBtn.disabled = true;
+          confirmDeleteBtn.innerHTML = '<i class="fas fa-trash me-1"></i>削除を実行';
+        }
+      });
+    }
+    
+    console.log('削除ボタン初期化完了');
   });
   </script>
   
