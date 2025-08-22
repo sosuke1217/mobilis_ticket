@@ -210,189 +210,232 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+// 初期化関数
+function initializeTicketManagement() {
+  console.log('🎫 チケット管理初期化開始');
+  
   // 新規チケット発行フォーム
   const newTicketForm = document.getElementById('newTicketForm');
+  if (newTicketForm) {
+    console.log('✅ チケット発行フォームを発見');
+    
+    // 既存のイベントリスナーを削除
+    newTicketForm.removeEventListener('submit', handleTicketSubmit);
+    newTicketForm.addEventListener('submit', handleTicketSubmit);
+  } else {
+    console.error('❌ チケット発行フォームが見つかりません');
+  }
   
-  newTicketForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const templateId = document.getElementById('ticketTemplate').value;
-    const count = document.getElementById('ticketCount').value;
-    
-    if (!templateId) {
-      alert('チケット種類を選択してください');
-      return;
-    }
-    
-    // ボタンを無効化
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>発行中...';
-    
-    // CSRF トークンを取得
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    
-    // チケット発行APIを呼び出し
-    fetch('/admin/tickets/create_for_user', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-CSRF-Token': csrfToken
-      },
-      body: JSON.stringify({
-        user_id: <%= @user.id %>,
-        ticket_template_id: templateId,
-        count: count
-      })
-    })
-    .then(response => {
-      console.log('Response status:', response.status);
-      
-      if (!response.ok) {
-        return response.json().then(data => {
-          throw new Error(data.error || 'チケット発行に失敗しました');
-        });
-      }
-      return response.json();
-    })
-    .then(data => {
-      console.log('✅ Ticket created:', data);
-      
-      // 成功メッセージを表示
-      const alertDiv = document.createElement('div');
-      alertDiv.innerHTML = `
-        <div class="alert alert-success alert-dismissible fade show">
-          <i class="fas fa-check-circle me-2"></i>
-          ${data.message}
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-      `;
-      document.querySelector('.container-lg').insertBefore(alertDiv, document.querySelector('.card'));
-      
-      // フォームをリセット
-      newTicketForm.reset();
-      
-      // 新しく作成されたチケットを一覧に追加
-      addNewTicketToList(data.ticket);
-      
-      // 残りチケット数と残額を更新
-      updateTicketCounts();
-      
-      // 成功メッセージを3秒後に自動で消す
-      setTimeout(() => {
-        if (alertDiv.firstElementChild) {
-          alertDiv.firstElementChild.remove();
-        }
-      }, 3000);
-    })
-    .catch(error => {
-      console.error('❌ Error creating ticket:', error);
-      alert('チケット発行エラー: ' + error.message);
-    })
-    .finally(() => {
-      // ボタンを元に戻す
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = originalText;
-    });
-  });
+  // チケット使用・削除ボタンのイベントリスナーを設定
+  setupTicketButtons();
+  
+  console.log('🎫 チケット管理初期化完了');
+}
 
-  // チケット使用機能
-  document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('use-ticket-btn')) {
-      const ticketId = e.target.getAttribute('data-ticket-id');
-      const ticketName = e.target.getAttribute('data-ticket-name');
-      
-      if (!confirm(`「${ticketName}」を1回使用しますか？`)) {
-        return;
-      }
-      
-      // ボタンを無効化
-      const originalText = e.target.innerHTML;
-      e.target.disabled = true;
-      e.target.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-      
-      // CSRF トークンを取得
-      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-      
-      // チケット使用APIを呼び出し
-      fetch(`/admin/tickets/${ticketId}/use`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-CSRF-Token': csrfToken
-        }
-      })
-      .then(response => {
-        console.log('Response status:', response.status);
-        
-        if (!response.ok) {
-          return response.json().then(data => {
-            throw new Error(data.error || 'チケット使用に失敗しました');
-          });
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log('✅ Ticket used:', data);
-        
-        // 成功メッセージを表示
-        const alertDiv = document.createElement('div');
-        alertDiv.className = 'alert alert-success alert-dismissible fade show';
-        alertDiv.innerHTML = `
-          <i class="fas fa-check-circle me-2"></i>
-          チケットを使用しました
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        document.querySelector('.container-lg').insertBefore(alertDiv, document.querySelector('.card'));
-        
-        // ページをリロード
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
-      })
-      .catch(error => {
-        console.error('❌ Error using ticket:', error);
-        alert('チケット使用エラー: ' + error.message);
-      })
-      .finally(() => {
-        // ボタンを元に戻す
-        e.target.disabled = false;
-        e.target.innerHTML = originalText;
+// チケット発行処理
+function handleTicketSubmit(e) {
+  e.preventDefault();
+  console.log('🎫 チケット発行処理開始');
+  
+  const templateId = document.getElementById('ticketTemplate').value;
+  const count = document.getElementById('ticketCount').value;
+  
+  if (!templateId) {
+    alert('チケット種類を選択してください');
+    return;
+  }
+  
+  // ボタンを無効化
+  const submitBtn = this.querySelector('button[type="submit"]');
+  const originalText = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>発行中...';
+  
+  // CSRF トークンを取得
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+  
+  // チケット発行APIを呼び出し
+  fetch('/admin/tickets/create_for_user', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'X-CSRF-Token': csrfToken
+    },
+    body: JSON.stringify({
+      user_id: <%= @user.id %>,
+      ticket_template_id: templateId,
+      count: count
+    })
+  })
+  .then(response => {
+    console.log('Response status:', response.status);
+    
+    if (!response.ok) {
+      return response.json().then(data => {
+        throw new Error(data.error || 'チケット発行に失敗しました');
       });
     }
+    return response.json();
+  })
+  .then(data => {
+    console.log('✅ Ticket created:', data);
     
-    // チケット削除ボタンクリック時
-    if (e.target.classList.contains('delete-ticket-btn') || e.target.closest('.delete-ticket-btn')) {
-      const deleteBtn = e.target.classList.contains('delete-ticket-btn') ? e.target : e.target.closest('.delete-ticket-btn');
-      const ticketId = deleteBtn.getAttribute('data-ticket-id');
-      const ticketName = deleteBtn.getAttribute('data-ticket-name');
-      
-      // チケット行から残り回数を取得
-      const ticketRow = deleteBtn.closest('tr');
-      const remainingCount = ticketRow.querySelector('td:nth-child(2) .badge').textContent.split('/')[0].trim();
-      
-      // モーダルにデータを設定
-      document.getElementById('deleteTicketName').textContent = ticketName;
-      document.getElementById('deleteTicketRemaining').textContent = remainingCount;
-      
-      // モーダルを表示
-      const deleteModal = new bootstrap.Modal(document.getElementById('deleteTicketModal'));
-      deleteModal.show();
-      
-      // 削除実行ボタンのイベントリスナー
-      document.getElementById('confirmDeleteTicketBtn').onclick = function() {
-        deleteTicket(ticketId, ticketRow);
-        deleteModal.hide();
-      };
-    }
+    // 成功メッセージを表示
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success alert-dismissible fade show';
+    alertDiv.innerHTML = `
+      <i class="fas fa-check-circle me-2"></i>
+      ${data.message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.querySelector('.container-lg').insertBefore(alertDiv, document.querySelector('.card'));
+    
+    // フォームをリセット
+    newTicketForm.reset();
+    
+    // 新しく作成されたチケットを一覧に追加
+    addNewTicketToList(data.ticket);
+    
+    // 残りチケット数と残額を更新
+    updateTicketCounts();
+    
+    // 成功メッセージを3秒後に自動で消す
+    setTimeout(() => {
+      if (alertDiv.firstElementChild) {
+        alertDiv.firstElementChild.remove();
+      }
+    }, 3000);
+  })
+  .catch(error => {
+    console.error('❌ Error creating ticket:', error);
+    alert('チケット発行エラー: ' + error.message);
+  })
+  .finally(() => {
+    // ボタンを元に戻す
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalText;
   });
+}
+
+// チケットボタンの設定
+function setupTicketButtons() {
+  console.log('🔘 チケットボタンの設定開始');
   
-  // チケット削除実行
-  function deleteTicket(ticketId, ticketRow) {
+  // 既存のイベントリスナーを削除
+  document.removeEventListener('click', handleTicketButtonClick);
+  
+  // 新しいイベントリスナーを設定
+  document.addEventListener('click', handleTicketButtonClick);
+  
+  console.log('🔘 チケットボタンの設定完了');
+}
+
+// チケットボタンクリック処理
+function handleTicketButtonClick(e) {
+  // チケット使用ボタン
+  if (e.target.classList.contains('use-ticket-btn')) {
+    handleTicketUse(e);
+  }
+  
+  // チケット削除ボタン
+  if (e.target.classList.contains('delete-ticket-btn') || e.target.closest('.delete-ticket-btn')) {
+    handleTicketDelete(e);
+  }
+}
+
+// チケット使用処理
+function handleTicketUse(e) {
+  const ticketId = e.target.getAttribute('data-ticket-id');
+  const ticketName = e.target.getAttribute('data-ticket-name');
+  
+  if (!confirm(`「${ticketName}」を1回使用しますか？`)) {
+    return;
+  }
+  
+  // ボタンを無効化
+  const originalText = e.target.innerHTML;
+  e.target.disabled = true;
+  e.target.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+  
+  // CSRF トークンを取得
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+  
+  // チケット使用APIを呼び出し
+  fetch(`/admin/tickets/${ticketId}/use`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'X-CSRF-Token': csrfToken
+    }
+  })
+  .then(response => {
+    console.log('Response status:', response.status);
+    
+    if (!response.ok) {
+      return response.json().then(data => {
+        throw new Error(data.error || 'チケット使用に失敗しました');
+      });
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log('✅ Ticket used:', data);
+    
+    // 成功メッセージを表示
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success alert-dismissible fade show';
+    alertDiv.innerHTML = `
+      <i class="fas fa-check-circle me-2"></i>
+      チケットを使用しました
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.querySelector('.container-lg').insertBefore(alertDiv, document.querySelector('.card'));
+    
+    // ページをリロード
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
+  })
+  .catch(error => {
+    console.error('❌ Error using ticket:', error);
+    alert('チケット使用エラー: ' + error.message);
+  })
+  .finally(() => {
+    // ボタンを元に戻す
+    e.target.disabled = false;
+    e.target.innerHTML = originalText;
+  });
+}
+
+// チケット削除処理
+function handleTicketDelete(e) {
+  const deleteBtn = e.target.classList.contains('delete-ticket-btn') ? e.target : e.target.closest('.delete-ticket-btn');
+  const ticketId = deleteBtn.getAttribute('data-ticket-id');
+  const ticketName = deleteBtn.getAttribute('data-ticket-name');
+  
+  // チケット行から残り回数を取得
+  const ticketRow = deleteBtn.closest('tr');
+  const remainingCount = ticketRow.querySelector('td:nth-child(2) .badge').textContent.split('/')[0].trim();
+  
+  // モーダルにデータを設定
+  document.getElementById('deleteTicketName').textContent = ticketName;
+  document.getElementById('deleteTicketRemaining').textContent = remainingCount;
+  
+  // モーダルを表示
+  const deleteModal = new bootstrap.Modal(document.getElementById('deleteTicketModal'));
+  deleteModal.show();
+  
+  // 削除実行ボタンのイベントリスナー
+  document.getElementById('confirmDeleteTicketBtn').onclick = function() {
+    deleteTicket(ticketId, ticketRow);
+    deleteModal.hide();
+  };
+}
+
+// チケット削除実行
+function deleteTicket(ticketId, ticketRow) {
     // 削除ボタンを無効化
     const deleteBtn = ticketRow.querySelector('.delete-ticket-btn');
     const originalText = deleteBtn.innerHTML;
@@ -558,5 +601,21 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   }
-});
+
+  // ページ読み込み時に初期化を実行
+  document.addEventListener('DOMContentLoaded', initializeTicketManagement);
+  
+  // ページが完全に読み込まれた後に初期化を実行
+  window.addEventListener('load', initializeTicketManagement);
+  
+  // 少し遅れて初期化を実行（Turboなどの問題に対応）
+  setTimeout(initializeTicketManagement, 100);
+  setTimeout(initializeTicketManagement, 500);
+  
+  // ページが表示された後に初期化を実行
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeTicketManagement);
+  } else {
+    initializeTicketManagement();
+  }
 </script> 
