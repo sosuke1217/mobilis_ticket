@@ -30,7 +30,7 @@
                       class: "form-control border-start-0 text-start",
                       placeholder: "admin@example.com",
                       required: true,
-                      style: "text-align: left !important; direction: ltr !important; text-align-last: left !important; text-align: left !important; text-align: left !important;" %>
+                      style: "text-align: left !important; direction: ltr !important;" %>
                 </div>
               </div>
 
@@ -46,7 +46,7 @@
                       class: "form-control border-start-0 text-start",
                       placeholder: "パスワードを入力",
                       required: true,
-                      style: "text-align: left !important; direction: ltr !important; text-align-last: left !important; text-align: left !important; text-align: left !important;" %>
+                      style: "text-align: left !important; direction: ltr !important;" %>
                 </div>
               </div>
 
@@ -81,6 +81,7 @@
 
 <!-- カスタムCSS -->
 <style>
+  /* ロゴスタイリング */
   .logo-container {
     display: inline-block;
     padding: 1.5rem;
@@ -102,15 +103,30 @@
     filter: drop-shadow(0 6px 12px rgba(0, 212, 255, 0.4));
   }
   
+  /* カードスタイリング */
   .card {
     border-radius: 1rem;
   }
   
+  /* フォームコントロール */
   .form-control:focus {
     border-color: #0d6efd;
     box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
   }
   
+  .form-control:focus + .input-group-text {
+    border-color: #0d6efd;
+  }
+  
+  .input-group-text {
+    border-color: #dee2e6;
+  }
+  
+  .form-control {
+    border-color: #dee2e6;
+  }
+  
+  /* ボタンスタイリング */
   .btn-primary {
     background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
     border: none;
@@ -122,218 +138,18 @@
     box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
   }
   
-  .input-group-text {
-    border-color: #dee2e6;
-  }
-  
-  .form-control {
-    border-color: #dee2e6;
-  }
-  
-  .form-control:focus + .input-group-text {
-    border-color: #0d6efd;
-  }
-  
-  /* プレースホルダーの位置を強制的に左寄せに固定 */
-  .form-control::placeholder {
-    text-align: left !important;
-  }
-  
-  .form-control:focus::placeholder {
-    text-align: left !important;
-  }
-  
-  /* 入力フィールドのテキストも左寄せに固定 */
-  .form-control {
-    text-align: left !important;
-  }
-  
-  .form-control:focus {
-    text-align: left !important;
-  }
-  
-  /* より強力なセレクターで確実に左寄せを固定 */
-  input[type="email"]::placeholder,
-  input[type="password"]::placeholder {
-    text-align: left !important;
-  }
-  
-  input[type="email"]:focus::placeholder,
-  input[type="password"]:focus::placeholder {
-    text-align: left !important;
-  }
-  
+  /* テキスト位置の基本設定 */
   input[type="email"],
   input[type="password"] {
     text-align: left !important;
-  }
-  
-  input[type="email"]:focus,
-  input[type="password"]:focus {
-    text-align: left !important;
-  }
-  
-  /* さらに強力なセレクターで確実に左寄せを固定 */
-  .form-control[type="email"]::placeholder,
-  .form-control[type="password"]::placeholder {
-    text-align: left !important;
     direction: ltr !important;
   }
   
-  .form-control[type="email"]:focus::placeholder,
-  .form-control[type="password"]:focus::placeholder {
-    text-align: left !important;
-    direction: ltr !important;
-  }
-  
-  .form-control[type="email"],
-  .form-control[type="password"] {
-    text-align: left !important;
-    direction: ltr !important;
-  }
-  
-  .form-control[type="email"]:focus,
-  .form-control[type="password"]:focus {
-    text-align: left !important;
-    direction: ltr !important;
-  }
-  
-  /* インラインスタイルで強制的に左寄せ */
-  input[type="email"] {
-    text-align: left !important;
-    direction: ltr !important;
-  }
-  
-  input[type="password"] {
-    text-align: left !important;
-    direction: ltr !important;
-  }
-  
-  /* すべての入力フィールドに対して強制的に左寄せ */
-  *[type="email"]::placeholder,
-  *[type="password"]::placeholder {
-    text-align: left !important;
-    direction: ltr !important;
-    text-align-last: left !important;
-  }
-  
-  *[type="email"]:focus::placeholder,
-  *[type="password"]:focus::placeholder {
-    text-align: left !important;
-    direction: ltr !important;
-    text-align-last: left !important;
-  }
-  
-  *[type="email"],
-  *[type="password"] {
-    text-align: left !important;
-    direction: ltr !important;
-    text-align-last: left !important;
-  }
-  
-  *[type="email"]:focus,
-  *[type="password"]:focus {
-    text-align: left !important;
-    direction: ltr !important;
-    text-align-last: left !important;
-  }
-  
-  /* プレースホルダーとテキストの位置を完全に固定 */
-  ::placeholder {
-    text-align: left !important;
-    direction: ltr !important;
-    text-align-last: left !important;
-  }
-  
-  :focus::placeholder {
-    text-align: left !important;
-    direction: ltr !important;
-    text-align-last: left !important;
-  }
-  
-  /* 入力フィールドのテキスト位置を完全に固定 */
-  input {
-    text-align: left !important;
-    direction: ltr !important;
-    text-align-last: left !important;
-  }
-  
-  input:focus {
-    text-align: left !important;
-    direction: ltr !important;
-    text-align-last: left !important;
-  }
-  
-  /* 入力中のテキストを強制的に左寄せ */
-  input[type="email"]:not(:placeholder-shown),
-  input[type="password"]:not(:placeholder-shown) {
-    text-align: left !important;
-    direction: ltr !important;
-    text-align-last: left !important;
-  }
-  
-  /* 入力中のテキスト（プレースホルダーが非表示）を強制左寄せ */
-  input:not(:placeholder-shown) {
-    text-align: left !important;
-    direction: ltr !important;
-    text-align-last: left !important;
-  }
-  
-  /* すべての状態でテキストを左寄せ */
-  input[type="email"],
-  input[type="password"],
-  input[type="email"]:focus,
-  input[type="password"]:focus,
-  input[type="email"]:not(:placeholder-shown),
-  input[type="password"]:not(:placeholder-shown),
-  input[type="email"]:not(:placeholder-shown):focus,
-  input[type="password"]:not(:placeholder-shown):focus {
-    text-align: left !important;
-    direction: ltr !important;
-    text-align-last: left !important;
-  }
-  
-  /* プレースホルダーを強制的に左寄せ */
+  /* プレースホルダーの位置設定 */
   input[type="email"]::placeholder,
   input[type="password"]::placeholder {
     text-align: left !important;
     direction: ltr !important;
-    text-align-last: left !important;
-    text-align: left !important;
-  }
-  
-  /* フォーカス時のプレースホルダーも左寄せ */
-  input[type="email"]:focus::placeholder,
-  input[type="password"]:focus::placeholder {
-    text-align: left !important;
-    direction: ltr !important;
-    text-align-last: left !important;
-    text-align: left !important;
-  }
-  
-  /* 入力中のプレースホルダーも左寄せ */
-  input[type="email"]:not(:placeholder-shown)::placeholder,
-  input[type="password"]:not(:placeholder-shown)::placeholder {
-    text-align: left !important;
-    direction: ltr !important;
-    text-align-last: left !important;
-    text-align: left !important;
-  }
-  
-  /* すべてのプレースホルダーを強制左寄せ */
-  ::placeholder {
-    text-align: left !important;
-    direction: ltr !important;
-    text-align-last: left !important;
-    text-align: left !important;
-  }
-  
-  /* フォーカス時のすべてのプレースホルダーを強制左寄せ */
-  :focus::placeholder {
-    text-align: left !important;
-    direction: ltr !important;
-    text-align-last: left !important;
-    text-align: left !important;
   }
 </style>
 
@@ -344,48 +160,20 @@
     const emailInput = document.querySelector('input[type="email"]');
     const passwordInput = document.querySelector('input[type="password"]');
     
-    // 強力な左寄せ関数
-    function forceLeftAlign(input) {
+    // シンプルな左寄せ関数
+    function alignLeft(input) {
       if (input) {
-        // 基本スタイル
         input.style.textAlign = 'left';
         input.style.direction = 'ltr';
-        input.style.textAlignLast = 'left';
-        
-        // プレースホルダーのスタイルを強制適用
-        input.style.setProperty('text-align', 'left', 'important');
-        input.style.setProperty('direction', 'ltr', 'important');
-        input.style.setProperty('text-align-last', 'left', 'important');
-        
-        // CSSルールを動的に追加
-        const style = document.createElement('style');
-        style.textContent = `
-          input[type="${input.type}"]::placeholder {
-            text-align: left !important;
-            direction: ltr !important;
-            text-align-last: left !important;
-          }
-        `;
-        document.head.appendChild(style);
       }
     }
     
     // 初期設定
-    forceLeftAlign(emailInput);
-    forceLeftAlign(passwordInput);
+    alignLeft(emailInput);
+    alignLeft(passwordInput);
     
     // フォーカス時に適用
-    if (emailInput) emailInput.addEventListener('focus', () => forceLeftAlign(emailInput));
-    if (passwordInput) passwordInput.addEventListener('focus', () => forceLeftAlign(passwordInput));
-    
-    // 入力時にも適用
-    if (emailInput) emailInput.addEventListener('input', () => forceLeftAlign(emailInput));
-    if (passwordInput) passwordInput.addEventListener('input', () => forceLeftAlign(passwordInput));
-    
-    // 定期的にチェック（軽量）
-    setInterval(() => {
-      forceLeftAlign(emailInput);
-      forceLeftAlign(passwordInput);
-    }, 200);
+    if (emailInput) emailInput.addEventListener('focus', () => alignLeft(emailInput));
+    if (passwordInput) passwordInput.addEventListener('focus', () => alignLeft(passwordInput));
   });
 </script>
