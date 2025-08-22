@@ -52,8 +52,7 @@ Rails.application.routes.draw do
     resources :notification_logs, only: [:index]
     resources :notification_preferences, only: [:index]
     
-    # 設定
-    resources :settings, only: [:index, :show, :edit, :update]
+    # 設定ルートを削除
   end
   
   # 一般ユーザー用ルート
