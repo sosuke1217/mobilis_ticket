@@ -171,8 +171,19 @@
 (function() {
   'use strict';
   
+  // 既に初期化済みかチェック
+  if (window.ticketListInitialized) {
+    console.log('⚠️ チケット一覧ページは既に初期化済みです');
+    return;
+  }
+  
   // グローバル変数
   let isProcessing = false;
+  
+  // 初期化完了フラグを設定
+  window.ticketListInitialized = true;
+  
+  console.log('🎫 チケット一覧ページ初期化開始（初回）');
   
   // チケット一覧ページの初期化
   function initializeTicketList() {
@@ -547,24 +558,37 @@
   
   // 初期化の実行
   function startInitialization() {
+    // 既に初期化済みの場合は何もしない
+    if (window.ticketListInitialized && window.ticketListSetupComplete) {
+      console.log('⚠️ 既に初期化とセットアップが完了しています');
+      return;
+    }
+    
     if (initializeTicketList()) {
       setupEventListeners();
+      window.ticketListSetupComplete = true;
       console.log('✅ チケット一覧ページ初期化完了');
     } else {
       console.error('❌ チケット一覧ページ初期化に失敗しました');
-      // 初期化失敗時の再試行
-      setTimeout(() => {
-        console.log('🔄 初期化失敗後の再試行を実行します...');
-        startInitialization();
-      }, 200);
+      // 初期化失敗時の再試行（最大3回まで）
+      if (!window.initializationRetryCount) {
+        window.initializationRetryCount = 0;
+      }
+      
+      if (window.initializationRetryCount < 3) {
+        window.initializationRetryCount++;
+        console.log(`🔄 初期化失敗後の再試行 ${window.initializationRetryCount}/3 を実行します...`);
+        setTimeout(startInitialization, 200 * window.initializationRetryCount);
+      } else {
+        console.error('❌ 最大再試行回数に達しました。初期化を中止します。');
+      }
     }
   }
   
-  // 複数のタイミングで初期化を試行
+  // 単一の初期化タイミングで実行
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
       console.log('🎫 DOMContentLoaded イベント発生');
-      // 少し遅れて初期化を実行（DOMの完全な準備を待つ）
       setTimeout(startInitialization, 100);
     });
   } else {
@@ -572,22 +596,11 @@
     startInitialization();
   }
   
-  // ページ読み込み完了後の初期化も実行
+  // バックアップ初期化（1回のみ）
   window.addEventListener('load', function() {
     console.log('🎫 load イベント発生');
-    setTimeout(startInitialization, 200);
-  });
-  
-  // 追加の遅延初期化（Turboなどの問題に対応）
-  setTimeout(startInitialization, 300);
-  setTimeout(startInitialization, 800);
-  setTimeout(startInitialization, 1500);
-  
-  // ページが完全に表示された後の初期化
-  document.addEventListener('readystatechange', function() {
-    if (document.readyState === 'complete') {
-      console.log('🎫 readystatechange: complete イベント発生');
-      setTimeout(startInitialization, 500);
+    if (!window.ticketListSetupComplete) {
+      setTimeout(startInitialization, 200);
     }
   });
   
