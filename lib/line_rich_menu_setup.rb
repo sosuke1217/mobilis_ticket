@@ -38,7 +38,7 @@ class LineRichMenuSetup
         # 上段中央：ホームページ
         { 
           bounds: { x: 834, y: 0, width: 833, height: 843 }, 
-          action: { type: "uri", uri: "https://mobilis-8008d58dd542.herokuapp.com/" } 
+          action: { type: "uri", uri: ENV['app_host'] || "https://mobilis-stretch.com" } 
         },
         # 上段右：最新情報
         { 
