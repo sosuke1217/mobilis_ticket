@@ -13,13 +13,19 @@
 <body>
   <header>
     <h1>管理ダッシュボード</h1>
-    <!-- ログアウトボタン - Rails link_toヘルパー使用 -->
-    <%= link_to "ログアウト", destroy_admin_user_session_path, 
+    <!-- ログアウトボタン - button_to使用（フォームベース） -->
+    <%= button_to "ログアウト", destroy_admin_user_session_path, 
         method: :delete, 
         class: "btn btn-outline-danger",
+        form: { 
+          data: { 
+            turbo: false,
+            "turbo-method": false,
+            "turbo-frame": false
+          }
+        },
         data: { 
-          confirm: "本当にログアウトしますか？",
-          turbo: false 
+          confirm: "本当にログアウトしますか？"
         } %>
   </header>
   <main>
