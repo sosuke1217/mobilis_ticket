@@ -183,7 +183,7 @@
               </tr>
             <% else %>
               <% @tickets.each do |ticket| %>
-                <tr>
+                <tr data-ticket-id="<%= ticket.id %>">
                   <td>
                     <strong><%= ticket.ticket_template.name %></strong>
                     <br><small class="text-muted">¥<%= number_with_delimiter(ticket.ticket_template.price) %></small>
@@ -523,11 +523,9 @@ function handleTicketUse(e) {
 
     // 残りチケット数と残額を即座に更新
     updateTicketCounts();
-        
-    // ページをリロード
-    setTimeout(() => {
-      window.location.reload();
-    }, 1500);
+    
+    // チケット使用後の表示を即座に更新
+    updateTicketDisplayAfterUse(ticketId);
   })
   .catch(error => {
     console.error('❌ Error using ticket:', error);
@@ -882,6 +880,71 @@ function deleteTicket(ticketId, ticketRow) {
       console.log('🔄 チケット数更新完了');
     } catch (error) {
       console.error('❌ チケット数更新中にエラーが発生しました:', error);
+    }
+  }
+  
+  // チケット使用後の表示を即座に更新する関数
+  function updateTicketDisplayAfterUse(ticketId) {
+    try {
+      console.log('🔄 チケット使用後の表示更新開始:', ticketId);
+      
+      // チケット行を検索
+      const ticketRow = document.querySelector(`tr[data-ticket-id="${ticketId}"]`);
+      if (!ticketRow) {
+        console.warn('⚠️ チケット行が見つかりませんでした:', ticketId);
+        return;
+      }
+
+      // 残り回数を取得
+      const remainingCountElement = ticketRow.querySelector('td:nth-child(2) .badge');
+      if (!remainingCountElement) {
+        console.warn('⚠️ 残り回数要素が見つかりませんでした:', ticketId);
+        return;
+      }
+
+      // 残り回数を更新
+      const currentRemainingCount = parseInt(remainingCountElement.textContent.split('/')[0].trim());
+      const newRemainingCount = currentRemainingCount - 1;
+      remainingCountElement.textContent = `${newRemainingCount}/${remainingCountElement.textContent.split('/')[1].trim()}`;
+      console.log('✅ 残り回数を更新しました:', newRemainingCount);
+
+      // ステータスを更新
+      const statusBadge = ticketRow.querySelector('td:nth-child(5) .badge');
+      if (statusBadge) {
+        if (newRemainingCount <= 0) {
+          statusBadge.className = 'badge bg-secondary';
+          statusBadge.textContent = '使用済み';
+          console.log('✅ ステータスを「使用済み」に更新しました');
+        } else if (newRemainingCount <= 2) {
+          statusBadge.className = 'badge bg-warning';
+          statusBadge.textContent = '残り少ない';
+          console.log('✅ ステータスを「残り少ない」に更新しました');
+        } else {
+          statusBadge.className = 'badge bg-success';
+          statusBadge.textContent = '利用可能';
+          console.log('✅ ステータスを「利用可能」に更新しました');
+        }
+      }
+
+      // 使用可能ボタンの有効化/無効化
+      const useTicketBtn = ticketRow.querySelector('.use-ticket-btn');
+      if (useTicketBtn) {
+        if (newRemainingCount > 0) {
+          useTicketBtn.disabled = false;
+          useTicketBtn.innerHTML = '<i class="fas fa-ticket-alt me-1"></i>使用';
+          console.log('✅ 使用可能ボタンを有効化しました');
+        } else {
+          useTicketBtn.disabled = true;
+          useTicketBtn.innerHTML = '<span class="text-muted">使用不可</span>';
+          console.log('✅ 使用可能ボタンを無効化しました');
+        }
+      }
+
+      // 残額も更新
+      updateTicketCounts();
+      console.log('🔄 チケット使用後の表示更新完了');
+    } catch (error) {
+      console.error('❌ チケット使用後の表示更新中にエラーが発生しました:', error);
     }
   }
   
