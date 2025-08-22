@@ -216,7 +216,7 @@
                     <button type="button" 
                             class="btn btn-sm btn-outline-primary use-ticket-btn"
                             data-ticket-id="<%= ticket.id %>"
-                            data-ticket-name="<%= ticket.ticket_template.name %>">
+                            data-ticket-name="<%= ticket.ticket_template&.name || '不明' %>">
                       使用
                     </button>
                   <% else %>
@@ -227,7 +227,7 @@
                     <button type="button" 
                             class="btn btn-sm btn-outline-danger delete-ticket-btn ms-1"
                             data-ticket-id="<%= ticket.id %>"
-                            data-ticket-name="<%= ticket.ticket_template.name %>">
+                            data-ticket-name="<%= ticket.ticket_template&.name || '不明' %>">
                       <i class="fas fa-trash"></i>
                     </button>
                 </td>
@@ -1170,6 +1170,5 @@ function deleteTicket(ticketId, ticketRow) {
   // グローバル関数として公開
   window.cleanupModalBackground = cleanupModalBackground;
   
-  console.log('🎫 チケット管理ページ初期化完了');
-});
+  console.log('�� チケット管理ページ初期化完了');
 </script>
