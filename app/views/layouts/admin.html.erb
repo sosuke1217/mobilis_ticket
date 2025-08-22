@@ -13,35 +13,65 @@
 <body>
   <header>
     <h1>管理ダッシュボード</h1>
+    <!-- ログアウトボタン - JavaScript版 -->
     <button type="button" class="btn btn-outline-danger" onclick="logout()">ログアウト</button>
     
+    <!-- ログアウトボタン - フォールバック版（JavaScript無効時用） -->
+    <form action="<%= destroy_admin_user_session_path %>" method="post" style="display: none;" id="logout-fallback">
+      <input name="_method" type="hidden" value="delete" />
+      <input name="authenticity_token" type="hidden" value="<%= form_authenticity_token %>" />
+    </form>
+    
     <script>
+    // ログアウト関数
     function logout() {
       if (confirm('本当にログアウトしますか？')) {
-        // フォームを作成して送信
-        var form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '<%= destroy_admin_user_session_path %>';
-        
-        // _method フィールドを追加
-        var methodField = document.createElement('input');
-        methodField.type = 'hidden';
-        methodField.name = '_method';
-        methodField.value = 'delete';
-        form.appendChild(methodField);
-        
-        // CSRF トークンを追加
-        var tokenField = document.createElement('input');
-        tokenField.type = 'hidden';
-        tokenField.name = 'authenticity_token';
-        tokenField.value = '<%= form_authenticity_token %>';
-        form.appendChild(tokenField);
-        
-        // フォームを送信
-        document.body.appendChild(form);
-        form.submit();
+        try {
+          // フォームを作成して送信
+          var form = document.createElement('form');
+          form.method = 'POST';
+          form.action = '<%= destroy_admin_user_session_path %>';
+          
+          // _method フィールドを追加
+          var methodField = document.createElement('input');
+          methodField.type = 'hidden';
+          methodField.name = '_method';
+          methodField.value = 'delete';
+          form.appendChild(methodField);
+          
+          // CSRF トークンを追加
+          var tokenField = document.createElement('input');
+          tokenField.type = 'hidden';
+          tokenField.name = 'authenticity_token';
+          tokenField.value = '<%= form_authenticity_token %>';
+          form.appendChild(tokenField);
+          
+          // フォームを送信
+          document.body.appendChild(form);
+          form.submit();
+        } catch (error) {
+          console.error('JavaScript error:', error);
+          // フォールバック: 隠しフォームを使用
+          document.getElementById('logout-fallback').submit();
+        }
       }
     }
+    
+    // ページ読み込み完了時にログアウトボタンの動作を確認
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Admin layout loaded, logout function available');
+      
+      // ログアウトボタンが存在するか確認
+      var logoutBtn = document.querySelector('button[onclick="logout()"]');
+      if (logoutBtn) {
+        console.log('Logout button found');
+        logoutBtn.addEventListener('click', function(e) {
+          console.log('Logout button clicked');
+        });
+      } else {
+        console.log('Logout button not found');
+      }
+    });
     </script>
   </header>
   <main>
