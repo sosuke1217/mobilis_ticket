@@ -5,11 +5,11 @@
 <div class="container-lg my-5">
   <div class="d-flex align-items-center mb-4">
     <div>
-      <h1 class="mb-1">
+      <h1 class="mb-1" style="margin-left: 1rem;">
         <%= @user.display_name_or_name || @user.line_user_id %> さんの詳細
       </h1>
       <% if @user.display_name.present? && @user.name.present? && @user.display_name != @user.name %>
-        <p class="text-muted mb-0">登録名: <%= @user.name %></p>
+        <p class="text-muted mb-0" style="margin-left: 1rem;">登録名: <%= @user.name %></p>
       <% end %>
     </div>
   </div>
@@ -111,9 +111,9 @@
     
     /* モーダルの全体的なレイアウト調整 */
     #lineLinkModal .modal-content {
-      height: 500px;
-      min-height: 500px;
-      max-height: 500px;
+      height: 350px;
+      min-height: 350px;
+      max-height: 350px;
       padding-bottom: 0;
     }
     
