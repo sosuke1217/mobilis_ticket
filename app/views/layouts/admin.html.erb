@@ -13,44 +13,17 @@
 <body>
   <header>
     <h1>管理ダッシュボード</h1>
-    <!-- ログアウトボタン - JavaScript版 -->
-    <button type="button" class="btn btn-outline-danger" onclick="logout()">ログアウト</button>
+    <!-- ログアウトボタン - Rails link_toヘルパー使用 -->
+    <%= link_to "ログアウト", destroy_admin_user_session_path, 
+        method: :delete, 
+        class: "btn btn-outline-danger",
+        data: { 
+          confirm: "本当にログアウトしますか？",
+          turbo: false 
+        } %>
   </header>
   <main>
     <%= yield %>
   </main>
-  
-  <script>
-    function logout() {
-      if (confirm('本当にログアウトしますか？')) {
-        // CSRFトークンを取得
-        const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        
-        // フォームを作成して送信
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '<%= destroy_admin_user_session_path %>';
-        form.style.display = 'none';
-        
-        // _method フィールドを追加（DELETE）
-        const methodField = document.createElement('input');
-        methodField.type = 'hidden';
-        methodField.name = '_method';
-        methodField.value = 'delete';
-        form.appendChild(methodField);
-        
-        // CSRFトークンを追加
-        const csrfField = document.createElement('input');
-        csrfField.type = 'hidden';
-        csrfField.name = 'authenticity_token';
-        csrfField.value = token;
-        form.appendChild(csrfField);
-        
-        // フォームを送信
-        document.body.appendChild(form);
-        form.submit();
-      }
-    }
-  </script>
 </body>
 </html>
