@@ -167,12 +167,24 @@ document.addEventListener('DOMContentLoaded', function() {
       })
       .then(response => {
         console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
         
         if (!response.ok) {
+          if (response.status === 406) {
+            throw new Error('サーバーが要求を受け入れられません。ページを再読み込みしてから再試行してください。');
+          }
           return response.json().then(data => {
-            throw new Error(data.error || `HTTP ${response.status}`);
+            throw new Error(data.error || `HTTP ${response.status}: ${response.statusText}`);
+          }).catch(() => {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
           });
         }
+        
+        // レスポンスが空の場合の処理
+        if (response.headers.get('content-length') === '0' || response.status === 204) {
+          return { success: true, message: 'チケットが削除されました' };
+        }
+        
         return response.json();
       })
       .then(data => {

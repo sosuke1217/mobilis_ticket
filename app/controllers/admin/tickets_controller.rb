@@ -99,6 +99,7 @@ class Admin::TicketsController < ApplicationController
     @ticket.destroy
   
     respond_to do |format|
+      format.json { render json: { success: true, message: "チケットを削除しました" } }
       format.turbo_stream # これで destroy.turbo_stream.erb を探す
       format.html do
         # リファラーを確認してリダイレクト先を決定

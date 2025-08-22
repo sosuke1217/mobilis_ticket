@@ -637,16 +637,34 @@ function deleteTicket(ticketId, ticketRow) {
     fetch(`/admin/tickets/${ticketId}`, {
       method: 'DELETE',
       headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
         'X-CSRF-Token': csrfToken
       }
     })
     .then(response => {
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+      
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+        if (response.status === 406) {
+          throw new Error('サーバーが要求を受け入れられません。ページを再読み込みしてから再試行してください。');
+        }
+        return response.json().then(data => {
+          throw new Error(data.error || `HTTP ${response.status}: ${response.statusText}`);
+        }).catch(() => {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        });
       }
-      return response;
+      
+      // レスポンスが空の場合の処理
+      if (response.headers.get('content-length') === '0' || response.status === 204) {
+        return { success: true, message: 'チケットが削除されました' };
+      }
+      
+      return response.json();
     })
-    .then(() => {
+    .then(data => {
       console.log('✅ Ticket deleted:', ticketId);
       
       // 成功メッセージを表示
