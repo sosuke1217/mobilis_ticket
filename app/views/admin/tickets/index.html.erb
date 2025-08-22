@@ -168,20 +168,37 @@
 
 <!-- 独立したスクリプトセクション -->
 <script type="text/javascript">
-// グローバルスコープでの重複実行チェック
-if (window.ticketListScriptLoaded) {
-  console.log('⚠️ チケット一覧ページスクリプトは既に読み込まれています');
-} else {
+// チケット一覧ページ専用のJavaScript
+// 重複実行を完全に防ぐための強力なメカニズム
+
+// グローバルスコープでの重複実行チェック（より強力な方法）
+if (typeof window.ticketListScriptLoaded === 'undefined') {
   window.ticketListScriptLoaded = true;
   
+  // スクリプト実行時刻を記録
+  window.ticketListScriptTimestamp = Date.now();
+  
+  console.log('🎫 チケット一覧ページスクリプト初期化開始', {
+    timestamp: window.ticketListScriptTimestamp,
+    url: window.location.href
+  });
+  
+  // メイン処理を即座に実行
   (function() {
     'use strict';
     
     // ローカルスコープでの変数宣言
     let isProcessing = false;
     let isInitialized = false;
+    let initializationAttempts = 0;
+    const maxInitializationAttempts = 3;
     
-    console.log('🎫 チケット一覧ページスクリプト初期化開始');
+    // 初期化完了フラグを設定
+    function markAsInitialized() {
+      isInitialized = true;
+      window.ticketListInitializationComplete = true;
+      console.log('✅ チケット一覧ページ初期化完了フラグを設定');
+    }
     
     // チケット一覧ページの初期化
     function initializeTicketList() {
@@ -191,7 +208,7 @@ if (window.ticketListScriptLoaded) {
           return true;
         }
         
-        console.log('🎫 チケット一覧ページ初期化開始');
+        console.log('🎫 チケット一覧ページ初期化開始（試行回数:', initializationAttempts + 1, '）');
         
         // ページ全体のHTML確認
         console.log('🔍 ページ全体のHTML確認:', document.body.innerHTML.length);
@@ -249,7 +266,7 @@ if (window.ticketListScriptLoaded) {
           button.addEventListener('click', handleTicketDelete);
         });
         
-        isInitialized = true;
+        markAsInitialized();
         console.log('✅ チケット一覧ページ初期化完了');
         return true;
         
@@ -563,46 +580,66 @@ if (window.ticketListScriptLoaded) {
   // 初期化の実行
   function startInitialization() {
     // 既に初期化済みの場合は何もしない
-    if (isInitialized) {
+    if (isInitialized || window.ticketListInitializationComplete) {
       console.log('⚠️ 既に初期化済みです');
       return;
     }
+    
+    // 最大試行回数をチェック
+    if (initializationAttempts >= maxInitializationAttempts) {
+      console.error('❌ 最大初期化試行回数に達しました。初期化を中止します。');
+      return;
+    }
+    
+    initializationAttempts++;
     
     if (initializeTicketList()) {
       setupEventListeners();
       console.log('✅ チケット一覧ページ初期化完了');
     } else {
-      console.error('❌ チケット一覧ページ初期化に失敗しました');
-      // 初期化失敗時の再試行（最大2回まで）
-      if (!window.initializationRetryCount) {
-        window.initializationRetryCount = 0;
-      }
+      console.error('❌ チケット一覧ページ初期化に失敗しました（試行回数:', initializationAttempts, '/', maxInitializationAttempts, '）');
       
-      if (window.initializationRetryCount < 2) {
-        window.initializationRetryCount++;
-        console.log(`🔄 初期化失敗後の再試行 ${window.initializationRetryCount}/2 を実行します...`);
-        setTimeout(startInitialization, 300 * window.initializationRetryCount);
+      // 初期化失敗時の再試行
+      if (initializationAttempts < maxInitializationAttempts) {
+        const delay = Math.min(300 * initializationAttempts, 1000); // 最大1秒まで
+        console.log(`🔄 ${delay}ms 後に再試行します...`);
+        setTimeout(startInitialization, delay);
       } else {
-        console.error('❌ 最大再試行回数に達しました。初期化を中止します。');
+        console.error('❌ 最大試行回数に達しました。初期化を中止します。');
+        // エラー状態を記録
+        window.ticketListInitializationFailed = true;
       }
     }
   }
   
-  // 単一の初期化タイミングで実行
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('🎫 DOMContentLoaded イベント発生');
-      setTimeout(startInitialization, 100);
-    });
-  } else {
-    console.log('🎫 readyState 既に完了 - 即座に初期化');
-    startInitialization();
+  // 初期化の開始（単一のタイミングで実行）
+  function beginInitialization() {
+    // 既に初期化が開始されている場合は何もしない
+    if (window.ticketListInitializationStarted) {
+      console.log('⚠️ 初期化は既に開始されています');
+      return;
+    }
+    
+    window.ticketListInitializationStarted = true;
+    console.log('🚀 初期化プロセスを開始します');
+    
+    // DOMの準備状態に応じて初期化を実行
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('🎫 DOMContentLoaded イベント発生');
+        setTimeout(startInitialization, 100);
+      });
+    } else {
+      console.log('🎫 readyState 既に完了 - 即座に初期化');
+      startInitialization();
+    }
   }
   
   // バックアップ初期化（1回のみ）
   window.addEventListener('load', function() {
     console.log('🎫 load イベント発生');
-    if (!isInitialized) {
+    if (!isInitialized && !window.ticketListInitializationComplete) {
+      console.log('🔄 バックアップ初期化を実行します');
       setTimeout(startInitialization, 200);
     }
   });
@@ -612,3 +649,4 @@ if (window.ticketListScriptLoaded) {
   
 })();
 </script>
+
