@@ -32,7 +32,7 @@
                 </div>
                 <div class="col-md-6">
                   <p class="mb-1"><strong>登録日:</strong> <%= l(@user.created_at.to_date) %></p>
-                  <p class="mb-1"><strong>残チケット:</strong> <%= @user.active_ticket_count %> 回</p>
+                  <p class="mb-1" id="remainingTicketCount"><strong>残チケット:</strong> <%= @user.active_ticket_count %> 回</p>
                   <p class="mb-1"><strong>残額合計:</strong> <%= number_to_currency(@user.remaining_ticket_value, unit: "¥", precision: 0) %></p>
                   
                   <!-- デバッグ情報 -->
@@ -561,44 +561,64 @@ function deleteTicket(ticketId, ticketRow) {
 
   // チケット数と残額を更新
   function updateTicketCounts() {
-    // 残りチケット数を再計算
-    const remainingTickets = document.querySelectorAll('tbody tr').length;
-    const remainingCount = Array.from(document.querySelectorAll('tbody tr')).reduce((total, row) => {
-      const badge = row.querySelector('td:nth-child(2) .badge');
-      if (badge) {
-        const count = parseInt(badge.textContent.split('/')[0].trim());
-        return total + (isNaN(count) ? 0 : count);
+    try {
+      console.log('🔄 チケット数更新開始');
+      
+      // 残りチケット数を再計算
+      const remainingTickets = document.querySelectorAll('tbody tr').length;
+      const remainingCount = Array.from(document.querySelectorAll('tbody tr')).reduce((total, row) => {
+        const badge = row.querySelector('td:nth-child(2) .badge');
+        if (badge) {
+          const count = parseInt(badge.textContent.split('/')[0].trim());
+          return total + (isNaN(count) ? 0 : count);
+        }
+        return total;
+      }, 0);
+      
+      console.log(`📊 計算結果: 残りチケット数=${remainingTickets}, 残り回数合計=${remainingCount}`);
+      
+      // 表示を更新 - IDを使用して確実に要素を選択
+      const ticketCountElement = document.getElementById('remainingTicketCount');
+      if (ticketCountElement) {
+        const originalText = ticketCountElement.innerHTML;
+        const updatedText = originalText.replace(
+          /残チケット: \d+ 回/,
+          `残チケット: ${remainingCount} 回`
+        );
+        ticketCountElement.innerHTML = updatedText;
+        console.log('✅ 残りチケット数表示を更新しました');
+      } else {
+        console.warn('⚠️ 残りチケット数表示要素が見つかりません');
       }
-      return total;
-    }, 0);
-    
-    // 表示を更新
-    const ticketCountElement = document.querySelector('p:contains("残チケット:")');
-    if (ticketCountElement) {
-      ticketCountElement.innerHTML = ticketCountElement.innerHTML.replace(
-        /残チケット: \d+ 回/,
-        `残チケット: ${remainingCount} 回`
-      );
-    }
-    
-    // デバッグ情報も更新
-    const debugElement = document.querySelector('.bg-light.border.rounded');
-    if (debugElement) {
-      const totalTicketsElement = debugElement.querySelector('small');
-      if (totalTicketsElement) {
-        totalTicketsElement.innerHTML = totalTicketsElement.innerHTML.replace(
-          /総チケット数: \d+/,
-          `総チケット数: ${remainingTickets}`
-        );
-        totalTicketsElement.innerHTML = totalTicketsElement.innerHTML.replace(
-          /有効チケット数: \d+/,
-          `有効チケット数: ${remainingTickets}`
-        );
-        totalTicketsElement.innerHTML = totalTicketsElement.innerHTML.replace(
-          /残り回数合計: \d+/,
-          `残り回数合計: ${remainingCount}`
-        );
+      
+      // デバッグ情報も更新
+      const debugElement = document.querySelector('.bg-light.border.rounded');
+      if (debugElement) {
+        const totalTicketsElement = debugElement.querySelector('small');
+        if (totalTicketsElement) {
+          totalTicketsElement.innerHTML = totalTicketsElement.innerHTML.replace(
+            /総チケット数: \d+/,
+            `総チケット数: ${remainingTickets}`
+          );
+          totalTicketsElement.innerHTML = totalTicketsElement.innerHTML.replace(
+            /有効チケット数: \d+/,
+            `有効チケット数: ${remainingTickets}`
+          );
+          totalTicketsElement.innerHTML = totalTicketsElement.innerHTML.replace(
+            /残り回数合計: \d+/,
+            `残り回数合計: ${remainingCount}`
+          );
+          console.log('✅ デバッグ情報を更新しました');
+        } else {
+          console.warn('⚠️ デバッグ情報要素が見つかりません');
+        }
+      } else {
+        console.warn('⚠️ デバッグ情報コンテナが見つかりません');
       }
+      
+      console.log('🔄 チケット数更新完了');
+    } catch (error) {
+      console.error('❌ チケット数更新中にエラーが発生しました:', error);
     }
   }
 
