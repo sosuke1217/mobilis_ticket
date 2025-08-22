@@ -574,14 +574,44 @@ function handleTicketDelete(e) {
         'data-ticket-id': deleteBtn.getAttribute('data-ticket-id'),
         'data-ticket-name': deleteBtn.getAttribute('data-ticket-name')
       },
-      innerHTML: deleteBtn.innerHTML
+      innerHTML: deleteBtn.innerHTML,
+      outerHTML: deleteBtn.outerHTML,
+      dataset: deleteBtn.dataset,
+      attributes: Array.from(deleteBtn.attributes).map(attr => ({
+        name: attr.name,
+        value: attr.value
+      }))
     });
     
+    // 属性値の取得を試行
     const ticketId = deleteBtn.getAttribute('data-ticket-id');
     const ticketName = deleteBtn.getAttribute('data-ticket-name');
     
+    console.log('🔍 属性値の取得結果:', {
+      ticketId: ticketId,
+      ticketName: ticketName,
+      ticketIdType: typeof ticketId,
+      ticketNameType: typeof ticketName,
+      ticketIdTruthy: !!ticketId,
+      ticketNameTruthy: !!ticketName
+    });
+    
     if (!ticketId || !ticketName) {
       console.error('❌ 削除ボタンに必要な属性が設定されていません:', { ticketId, ticketName });
+      
+      // 代替方法で属性値を取得してみる
+      console.log('🔄 代替方法で属性値を取得を試行...');
+      
+      // dataset経由で取得
+      const datasetTicketId = deleteBtn.dataset.ticketId;
+      const datasetTicketName = deleteBtn.dataset.ticketName;
+      console.log('🔍 dataset経由の取得結果:', { datasetTicketId, datasetTicketName });
+      
+      // 直接属性アクセスで取得
+      const directTicketId = deleteBtn['data-ticket-id'];
+      const directTicketName = deleteBtn['data-ticket-name'];
+      console.log('🔍 直接属性アクセスの取得結果:', { directTicketId, directTicketName });
+      
       return;
     }
     
@@ -1116,65 +1146,4 @@ function deleteTicket(ticketId, ticketRow) {
     
     // 即座に背景をクリーンアップ
     const backdrops = document.querySelectorAll('.modal-backdrop');
-    console.log(`📊 発見された背景要素: ${backdrops.length}個`);
-    
-    backdrops.forEach((backdrop, index) => {
-      console.log(`🗑️ 背景要素${index + 1}を削除中...`);
-      backdrop.style.opacity = '0';
-      backdrop.style.transition = 'opacity 0.1s ease';
-      
-      // 即座に削除を試行
-      if (backdrop.parentNode) {
-        backdrop.parentNode.removeChild(backdrop);
-        console.log(`✅ 背景要素${index + 1}を削除完了`);
-      }
-    });
-    
-    // bodyの状態を即座にリセット
-    document.body.classList.remove('modal-open');
-    document.body.style.overflow = '';
-    document.body.style.paddingRight = '';
-    console.log('✅ bodyの状態をリセット完了');
-    
-    // 背景を明るくする
-    document.body.style.backgroundColor = '';
-    document.body.style.background = '';
-    console.log('✅ 背景を明るくしました');
-    
-    // 強制的なクリーンアップを複数回実行
-    const cleanupAttempts = [100, 300, 500, 1000];
-    
-    cleanupAttempts.forEach((delay, attempt) => {
-      setTimeout(() => {
-        console.log(`🔄 クリーンアップ試行${attempt + 1} (${delay}ms後)`);
-        
-        // 残っている背景要素を強制的に削除
-        const remainingBackdrops = document.querySelectorAll('.modal-backdrop');
-        if (remainingBackdrops.length > 0) {
-          console.log(`📊 残りの背景要素: ${remainingBackdrops.length}個`);
-          
-          remainingBackdrops.forEach((backdrop, index) => {
-            console.log(`🗑️ 残り背景要素${index + 1}を強制削除中...`);
-            if (backdrop.parentNode) {
-              backdrop.parentNode.removeChild(backdrop);
-              console.log(`✅ 残り背景要素${index + 1}を強制削除完了`);
-            }
-          });
-        }
-        
-        // 再度bodyの状態を確認
-        document.body.classList.remove('modal-open');
-        document.body.style.overflow = '';
-        document.body.style.paddingRight = '';
-        document.body.style.backgroundColor = '';
-        document.body.style.background = '';
-        
-        // 最後の試行でログ出力
-        if (attempt === cleanupAttempts.length - 1) {
-          const finalBackdrops = document.querySelectorAll('.modal-backdrop');
-          console.log(`🎯 最終クリーンアップ完了。残り背景要素: ${finalBackdrops.length}個`);
-        }
-      }, delay);
-    });
-  }
-</script> 
+    console.log(`
