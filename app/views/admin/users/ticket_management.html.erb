@@ -1,13 +1,13 @@
 <style>
   /* 削除モーダルのカスタムスタイル */
   #deleteTicketModal .modal-content {
-    max-height: 500px;
+    max-height: 600px;
     overflow: hidden;
   }
   
   #deleteTicketModal .modal-body {
     overflow: hidden;
-    padding: 1.5rem 1.5rem 1rem 1.5rem;
+    padding: 1.5rem 1.5rem 1.5rem 1.5rem;
   }
   
   #deleteTicketModal .modal-footer {
@@ -604,7 +604,7 @@ function deleteTicket(ticketId, ticketRow) {
               <p class="text-muted">保有チケットがありません</p>
             </td>
           </tr>
-        `;
+        `
       }
       
       // 成功メッセージを3秒後に自動で消す
@@ -698,7 +698,7 @@ function deleteTicket(ticketId, ticketRow) {
     `;
     tbody.appendChild(newRow);
   }
-
+  
   // チケット数と残額を更新
   function updateTicketCounts() {
     try {
@@ -776,7 +776,7 @@ function deleteTicket(ticketId, ticketRow) {
       console.error('❌ チケット数更新中にエラーが発生しました:', error);
     }
   }
-
+  
   // ページ読み込み時に初期化を実行
   document.addEventListener('DOMContentLoaded', initializeTicketManagement);
   
@@ -836,4 +836,4 @@ function deleteTicket(ticketId, ticketRow) {
       document.body.style.paddingRight = '';
     }, 300);
   }
-</script> 
+</script>
