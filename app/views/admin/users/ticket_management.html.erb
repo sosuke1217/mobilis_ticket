@@ -1,7 +1,7 @@
 <style>
   /* 削除モーダルのカスタムスタイル */
   #deleteTicketModal .modal-content {
-    max-height: 450px;
+    max-height: 500px;
     overflow: hidden;
   }
   
@@ -12,7 +12,7 @@
   
   #deleteTicketModal .modal-footer {
     border-top: 1px solid #dee2e6;
-    padding: 0.75rem 1.5rem;
+    padding: 1rem 1.5rem;
     background-color: #f8f9fa;
     margin-top: 0;
   }
@@ -544,14 +544,9 @@ function handleTicketDelete(e) {
     deleteTicket(ticketId, ticketRow);
     deleteModal.hide();
     
-    // モーダルが完全に閉じた後に背景を明るくする
+    // モーダルが完全に閉じた後に背景をクリーンアップ
     setTimeout(() => {
-      const backdrop = document.querySelector('.modal-backdrop');
-      if (backdrop) {
-        backdrop.style.opacity = '0';
-        backdrop.style.transition = 'opacity 0.3s ease';
-      }
-      document.body.classList.remove('modal-open');
+      cleanupModalBackground();
     }, 300);
   };
 }
@@ -799,6 +794,30 @@ function deleteTicket(ticketId, ticketRow) {
     initializeTicketManagement();
   }
   
+  // ページ読み込み直後の背景クリーンアップ
+  function cleanupPageBackground() {
+    // 既存のモーダル背景をクリーンアップ
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    backdrops.forEach(backdrop => {
+      backdrop.style.opacity = '0';
+      backdrop.style.transition = 'opacity 0.3s ease';
+      setTimeout(() => {
+        if (backdrop.parentNode) {
+          backdrop.parentNode.removeChild(backdrop);
+        }
+      }, 300);
+    });
+    
+    // modal-openクラスを削除
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+  }
+  
+  // ページ読み込み時に背景をクリーンアップ
+  window.addEventListener('load', cleanupPageBackground);
+  document.addEventListener('DOMContentLoaded', cleanupPageBackground);
+  
   // モーダル背景のクリーンアップ関数
   function cleanupModalBackground() {
     setTimeout(() => {
@@ -806,8 +825,15 @@ function deleteTicket(ticketId, ticketRow) {
       if (backdrop) {
         backdrop.style.opacity = '0';
         backdrop.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => {
+          if (backdrop.parentNode) {
+            backdrop.parentNode.removeChild(backdrop);
+          }
+        }, 300);
       }
       document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
     }, 300);
   }
 </script> 
