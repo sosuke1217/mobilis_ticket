@@ -113,6 +113,14 @@
   function initializeTicketList() {
     console.log('🎫 チケット一覧ページ初期化開始');
     
+    // ページ全体のHTMLを確認
+    console.log('🔍 ページ全体のHTML確認:', {
+      bodyChildren: document.body.children.length,
+      bodyHTML: document.body.innerHTML.substring(0, 1000) + '...',
+      hasModal: document.body.innerHTML.includes('deleteTicketModal'),
+      modalElements: document.querySelectorAll('[id*="delete"]')
+    });
+    
     // モーダル要素の存在確認
     const deleteTicketModal = document.getElementById('deleteTicketModal');
     const deleteTicketName = document.getElementById('deleteTicketName');
@@ -127,11 +135,30 @@
       modalExists: !!deleteTicketModal,
       nameElementExists: !!deleteTicketName,
       userElementExists: !!deleteTicketUser,
-      remainingElementExists: !!deleteTicketRemaining
+      remainingElementExists: !!deleteTicketRemaining,
+      modalHTML: deleteTicketModal ? deleteTicketModal.outerHTML.substring(0, 200) + '...' : 'N/A'
     });
     
+    // モーダル要素が見つからない場合の詳細調査
     if (!deleteTicketModal || !deleteTicketName || !deleteTicketUser || !deleteTicketRemaining) {
-      console.error('❌ 必要なモーダル要素が見つかりません。ページの再読み込みが必要かもしれません。');
+      console.error('❌ 必要なモーダル要素が見つかりません。詳細調査を実行します...');
+      
+      // 全要素のIDを確認
+      const allElements = document.querySelectorAll('*[id]');
+      const modalRelatedIds = Array.from(allElements)
+        .filter(el => el.id.includes('delete'))
+        .map(el => ({ id: el.id, tagName: el.tagName, className: el.className }));
+      
+      console.log('🔍 削除関連のIDを持つ要素:', modalRelatedIds);
+      
+      // モーダル関連の要素を検索
+      const modalElements = document.querySelectorAll('.modal');
+      console.log('🔍 モーダル要素:', Array.from(modalElements).map(el => ({
+        id: el.id,
+        className: el.className,
+        visible: el.offsetParent !== null
+      })));
+      
       return false;
     }
     
@@ -154,23 +181,36 @@
       if (!deleteTicketModal || !deleteTicketName || !deleteTicketUser || !deleteTicketRemaining) {
         console.warn('⚠️ モーダル要素が見つかりません。再試行を実行します...');
         
-        // 少し待ってから再試行
-        setTimeout(() => {
+        // 複数回の再試行を実行
+        let retryCount = 0;
+        const maxRetries = 5;
+        
+        const attemptRetry = () => {
+          retryCount++;
+          console.log(`🔄 再試行 ${retryCount}/${maxRetries} を実行中...`);
+          
           deleteTicketModal = document.getElementById('deleteTicketModal');
           deleteTicketName = document.getElementById('deleteTicketName');
           deleteTicketUser = document.getElementById('deleteTicketUser');
           deleteTicketRemaining = document.getElementById('deleteTicketRemaining');
           
-          if (!deleteTicketModal || !deleteTicketName || !deleteTicketUser || !deleteTicketRemaining) {
-            console.error('❌ 再試行後もモーダル要素が見つかりません');
-            alert('削除確認モーダルの準備に失敗しました。ページを再読み込みしてください。');
+          if (deleteTicketModal && deleteTicketName && deleteTicketUser && deleteTicketRemaining) {
+            console.log('✅ 再試行成功！モーダルを表示します');
+            showDeleteModal(ticketId, ticketName, userName);
             return;
           }
           
-          // 再試行成功後、モーダルを表示
-          showDeleteModal(ticketId, ticketName, userName);
-        }, 100);
+          if (retryCount < maxRetries) {
+            console.log(`⏳ ${retryCount * 200}ms 後に再試行します...`);
+            setTimeout(attemptRetry, retryCount * 200);
+          } else {
+            console.error('❌ 最大再試行回数に達しました。モーダル要素が見つかりません');
+            alert('削除確認モーダルの準備に失敗しました。ページを再読み込みしてください。');
+          }
+        };
         
+        // 最初の再試行を開始
+        setTimeout(attemptRetry, 200);
         return;
       }
       
@@ -429,7 +469,7 @@
     document.addEventListener('DOMContentLoaded', function() {
       console.log('🎫 DOMContentLoaded イベント発生');
       // 少し遅れて初期化を実行（DOMの完全な準備を待つ）
-      setTimeout(startInitialization, 50);
+      setTimeout(startInitialization, 100);
     });
   } else {
     console.log('🎫 readyState 既に完了 - 即座に初期化');
@@ -439,12 +479,21 @@
   // ページ読み込み完了後の初期化も実行
   window.addEventListener('load', function() {
     console.log('🎫 load イベント発生');
-    setTimeout(startInitialization, 100);
+    setTimeout(startInitialization, 200);
   });
   
   // 追加の遅延初期化（Turboなどの問題に対応）
-  setTimeout(startInitialization, 100);
-  setTimeout(startInitialization, 500);
+  setTimeout(startInitialization, 300);
+  setTimeout(startInitialization, 800);
+  setTimeout(startInitialization, 1500);
+  
+  // ページが完全に表示された後の初期化
+  document.addEventListener('readystatechange', function() {
+    if (document.readyState === 'complete') {
+      console.log('🎫 readystatechange: complete イベント発生');
+      setTimeout(startInitialization, 500);
+    }
+  });
   
   // グローバル関数として公開（必要に応じて）
   window.cleanupModalBackground = cleanupModalBackground;
