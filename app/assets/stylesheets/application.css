@@ -34,6 +34,16 @@ select {
   margin-right: 0 !important;
 }
 
+/* ボタンのテキストは中央寄せに */
+button,
+.btn,
+input[type="submit"],
+input[type="button"],
+input[type="reset"] {
+  text-align: center !important;
+  text-align-last: center !important;
+}
+
 /* プレースホルダーのスタイル - 入力フィールドのみ */
 input::placeholder,
 textarea::placeholder {
