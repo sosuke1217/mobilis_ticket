@@ -603,25 +603,24 @@
             </div>
           </div>
 
-          <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" id="confirmDeletionCheck">
-            <label class="form-check-label" for="confirmDeletionCheck">
-              <strong>上記の内容を理解し、削除を実行することに同意します</strong>
-            </label>
+          <div class="modal-footer" style="width: 80%; margin: 0 auto;">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="confirmDeletionCheck">
+              <label class="form-check-label" for="confirmDeletionCheck">
+                削除を実行することを確認します
+              </label>
+            </div>
+            <div class="mt-3">
+              <label for="confirmationText" class="form-label">確認のため、ユーザー名を入力してください:</label>
+              <input type="text" class="form-control" id="confirmationText" placeholder="ユーザー名を入力">
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-3">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+              <button type="button" class="btn btn-danger" id="confirmDeleteBtn" disabled>
+                <i class="fas fa-trash me-1"></i>削除を実行
+              </button>
+            </div>
           </div>
-
-          <div class="mb-3">
-            <label for="confirmationText" class="form-label">
-              確認のため、ユーザー名「<span id="confirmUserName"></span>」を入力してください：
-            </label>
-            <input type="text" class="form-control" id="confirmationText" placeholder="ユーザー名を正確に入力">
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
-          <button type="button" class="btn btn-danger" id="confirmDeleteBtn" disabled>
-            <i class="fas fa-trash me-1"></i>削除を実行
-          </button>
         </div>
       </div>
     </div>
