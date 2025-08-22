@@ -84,19 +84,11 @@
           
           <!-- 右側のメニュー -->
           <ul class="navbar-nav">
-            <!-- ユーザー情報ドロップダウン -->
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="fas fa-user-circle me-1"></i>
-                <%= current_admin_user&.email || "管理者" %>
-              </a>
-              <ul class="dropdown-menu dropdown-menu-end">
-                <li>
-                  <button type="button" class="dropdown-item" onclick="logout()">
-                    <i class="fas fa-sign-out-alt me-2"></i>ログアウト
-                  </button>
-                </li>
-              </ul>
+            <!-- ログアウトボタン -->
+            <li class="nav-item">
+              <button type="button" class="nav-link btn btn-link text-light border-0 bg-transparent" onclick="logout()">
+                <i class="fas fa-sign-out-alt me-1"></i>ログアウト
+              </button>
             </li>
           </ul>
         </div>
