@@ -245,6 +245,93 @@ class Admin::UsersController < ApplicationController
     end
   end
 
+  # LINE連携を作成
+  def create_line_link
+    line_user_id = params[:line_user_id]&.strip
+    
+    unless line_user_id.present?
+      respond_to do |format|
+        format.html { redirect_to admin_user_path(@user), alert: 'LINEユーザーIDが入力されていません' }
+        format.json { render json: { success: false, error: 'LINEユーザーIDが入力されていません' }, status: :unprocessable_entity }
+      end
+      return
+    end
+
+    # 既に他のユーザーが連携しているかチェック
+    existing_user = User.find_by(line_user_id: line_user_id)
+    if existing_user && existing_user != @user
+      respond_to do |format|
+        format.html { redirect_to admin_user_path(@user), alert: "このLINEユーザーIDは既に他のユーザー（#{existing_user.name}）と連携されています" }
+        format.json { render json: { success: false, error: "このLINEユーザーIDは既に他のユーザー（#{existing_user.name}）と連携されています" }, status: :unprocessable_entity }
+      end
+      return
+    end
+
+    begin
+      # LINE連携を作成
+      @user.update!(line_user_id: line_user_id)
+      
+      # LINEからプロフィール情報を取得して更新
+      if ENV['LINE_CHANNEL_SECRET'].present? && ENV['LINE_CHANNEL_TOKEN'].present?
+        linebot_controller = LinebotController.new
+        linebot_controller.send(:update_user_profile, @user, line_user_id)
+      end
+      
+      Rails.logger.info "LINE連携作成成功: ユーザーID #{@user.id}, LINE ID #{line_user_id}"
+      
+      respond_to do |format|
+        format.html { redirect_to admin_user_path(@user), notice: 'LINE連携を作成しました' }
+        format.json { render json: { success: true, message: 'LINE連携を作成しました' } }
+      end
+    rescue => e
+      Rails.logger.error "LINE連携作成失敗: ユーザーID #{@user.id} - #{e.class}: #{e.message}"
+      
+      respond_to do |format|
+        format.html { redirect_to admin_user_path(@user), alert: "LINE連携の作成に失敗しました: #{e.message}" }
+        format.json { render json: { success: false, error: e.message }, status: :unprocessable_entity }
+      end
+    end
+  end
+
+  # LINE連携を削除
+  def remove_line_link
+    unless @user.line_user_id.present?
+      respond_to do |format|
+        format.html { redirect_to admin_user_path(@user), alert: 'LINE連携されていないユーザーです' }
+        format.json { render json: { success: false, error: 'LINE連携されていないユーザーです' }, status: :unprocessable_entity }
+      end
+      return
+    end
+
+    begin
+      line_user_id = @user.line_user_id
+      
+      # LINE連携を削除（line_user_idをnilに設定）
+      @user.update!(line_user_id: nil)
+      
+      # LINEプロフィール情報もクリア
+      @user.update!(
+        display_name: nil,
+        status_message: nil,
+        language: nil
+      )
+      
+      Rails.logger.info "LINE連携削除成功: ユーザーID #{@user.id}, LINE ID #{line_user_id}"
+      
+      respond_to do |format|
+        format.html { redirect_to admin_user_path(@user), notice: 'LINE連携を削除しました' }
+        format.json { render json: { success: true, message: 'LINE連携を削除しました' } }
+      end
+    rescue => e
+      Rails.logger.error "LINE連携削除失敗: ユーザーID #{@user.id} - #{e.class}: #{e.message}"
+      
+      respond_to do |format|
+        format.html { redirect_to admin_user_path(@user), alert: "LINE連携の削除に失敗しました: #{e.message}" }
+        format.json { render json: { success: false, error: e.message }, status: :unprocessable_entity }
+      end
+    end
+  end
+
   private
 
   def set_user

@@ -18,17 +18,109 @@
     <strong>LINE連携状況:</strong>
     <% if @user.line_user_id.present? %>
       <span class="badge bg-success"><i class="fas fa-link me-1"></i>連携済み</span>
-      <button type="button" class="btn btn-sm btn-outline-primary ms-2" onclick="updateLineProfile()">
-        LINE情報を更新
-      </button>
+      <div class="btn-group ms-2" role="group">
+        <%= link_to "LINE情報を更新", update_line_profile_admin_user_path(@user), 
+            method: :patch, 
+            class: "btn btn-sm btn-outline-primary",
+            data: { confirm: "LINEから最新のユーザー情報を取得しますか？" } %>
+        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeLineLink()">
+          <i class="fas fa-unlink me-1"></i>連携解除
+        </button>
+      </div>
     <% else %>
       <span class="badge bg-danger"><i class="fas fa-unlink me-1"></i>未連携</span>
+      <button type="button" class="btn btn-sm btn-outline-success ms-2" onclick="showLineLinkForm()">
+        <i class="fas fa-link me-1"></i>LINE連携
+      </button>
     <% end %>
   </p>
 
+  <!-- LINE連携フォーム（モーダル） -->
+  <div class="modal fade" id="lineLinkModal" tabindex="-1" aria-labelledby="lineLinkModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="lineLinkModalLabel">LINE連携</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="lineLinkForm">
+            <div class="mb-3">
+              <label for="lineUserId" class="form-label">LINEユーザーID</label>
+              <input type="text" class="form-control" id="lineUserId" name="line_user_id" 
+                     placeholder="例: U1234567890abcdef" required>
+              <div class="form-text">LINEボットから取得したユーザーIDを入力してください</div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+          <button type="button" class="btn btn-primary" onclick="createLineLink()">連携作成</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
-    function updateLineProfile() {
-      if (confirm('LINEから最新のユーザー情報を取得しますか？')) {
+    function showLineLinkForm() {
+      const modal = new bootstrap.Modal(document.getElementById('lineLinkModal'));
+      modal.show();
+    }
+
+    function createLineLink() {
+      const lineUserId = document.getElementById('lineUserId').value.trim();
+      if (!lineUserId) {
+        alert('LINEユーザーIDを入力してください');
+        return;
+      }
+
+      const userId = '<%= @user.id %>';
+      const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      
+      if (!token) {
+        alert('セキュリティトークンが見つかりません。ページを再読み込みしてください。');
+        return;
+      }
+
+      // ボタンを無効化
+      const button = event.target;
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = '連携中...';
+
+      fetch(`/admin/users/${userId}/create_line_link`, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-Token': token,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ line_user_id: lineUserId })
+      })
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+      })
+      .then(data => {
+        alert('LINE連携を作成しました');
+        window.location.reload();
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert(`LINE連携の作成に失敗しました: ${error.message}`);
+      })
+      .finally(() => {
+        // ボタンを元に戻す
+        button.disabled = false;
+        button.textContent = originalText;
+      });
+    }
+
+    function removeLineLink() {
+      if (confirm('LINE連携を解除しますか？\n\n注意: 連携解除後もユーザー情報は保持されますが、LINEからの自動更新は行われなくなります。')) {
         const userId = '<%= @user.id %>';
         const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
         
@@ -36,15 +128,15 @@
           alert('セキュリティトークンが見つかりません。ページを再読み込みしてください。');
           return;
         }
-        
+
         // ボタンを無効化
         const button = event.target;
         const originalText = button.textContent;
         button.disabled = true;
-        button.textContent = '更新中...';
-        
-        fetch(`/admin/users/${userId}/update_line_profile`, {
-          method: 'PATCH',
+        button.textContent = '解除中...';
+
+        fetch(`/admin/users/${userId}/remove_line_link`, {
+          method: 'DELETE',
           headers: {
             'X-CSRF-Token': token,
             'Content-Type': 'application/json',
@@ -59,12 +151,12 @@
           }
         })
         .then(data => {
-          alert('LINEユーザー情報を更新しました');
+          alert('LINE連携を解除しました');
           window.location.reload();
         })
         .catch(error => {
           console.error('Error:', error);
-          alert(`LINE情報の更新に失敗しました: ${error.message}`);
+          alert(`LINE連携の解除に失敗しました: ${error.message}`);
         })
         .finally(() => {
           // ボタンを元に戻す
