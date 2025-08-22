@@ -118,4 +118,39 @@
   .form-control:focus + .input-group-text {
     border-color: #ffc107;
   }
+  
+  /* プレースホルダーの位置を強制的に左寄せに固定 */
+  .form-control::placeholder {
+    text-align: left !important;
+  }
+  
+  .form-control:focus::placeholder {
+    text-align: left !important;
+  }
+  
+  /* 入力フィールドのテキストも左寄せに固定 */
+  .form-control {
+    text-align: left !important;
+  }
+  
+  .form-control:focus {
+    text-align: left !important;
+  }
+  
+  /* より強力なセレクターで確実に左寄せを固定 */
+  input[type="email"]::placeholder {
+    text-align: left !important;
+  }
+  
+  input[type="email"]:focus::placeholder {
+    text-align: left !important;
+  }
+  
+  input[type="email"] {
+    text-align: left !important;
+  }
+  
+  input[type="email"]:focus {
+    text-align: left !important;
+  }
 </style>
