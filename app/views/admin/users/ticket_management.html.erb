@@ -187,41 +187,41 @@
                   <td>
                     <strong><%= ticket.ticket_template.name %></strong>
                     <br><small class="text-muted">¥<%= number_with_delimiter(ticket.ticket_template.price) %></small>
-                  </td>
-                  <td>
+                </td>
+                <td>
                     <span class="badge bg-primary">
-                      <%= ticket.remaining_count %> / <%= ticket.total_count %>
-                    </span>
-                  </td>
+                    <%= ticket.remaining_count %> / <%= ticket.total_count %>
+                  </span>
+                </td>
                   <td><%= ticket.purchase_date&.strftime('%Y/%m/%d') %></td>
-                  <td>
+                <td>
                     <%= ticket.expiry_date&.strftime('%Y/%m/%d') || '無期限' %>
                     <% if ticket.expiry_date && ticket.expiry_date < Date.current %>
                       <span class="badge bg-danger">期限切れ</span>
-                    <% end %>
-                  </td>
-                  <td>
-                    <% if ticket.expiry_date && ticket.expiry_date < Date.current %>
-                      <span class="badge bg-danger">期限切れ</span>
-                    <% elsif ticket.remaining_count <= 0 %>
-                      <span class="badge bg-secondary">使用済み</span>
-                    <% elsif ticket.remaining_count <= 2 %>
-                      <span class="badge bg-warning">残り少ない</span>
-                    <% else %>
-                      <span class="badge bg-success">利用可能</span>
-                    <% end %>
-                  </td>
-                  <td>
-                    <% if ticket.remaining_count > 0 && (!ticket.expiry_date || ticket.expiry_date >= Date.current) %>
-                      <button type="button" 
-                              class="btn btn-sm btn-outline-primary use-ticket-btn"
-                              data-ticket-id="<%= ticket.id %>"
-                              data-ticket-name="<%= ticket.ticket_template.name %>">
-                        使用
-                      </button>
-                    <% else %>
-                      <span class="text-muted">使用不可</span>
-                    <% end %>
+                  <% end %>
+                </td>
+                <td>
+                  <% if ticket.expiry_date && ticket.expiry_date < Date.current %>
+                    <span class="badge bg-danger">期限切れ</span>
+                  <% elsif ticket.remaining_count <= 0 %>
+                    <span class="badge bg-secondary">使用済み</span>
+                  <% elsif ticket.remaining_count <= 2 %>
+                    <span class="badge bg-warning">残り少ない</span>
+                  <% else %>
+                    <span class="badge bg-success">利用可能</span>
+                  <% end %>
+                </td>
+                <td>
+                  <% if ticket.remaining_count > 0 && (!ticket.expiry_date || ticket.expiry_date >= Date.current) %>
+                    <button type="button" 
+                            class="btn btn-sm btn-outline-primary use-ticket-btn"
+                            data-ticket-id="<%= ticket.id %>"
+                            data-ticket-name="<%= ticket.ticket_template.name %>">
+                      使用
+                    </button>
+                  <% else %>
+                    <span class="text-muted">使用不可</span>
+                  <% end %>
                     
                     <!-- 削除ボタン -->
                     <button type="button" 
@@ -230,8 +230,8 @@
                             data-ticket-name="<%= ticket.ticket_template.name %>">
                       <i class="fas fa-trash"></i>
                     </button>
-                  </td>
-                </tr>
+                </td>
+              </tr>
               <% end %>
             <% end %>
           </tbody>
@@ -239,9 +239,44 @@
       </div>
     </div>
   </div>
-</div>
+      </div>
 
-<!-- チケット削除確認モーダルは不要になったため削除 -->
+<!-- チケット削除確認モーダル -->
+<div class="modal fade" id="deleteTicketModal" tabindex="-1" aria-labelledby="deleteTicketModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="deleteTicketModalLabel">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          チケット削除の確認
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center">
+          <i class="fas fa-trash-alt fa-3x text-danger mb-3"></i>
+          <p class="mb-2">以下のチケットを削除しますか？</p>
+          <div class="alert alert-warning">
+            <strong>チケット名:</strong> <span id="deleteTicketName"></span><br>
+            <strong>残り回数:</strong> <span id="deleteTicketRemaining"></span> 回
+          </div>
+          <p class="text-muted small mt-2 mb-0">
+            <i class="fas fa-info-circle me-1"></i>
+            この操作は取り消すことができません
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="cleanupModalBackground()">
+          <i class="fas fa-times me-1"></i>キャンセル
+        </button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteTicketBtn">
+          <i class="fas fa-trash me-1"></i>削除する
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 // 初期化関数
@@ -427,60 +462,60 @@ function handleTicketUse(e) {
     return;
   }
   
-  const ticketId = e.target.getAttribute('data-ticket-id');
-  const ticketName = e.target.getAttribute('data-ticket-name');
+      const ticketId = e.target.getAttribute('data-ticket-id');
+      const ticketName = e.target.getAttribute('data-ticket-name');
   
   console.log('🎫 チケット使用処理開始:', { ticketId, ticketName });
-  
-  if (!confirm(`「${ticketName}」を1回使用しますか？`)) {
+      
+      if (!confirm(`「${ticketName}」を1回使用しますか？`)) {
     console.log('❌ ユーザーがチケット使用をキャンセル');
-    return;
-  }
-  
-  // ボタンを無効化
-  const originalText = e.target.innerHTML;
-  e.target.disabled = true;
-  e.target.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        return;
+      }
+      
+      // ボタンを無効化
+      const originalText = e.target.innerHTML;
+      e.target.disabled = true;
+      e.target.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
   
   console.log('🔄 チケット使用API呼び出し中...');
-  
-  // CSRF トークンを取得
-  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-  
-  // チケット使用APIを呼び出し
-  fetch(`/admin/tickets/${ticketId}/use`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'X-CSRF-Token': csrfToken
-    }
-  })
-  .then(response => {
-    console.log('Response status:', response.status);
-    
-    if (!response.ok) {
-      return response.json().then(data => {
-        throw new Error(data.error || 'チケット使用に失敗しました');
-      });
-    }
-    return response.json();
-  })
-  .then(data => {
-    console.log('✅ Ticket used:', data);
-    
-    // 成功メッセージを表示
-    const alertDiv = document.createElement('div');
-    alertDiv.className = 'alert alert-success alert-dismissible fade show';
-    alertDiv.innerHTML = `
-      <i class="fas fa-check-circle me-2"></i>
-      チケットを使用しました
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    document.querySelector('.container-lg').insertBefore(alertDiv, document.querySelector('.card'));
-
+      
+      // CSRF トークンを取得
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      
+      // チケット使用APIを呼び出し
+      fetch(`/admin/tickets/${ticketId}/use`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-Token': csrfToken
+        }
+      })
+      .then(response => {
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+          return response.json().then(data => {
+            throw new Error(data.error || 'チケット使用に失敗しました');
+          });
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('✅ Ticket used:', data);
+        
+        // 成功メッセージを表示
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-success alert-dismissible fade show';
+        alertDiv.innerHTML = `
+          <i class="fas fa-check-circle me-2"></i>
+          チケットを使用しました
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.querySelector('.container-lg').insertBefore(alertDiv, document.querySelector('.card'));
+        
     // 成功メッセージを2秒後に自動で消す
-    setTimeout(() => {
+        setTimeout(() => {
       if (alertDiv && alertDiv.parentNode) {
         alertDiv.remove();
       }
@@ -491,9 +526,9 @@ function handleTicketUse(e) {
     
     // チケット使用後の表示を即座に更新
     updateTicketDisplayAfterUse(ticketId);
-  })
-  .catch(error => {
-    console.error('❌ Error using ticket:', error);
+      })
+      .catch(error => {
+        console.error('❌ Error using ticket:', error);
 
     // エラーメッセージを表示
     const alertDiv = document.createElement('div');
@@ -511,11 +546,11 @@ function handleTicketUse(e) {
         alertDiv.remove();
       }
     }, 5000);
-  })
-  .finally(() => {
-    // ボタンを元に戻す
-    e.target.disabled = false;
-    e.target.innerHTML = originalText;
+      })
+      .finally(() => {
+        // ボタンを元に戻す
+        e.target.disabled = false;
+        e.target.innerHTML = originalText;
     console.log('🔄 チケット使用処理完了');
   });
 }
@@ -526,116 +561,131 @@ function handleTicketDelete(e) {
   const ticketId = deleteBtn.getAttribute('data-ticket-id');
   const ticketName = deleteBtn.getAttribute('data-ticket-name');
   
-  console.log('🗑️ チケット削除処理開始:', { ticketId, ticketName });
-  
   // チケット行から残り回数を取得
   const ticketRow = deleteBtn.closest('tr');
-  const remainingCountElement = ticketRow.querySelector('td:nth-child(2) .badge');
-  const remainingCount = remainingCountElement ? parseInt(remainingCountElement.textContent.split('/')[0].trim()) : 0;
+  const remainingCount = ticketRow.querySelector('td:nth-child(2) .badge').textContent.split('/')[0].trim();
   
-  if (!confirm(`「${ticketName}」を削除しますか？\n残り回数: ${remainingCount}回`)) {
-    console.log('❌ ユーザーがチケット削除をキャンセル');
+  // モーダル要素の存在チェック
+  const deleteTicketName = document.getElementById('deleteTicketName');
+  const deleteTicketRemaining = document.getElementById('deleteTicketRemaining');
+  
+  if (!deleteTicketName || !deleteTicketRemaining) {
+    console.error('❌ 削除確認モーダルの要素が見つかりません');
+    alert('削除確認モーダルの準備に失敗しました');
     return;
   }
   
-  // ボタンを無効化
-  const originalText = deleteBtn.innerHTML;
-  deleteBtn.disabled = true;
-  deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+  // モーダルにデータを設定
+  deleteTicketName.textContent = ticketName;
+  deleteTicketRemaining.textContent = remainingCount;
   
-  console.log('🔄 チケット削除API呼び出し中...');
+  // モーダルを表示
+  const deleteModal = new bootstrap.Modal(document.getElementById('deleteTicketModal'));
+  deleteModal.show();
   
-  // CSRF トークンを取得
-  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-  
-  // チケット削除APIを呼び出し
-  fetch(`/admin/tickets/${ticketId}`, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'X-CSRF-Token': csrfToken
-    }
-  })
-  .then(response => {
-    console.log('Response status:', response.status);
+  // 削除実行ボタンのイベントリスナー
+  document.getElementById('confirmDeleteTicketBtn').onclick = function() {
+    deleteTicket(ticketId, ticketRow);
+    deleteModal.hide();
     
-    if (!response.ok) {
-      return response.json().then(data => {
-        throw new Error(data.error || 'チケット削除に失敗しました');
-      });
-    }
-    return response.json();
-  })
-  .then(data => {
-    console.log('✅ Ticket deleted:', data);
-    
-    // 成功メッセージを表示
-    const alertDiv = document.createElement('div');
-    alertDiv.className = 'alert alert-success alert-dismissible fade show';
-    alertDiv.innerHTML = `
-      <i class="fas fa-check-circle me-2"></i>
-      チケットを削除しました
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    document.querySelector('.container-lg').insertBefore(alertDiv, document.querySelector('.card'));
-
-    // 成功メッセージを2秒後に自動で消す
-    setTimeout(() => {
-      if (alertDiv && alertDiv.parentNode) {
-        alertDiv.remove();
-      }
-    }, 2000);
-
-    // チケット行を即座に削除
-    ticketRow.remove();
-    console.log('✅ チケット行を削除しました');
-    
-    // チケットが0件になった場合の処理
-    const tbody = document.querySelector('tbody');
-    if (tbody.querySelectorAll('tr').length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="6" class="text-center py-4">
-            <i class="fas fa-ticket-alt fa-3x text-muted mb-3"></i>
-            <p class="text-muted">保有チケットがありません</p>
-          </td>
-        </tr>
-      `;
-      console.log('✅ 「保有チケットがありません」の表示を追加しました');
-    }
-    
-    // 残りチケット数と残額を即座に更新
-    updateTicketCounts();
-    console.log('🔄 チケット削除後の表示更新完了');
-  })
-  .catch(error => {
-    console.error('❌ Error deleting ticket:', error);
-
-    // エラーメッセージを表示
-    const alertDiv = document.createElement('div');
-    alertDiv.className = 'alert alert-danger alert-dismissible fade show';
-    alertDiv.innerHTML = `
-      <i class="fas fa-exclamation-triangle me-2"></i>
-      チケット削除エラー: ${error.message}
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    document.querySelector('.container-lg').insertBefore(alertDiv, document.querySelector('.card'));
-
-    // エラーメッセージを5秒後に自動で消す
-    setTimeout(() => {
-      if (alertDiv && alertDiv.parentNode) {
-        alertDiv.remove();
-      }
-    }, 5000);
-  })
-  .finally(() => {
-    // ボタンを元に戻す
-    deleteBtn.disabled = false;
-    deleteBtn.innerHTML = originalText;
-    console.log('🔄 チケット削除処理完了');
-  });
+    // 即座に背景をクリーンアップ
+    cleanupModalBackground();
+  };
 }
+
+// チケット削除実行
+function deleteTicket(ticketId, ticketRow) {
+    // 削除ボタンを無効化
+    const deleteBtn = ticketRow.querySelector('.delete-ticket-btn');
+    const originalText = deleteBtn.innerHTML;
+    deleteBtn.disabled = true;
+    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    
+    // CSRF トークンを取得
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    
+    // チケット削除APIを呼び出し
+    fetch(`/admin/tickets/${ticketId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRF-Token': csrfToken
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      return response;
+    })
+    .then(() => {
+      console.log('✅ Ticket deleted:', ticketId);
+      
+      // 成功メッセージを表示
+      const alertDiv = document.createElement('div');
+      alertDiv.className = 'alert alert-success alert-dismissible fade show';
+      alertDiv.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>
+        チケットを削除しました
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      document.querySelector('.container-lg').insertBefore(alertDiv, document.querySelector('.card'));
+      
+      // チケット行を即座に削除
+      ticketRow.remove();
+      
+      // 残りチケット数と残額を更新
+      updateTicketCounts();
+      
+      // チケットが0件になった場合の処理
+      if (document.querySelectorAll('tbody tr').length === 0) {
+        const tbody = document.querySelector('tbody');
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="text-center py-4">
+              <i class="fas fa-ticket-alt fa-3x text-muted mb-3"></i>
+              <p class="text-muted">保有チケットがありません</p>
+            </td>
+          </tr>
+        `;
+        
+        // 残りチケット数と残額を即座に更新（0件状態）
+        setTimeout(() => {
+          updateTicketCounts();
+        }, 100);
+      }
+      
+      // 成功メッセージを3秒後に自動で消す
+      setTimeout(() => {
+        if (alertDiv && alertDiv.parentNode) {
+          alertDiv.remove();
+        }
+      }, 3000);
+    })
+    .catch(error => {
+      console.error('❌ Error deleting ticket:', error);
+      
+      // エラーメッセージを表示
+      const alertDiv = document.createElement('div');
+      alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+      alertDiv.innerHTML = `
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        チケット削除エラー: ${error.message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      document.querySelector('.container-lg').insertBefore(alertDiv, document.querySelector('.card'));
+      
+      // エラーメッセージを5秒後に自動で消す
+      setTimeout(() => {
+        if (alertDiv && alertDiv.parentNode) {
+          alertDiv.remove();
+        }
+      }, 5000);
+      
+      // ボタンを元に戻す
+      deleteBtn.disabled = false;
+      deleteBtn.innerHTML = originalText;
+    });
+  }
   
   // 新しく作成されたチケットを一覧に追加する関数
   function addNewTicketToList(ticket) {

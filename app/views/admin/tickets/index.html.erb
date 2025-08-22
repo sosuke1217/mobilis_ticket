@@ -92,17 +92,37 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  console.log('🎫 チケット一覧ページ初期化開始');
+  
   // チケット削除ボタンクリック時
   document.addEventListener('click', function(e) {
     if (e.target.classList.contains('delete-ticket-btn') || e.target.closest('.delete-ticket-btn')) {
       const deleteBtn = e.target.classList.contains('delete-ticket-btn') ? e.target : e.target.closest('.delete-ticket-btn');
+      
+      // 既に処理中の場合は何もしない
+      if (deleteBtn.disabled) {
+        console.log('⚠️ 既に処理中のため、重複実行をスキップ');
+        return;
+      }
+      
       const ticketId = deleteBtn.getAttribute('data-ticket-id');
       const ticketName = deleteBtn.getAttribute('data-ticket-name');
       const userName = deleteBtn.getAttribute('data-user-name');
       
+      console.log('🗑️ チケット削除処理開始:', { ticketId, ticketName, userName });
+      
       // モーダルにデータを設定
-      document.getElementById('deleteTicketName').textContent = ticketName;
-      document.getElementById('deleteTicketUser').textContent = userName;
+      const deleteTicketName = document.getElementById('deleteTicketName');
+      const deleteTicketUser = document.getElementById('deleteTicketUser');
+      
+      if (!deleteTicketName || !deleteTicketUser) {
+        console.error('❌ 削除確認モーダルの要素が見つかりません');
+        alert('削除確認モーダルの準備に失敗しました');
+        return;
+      }
+      
+      deleteTicketName.textContent = ticketName;
+      deleteTicketUser.textContent = userName;
       
       // モーダルを表示
       const deleteModal = new bootstrap.Modal(document.getElementById('deleteTicketModal'));
@@ -112,71 +132,169 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('confirmDeleteTicketBtn').onclick = function() {
         deleteTicket(ticketId, deleteBtn);
         deleteModal.hide();
+        
+        // 即座に背景をクリーンアップ
+        cleanupModalBackground();
       };
     }
   });
   
   // チケット削除実行
   function deleteTicket(ticketId, deleteBtn) {
-    // 削除ボタンを無効化
-    const originalText = deleteBtn.innerHTML;
-    deleteBtn.disabled = true;
-    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 削除中...';
-    
-    // CSRF トークンを取得
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    
-    // チケット削除APIを呼び出し
-    fetch(`/admin/tickets/${ticketId}`, {
-      method: 'DELETE',
-      headers: {
-        'X-CSRF-Token': csrfToken
-      }
-    })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      return response;
-    })
-    .then(() => {
-      console.log('✅ Ticket deleted:', ticketId);
+    try {
+      console.log('🔄 チケット削除API呼び出し中...');
       
-      // 成功メッセージを表示
+      // 削除ボタンを無効化
+      const originalText = deleteBtn.innerHTML;
+      deleteBtn.disabled = true;
+      deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 削除中...';
+      
+      // CSRF トークンを取得
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      
+      if (!csrfToken) {
+        throw new Error('CSRFトークンが見つかりません');
+      }
+      
+      // チケット削除APIを呼び出し
+      fetch(`/admin/tickets/${ticketId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-Token': csrfToken
+        }
+      })
+      .then(response => {
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+          return response.json().then(data => {
+            throw new Error(data.error || `HTTP ${response.status}`);
+          });
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('✅ Ticket deleted:', data);
+        
+        // 成功メッセージを表示
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-success alert-dismissible fade show';
+        alertDiv.innerHTML = `
+          <i class="fas fa-check-circle me-2"></i>
+          チケットを削除しました
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.querySelector('.container').insertBefore(alertDiv, document.querySelector('h1'));
+        
+        // チケット行を即座に削除
+        const ticketRow = deleteBtn.closest('tr');
+        if (ticketRow) {
+          ticketRow.remove();
+          console.log('✅ チケット行を削除しました');
+        }
+        
+        // チケットが0件になった場合の処理
+        const remainingRows = document.querySelectorAll('tbody tr');
+        if (remainingRows.length === 0) {
+          const tbody = document.querySelector('tbody');
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="6" class="text-center py-4">
+                <i class="fas fa-ticket-alt fa-3x text-muted mb-3"></i>
+                <p class="text-muted">チケットがありません</p>
+              </td>
+            </tr>
+          `;
+          console.log('✅ 「チケットがありません」の表示を追加しました');
+        }
+        
+        // 成功メッセージを3秒後に自動で消す
+        setTimeout(() => {
+          if (alertDiv && alertDiv.parentNode) {
+            alertDiv.remove();
+          }
+        }, 3000);
+        
+        console.log('🔄 チケット削除完了');
+      })
+      .catch(error => {
+        console.error('❌ Error deleting ticket:', error);
+        
+        // エラーメッセージを表示
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+        alertDiv.innerHTML = `
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          チケット削除エラー: ${error.message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.querySelector('.container').insertBefore(alertDiv, document.querySelector('h1'));
+        
+        // エラーメッセージを5秒後に自動で消す
+        setTimeout(() => {
+          if (alertDiv && alertDiv.parentNode) {
+            alertDiv.remove();
+          }
+        }, 5000);
+      })
+      .finally(() => {
+        // ボタンを元に戻す
+        deleteBtn.disabled = false;
+        deleteBtn.innerHTML = originalText;
+        console.log('🔄 チケット削除処理完了');
+      });
+      
+    } catch (error) {
+      console.error('❌ チケット削除処理中にエラーが発生しました:', error);
+      
+      // エラーメッセージを表示
       const alertDiv = document.createElement('div');
-      alertDiv.className = 'alert alert-success alert-dismissible fade show';
+      alertDiv.className = 'alert alert-danger alert-dismissible fade show';
       alertDiv.innerHTML = `
-        <i class="fas fa-check-circle me-2"></i>
-        チケットを削除しました
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        チケット削除エラー: ${error.message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
       `;
       document.querySelector('.container').insertBefore(alertDiv, document.querySelector('h1'));
       
-      // チケット行を即座に削除
-      const ticketRow = deleteBtn.closest('tr');
-      ticketRow.remove();
-      
-      // チケットが0件になった場合の処理
-      if (document.querySelectorAll('tbody tr').length === 0) {
-        const tbody = document.querySelector('tbody');
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="6" class="text-center py-4">
-              <i class="fas fa-ticket-alt fa-3x text-muted mb-3"></i>
-              <p class="text-muted">チケットがありません</p>
-            </td>
-          </tr>
-        `;
-      }
-    })
-    .catch(error => {
-      console.error('❌ Error deleting ticket:', error);
-      alert('チケット削除エラー: ' + error.message);
+      // エラーメッセージを5秒後に自動で消す
+      setTimeout(() => {
+        if (alertDiv && alertDiv.parentNode) {
+          alertDiv.remove();
+        }
+      }, 5000);
       
       // ボタンを元に戻す
       deleteBtn.disabled = false;
       deleteBtn.innerHTML = originalText;
-    });
+    }
   }
+  
+  // モーダル背景のクリーンアップ
+  function cleanupModalBackground() {
+    try {
+      console.log('🔄 モーダル背景クリーンアップ開始');
+      
+      // モーダル背景要素を削除
+      const modalBackdrops = document.querySelectorAll('.modal-backdrop');
+      modalBackdrops.forEach(backdrop => {
+        backdrop.remove();
+        console.log('🗑️ モーダル背景要素を削除しました');
+      });
+      
+      // bodyの状態をリセット
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+      
+      console.log('✅ モーダル背景クリーンアップ完了');
+    } catch (error) {
+      console.error('❌ モーダル背景クリーンアップ中にエラーが発生しました:', error);
+    }
+  }
+  
+  console.log('🎫 チケット一覧ページ初期化完了');
 });
 </script>
