@@ -5,7 +5,7 @@
 <div class="container-lg my-5">
   <div class="d-flex align-items-center mb-4">
     <div>
-      <h1 class="px-1 mb-1" style="margin-left: 1rem;">
+      <h1 class="mb-1" style="margin-left: 1rem;">
         <%= @user.display_name_or_name || @user.line_user_id %> さんの詳細
       </h1>
       <% if @user.display_name.present? && @user.name.present? && @user.display_name != @user.name %>
@@ -227,7 +227,7 @@
           </div>
           
           <form id="lineLinkForm">
-            <div class="mb-1">
+            <div class="px-1 mb-1">
               <label for="lineUserId" class="form-label fw-bold mb-1 small">
                 <i class="fas fa-user-circle me-1 text-primary"></i>LINEユーザーID
               </label>
