@@ -47,28 +47,34 @@
     #lineLinkModal .modal-content {
       max-height: 500px;
       min-height: 400px;
+      display: flex;
+      flex-direction: column;
     }
     
     #lineLinkModal .modal-header {
       min-height: 50px;
       padding: 1rem;
+      flex-shrink: 0;
     }
     
     #lineLinkModal .modal-body {
-      min-height: 300px;
+      flex: 1;
       padding: 1.5rem;
+      overflow-y: auto;
+      min-height: 0;
     }
     
     #lineLinkModal .modal-footer {
-      min-height: 60px;
-      max-height: 70px;
+      flex-shrink: 0;
       padding: 1rem;
       width: 100%;
       justify-content: space-between;
+      border-top: 1px solid #dee2e6;
+      background-color: #f8f9fa;
     }
     
-    #lineLinkModal .input-group-sm > .form-control,
-    #lineLinkModal .input-group-sm > .input-group-text {
+    #lineLinkModal .input-group > .form-control,
+    #lineLinkModal .input-group > .input-group-text {
       font-size: 1rem;
       line-height: 1.4;
       padding: 0.5rem 0.75rem;
@@ -78,25 +84,6 @@
       font-size: 1rem;
       padding: 0.5rem 1rem;
       min-width: 100px;
-    }
-    
-    /* フッターがボディ内に収まるように調整 */
-    #lineLinkModal .modal-content {
-      display: flex;
-      flex-direction: column;
-    }
-    
-    #lineLinkModal .modal-body {
-      flex: 1;
-      overflow: hidden;
-    }
-    
-    #lineLinkModal .modal-footer {
-      flex-shrink: 0;
-      margin-top: auto;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
     }
     
     /* ボタンが確実に表示されるように */
@@ -117,6 +104,12 @@
     #lineLinkModal .modal-body .bg-light.rounded-circle {
       width: 80px;
       height: 80px;
+    }
+    
+    /* モーダルの全体的なレイアウト調整 */
+    #lineLinkModal .modal-content {
+      height: auto;
+      max-height: 90vh;
     }
   </style>
 
@@ -178,7 +171,7 @@
             </div>
           </form>
         </div>
-        <div class="modal-footer border-0 bg-light py-2">
+        <div class="modal-footer border-0 bg-light">
           <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
             <i class="fas fa-times me-1"></i>キャンセル
           </button>
