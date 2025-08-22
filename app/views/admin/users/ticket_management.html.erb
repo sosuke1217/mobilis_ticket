@@ -1,3 +1,41 @@
+<style>
+  /* 削除モーダルのカスタムスタイル */
+  #deleteTicketModal .modal-content {
+    max-height: 400px;
+    overflow: hidden;
+  }
+  
+  #deleteTicketModal .modal-body {
+    overflow: hidden;
+    padding: 1.5rem;
+  }
+  
+  #deleteTicketModal .modal-footer {
+    border-top: 1px solid #dee2e6;
+    padding: 1rem 1.5rem;
+    background-color: #f8f9fa;
+  }
+  
+  #deleteTicketModal .alert {
+    margin-bottom: 0;
+    border: none;
+    background-color: #fff3cd;
+    color: #856404;
+  }
+  
+  #deleteTicketModal .btn {
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+  }
+  
+  #deleteTicketModal .text-danger {
+    color: #dc3545 !important;
+  }
+  
+  #deleteTicketModal .text-muted {
+    color: #6c757d !important;
+  }
+</style>
 <div class="container-lg my-5">
   <div class="card shadow-sm">
     <div class="card-header bg-primary text-white">
@@ -33,7 +71,7 @@
                 <div class="col-md-6">
                   <p class="mb-1"><strong>登録日:</strong> <%= l(@user.created_at.to_date) %></p>
                   <p class="mb-1" id="remainingTicketCount"><strong>残チケット:</strong> <%= @user.active_ticket_count %> 回</p>
-                  <p class="mb-1"><strong>残額合計:</strong> <%= number_to_currency(@user.remaining_ticket_value, unit: "¥", precision: 0) %></p>
+                  <p class="mb-1" id="remainingTicketValue"><strong>残額合計:</strong> <%= number_to_currency(@user.remaining_ticket_value, unit: "¥", precision: 0) %></p>
                   
                   <!-- デバッグ情報 -->
                   <% if Rails.env.development? %>
@@ -183,26 +221,35 @@
 
 <!-- チケット削除確認モーダル -->
 <div class="modal fade" id="deleteTicketModal" tabindex="-1" aria-labelledby="deleteTicketModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header bg-danger text-white">
         <h5 class="modal-title" id="deleteTicketModalLabel">
-          <i class="fas fa-exclamation-triangle me-2"></i>チケット削除の確認
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          チケット削除の確認
         </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <p>以下のチケットを削除しますか？</p>
-        <div class="alert alert-warning">
-          <strong>チケット名:</strong> <span id="deleteTicketName"></span><br>
-          <strong>残り回数:</strong> <span id="deleteTicketRemaining"></span><br>
-          <strong>注意:</strong> この操作は取り消せません。
+        <div class="text-center">
+          <i class="fas fa-trash-alt fa-3x text-danger mb-3"></i>
+          <p class="mb-2">以下のチケットを削除しますか？</p>
+          <div class="alert alert-warning">
+            <strong>チケット名:</strong> <span id="deleteTicketName"></span><br>
+            <strong>残り回数:</strong> <span id="deleteTicketRemaining"></span> 回
+          </div>
+          <p class="text-muted small mt-2">
+            <i class="fas fa-info-circle me-1"></i>
+            この操作は取り消すことができません
+          </p>
         </div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times me-1"></i>キャンセル
+        </button>
         <button type="button" class="btn btn-danger" id="confirmDeleteTicketBtn">
-          <i class="fas fa-trash me-1"></i>削除を実行
+          <i class="fas fa-trash me-1"></i>削除する
         </button>
       </div>
     </div>
@@ -297,7 +344,7 @@ function handleTicketSubmit(e) {
     // 新しく作成されたチケットを一覧に追加
     addNewTicketToList(data.ticket);
     
-    // 残りチケット数と残額を更新
+    // 残りチケット数と残額を即座に更新
     updateTicketCounts();
     
     // 成功メッセージを3秒後に自動で消す
@@ -652,15 +699,30 @@ function deleteTicket(ticketId, ticketRow) {
       // 表示を更新 - IDを使用して確実に要素を選択
       const ticketCountElement = document.getElementById('remainingTicketCount');
       if (ticketCountElement) {
-        const originalText = ticketCountElement.innerHTML;
-        const updatedText = originalText.replace(
-          /残チケット: \d+ 回/,
-          `残チケット: ${remainingCount} 回`
-        );
-        ticketCountElement.innerHTML = updatedText;
+        // 残りチケット数の表示を更新
+        ticketCountElement.innerHTML = `<strong>残チケット:</strong> ${remainingCount} 回`;
         console.log('✅ 残りチケット数表示を更新しました');
       } else {
         console.warn('⚠️ 残りチケット数表示要素が見つかりません');
+      }
+      
+      // 残額合計も更新
+      const remainingValueElement = document.getElementById('remainingTicketValue');
+      if (remainingValueElement) {
+        // 残額合計の計算（実際のチケット価格に基づく）
+        const totalValue = Array.from(document.querySelectorAll('tbody tr')).reduce((total, row) => {
+          const badge = row.querySelector('td:nth-child(2) .badge');
+          const priceElement = row.querySelector('td:nth-child(1) small');
+          if (badge && priceElement) {
+            const count = parseInt(badge.textContent.split('/')[0].trim());
+            const price = parseInt(priceElement.textContent.replace('¥', '').replace(/,/g, ''));
+            return total + (isNaN(count) ? 0 : count) * (isNaN(price) ? 0 : price);
+          }
+          return total;
+        }, 0);
+        
+        remainingValueElement.innerHTML = `<strong>残額合計:</strong> ¥${totalValue.toLocaleString()}`;
+        console.log('✅ 残額合計表示を更新しました');
       }
       
       // デバッグ情報も更新
