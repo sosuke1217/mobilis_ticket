@@ -40,39 +40,44 @@
   <style>
     /* LINE連携モーダルのカスタムスタイル */
     #lineLinkModal .modal-dialog {
-      max-width: 500px;
+      max-width: 600px;
+      width: 90%;
     }
     
     #lineLinkModal .modal-content {
-      max-height: 400px;
+      max-height: 500px;
+      min-height: 400px;
     }
     
     #lineLinkModal .modal-header {
-      min-height: 40px;
+      min-height: 50px;
+      padding: 1rem;
     }
     
     #lineLinkModal .modal-body {
-      min-height: 250px;
+      min-height: 300px;
+      padding: 1.5rem;
     }
     
     #lineLinkModal .modal-footer {
-      min-height: 45px;
-      max-height: 60px;
-      padding: 0.5rem;
+      min-height: 60px;
+      max-height: 70px;
+      padding: 1rem;
       width: 100%;
       justify-content: space-between;
     }
     
     #lineLinkModal .input-group-sm > .form-control,
     #lineLinkModal .input-group-sm > .input-group-text {
-      font-size: 0.875rem;
-      line-height: 1.2;
+      font-size: 1rem;
+      line-height: 1.4;
+      padding: 0.5rem 0.75rem;
     }
     
     #lineLinkModal .btn-sm {
-      font-size: 0.875rem;
-      padding: 0.25rem 0.5rem;
-      min-width: 80px;
+      font-size: 1rem;
+      padding: 0.5rem 1rem;
+      min-width: 100px;
     }
     
     /* フッターがボディ内に収まるように調整 */
@@ -91,13 +96,27 @@
       margin-top: auto;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 1rem;
     }
     
     /* ボタンが確実に表示されるように */
     #lineLinkModal .modal-footer .btn {
       white-space: nowrap;
       overflow: visible;
+    }
+    
+    /* アイコンとテキストのサイズ調整 */
+    #lineLinkModal .modal-header .modal-title {
+      font-size: 1.25rem;
+    }
+    
+    #lineLinkModal .modal-body .fa-link {
+      font-size: 1.5rem;
+    }
+    
+    #lineLinkModal .modal-body .bg-light.rounded-circle {
+      width: 80px;
+      height: 80px;
     }
   </style>
 
@@ -106,30 +125,31 @@
     <div class="modal-dialog modal-dialog-centered modal-sm">
       <div class="modal-content border-0 shadow-lg">
         <div class="modal-header bg-primary text-white border-0 py-2">
-          <h6 class="modal-title mb-0 small" id="lineLinkModalLabel">
-            <i class="fas fa-link me-1"></i>LINE連携作成
-          </h6>
+          <h5 class="modal-title mb-0" id="lineLinkModalLabel">
+            <i class="fas fa-link me-2"></i>LINE連携作成
+          </h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body p-2">
-          <div class="text-center mb-2">
-            <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-1" style="width: 40px; height: 40px;">
+          <div class="text-center mb-3">
+            <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 80px; height: 80px;">
               <i class="fas fa-link text-primary"></i>
             </div>
-            <p class="text-muted small mb-0">ユーザーとLINEアカウントを連携</p>
+            <h6 class="text-muted mb-2">ユーザーとLINEアカウントを連携</h6>
+            <p class="text-muted small mb-0">LINEボットから取得したユーザーIDを入力して連携を作成します</p>
           </div>
           
           <form id="lineLinkForm">
-            <div class="mb-2">
-              <label for="lineUserId" class="form-label fw-bold small mb-1">
-                <i class="fas fa-user-circle me-1 text-primary"></i>LINEユーザーID
+            <div class="mb-3">
+              <label for="lineUserId" class="form-label fw-bold mb-2">
+                <i class="fas fa-user-circle me-2 text-primary"></i>LINEユーザーID
               </label>
-              <div class="input-group input-group-sm">
-                <span class="input-group-text bg-light border-end-0 py-1">
-                  <i class="fas fa-id-card text-muted small"></i>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0">
+                  <i class="fas fa-id-card text-muted"></i>
                 </span>
                 <input type="text" 
-                       class="form-control border-start-0 py-1" 
+                       class="form-control border-start-0" 
                        id="lineUserId" 
                        name="line_user_id" 
                        placeholder="U1234567890abcdef" 
@@ -137,18 +157,22 @@
                        pattern="U[a-zA-Z0-9]{32}"
                        title="LINEユーザーIDは「U」で始まる33文字の英数字です">
               </div>
-              <div class="form-text small">
+              <div class="form-text mt-2">
                 <i class="fas fa-info-circle me-1 text-info"></i>
-                LINEボットから取得したユーザーID
+                LINEボットから取得したユーザーIDを入力してください
               </div>
             </div>
             
-            <div class="alert alert-info border-0 bg-light py-1 mb-0 small">
+            <div class="alert alert-info border-0 bg-light">
               <div class="d-flex align-items-start">
-                <i class="fas fa-shield-alt text-info me-1 mt-1"></i>
+                <i class="fas fa-shield-alt text-info me-2 mt-1"></i>
                 <div>
-                  <strong class="d-block small mb-0">セキュリティ</strong>
-                  <small class="text-muted">重複不可・自動更新・解除可能</small>
+                  <strong class="d-block mb-1">セキュリティについて</strong>
+                  <small class="text-muted">
+                    ・LINEユーザーIDは他のユーザーと重複できません<br>
+                    ・連携後はLINEからの自動更新が有効になります<br>
+                    ・必要に応じて連携解除も可能です
+                  </small>
                 </div>
               </div>
             </div>
