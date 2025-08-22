@@ -21,7 +21,7 @@ class LinebotController < ApplicationController
         next unless event.type == Line::Bot::Event::MessageType::Text
 
         user_id = event['source']['userId']
-        user = User.find_or_create_by!(line_user_id: user_id)
+        user = find_or_create_user_with_profile(user_id)
 
         if user.notification_preference.nil?
           user.create_notification_preference!(enabled: true)
@@ -34,9 +34,7 @@ class LinebotController < ApplicationController
         Rails.logger.info "[LINE POSTBACK] data=#{event['postback']['data']}, user=#{event['source']['userId']}"
 
         user_id = event['source']['userId']
-        user = User.find_or_create_by!(line_user_id: user_id) do |u|
-          u.name = "LINEユーザー#{user_id[-4..-1]}" # 末尾4文字を使用
-        end
+        user = find_or_create_user_with_profile(user_id)
         
         data = event['postback']['data']
         handle_postback_action(user, data, event['replyToken'])
@@ -1368,5 +1366,22 @@ class LinebotController < ApplicationController
     when "メンテナンス" then "#9c27b0"
     else "#666666"
     end
+  end
+
+  def find_or_create_user_with_profile(user_id)
+    user = User.find_by(line_user_id: user_id)
+    if user.nil?
+      # LINEからユーザー情報を取得
+      profile = client.get_profile(user_id)
+      user = User.create!(
+        line_user_id: user_id,
+        name: profile['displayName'],
+        display_name: profile['displayName'],
+        picture_url: profile['pictureUrl'],
+        status_message: profile['statusMessage'],
+        language: profile['language']
+      )
+    end
+    user
   end
 end

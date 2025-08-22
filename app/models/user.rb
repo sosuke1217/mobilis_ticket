@@ -16,6 +16,16 @@ class User < ApplicationRecord
   # 削除前のバリデーション（必要に応じて）
   before_destroy :check_if_deletable
 
+  # LINEから取得した名前を優先的に表示
+  def display_name_or_name
+    display_name.present? ? display_name : name
+  end
+
+  # LINEプロフィール画像のURL
+  def profile_picture_url
+    picture_url.present? ? picture_url : nil
+  end
+
   def build_default_notification_preference
     create_notification_preference!(enabled: true)
   end

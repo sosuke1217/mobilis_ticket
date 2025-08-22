@@ -46,11 +46,25 @@
               <tr>
                 <td><%= user.id %></td>
                 <td>
-                  <% if user.name.present? %>
-                    <%= link_to user.name, admin_user_path(user), class: "fw-semibold" %>
-                  <% else %>
-                    <span class="text-muted fst-italic">未登録</span>
-                  <% end %>
+                  <div class="d-flex align-items-center">
+                    <% if user.profile_picture_url.present? %>
+                      <%= image_tag user.profile_picture_url, class: "rounded-circle me-2", style: "width: 32px; height: 32px; object-fit: cover;" %>
+                    <% else %>
+                      <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                        <i class="fas fa-user text-white"></i>
+                      </div>
+                    <% end %>
+                    <div>
+                      <% if user.display_name_or_name.present? %>
+                        <%= link_to user.display_name_or_name, admin_user_path(user), class: "fw-semibold" %>
+                        <% if user.display_name.present? && user.name.present? && user.display_name != user.name %>
+                          <br><small class="text-muted">登録名: <%= user.name %></small>
+                        <% end %>
+                      <% else %>
+                        <span class="text-muted fst-italic">未登録</span>
+                      <% end %>
+                    </div>
+                  </div>
                 </td>
                 <td><%= user.line_user_id || content_tag(:span, "未連携", class: "text-muted") %></td>
                 <td><%= l(user.created_at.to_date) %></td>

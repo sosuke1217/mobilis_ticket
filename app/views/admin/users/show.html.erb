@@ -3,9 +3,23 @@
 <% end %>
 
 <div class="container-lg my-5">
-  <h1 class="mb-4">
-    <%= @user.name || @user.line_user_id %> さんの詳細
-  </h1>
+  <div class="d-flex align-items-center mb-4">
+    <% if @user.profile_picture_url.present? %>
+      <%= image_tag @user.profile_picture_url, class: "rounded-circle me-3", style: "width: 64px; height: 64px; object-fit: cover;" %>
+    <% else %>
+      <div class="bg-secondary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+        <i class="fas fa-user text-white" style="font-size: 24px;"></i>
+      </div>
+    <% end %>
+    <div>
+      <h1 class="mb-1">
+        <%= @user.display_name_or_name || @user.line_user_id %> さんの詳細
+      </h1>
+      <% if @user.display_name.present? && @user.name.present? && @user.display_name != @user.name %>
+        <p class="text-muted mb-0">登録名: <%= @user.name %></p>
+      <% end %>
+    </div>
+  </div>
 
   <p>
     <strong>LINE連携状況:</strong>
@@ -24,7 +38,7 @@
         <%= link_to "編集", edit_admin_user_path(@user), class: "btn btn-sm btn-light" %>
         <button type="button" class="btn btn-sm btn-danger ms-2" id="deleteUserBtn" 
                 data-user-id="<%= @user.id %>"
-                data-user-name="<%= @user.name.presence || @user.line_user_id || "ID:#{@user.id}" %>"
+                data-user-name="<%= @user.display_name_or_name.presence || @user.line_user_id || "ID:#{@user.id}" %>"
                 data-active-tickets="<%= @active_tickets.count %>"
                 data-total-usages="<%= @total_usages %>"
                 data-remaining-value="<%= number_to_currency(@user.remaining_ticket_value, unit: "¥", precision: 0) %>">
@@ -41,7 +55,46 @@
           </tr>
           <tr>
             <th class="bg-light">氏名</th>
-            <td><%= @user.name.presence || content_tag(:span, "未登録", class: "text-muted") %></td>
+            <td>
+              <% if @user.display_name_or_name.present? %>
+                <%= @user.display_name_or_name %>
+                <% if @user.display_name.present? && @user.name.present? && @user.display_name != @user.name %>
+                  <br><small class="text-muted">登録名: <%= @user.name %></small>
+                <% end %>
+              <% else %>
+                <%= content_tag(:span, "未登録", class: "text-muted") %>
+              <% end %>
+            </td>
+          </tr>
+          <tr>
+            <th class="bg-light">LINE表示名</th>
+            <td>
+              <% if @user.display_name.present? %>
+                <%= @user.display_name %>
+              <% else %>
+                <%= content_tag(:span, "未取得", class: "text-muted") %>
+              <% end %>
+            </td>
+          </tr>
+          <tr>
+            <th class="bg-light">LINEステータスメッセージ</th>
+            <td>
+              <% if @user.status_message.present? %>
+                <%= @user.status_message %>
+              <% else %>
+                <%= content_tag(:span, "未設定", class: "text-muted") %>
+              <% end %>
+            </td>
+          </tr>
+          <tr>
+            <th class="bg-light">LINE言語設定</th>
+            <td>
+              <% if @user.language.present? %>
+                <%= @user.language %>
+              <% else %>
+                <%= content_tag(:span, "未取得", class: "text-muted") %>
+              <% end %>
+            </td>
           </tr>
           <tr>
             <th class="bg-light">生年月日</th>
