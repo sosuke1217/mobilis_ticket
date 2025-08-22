@@ -863,8 +863,8 @@ class Admin::ReservationsController < ApplicationController
       week_start_date = params[:week_start_date]
       Rails.logger.info "📅 Loading settings for week: #{week_start_date}"
       
-      # デフォルトスケジュールを取得
-      default_schedule = WeeklySchedule.default_schedule.schedule_for_javascript
+      # デフォルトスケジュールを取得（クラスメソッドを使用）
+      default_schedule = WeeklySchedule.schedule_for_javascript
       
       # 特定の週のスケジュールを取得
       weekly_schedule = WeeklySchedule.find_by(week_start_date: week_start_date)
