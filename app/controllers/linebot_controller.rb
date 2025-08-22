@@ -1380,7 +1380,25 @@ class LinebotController < ApplicationController
         status_message: profile['statusMessage'],
         language: profile['language']
       )
+    else
+      # 既存ユーザーの情報を更新
+      update_user_profile(user, user_id)
     end
     user
+  end
+
+  # 既存ユーザーのLINEプロフィール情報を更新
+  def update_user_profile(user, user_id)
+    begin
+      profile = client.get_profile(user_id)
+      user.update!(
+        display_name: profile['displayName'],
+        status_message: profile['statusMessage'],
+        language: profile['language']
+      )
+      Rails.logger.info "LINEプロフィール更新完了: #{user_id} - #{profile['displayName']}"
+    rescue => e
+      Rails.logger.error "LINEプロフィール更新エラー: #{user_id} - #{e.message}"
+    end
   end
 end

@@ -33,6 +33,7 @@ Rails.application.routes.draw do
         get 'history'
         get 'ticket_management'
         get 'ticket_usages'
+        patch :update_line_profile
       end
     end
     

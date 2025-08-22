@@ -1,6 +1,6 @@
 class Admin::UsersController < ApplicationController
   before_action :authenticate_admin_user!
-  before_action :set_user, only: [:show, :edit, :update, :destroy, :tickets, :history, :ticket_management, :ticket_usages]
+  before_action :set_user, only: [:show, :edit, :update, :destroy, :tickets, :history, :ticket_management, :ticket_usages, :update_line_profile]
 
   def index
     @q = User.ransack(params[:q])
@@ -191,6 +191,22 @@ class Admin::UsersController < ApplicationController
         
         render json: history_data
       end
+    end
+  end
+
+  def update_line_profile
+    if @user.line_user_id.present?
+      begin
+        # LINEボットコントローラーのメソッドを使用
+        linebot_controller = LinebotController.new
+        linebot_controller.update_user_profile(@user, @user.line_user_id)
+        
+        redirect_to admin_user_path(@user), notice: 'LINEユーザー情報を更新しました'
+      rescue => e
+        redirect_to admin_user_path(@user), alert: "LINEユーザー情報の更新に失敗しました: #{e.message}"
+      end
+    else
+      redirect_to admin_user_path(@user), alert: 'LINE連携されていないユーザーです'
     end
   end
 
