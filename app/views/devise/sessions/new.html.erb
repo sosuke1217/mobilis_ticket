@@ -30,7 +30,7 @@
                       class: "form-control border-start-0 text-start",
                       placeholder: "admin@example.com",
                       required: true,
-                      style: "text-align: left !important; direction: ltr !important; text-align-last: left !important;" %>
+                      style: "text-align: left !important; direction: ltr !important; text-align-last: left !important; text-align: left !important;" %>
                 </div>
               </div>
 
@@ -46,7 +46,7 @@
                       class: "form-control border-start-0 text-start",
                       placeholder: "パスワードを入力",
                       required: true,
-                      style: "text-align: left !important; direction: ltr !important; text-align-last: left !important;" %>
+                      style: "text-align: left !important; direction: ltr !important; text-align-last: left !important; text-align: left !important;" %>
                 </div>
               </div>
 
@@ -263,6 +263,35 @@
     direction: ltr !important;
     text-align-last: left !important;
   }
+  
+  /* 入力中のテキストを強制的に左寄せ */
+  input[type="email"]:not(:placeholder-shown),
+  input[type="password"]:not(:placeholder-shown) {
+    text-align: left !important;
+    direction: ltr !important;
+    text-align-last: left !important;
+  }
+  
+  /* 入力中のテキスト（プレースホルダーが非表示）を強制左寄せ */
+  input:not(:placeholder-shown) {
+    text-align: left !important;
+    direction: ltr !important;
+    text-align-last: left !important;
+  }
+  
+  /* すべての状態でテキストを左寄せ */
+  input[type="email"],
+  input[type="password"],
+  input[type="email"]:focus,
+  input[type="password"]:focus,
+  input[type="email"]:not(:placeholder-shown),
+  input[type="password"]:not(:placeholder-shown),
+  input[type="email"]:not(:placeholder-shown):focus,
+  input[type="password"]:not(:placeholder-shown):focus {
+    text-align: left !important;
+    direction: ltr !important;
+    text-align-last: left !important;
+  }
 </style>
 
 <script>
@@ -282,6 +311,13 @@
         input.style.setProperty('text-align', 'left', 'important');
         input.style.setProperty('direction', 'ltr', 'important');
         input.style.setProperty('text-align-last', 'left', 'important');
+        
+        // 入力中のテキストも強制左寄せ
+        if (input.value.length > 0) {
+          input.style.textAlign = 'left';
+          input.style.direction = 'ltr';
+          input.style.textAlignLast = 'left';
+        }
       }
     }
     
@@ -297,10 +333,32 @@
     emailInput.addEventListener('input', () => forceLeftAlign(emailInput));
     passwordInput.addEventListener('input', () => forceLeftAlign(passwordInput));
     
-    // 定期的にチェックして強制適用
+    // キー入力時にも強制適用
+    emailInput.addEventListener('keydown', () => forceLeftAlign(emailInput));
+    passwordInput.addEventListener('keydown', () => forceLeftAlign(passwordInput));
+    
+    // キー入力後にも強制適用
+    emailInput.addEventListener('keyup', () => forceLeftAlign(emailInput));
+    passwordInput.addEventListener('keyup', () => forceLeftAlign(passwordInput));
+    
+    // 変更時にも強制適用
+    emailInput.addEventListener('change', () => forceLeftAlign(emailInput));
+    passwordInput.addEventListener('change', () => forceLeftAlign(passwordInput));
+    
+    // 定期的にチェックして強制適用（より頻繁に）
     setInterval(() => {
       forceLeftAlign(emailInput);
       forceLeftAlign(passwordInput);
-    }, 100);
+    }, 50);
+    
+    // 入力フィールドの値が変更されたときの監視
+    const observer = new MutationObserver(() => {
+      forceLeftAlign(emailInput);
+      forceLeftAlign(passwordInput);
+    });
+    
+    // 入力フィールドの属性変更を監視
+    if (emailInput) observer.observe(emailInput, { attributes: true, attributeFilter: ['style'] });
+    if (passwordInput) observer.observe(passwordInput, { attributes: true, attributeFilter: ['style'] });
   });
 </script>
