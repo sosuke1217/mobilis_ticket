@@ -105,6 +105,9 @@
 (function() {
   'use strict';
   
+  // グローバル変数
+  let isProcessing = false;
+  
   // ページ読み込み完了後の初期化
   function initializeTicketList() {
     console.log('🎫 チケット一覧ページ初期化開始');
@@ -174,6 +177,13 @@
   
   // チケット削除実行
   function deleteTicket(ticketId) {
+    if (isProcessing) {
+      console.log('⚠️ 既に処理中のため、重複実行をスキップ');
+      return;
+    }
+    
+    isProcessing = true;
+    
     try {
       console.log('🔄 チケット削除API呼び出し中...');
       
@@ -216,11 +226,15 @@
       .catch(error => {
         console.error('❌ Error deleting ticket:', error);
         showAlert('danger', `チケット削除エラー: ${error.message}`);
+      })
+      .finally(() => {
+        isProcessing = false;
       });
       
     } catch (error) {
       console.error('❌ チケット削除処理中にエラーが発生しました:', error);
       showAlert('danger', `削除処理エラー: ${error.message}`);
+      isProcessing = false;
     }
   }
   
@@ -271,17 +285,40 @@
     document.addEventListener('click', function(e) {
       const deleteBtn = e.target.classList.contains('delete-ticket-btn') ? e.target : e.target.closest('.delete-ticket-btn');
       
-      if (deleteBtn && !deleteBtn.disabled) {
+      if (deleteBtn && !deleteBtn.disabled && !isProcessing) {
         e.preventDefault();
+        e.stopPropagation();
+        
+        // 属性の詳細なログ出力
+        console.log('🔍 削除ボタンの詳細情報:', {
+          element: deleteBtn,
+          classList: Array.from(deleteBtn.classList),
+          attributes: Array.from(deleteBtn.attributes).map(attr => ({ name: attr.name, value: attr.value })),
+          dataset: deleteBtn.dataset,
+          outerHTML: deleteBtn.outerHTML.substring(0, 200) + '...'
+        });
         
         const ticketId = deleteBtn.getAttribute('data-ticket-id');
         const ticketName = deleteBtn.getAttribute('data-ticket-name');
         const userName = deleteBtn.getAttribute('data-user-name');
         
+        console.log('📋 取得された属性値:', {
+          ticketId: ticketId,
+          ticketName: ticketName,
+          userName: userName,
+          ticketIdType: typeof ticketId,
+          ticketNameType: typeof ticketName,
+          userNameType: typeof userName
+        });
+        
         if (ticketId && ticketName) {
           handleTicketDelete(ticketId, ticketName, userName);
         } else {
-          console.error('❌ 削除ボタンに必要な属性が設定されていません');
+          console.error('❌ 削除ボタンに必要な属性が設定されていません:', {
+            ticketId: !!ticketId,
+            ticketName: !!ticketName,
+            button: deleteBtn
+          });
           alert('削除ボタンの設定に問題があります。ページを再読み込みしてください。');
         }
       }
@@ -289,25 +326,27 @@
   }
   
   // 初期化の実行
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
-      if (initializeTicketList()) {
-        setupEventListeners();
-      }
-    });
-  } else {
+  function startInitialization() {
     if (initializeTicketList()) {
       setupEventListeners();
+      console.log('✅ チケット一覧ページ初期化完了');
+    } else {
+      console.error('❌ チケット一覧ページ初期化に失敗しました');
     }
   }
   
-  // ページ読み込み完了後の初期化も実行
-  window.addEventListener('load', function() {
-    if (initializeTicketList()) {
-      setupEventListeners();
-    }
-  });
+  // 複数のタイミングで初期化を試行
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startInitialization);
+  } else {
+    startInitialization();
+  }
   
-  console.log('🎫 チケット一覧ページ初期化完了');
+  // ページ読み込み完了後の初期化も実行
+  window.addEventListener('load', startInitialization);
+  
+  // グローバル関数として公開（必要に応じて）
+  window.cleanupModalBackground = cleanupModalBackground;
+  
 })();
 </script>
