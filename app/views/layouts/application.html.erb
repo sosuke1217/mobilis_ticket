@@ -38,62 +38,64 @@
     <% end %>
 
     <!-- app/views/layouts/application.html.erb のナビゲーション部分を修正 -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-      <div class="container-fluid">
-        <a class="navbar-brand" href="<%= root_path %>">
-          <i class="fas fa-spa me-2"></i>Mobilis
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
-          aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
+    <% if admin_user_signed_in? %>
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="<%= root_path %>">
+            <i class="fas fa-spa me-2"></i>Mobilis
+          </a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
+            aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
 
-        <div class="collapse navbar-collapse" id="navbarContent">
-          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            <li class="nav-item">
-              <%= link_to admin_root_path, class: "nav-link #{'active' if current_page?(admin_root_path)}" do %>
-                <i class="fas fa-tachometer-alt me-1"></i>ダッシュボード
-              <% end %>
-            </li>
-            <li class="nav-item">
-              <%= link_to admin_reservations_path, class: "nav-link #{'active' if controller_name == 'reservations' && action_name != 'calendar'}" do %>
-                <i class="fas fa-calendar-alt me-1"></i>予約一覧
-              <% end %>
-            </li>
-            <li class="nav-item">
-              <%= link_to calendar_admin_reservations_path, class: "nav-link #{'active' if action_name == 'calendar'}" do %>
-                <i class="fas fa-calendar me-1"></i>予約カレンダー
-              <% end %>
-            </li>
-            <li class="nav-item">
-              <%= link_to admin_tickets_path, class: "nav-link #{'active' if controller_name == 'tickets'}" do %>
-                <i class="fas fa-ticket-alt me-1"></i>チケット一覧
-              <% end %>
-            </li>
-            <li class="nav-item">
-              <%= link_to admin_ticket_templates_path, class: "nav-link #{'active' if controller_name == 'ticket_templates'}" do %>
-                <i class="fas fa-clipboard-list me-1"></i>テンプレート
-              <% end %>
-            </li>
-            <li class="nav-item">
-              <%= link_to admin_users_path, class: "nav-link #{'active' if controller_name == 'users'}" do %>
-                <i class="fas fa-users me-1"></i>ユーザー管理
-              <% end %>
-            </li>
-          </ul>
-          
-          <!-- 右側のメニュー -->
-          <ul class="navbar-nav">
-            <!-- ログアウトボタン -->
-            <li class="nav-item">
-              <button type="button" class="nav-link btn btn-link text-light border-0 bg-transparent" onclick="logout()">
-                <i class="fas fa-sign-out-alt me-1"></i>ログアウト
-              </button>
-            </li>
-          </ul>
+          <div class="collapse navbar-collapse" id="navbarContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <%= link_to admin_root_path, class: "nav-link #{'active' if current_page?(admin_root_path)}" do %>
+                  <i class="fas fa-tachometer-alt me-1"></i>ダッシュボード
+                <% end %>
+              </li>
+              <li class="nav-item">
+                <%= link_to admin_reservations_path, class: "nav-link #{'active' if controller_name == 'reservations' && action_name != 'calendar'}" do %>
+                  <i class="fas fa-calendar-alt me-1"></i>予約一覧
+                <% end %>
+              </li>
+              <li class="nav-item">
+                <%= link_to calendar_admin_reservations_path, class: "nav-link #{'active' if action_name == 'calendar'}" do %>
+                  <i class="fas fa-calendar me-1"></i>予約カレンダー
+                <% end %>
+              </li>
+              <li class="nav-item">
+                <%= link_to admin_tickets_path, class: "nav-link #{'active' if controller_name == 'tickets'}" do %>
+                  <i class="fas fa-ticket-alt me-1"></i>チケット一覧
+                <% end %>
+              </li>
+              <li class="nav-item">
+                <%= link_to admin_ticket_templates_path, class: "nav-link #{'active' if controller_name == 'ticket_templates'}" do %>
+                  <i class="fas fa-clipboard-list me-1"></i>テンプレート
+                <% end %>
+              </li>
+              <li class="nav-item">
+                <%= link_to admin_users_path, class: "nav-link #{'active' if controller_name == 'users'}" do %>
+                  <i class="fas fa-users me-1"></i>ユーザー管理
+                <% end %>
+              </li>
+            </ul>
+            
+            <!-- 右側のメニュー -->
+            <ul class="navbar-nav">
+              <!-- ログアウトボタン -->
+              <li class="nav-item">
+                <button type="button" class="nav-link btn btn-link text-light border-0 bg-transparent" onclick="logout()">
+                  <i class="fas fa-sign-out-alt me-1"></i>ログアウト
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+    <% end %>
     <%= yield %>
     
     <!-- 外部JavaScriptライブラリ -->

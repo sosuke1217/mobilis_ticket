@@ -1,26 +1,119 @@
-<h2>Log in</h2>
+<div class="min-vh-100 d-flex align-items-center justify-content-center bg-light">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6 col-lg-4">
+        <div class="card shadow-lg border-0">
+          <div class="card-body p-5">
+            <!-- ロゴとタイトル -->
+            <div class="text-center mb-4">
+              <div class="mb-3">
+                <i class="fas fa-spa fa-3x text-primary"></i>
+              </div>
+              <h2 class="h3 text-dark mb-2">Mobilis</h2>
+              <p class="text-muted">管理画面にログイン</p>
+            </div>
 
-<%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
-  <div class="field">
-    <%= f.label :email %><br />
-    <%= f.email_field :email, autofocus: true, autocomplete: "email" %>
-  </div>
+            <!-- ログインフォーム -->
+            <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "needs-validation", novalidate: true }) do |f| %>
+              <!-- メールアドレス -->
+              <div class="mb-3">
+                <%= f.label :email, "メールアドレス", class: "form-label fw-bold text-dark" %>
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-end-0">
+                    <i class="fas fa-envelope text-muted"></i>
+                  </span>
+                  <%= f.email_field :email, 
+                      autofocus: true, 
+                      autocomplete: "email",
+                      class: "form-control border-start-0",
+                      placeholder: "admin@example.com",
+                      required: true %>
+                </div>
+              </div>
 
-  <div class="field">
-    <%= f.label :password %><br />
-    <%= f.password_field :password, autocomplete: "current-password" %>
-  </div>
+              <!-- パスワード -->
+              <div class="mb-3">
+                <%= f.label :password, "パスワード", class: "form-label fw-bold text-dark" %>
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-end-0">
+                    <i class="fas fa-lock text-muted"></i>
+                  </span>
+                  <%= f.password_field :password, 
+                      autocomplete: "current-password",
+                      class: "form-control border-start-0",
+                      placeholder: "パスワードを入力",
+                      required: true %>
+                </div>
+              </div>
 
-  <% if devise_mapping.rememberable? %>
-    <div class="field">
-      <%= f.check_box :remember_me %>
-      <%= f.label :remember_me %>
+              <!-- ログイン状態を保持 -->
+              <% if devise_mapping.rememberable? %>
+                <div class="mb-4">
+                  <div class="form-check">
+                    <%= f.check_box :remember_me, class: "form-check-input" %>
+                    <%= f.label :remember_me, "ログイン状態を保持", class: "form-check-label text-muted" %>
+                  </div>
+                </div>
+              <% end %>
+
+              <!-- ログインボタン -->
+              <div class="d-grid mb-3">
+                <%= f.submit "ログイン", class: "btn btn-primary btn-lg fw-bold" %>
+              </div>
+            <% end %>
+
+            <!-- 追加リンク -->
+            <div class="text-center">
+              <small class="text-muted">
+                パスワードを忘れた場合は
+                <%= link_to "こちら", new_password_path(resource_name), class: "text-decoration-none" %>
+              </small>
+            </div>
+          </div>
+        </div>
+
+        <!-- フッター情報 -->
+        <div class="text-center mt-4">
+          <small class="text-muted">
+            &copy; 2025 Mobilis. All rights reserved.
+          </small>
+        </div>
+      </div>
     </div>
-  <% end %>
-
-  <div class="actions">
-    <%= f.submit "Log in" %>
   </div>
-<% end %>
+</div>
 
-<%= render "devise/shared/links" %>
+<!-- カスタムCSS -->
+<style>
+  .card {
+    border-radius: 1rem;
+  }
+  
+  .form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+  }
+  
+  .btn-primary {
+    background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+    border: none;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+  }
+  
+  .input-group-text {
+    border-color: #dee2e6;
+  }
+  
+  .form-control {
+    border-color: #dee2e6;
+  }
+  
+  .form-control:focus + .input-group-text {
+    border-color: #0d6efd;
+  }
+</style>
