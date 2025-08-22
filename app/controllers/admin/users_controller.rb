@@ -199,6 +199,17 @@ class Admin::UsersController < ApplicationController
       begin
         Rails.logger.info "LINE情報更新開始: ユーザーID #{@user.id}, LINE ID #{@user.line_user_id}"
         
+        # 環境変数の確認
+        unless ENV['LINE_CHANNEL_SECRET'].present? && ENV['LINE_CHANNEL_TOKEN'].present?
+          error_msg = "LINE API設定が不完全です"
+          Rails.logger.error "#{error_msg}: LINE_CHANNEL_SECRET=#{ENV['LINE_CHANNEL_SECRET'].present?}, LINE_CHANNEL_TOKEN=#{ENV['LINE_CHANNEL_TOKEN'].present?}"
+          respond_to do |format|
+            format.html { redirect_to admin_user_path(@user), alert: error_msg }
+            format.json { render json: { success: false, error: error_msg }, status: :unprocessable_entity }
+          end
+          return
+        end
+        
         # LINEボットコントローラーのメソッドを使用
         linebot_controller = LinebotController.new
         result = linebot_controller.update_user_profile(@user, @user.line_user_id)
