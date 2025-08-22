@@ -41,14 +41,14 @@
         <tr>
           <td><%= ticket.id %></td>
           <td><%= ticket.user&.name.presence || ticket.user&.line_user_id %></td>
-          <td><%= ticket.title %></td>
+          <td><%= ticket.title.presence || ticket.ticket_template&.name || "チケット#{ticket.id}" %></td>
           <td>残り: <%= ticket.remaining_count %> 回</td>
           <td><%= ticket.expiry_date.strftime("%Y-%m-%d") %></td>
           <td>
             <button type="button" 
                     class="btn btn-sm btn-outline-danger delete-ticket-btn"
                     data-ticket-id="<%= ticket.id %>"
-                    data-ticket-name="<%= ticket.title %>"
+                    data-ticket-name="<%= ticket.title.presence || ticket.ticket_template&.name || "チケット#{ticket.id}" %>"
                     data-user-name="<%= ticket.user&.name.presence || ticket.user&.line_user_id %>">
               <i class="fas fa-trash"></i> 削除
             </button>
@@ -319,6 +319,14 @@
             ticketName: !!ticketName,
             button: deleteBtn
           });
+          
+          // 空文字列の場合の詳細ログ
+          if (ticketName === '') {
+            console.error('⚠️ ticketNameが空文字列です。HTMLの確認が必要です。');
+            console.log('🔍 ボタンの完全なHTML:', deleteBtn.outerHTML);
+            console.log('🔍 ボタンの全属性:', Array.from(deleteBtn.attributes).map(attr => ({ name: attr.name, value: attr.value })));
+          }
+          
           alert('削除ボタンの設定に問題があります。ページを再読み込みしてください。');
         }
       }
