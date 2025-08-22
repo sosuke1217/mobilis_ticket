@@ -47,6 +47,9 @@ export default class extends Controller {
       
       console.log('✅ チケット発行フォームを発見')
       
+      // フォームのイベントリスナーを設定
+      this.setupFormHandlers()
+      
       // チケットボタンのイベントリスナーを設定
       this.setupTicketButtons()
       
@@ -58,6 +61,16 @@ export default class extends Controller {
     } catch (error) {
       console.error('❌ チケット管理ページ初期化中にエラーが発生しました:', error)
     }
+  }
+  
+  // フォームハンドラーの設定
+  setupFormHandlers() {
+    console.log('📝 フォームハンドラーの設定開始')
+    
+    // フォームのsubmitイベントリスナーを設定
+    this.formTarget.addEventListener('submit', this.handleTicketSubmit.bind(this))
+    
+    console.log('📝 フォームハンドラーの設定完了')
   }
   
   // チケットボタンの設定
@@ -97,54 +110,75 @@ export default class extends Controller {
     try {
       console.log('🎫 チケット発行処理開始')
       
-      const formData = new FormData(event.target)
+      const templateId = document.getElementById('ticketTemplate').value
+      const count = document.getElementById('ticketCount').value
+      
+      if (!templateId) {
+        alert('チケット種類を選択してください')
+        this.isProcessing = false
+        return
+      }
+      
+      // ボタンを無効化
+      const submitBtn = event.target.querySelector('button[type="submit"]')
+      const originalText = submitBtn.innerHTML
+      submitBtn.disabled = true
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>発行中...'
+      
+      // CSRF トークンを取得
       const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
       
       if (!csrfToken) {
         throw new Error('CSRFトークンが見つかりません')
       }
       
-      fetch('/admin/users/ticket_management', {
+      // チケット発行APIを呼び出し
+      fetch('/admin/tickets/create_for_user', {
         method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
           'X-CSRF-Token': csrfToken
         },
-        body: formData
+        body: JSON.stringify({
+          user_id: this.getUserIdFromPage(),
+          ticket_template_id: templateId,
+          count: count
+        })
       })
       .then(response => {
         console.log('Response status:', response.status)
         
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+          return response.json().then(data => {
+            throw new Error(data.error || 'チケット発行に失敗しました')
+          })
         }
-        
         return response.json()
       })
       .then(data => {
         console.log('✅ Ticket created:', data)
         
-        if (data.success) {
-          // 成功メッセージを表示
-          this.showAlert('success', data.message)
-          
-          // チケット一覧を更新
-          if (data.ticket) {
-            this.addNewTicketToList(data.ticket)
-          }
-          
-          // フォームをリセット
-          event.target.reset()
-          
-          // チケット数を更新
-          setTimeout(() => {
-            this.updateTicketCounts()
-          }, 100)
-          
-          // 既存チケットがある場合の残額更新
-          setTimeout(() => {
-            this.updateTicketCounts()
-          }, 200)
+        // 成功メッセージを表示
+        this.showAlert('success', data.message)
+        
+        // チケット一覧を更新
+        if (data.ticket) {
+          this.addNewTicketToList(data.ticket)
         }
+        
+        // フォームをリセット
+        event.target.reset()
+        
+        // チケット数を更新
+        setTimeout(() => {
+          this.updateTicketCounts()
+        }, 100)
+        
+        // 既存チケットがある場合の残額更新
+        setTimeout(() => {
+          this.updateTicketCounts()
+        }, 200)
         
         this.isProcessing = false
       })
@@ -153,12 +187,34 @@ export default class extends Controller {
         this.showAlert('danger', `チケット発行エラー: ${error.message}`)
         this.isProcessing = false
       })
+      .finally(() => {
+        // ボタンを元に戻す
+        submitBtn.disabled = false
+        submitBtn.innerHTML = originalText
+      })
       
     } catch (error) {
       console.error('❌ チケット発行処理中にエラーが発生しました:', error)
       this.showAlert('danger', `発行処理エラー: ${error.message}`)
       this.isProcessing = false
     }
+  }
+  
+  // ページからユーザーIDを取得
+  getUserIdFromPage() {
+    // URLからユーザーIDを抽出（例: /admin/users/1/ticket_management から 1 を取得）
+    const urlMatch = window.location.pathname.match(/\/admin\/users\/(\d+)\/ticket_management/)
+    if (urlMatch) {
+      return urlMatch[1]
+    }
+    
+    // 代替方法: ページ内の要素から取得
+    const userIdElement = document.querySelector('[data-user-id]')
+    if (userIdElement) {
+      return userIdElement.getAttribute('data-user-id')
+    }
+    
+    throw new Error('ユーザーIDを取得できませんでした')
   }
   
   // 新チケットを一覧に追加
@@ -182,6 +238,7 @@ export default class extends Controller {
       
       // 新しいチケット行を作成
       const newRow = document.createElement('tr')
+      newRow.setAttribute('data-ticket-id', ticket.id)
       newRow.innerHTML = `
         <td>
           <strong>${ticket.ticket_template.name}</strong>
@@ -190,8 +247,8 @@ export default class extends Controller {
         <td>
           <span class="badge bg-primary">${ticket.remaining_count}/${ticket.total_count}</span>
         </td>
-        <td>${new Date(ticket.purchase_date).toLocaleDateString('ja-JP')}</td>
-        <td>${new Date(ticket.expiry_date).toLocaleDateString('ja-JP')}</td>
+        <td>${ticket.purchase_date ? new Date(ticket.purchase_date).toLocaleDateString('ja-JP') : 'なし'}</td>
+        <td>${ticket.expiry_date ? new Date(ticket.expiry_date).toLocaleDateString('ja-JP') : '無期限'}</td>
         <td>
           <span class="badge bg-success">利用可能</span>
         </td>
@@ -257,15 +314,18 @@ export default class extends Controller {
     }
     
     fetch(`/admin/tickets/${ticketId}/use`, {
-      method: 'POST',
+      method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
         'X-CSRF-Token': csrfToken
       }
     })
     .then(response => {
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        return response.json().then(data => {
+          throw new Error(data.error || 'チケット使用に失敗しました')
+        })
       }
       return response.json()
     })
@@ -274,7 +334,7 @@ export default class extends Controller {
       
       if (data.success) {
         // 成功メッセージを表示
-        this.showAlert('success', data.message)
+        this.showAlert('success', 'チケットを使用しました')
         
         // チケット表示を即座に更新
         this.updateTicketDisplayAfterUse(ticketId, data.remaining_count, data.total_count)
@@ -297,7 +357,7 @@ export default class extends Controller {
   // チケット使用後の表示更新
   updateTicketDisplayAfterUse(ticketId, remainingCount, totalCount) {
     try {
-      const ticketRow = this.element.querySelector(`tr:has(button[data-ticket-id="${ticketId}"])`)
+      const ticketRow = this.element.querySelector(`tr[data-ticket-id="${ticketId}"]`)
       if (!ticketRow) {
         console.error('❌ チケット行が見つかりません')
         return
@@ -503,7 +563,7 @@ export default class extends Controller {
         this.showAlert('success', 'チケットを削除しました')
         
         // チケット行を即座に削除
-        const ticketRow = this.element.querySelector(`tr:has(button[data-ticket-id="${ticketId}"])`)
+        const ticketRow = this.element.querySelector(`tr[data-ticket-id="${ticketId}"]`)
         if (ticketRow) {
           ticketRow.remove()
           console.log('✅ チケット行を削除しました')
@@ -590,9 +650,9 @@ export default class extends Controller {
       })
       
       // 残りチケット数を表示
-      const ticketCountElement = this.element.querySelector('#ticketCount')
+      const ticketCountElement = this.element.querySelector('#remainingTicketCount')
       if (ticketCountElement) {
-        ticketCountElement.textContent = remainingTickets
+        ticketCountElement.innerHTML = `<strong>残チケット:</strong> ${totalRemainingCount} 回`
         console.log('✅ 残りチケット数表示を更新しました')
       }
       
@@ -629,14 +689,14 @@ export default class extends Controller {
       console.log('💰 最終チケット価格合計:', totalPrice)
       
       // チケット価格合計を表示
-      const totalPriceElement = this.element.querySelector('#totalPrice')
+      const totalPriceElement = this.element.querySelector('#remainingTicketValue')
       if (totalPriceElement) {
-        totalPriceElement.textContent = totalPrice.toLocaleString()
+        totalPriceElement.innerHTML = `<strong>チケット価格合計:</strong> ¥${totalPrice.toLocaleString()}`
         console.log('✅ チケット価格合計表示を更新しました:', totalPrice)
       }
       
       // デバッグ情報コンテナの確認
-      const debugContainer = this.element.querySelector('#debugInfo')
+      const debugContainer = this.element.querySelector('.bg-light.border.rounded')
       if (!debugContainer) {
         console.log('⚠️ デバッグ情報コンテナが見つかりません')
       }
@@ -658,9 +718,9 @@ export default class extends Controller {
       <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `
     
-    const container = this.element.querySelector('.container')
+    const container = this.element.querySelector('.container-lg')
     if (container) {
-      container.insertBefore(alertDiv, container.firstChild)
+      container.insertBefore(alertDiv, container.querySelector('.card'))
       
       // アラートを自動で消す
       setTimeout(() => {
