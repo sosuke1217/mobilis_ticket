@@ -302,14 +302,30 @@ function handleTicketSubmit(e) {
     
     // 成功メッセージを3秒後に自動で消す
     setTimeout(() => {
-      if (alertDiv.firstElementChild) {
-        alertDiv.firstElementChild.remove();
+      if (alertDiv && alertDiv.parentNode) {
+        alertDiv.remove();
       }
     }, 3000);
   })
   .catch(error => {
     console.error('❌ Error creating ticket:', error);
-    alert('チケット発行エラー: ' + error.message);
+    
+    // エラーメッセージを表示
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+    alertDiv.innerHTML = `
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      チケット発行エラー: ${error.message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.querySelector('.container-lg').insertBefore(alertDiv, document.querySelector('.card'));
+    
+    // エラーメッセージを5秒後に自動で消す
+    setTimeout(() => {
+      if (alertDiv && alertDiv.parentNode) {
+        alertDiv.remove();
+      }
+    }, 5000);
   })
   .finally(() => {
     // ボタンを元に戻す
@@ -393,6 +409,13 @@ function handleTicketUse(e) {
     `;
     document.querySelector('.container-lg').insertBefore(alertDiv, document.querySelector('.card'));
     
+    // 成功メッセージを2秒後に自動で消す
+    setTimeout(() => {
+      if (alertDiv && alertDiv.parentNode) {
+        alertDiv.remove();
+      }
+    }, 2000);
+    
     // ページをリロード
     setTimeout(() => {
       window.location.reload();
@@ -400,7 +423,23 @@ function handleTicketUse(e) {
   })
   .catch(error => {
     console.error('❌ Error using ticket:', error);
-    alert('チケット使用エラー: ' + error.message);
+    
+    // エラーメッセージを表示
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+    alertDiv.innerHTML = `
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      チケット使用エラー: ${error.message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.querySelector('.container-lg').insertBefore(alertDiv, document.querySelector('.card'));
+    
+    // エラーメッセージを5秒後に自動で消す
+    setTimeout(() => {
+      if (alertDiv && alertDiv.parentNode) {
+        alertDiv.remove();
+      }
+    }, 5000);
   })
   .finally(() => {
     // ボタンを元に戻す
@@ -419,9 +458,19 @@ function handleTicketDelete(e) {
   const ticketRow = deleteBtn.closest('tr');
   const remainingCount = ticketRow.querySelector('td:nth-child(2) .badge').textContent.split('/')[0].trim();
   
+  // モーダル要素の存在チェック
+  const deleteTicketName = document.getElementById('deleteTicketName');
+  const deleteTicketRemaining = document.getElementById('deleteTicketRemaining');
+  
+  if (!deleteTicketName || !deleteTicketRemaining) {
+    console.error('❌ 削除確認モーダルの要素が見つかりません');
+    alert('削除確認モーダルの準備に失敗しました');
+    return;
+  }
+  
   // モーダルにデータを設定
-  document.getElementById('deleteTicketName').textContent = ticketName;
-  document.getElementById('deleteTicketRemaining').textContent = remainingCount;
+  deleteTicketName.textContent = ticketName;
+  deleteTicketRemaining.textContent = remainingCount;
   
   // モーダルを表示
   const deleteModal = new bootstrap.Modal(document.getElementById('deleteTicketModal'));
@@ -489,10 +538,33 @@ function deleteTicket(ticketId, ticketRow) {
           </tr>
         `;
       }
+      
+      // 成功メッセージを3秒後に自動で消す
+      setTimeout(() => {
+        if (alertDiv && alertDiv.parentNode) {
+          alertDiv.remove();
+        }
+      }, 3000);
     })
     .catch(error => {
       console.error('❌ Error deleting ticket:', error);
-      alert('チケット削除エラー: ' + error.message);
+      
+      // エラーメッセージを表示
+      const alertDiv = document.createElement('div');
+      alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+      alertDiv.innerHTML = `
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        チケット削除エラー: ${error.message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      document.querySelector('.container-lg').insertBefore(alertDiv, document.querySelector('.card'));
+      
+      // エラーメッセージを5秒後に自動で消す
+      setTimeout(() => {
+        if (alertDiv && alertDiv.parentNode) {
+          alertDiv.remove();
+        }
+      }, 5000);
       
       // ボタンを元に戻す
       deleteBtn.disabled = false;
