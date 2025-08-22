@@ -10,10 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_07_31_053016) do
-  # These are extensions that must be enabled in order to support this database
-  enable_extension "plpgsql"
-
+ActiveRecord::Schema[7.2].define(version: 2025_08_22_040911) do
   create_table "admin_users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -40,8 +37,8 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_31_053016) do
   end
 
   create_table "notification_logs", force: :cascade do |t|
-    t.bigint "user_id", null: false
-    t.bigint "ticket_id", null: false
+    t.integer "user_id", null: false
+    t.integer "ticket_id", null: false
     t.string "kind", null: false
     t.text "message", null: false
     t.datetime "sent_at", null: false
@@ -53,7 +50,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_31_053016) do
   end
 
   create_table "notification_preferences", force: :cascade do |t|
-    t.bigint "user_id", null: false
+    t.integer "user_id", null: false
     t.boolean "enabled", default: true
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -100,8 +97,8 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_31_053016) do
   end
 
   create_table "ticket_usages", force: :cascade do |t|
-    t.bigint "ticket_id", null: false
-    t.bigint "user_id", null: false
+    t.integer "ticket_id", null: false
+    t.integer "user_id", null: false
     t.datetime "used_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -118,7 +115,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_31_053016) do
     t.datetime "expiry_date"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.bigint "user_id", null: false
+    t.integer "user_id", null: false
     t.string "title"
     t.integer "ticket_template_id"
     t.index ["ticket_template_id"], name: "index_tickets_on_ticket_template_id"
@@ -140,6 +137,14 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_31_053016) do
     t.string "email"
     t.date "birth_date"
     t.index ["line_user_id"], name: "index_users_on_line_user_id", unique: true
+  end
+
+  create_table "weekly_schedules", force: :cascade do |t|
+    t.date "week_start_date", null: false
+    t.json "schedule", default: {}
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["week_start_date"], name: "index_weekly_schedules_on_week_start_date", unique: true
   end
 
   add_foreign_key "notification_logs", "tickets"

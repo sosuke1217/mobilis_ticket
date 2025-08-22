@@ -117,7 +117,7 @@ class Reservation < ApplicationRecord
     Rails.logger.info "  start_time: #{start_time} (#{start_time.class})"
     Rails.logger.info "  end_time: #{end_time} (#{end_time.class})"
     Rails.logger.info "  course: #{course}"
-    Rails.logger.info "  is_break: #{is_break}"
+    # Rails.logger.info "  is_break: #{is_break}"
     Rails.logger.info "  skip_flags: time=#{skip_time_validation}, business_hours=#{skip_business_hours_validation}, overlap=#{skip_overlap_validation}"
     Rails.logger.info "  validation_context: #{validation_context}"
   end
@@ -473,7 +473,7 @@ class Reservation < ApplicationRecord
     return if start_time.blank? || end_time.blank?
     return if skip_overlap_validation
 
-    Rails.logger.info "🔍 Checking time overlap for reservation #{id} (is_break: #{is_break})"
+    Rails.logger.info "🔍 Checking time overlap for reservation #{id}"
     Rails.logger.info "🔍 Time range: #{start_time.strftime('%H:%M')} - #{end_time.strftime('%H:%M')}"
 
     # インターバルを含む重複チェック
@@ -503,16 +503,10 @@ class Reservation < ApplicationRecord
       other_interval = overlapping_reservation.effective_interval_minutes
       other_end_with_interval = overlapping_reservation.end_time + other_interval.minutes
       
-      # 休憩予約の場合は特別なメッセージ
-      if is_break?
-        error_msg = "休憩時間が他の予約と重複しています: #{overlapping_reservation.start_time.strftime('%H:%M')}〜#{other_end_with_interval.strftime('%H:%M')}"
-        Rails.logger.error "❌ Break overlap error: #{error_msg}"
-        errors.add(:base, error_msg)
-      else
-        error_msg = "#{overlapping_reservation.start_time.strftime('%H:%M')}〜#{other_end_with_interval.strftime('%H:%M')}の予約があります。"
-        Rails.logger.error "❌ Regular overlap error: #{error_msg}"
-        errors.add(:base, error_msg)
-      end
+      # 予約の重複エラーメッセージ
+      error_msg = "#{overlapping_reservation.start_time.strftime('%H:%M')}〜#{other_end_with_interval.strftime('%H:%M')}の予約があります。"
+      Rails.logger.error "❌ Overlap error: #{error_msg}"
+      errors.add(:base, error_msg)
     else
       Rails.logger.info "✅ No overlaps detected"
     end
@@ -525,11 +519,7 @@ class Reservation < ApplicationRecord
       error_msg = "開始時間と終了時間は10分刻みで入力してください"
       Rails.logger.error "❌ 10-minute interval validation failed: #{error_msg}"
       
-      if is_break?
-        errors.add(:base, "休憩時間は10分刻みで設定してください")
-      else
-        errors.add(:base, error_msg)
-      end
+      errors.add(:base, error_msg)
     else
       Rails.logger.info "✅ 10-minute interval validation passed"
     end
@@ -538,18 +528,14 @@ class Reservation < ApplicationRecord
   def end_time_after_start_time
     return unless start_time && end_time
     
-    Rails.logger.info "🔍 End time after start time validation for reservation #{id} (is_break: #{is_break})"
+    Rails.logger.info "🔍 End time after start time validation for reservation #{id}"
     Rails.logger.info "🔍 Time check: start=#{start_time.strftime('%H:%M')}, end=#{end_time.strftime('%H:%M')}"
     
     if end_time <= start_time
       error_msg = "終了時間は開始時間より後に設定してください"
       Rails.logger.error "❌ End time validation failed: #{error_msg}"
       
-      if is_break?
-        errors.add(:end_time, "休憩時間の終了時間は開始時間より後に設定してください")
-      else
-        errors.add(:end_time, error_msg)
-      end
+      errors.add(:end_time, error_msg)
     else
       Rails.logger.info "✅ End time validation passed"
     end
@@ -565,18 +551,14 @@ class Reservation < ApplicationRecord
   def booking_within_business_hours
     return unless start_time && end_time
     
-    Rails.logger.info "🔍 Business hours validation for reservation #{id} (is_break: #{is_break})"
+    Rails.logger.info "🔍 Business hours validation for reservation #{id}"
     
-    # 指定日のシフトを取得
-    shift = Shift.for_date(start_time.to_date).first
+    # 指定日のシフトを取得（現在は無効化）
+    # shift = Shift.for_date(start_time.to_date).first
     
-    # 営業時間を決定（シフト設定があればそれを使用、なければシステム設定）
-    business_start, business_end = if shift&.requires_time?
-      [shift.start_time.hour, shift.end_time.hour]
-    else
-      settings = ApplicationSetting.current
-      [settings.business_hours_start, settings.business_hours_end]
-    end
+    # 営業時間を決定（システム設定を使用）
+    settings = ApplicationSetting.current
+    business_start, business_end = [settings.business_hours_start, settings.business_hours_end]
     
     # end_timeは既にコース時間＋インターバル時間を含んでいるため、そのまま使用
     actual_end_time = end_time
@@ -586,19 +568,13 @@ class Reservation < ApplicationRecord
     end_minute = actual_end_time.min
     
     Rails.logger.info "🕐 Business hours check: start=#{start_time.strftime('%H:%M')}, end=#{actual_end_time.strftime('%H:%M')}, business=#{business_start}:00-#{business_end}:00"
-    Rails.logger.info "🕐 Shift info: #{shift&.shift_type_display || 'No shift'} (#{shift&.business_hours || 'Default hours'})"
+    Rails.logger.info "🕐 Shift info: No shift (Default hours)"
     
     if start_hour < business_start || end_hour > business_end || (end_hour == business_end && end_minute > 0)
-      shift_info = shift ? " (#{shift.shift_type_display})" : ""
-      error_msg = "営業時間内（#{business_start}:00-#{business_end}:00#{shift_info}）でご予約ください。終了時刻: #{actual_end_time.strftime('%H:%M')}"
+      error_msg = "営業時間内（#{business_start}:00-#{business_end}:00）でご予約ください。終了時刻: #{actual_end_time.strftime('%H:%M')}"
       
-      if is_break?
-        Rails.logger.error "❌ Break business hours error: #{error_msg}"
-        errors.add(:start_time, "休憩時間は営業時間内に設定してください: #{error_msg}")
-      else
-        Rails.logger.error "❌ Regular business hours error: #{error_msg}"
-        errors.add(:start_time, error_msg)
-      end
+      Rails.logger.error "❌ Business hours error: #{error_msg}"
+      errors.add(:start_time, error_msg)
     else
       Rails.logger.info "✅ Business hours validation passed"
     end
