@@ -426,15 +426,19 @@ function handleTicketSubmit(e) {
 
 // チケットボタンの設定
 function setupTicketButtons() {
-  console.log('🔘 チケットボタンの設定開始');
-  
-  // 既存のイベントリスナーを削除
-  document.removeEventListener('click', handleTicketButtonClick);
-  
-  // 新しいイベントリスナーを設定
-  document.addEventListener('click', handleTicketButtonClick);
-  
-  console.log('🔘 チケットボタンの設定完了');
+  try {
+    console.log('🔘 チケットボタンの設定開始');
+    
+    // 既存のイベントリスナーを削除（重複防止）
+    document.removeEventListener('click', handleTicketButtonClick);
+    
+    // 新しいイベントリスナーを設定
+    document.addEventListener('click', handleTicketButtonClick);
+    
+    console.log('🔘 チケットボタンの設定完了');
+  } catch (error) {
+    console.error('❌ チケットボタン設定中にエラーが発生しました:', error);
+  }
 }
 
 // チケットボタンクリック処理
@@ -452,71 +456,82 @@ function handleTicketButtonClick(e) {
 
 // チケット使用処理
 function handleTicketUse(e) {
-      const ticketId = e.target.getAttribute('data-ticket-id');
-      const ticketName = e.target.getAttribute('data-ticket-name');
-      
-      if (!confirm(`「${ticketName}」を1回使用しますか？`)) {
-        return;
-      }
-      
-      // ボタンを無効化
-      const originalText = e.target.innerHTML;
-      e.target.disabled = true;
-      e.target.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-      
-      // CSRF トークンを取得
-      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-      
-      // チケット使用APIを呼び出し
-      fetch(`/admin/tickets/${ticketId}/use`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-CSRF-Token': csrfToken
-        }
-      })
-      .then(response => {
-        console.log('Response status:', response.status);
-        
-        if (!response.ok) {
-          return response.json().then(data => {
-            throw new Error(data.error || 'チケット使用に失敗しました');
-          });
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log('✅ Ticket used:', data);
-        
-        // 成功メッセージを表示
-        const alertDiv = document.createElement('div');
-        alertDiv.className = 'alert alert-success alert-dismissible fade show';
-        alertDiv.innerHTML = `
-          <i class="fas fa-check-circle me-2"></i>
-          チケットを使用しました
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        document.querySelector('.container-lg').insertBefore(alertDiv, document.querySelector('.card'));
+  // 既に処理中の場合は何もしない
+  if (e.target.disabled) {
+    console.log('⚠️ 既に処理中のため、重複実行をスキップ');
+    return;
+  }
+  
+  const ticketId = e.target.getAttribute('data-ticket-id');
+  const ticketName = e.target.getAttribute('data-ticket-name');
+  
+  console.log('🎫 チケット使用処理開始:', { ticketId, ticketName });
+  
+  if (!confirm(`「${ticketName}」を1回使用しますか？`)) {
+    console.log('❌ ユーザーがチケット使用をキャンセル');
+    return;
+  }
+  
+  // ボタンを無効化
+  const originalText = e.target.innerHTML;
+  e.target.disabled = true;
+  e.target.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+  
+  console.log('🔄 チケット使用API呼び出し中...');
+  
+  // CSRF トークンを取得
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+  
+  // チケット使用APIを呼び出し
+  fetch(`/admin/tickets/${ticketId}/use`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'X-CSRF-Token': csrfToken
+    }
+  })
+  .then(response => {
+    console.log('Response status:', response.status);
     
+    if (!response.ok) {
+      return response.json().then(data => {
+        throw new Error(data.error || 'チケット使用に失敗しました');
+      });
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log('✅ Ticket used:', data);
+    
+    // 成功メッセージを表示
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success alert-dismissible fade show';
+    alertDiv.innerHTML = `
+      <i class="fas fa-check-circle me-2"></i>
+      チケットを使用しました
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.querySelector('.container-lg').insertBefore(alertDiv, document.querySelector('.card'));
+
     // 成功メッセージを2秒後に自動で消す
     setTimeout(() => {
       if (alertDiv && alertDiv.parentNode) {
         alertDiv.remove();
       }
     }, 2000);
-    
+
     // 残りチケット数と残額を即座に更新
     updateTicketCounts();
         
-        // ページをリロード
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
-      })
-      .catch(error => {
-        console.error('❌ Error using ticket:', error);
-    
+    // ページをリロード
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
+  })
+  .catch(error => {
+    console.error('❌ Error using ticket:', error);
+
     // エラーメッセージを表示
     const alertDiv = document.createElement('div');
     alertDiv.className = 'alert alert-danger alert-dismissible fade show';
@@ -526,19 +541,20 @@ function handleTicketUse(e) {
       <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
     document.querySelector('.container-lg').insertBefore(alertDiv, document.querySelector('.card'));
-    
+
     // エラーメッセージを5秒後に自動で消す
     setTimeout(() => {
       if (alertDiv && alertDiv.parentNode) {
         alertDiv.remove();
       }
     }, 5000);
-      })
-      .finally(() => {
-        // ボタンを元に戻す
-        e.target.disabled = false;
-        e.target.innerHTML = originalText;
-      });
+  })
+  .finally(() => {
+    // ボタンを元に戻す
+    e.target.disabled = false;
+    e.target.innerHTML = originalText;
+    console.log('🔄 チケット使用処理完了');
+  });
 }
 
 // チケット削除処理
