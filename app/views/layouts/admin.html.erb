@@ -13,46 +13,23 @@
 <body>
   <header>
     <h1>管理ダッシュボード</h1>
-    <!-- ログアウトボタン - JavaScript使用（Turbo完全回避） -->
-    <button type="button" class="btn btn-outline-danger" onclick="logout()">
-      ログアウト
-    </button>
+    <!-- ログアウトボタン - button_to使用（フォームベース） -->
+    <%= button_to "ログアウト", destroy_admin_user_session_path, 
+        method: :delete, 
+        class: "btn btn-outline-danger",
+        form: { 
+          data: { 
+            turbo: false,
+            "turbo-method": false,
+            "turbo-frame": false
+          }
+        },
+        data: { 
+          confirm: "本当にログアウトしますか？"
+        } %>
   </header>
   <main>
     <%= yield %>
   </main>
-
-  <script>
-    function logout() {
-      if (confirm('本当にログアウトしますか？')) {
-        // CSRFトークンを取得
-        const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        
-        // フォームを作成して送信
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '<%= destroy_admin_user_session_path %>';
-        form.style.display = 'none';
-        
-        // CSRFトークンを追加
-        const csrfInput = document.createElement('input');
-        csrfInput.type = 'hidden';
-        csrfInput.name = 'authenticity_token';
-        csrfInput.value = token;
-        form.appendChild(csrfInput);
-        
-        // methodをDELETEに設定
-        const methodInput = document.createElement('input');
-        methodInput.type = 'hidden';
-        methodInput.name = '_method';
-        methodInput.value = 'DELETE';
-        form.appendChild(methodInput);
-        
-        // フォームを送信
-        document.body.appendChild(form);
-        form.submit();
-      }
-    }
-  </script>
 </body>
 </html>

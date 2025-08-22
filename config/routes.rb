@@ -51,8 +51,6 @@ Rails.application.routes.draw do
     # 通知管理
     resources :notification_logs, only: [:index]
     resources :notification_preferences, only: [:index]
-    
-    # 設定ルートを削除
   end
   
   # 一般ユーザー用ルート
@@ -78,5 +76,14 @@ Rails.application.routes.draw do
   get 'service-worker.js', to: 'pwa#service_worker'
   
   # Devise
-  devise_for :admin_users
+  devise_for :admin_users, path: 'admin_users', controllers: {
+    sessions: 'admin_users/sessions',
+    passwords: 'admin_users/passwords'
+  }
+  
+  devise_for :users, path: 'users', controllers: {
+    sessions: 'users/sessions',
+    registrations: 'users/registrations',
+    passwords: 'users/passwords'
+  }
 end
