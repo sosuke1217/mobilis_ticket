@@ -372,6 +372,15 @@ function handleTicketSubmit(e) {
     // 残りチケット数と残額を即座に更新
     updateTicketCounts();
     
+    // チケットがない状態の表示を更新
+    const tbody = document.querySelector('tbody');
+    if (tbody.querySelector('tr td[colspan="6"]')) {
+      // 「保有チケットがありません」の行を削除
+      tbody.innerHTML = '';
+      // 新しく作成されたチケットを追加
+      addNewTicketToList(data.ticket);
+    }
+    
     // 成功メッセージを3秒後に自動で消す
     setTimeout(() => {
       if (alertDiv && alertDiv.parentNode) {
@@ -487,6 +496,9 @@ function handleTicketUse(e) {
         alertDiv.remove();
       }
     }, 2000);
+    
+    // 残りチケット数と残額を即座に更新
+    updateTicketCounts();
     
     // ページをリロード
     setTimeout(() => {
@@ -611,7 +623,10 @@ function deleteTicket(ticketId, ticketRow) {
               <p class="text-muted">保有チケットがありません</p>
             </td>
           </tr>
-        `
+        `;
+        
+        // 残りチケット数と残額を即座に更新（0件状態）
+        updateTicketCounts();
       }
       
       // 成功メッセージを3秒後に自動で消す
@@ -750,7 +765,7 @@ function deleteTicket(ticketId, ticketRow) {
         }, 0);
         
         remainingValueElement.innerHTML = `<strong>残額合計:</strong> ¥${totalValue.toLocaleString()}`;
-        console.log('✅ 残額合計表示を更新しました');
+        console.log('✅ 残額合計表示を更新しました:', totalValue);
       }
       
       // デバッグ情報も更新
@@ -776,6 +791,14 @@ function deleteTicket(ticketId, ticketRow) {
         }
       } else {
         console.warn('⚠️ デバッグ情報コンテナが見つかりません');
+      }
+      
+      // 残額合計の詳細ログ
+      const remainingValueElement = document.getElementById('remainingTicketValue');
+      if (remainingValueElement) {
+        console.log('💰 残額合計要素を発見:', remainingValueElement.textContent);
+      } else {
+        console.warn('⚠️ 残額合計要素が見つかりません');
       }
       
       console.log('🔄 チケット数更新完了');
