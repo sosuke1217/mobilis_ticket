@@ -20,6 +20,10 @@
     background-color: #f8f9fa;
     margin-top: 0;
     min-height: 80px;
+    /* フッターの幅をボディと合わせる */
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
   }
   
   #deleteTicketModal .alert {
@@ -44,17 +48,17 @@
   
   /* モーダル背景の暗さを調整 */
   #deleteTicketModal.modal-backdrop {
-    opacity: 0.3 !important;
+    opacity: 0.2 !important;
   }
   
   /* モーダルが閉じた後の背景を明るくする */
   body.modal-open {
-    background-color: rgba(0, 0, 0, 0.1) !important;
+    background-color: rgba(0, 0, 0, 0.05) !important;
   }
   
   /* モーダル背景の透明度を調整 */
   .modal-backdrop.show {
-    opacity: 0.3 !important;
+    opacity: 0.2 !important;
   }
 </style>
 <div class="container-lg my-5">
@@ -825,6 +829,13 @@ function deleteTicket(ticketId, ticketRow) {
     
     // 追加のクリーンアップを実行
     setTimeout(cleanupModalBackground, 100);
+    
+    // ページ読み込み直後の背景を明るくする
+    setTimeout(() => {
+      document.body.style.backgroundColor = '';
+      document.body.style.background = '';
+      console.log('✅ ページ背景を明るくしました');
+    }, 200);
   }
   
   // ページ読み込み時に背景をクリーンアップ
@@ -857,6 +868,11 @@ function deleteTicket(ticketId, ticketRow) {
     document.body.style.paddingRight = '';
     console.log('✅ bodyの状態をリセット完了');
     
+    // 背景を明るくする
+    document.body.style.backgroundColor = '';
+    document.body.style.background = '';
+    console.log('✅ 背景を明るくしました');
+    
     // 強制的なクリーンアップを複数回実行
     const cleanupAttempts = [100, 300, 500, 1000];
     
@@ -882,6 +898,8 @@ function deleteTicket(ticketId, ticketRow) {
         document.body.classList.remove('modal-open');
         document.body.style.overflow = '';
         document.body.style.paddingRight = '';
+        document.body.style.backgroundColor = '';
+        document.body.style.background = '';
         
         // 最後の試行でログ出力
         if (attempt === cleanupAttempts.length - 1) {
