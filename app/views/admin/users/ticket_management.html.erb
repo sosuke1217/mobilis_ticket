@@ -34,6 +34,19 @@
                   <p class="mb-1"><strong>登録日:</strong> <%= l(@user.created_at.to_date) %></p>
                   <p class="mb-1"><strong>残チケット:</strong> <%= @user.active_ticket_count %> 回</p>
                   <p class="mb-1"><strong>残額合計:</strong> <%= number_to_currency(@user.remaining_ticket_value, unit: "¥", precision: 0) %></p>
+                  
+                  <!-- デバッグ情報 -->
+                  <% if Rails.env.development? %>
+                    <div class="mt-2 p-2 bg-light border rounded">
+                      <small class="text-muted">
+                        <strong>デバッグ情報:</strong><br>
+                        総チケット数: <%= @user.tickets.count %><br>
+                        有効チケット数: <%= @user.tickets.where("remaining_count > 0").count %><br>
+                        残り回数合計: <%= @user.tickets.sum(:remaining_count) %><br>
+                        キャッシュキー: user_<%= @user.id %>_active_tickets
+                      </small>
+                    </div>
+                  <% end %>
                 </div>
               </div>
             </div>
