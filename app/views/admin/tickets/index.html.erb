@@ -64,26 +64,36 @@
 
 <!-- チケット削除確認モーダル -->
 <div class="modal fade" id="deleteTicketModal" tabindex="-1" aria-labelledby="deleteTicketModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header bg-danger text-white">
         <h5 class="modal-title" id="deleteTicketModalLabel">
-          <i class="fas fa-exclamation-triangle me-2"></i>チケット削除の確認
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          チケット削除の確認
         </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <p>以下のチケットを削除しますか？</p>
-        <div class="alert alert-warning">
-          <strong>チケット名:</strong> <span id="deleteTicketName"></span><br>
-          <strong>ユーザー:</strong> <span id="deleteTicketUser"></span><br>
-          <strong>注意:</strong> この操作は取り消せません。
+        <div class="text-center">
+          <i class="fas fa-trash-alt fa-3x text-danger mb-3"></i>
+          <p class="mb-2">以下のチケットを削除しますか？</p>
+          <div class="alert alert-warning">
+            <strong>チケット名:</strong> <span id="deleteTicketName"></span><br>
+            <strong>ユーザー:</strong> <span id="deleteTicketUser"></span><br>
+            <strong>注意:</strong> この操作は取り消すことができません
+          </div>
+          <p class="text-muted small mt-2 mb-0">
+            <i class="fas fa-info-circle me-1"></i>
+            この操作は取り消すことができません
+          </p>
         </div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="cleanupModalBackground()">
+          <i class="fas fa-times me-1"></i>キャンセル
+        </button>
         <button type="button" class="btn btn-danger" id="confirmDeleteTicketBtn">
-          <i class="fas fa-trash me-1"></i>削除を実行
+          <i class="fas fa-trash me-1"></i>削除する
         </button>
       </div>
     </div>
