@@ -19,12 +19,9 @@
     <% if @user.line_user_id.present? && @user.line_user_id != '' %>
       <span class="badge bg-success"><i class="fas fa-link me-1"></i>連携済み</span>
       <div class="btn-group ms-2" role="group">
-        <%= link_to update_line_profile_admin_user_path(@user), 
-            method: :patch, 
-            class: "btn btn-sm btn-outline-primary",
-            data: { confirm: "LINEから最新のユーザー情報を取得しますか？" } do %>
+        <button type="button" class="btn btn-sm btn-outline-primary" onclick="updateLineProfile()">
           <i class="fas fa-sync-alt me-1"></i>LINE情報を更新
-        <% end %>
+        </button>
         <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeLineLink()">
           <i class="fas fa-unlink me-1"></i>連携解除
         </button>
@@ -400,6 +397,53 @@
           button.innerHTML = originalText;
         });
       }
+    }
+
+    function updateLineProfile() {
+      const userId = '<%= @user.id %>';
+      const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      
+      if (!token) {
+        showError('セキュリティトークンが見つかりません。ページを再読み込みしてください。');
+        return;
+      }
+
+      // ボタンを無効化
+      const button = event.target;
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>更新中...';
+
+      fetch(`/admin/users/${userId}/update_line_profile`, {
+        method: 'PATCH',
+        headers: {
+          'X-CSRF-Token': token,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      })
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+      })
+      .then(data => {
+        showSuccess('LINEプロファイルを更新しました');
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showError(`LINEプロファイルの更新に失敗しました: ${error.message}`);
+      })
+      .finally(() => {
+        // ボタンを元に戻す
+        button.disabled = false;
+        button.innerHTML = originalText;
+      });
     }
 
     // 成功メッセージ表示
