@@ -168,92 +168,96 @@
 
 <!-- 独立したスクリプトセクション -->
 <script type="text/javascript">
-(function() {
-  'use strict';
+// グローバルスコープでの重複実行チェック
+if (window.ticketListScriptLoaded) {
+  console.log('⚠️ チケット一覧ページスクリプトは既に読み込まれています');
+} else {
+  window.ticketListScriptLoaded = true;
   
-  // 既に初期化済みかチェック
-  if (window.ticketListInitialized) {
-    console.log('⚠️ チケット一覧ページは既に初期化済みです');
-    return;
-  }
-  
-  // グローバル変数
-  let isProcessing = false;
-  
-  // 初期化完了フラグを設定
-  window.ticketListInitialized = true;
-  
-  console.log('🎫 チケット一覧ページ初期化開始（初回）');
-  
-  // チケット一覧ページの初期化
-  function initializeTicketList() {
-    try {
-      console.log('🎫 チケット一覧ページ初期化開始');
-      
-      // ページ全体のHTML確認
-      console.log('🔍 ページ全体のHTML確認:', document.body.innerHTML.length);
-      
-      // 初期化時のモーダル要素確認
-      const deleteTicketModal = document.querySelector('#deleteTicketModal');
-      const deleteTicketName = document.querySelector('#deleteTicketName');
-      const deleteTicketUser = document.querySelector('#deleteTicketUser');
-      const deleteTicketRemaining = document.querySelector('#deleteTicketRemaining');
-      const confirmDeleteTicketBtn = document.querySelector('#confirmDeleteTicketBtn');
-      
-      console.log('🔍 初期化時のモーダル要素確認:', {
-        modal: !!deleteTicketModal,
-        name: !!deleteTicketName,
-        user: !!deleteTicketUser,
-        remaining: !!deleteTicketRemaining,
-        confirmBtn: !!confirmDeleteTicketBtn
-      });
-      
-      // 必要な要素がすべて存在するかチェック
-      if (!deleteTicketModal || !deleteTicketName || !deleteTicketUser || !deleteTicketRemaining || !confirmDeleteTicketBtn) {
-        console.error('❌ 必要なモーダル要素が見つかりません。詳細調査を実行します...');
+  (function() {
+    'use strict';
+    
+    // ローカルスコープでの変数宣言
+    let isProcessing = false;
+    let isInitialized = false;
+    
+    console.log('🎫 チケット一覧ページスクリプト初期化開始');
+    
+    // チケット一覧ページの初期化
+    function initializeTicketList() {
+      try {
+        if (isInitialized) {
+          console.log('⚠️ 既に初期化済みです');
+          return true;
+        }
         
-        // 削除関連のIDを持つ要素を検索
-        const deleteElements = document.querySelectorAll('[id*="delete"]');
-        console.log('🔍 削除関連のIDを持つ要素:', deleteElements);
+        console.log('🎫 チケット一覧ページ初期化開始');
         
-        // モーダル要素を検索
-        const modalElements = document.querySelectorAll('.modal');
-        console.log('🔍 モーダル要素:', modalElements);
+        // ページ全体のHTML確認
+        console.log('🔍 ページ全体のHTML確認:', document.body.innerHTML.length);
         
-        // 各モーダルの詳細情報を出力
-        modalElements.forEach((modal, index) => {
-          console.log(`🔍 モーダル${index + 1}:`, {
-            id: modal.id,
-            visible: modal.style.display !== 'none',
-            children: modal.children.length
-          });
+        // 初期化時のモーダル要素確認
+        const deleteTicketModal = document.querySelector('#deleteTicketModal');
+        const deleteTicketName = document.querySelector('#deleteTicketName');
+        const deleteTicketUser = document.querySelector('#deleteTicketUser');
+        const deleteTicketRemaining = document.querySelector('#deleteTicketRemaining');
+        const confirmDeleteTicketBtn = document.querySelector('#confirmDeleteTicketBtn');
+        
+        console.log('🔍 初期化時のモーダル要素確認:', {
+          modal: !!deleteTicketModal,
+          name: !!deleteTicketName,
+          user: !!deleteTicketUser,
+          remaining: !!deleteTicketRemaining,
+          confirmBtn: !!confirmDeleteTicketBtn
         });
         
+        // 必要な要素がすべて存在するかチェック
+        if (!deleteTicketModal || !deleteTicketName || !deleteTicketUser || !deleteTicketRemaining || !confirmDeleteTicketBtn) {
+          console.error('❌ 必要なモーダル要素が見つかりません。詳細調査を実行します...');
+          
+          // 削除関連のIDを持つ要素を検索
+          const deleteElements = document.querySelectorAll('[id*="delete"]');
+          console.log('🔍 削除関連のIDを持つ要素:', deleteElements);
+          
+          // モーダル要素を検索
+          const modalElements = document.querySelectorAll('.modal');
+          console.log('🔍 モーダル要素:', modalElements);
+          
+          // 各モーダルの詳細情報を出力
+          modalElements.forEach((modal, index) => {
+            console.log(`🔍 モーダル${index + 1}:`, {
+              id: modal.id,
+              visible: modal.style.display !== 'none',
+              children: modal.children.length
+            });
+          });
+          
+          return false;
+        }
+        
+        console.log('✅ モーダル要素の確認完了');
+        
+        // 削除ボタンのイベントリスナーを設定
+        const deleteButtons = document.querySelectorAll('.delete-ticket-btn');
+        console.log(`🔘 削除ボタン${deleteButtons.length}個を発見`);
+        
+        deleteButtons.forEach(button => {
+          // 既存のイベントリスナーを削除
+          button.removeEventListener('click', handleTicketDelete);
+          
+          // 新しいイベントリスナーを追加
+          button.addEventListener('click', handleTicketDelete);
+        });
+        
+        isInitialized = true;
+        console.log('✅ チケット一覧ページ初期化完了');
+        return true;
+        
+      } catch (error) {
+        console.error('❌ チケット一覧ページ初期化中にエラーが発生しました:', error);
         return false;
       }
-      
-      console.log('✅ モーダル要素の確認完了');
-      
-      // 削除ボタンのイベントリスナーを設定
-      const deleteButtons = document.querySelectorAll('.delete-ticket-btn');
-      console.log(`🔘 削除ボタン${deleteButtons.length}個を発見`);
-      
-      deleteButtons.forEach(button => {
-        // 既存のイベントリスナーを削除
-        button.removeEventListener('click', handleTicketDelete);
-        
-        // 新しいイベントリスナーを追加
-        button.addEventListener('click', handleTicketDelete);
-      });
-      
-      console.log('✅ チケット一覧ページ初期化完了');
-      return true;
-      
-    } catch (error) {
-      console.error('❌ チケット一覧ページ初期化中にエラーが発生しました:', error);
-      return false;
     }
-  }
   
   // チケット削除処理
   function handleTicketDelete(event) {
@@ -559,26 +563,25 @@
   // 初期化の実行
   function startInitialization() {
     // 既に初期化済みの場合は何もしない
-    if (window.ticketListInitialized && window.ticketListSetupComplete) {
-      console.log('⚠️ 既に初期化とセットアップが完了しています');
+    if (isInitialized) {
+      console.log('⚠️ 既に初期化済みです');
       return;
     }
     
     if (initializeTicketList()) {
       setupEventListeners();
-      window.ticketListSetupComplete = true;
       console.log('✅ チケット一覧ページ初期化完了');
     } else {
       console.error('❌ チケット一覧ページ初期化に失敗しました');
-      // 初期化失敗時の再試行（最大3回まで）
+      // 初期化失敗時の再試行（最大2回まで）
       if (!window.initializationRetryCount) {
         window.initializationRetryCount = 0;
       }
       
-      if (window.initializationRetryCount < 3) {
+      if (window.initializationRetryCount < 2) {
         window.initializationRetryCount++;
-        console.log(`🔄 初期化失敗後の再試行 ${window.initializationRetryCount}/3 を実行します...`);
-        setTimeout(startInitialization, 200 * window.initializationRetryCount);
+        console.log(`🔄 初期化失敗後の再試行 ${window.initializationRetryCount}/2 を実行します...`);
+        setTimeout(startInitialization, 300 * window.initializationRetryCount);
       } else {
         console.error('❌ 最大再試行回数に達しました。初期化を中止します。');
       }
@@ -599,7 +602,7 @@
   // バックアップ初期化（1回のみ）
   window.addEventListener('load', function() {
     console.log('🎫 load イベント発生');
-    if (!window.ticketListSetupComplete) {
+    if (!isInitialized) {
       setTimeout(startInitialization, 200);
     }
   });
