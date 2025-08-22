@@ -92,9 +92,19 @@
               </a>
               <ul class="dropdown-menu dropdown-menu-end">
                 <li>
-                  <%= link_to destroy_admin_user_session_path, method: :delete, class: "dropdown-item" do %>
-                    <i class="fas fa-sign-out-alt me-2"></i>ログアウト
-                  <% end %>
+                  <%= button_to "ログアウト", destroy_admin_user_session_path, 
+                      method: :delete, 
+                      class: "dropdown-item",
+                      form: { 
+                        data: { 
+                          turbo: false,
+                          "turbo-method": false,
+                          "turbo-frame": false
+                        }
+                      },
+                      data: { 
+                        confirm: "本当にログアウトしますか？"
+                      } %>
                 </li>
               </ul>
             </li>
