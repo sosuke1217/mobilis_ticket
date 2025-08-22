@@ -17,6 +17,8 @@ Rails.application.routes.draw do
       collection do
         get 'calendar'
         get 'cancellation_stats'
+        get 'load_shift_settings'
+        get 'load_reservations'
       end
     end
     
