@@ -64,7 +64,7 @@
 
 <!-- チケット削除確認モーダル -->
 <div class="modal fade" id="deleteTicketModal" tabindex="-1" aria-labelledby="deleteTicketModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-sm">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header bg-danger text-white">
         <h5 class="modal-title" id="deleteTicketModalLabel">
@@ -100,6 +100,71 @@
     </div>
   </div>
 </div>
+
+<!-- モーダルのカスタムスタイル -->
+<style>
+  /* 削除モーダルのカスタムスタイル */
+  #deleteTicketModal .modal-content {
+    /* 高さ制限を完全に削除 */
+    max-height: none;
+    min-height: 400px;
+    overflow: visible;
+  }
+  
+  #deleteTicketModal .modal-body {
+    /* スクロール制限を完全に削除 */
+    overflow: visible;
+    padding: 2rem;
+    min-height: 200px;
+  }
+  
+  #deleteTicketModal .modal-footer {
+    border-top: 1px solid #dee2e6;
+    padding: 1.5rem;
+    background-color: #f8f9fa;
+    margin-top: 0;
+    min-height: 80px;
+    /* フッターの幅をボディと合わせる */
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+  
+  #deleteTicketModal .alert {
+    margin-bottom: 0;
+    border: none;
+    background-color: #fff3cd;
+    color: #856404;
+  }
+  
+  #deleteTicketModal .btn {
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+  }
+  
+  #deleteTicketModal .text-danger {
+    color: #dc3545 !important;
+  }
+  
+  #deleteTicketModal .text-muted {
+    color: #6c757d !important;
+  }
+  
+  /* モーダル背景の暗さを調整 */
+  #deleteTicketModal.modal-backdrop {
+    opacity: 0.2 !important;
+  }
+  
+  /* モーダルが閉じた後の背景を明るくする */
+  body.modal-open {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+  }
+  
+  /* モーダル背景の透明度を調整 */
+  .modal-backdrop.show {
+    opacity: 0.2 !important;
+  }
+</style>
 
 <!-- 独立したスクリプトセクション -->
 <script type="text/javascript">
