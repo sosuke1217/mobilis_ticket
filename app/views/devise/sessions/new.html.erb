@@ -29,7 +29,8 @@
                       autocomplete: "email",
                       class: "form-control border-start-0 text-start",
                       placeholder: "admin@example.com",
-                      required: true %>
+                      required: true,
+                      style: "text-align: left !important; direction: ltr !important;" %>
                 </div>
               </div>
 
@@ -44,7 +45,8 @@
                       autocomplete: "current-password",
                       class: "form-control border-start-0 text-start",
                       placeholder: "パスワードを入力",
-                      required: true %>
+                      required: true,
+                      style: "text-align: left !important; direction: ltr !important;" %>
                 </div>
               </div>
 
@@ -169,5 +171,41 @@
   input[type="email"]:focus,
   input[type="password"]:focus {
     text-align: left !important;
+  }
+  
+  /* さらに強力なセレクターで確実に左寄せを固定 */
+  .form-control[type="email"]::placeholder,
+  .form-control[type="password"]::placeholder {
+    text-align: left !important;
+    direction: ltr !important;
+  }
+  
+  .form-control[type="email"]:focus::placeholder,
+  .form-control[type="password"]:focus::placeholder {
+    text-align: left !important;
+    direction: ltr !important;
+  }
+  
+  .form-control[type="email"],
+  .form-control[type="password"] {
+    text-align: left !important;
+    direction: ltr !important;
+  }
+  
+  .form-control[type="email"]:focus,
+  .form-control[type="password"]:focus {
+    text-align: left !important;
+    direction: ltr !important;
+  }
+  
+  /* インラインスタイルで強制的に左寄せ */
+  input[type="email"] {
+    text-align: left !important;
+    direction: ltr !important;
+  }
+  
+  input[type="password"] {
+    text-align: left !important;
+    direction: ltr !important;
   }
 </style>
