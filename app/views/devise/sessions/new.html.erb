@@ -157,7 +157,7 @@
     const passwordInput = document.querySelector('input[type="password"]');
     
     function forceLeftAlign(input) {
-      if (input) {
+      if (input && input.tagName === 'INPUT') {  // 入力フィールドのみに限定
         input.style.textAlign = 'left';
         input.style.textAlignLast = 'left';
         input.style.direction = 'ltr';
@@ -188,7 +188,10 @@
       passwordInput.addEventListener('click', applyLeftAlign);
     }
     
-    // 定期的に適用（他のCSSが上書きした場合の対策）
-    setInterval(applyLeftAlign, 100);
+    // 定期的に適用（他のCSSが上書きした場合の対策）- 入力フィールドのみ
+    setInterval(function() {
+      if (emailInput && emailInput.tagName === 'INPUT') applyLeftAlign();
+      if (passwordInput && passwordInput.tagName === 'INPUT') applyLeftAlign();
+    }, 100);
   });
 </script>

@@ -14,7 +14,7 @@
  *= require_self
  */
 
-/* グローバルテキスト入力スタイル修正 */
+/* グローバルテキスト入力スタイル修正 - 入力フィールドのみに限定 */
 input[type="text"],
 input[type="email"],
 input[type="password"],
@@ -34,7 +34,7 @@ select {
   margin-right: 0 !important;
 }
 
-/* プレースホルダーのスタイル */
+/* プレースホルダーのスタイル - 入力フィールドのみ */
 input::placeholder,
 textarea::placeholder {
   text-align: left !important;
@@ -42,7 +42,7 @@ textarea::placeholder {
   text-indent: 0 !important;
 }
 
-/* フォーカス時のスタイル */
+/* フォーカス時のスタイル - 入力フィールドのみ */
 input:focus,
 textarea:focus,
 select:focus {
@@ -52,7 +52,7 @@ select:focus {
   text-indent: 0 !important;
 }
 
-/* 入力中のスタイル */
+/* 入力中のスタイル - 入力フィールドのみ */
 input:not(:placeholder-shown),
 textarea:not(:placeholder-shown) {
   text-align: left !important;
@@ -61,7 +61,7 @@ textarea:not(:placeholder-shown) {
   text-indent: 0 !important;
 }
 
-/* Bootstrapフォームコントロールのオーバーライド */
+/* Bootstrapフォームコントロールのオーバーライド - 入力フィールドのみ */
 .form-control {
   text-align: left !important;
   text-align-last: left !important;
@@ -76,7 +76,7 @@ textarea:not(:placeholder-shown) {
   text-indent: 0 !important;
 }
 
-/* 入力グループ内のフォームコントロール */
+/* 入力グループ内のフォームコントロール - 入力フィールドのみ */
 .input-group .form-control {
   text-align: left !important;
   text-align-last: left !important;
@@ -84,12 +84,12 @@ textarea:not(:placeholder-shown) {
   text-indent: 0 !important;
 }
 
-/* 特定のクラスを持つ要素のオーバーライド */
-.text-start,
+/* 特定のクラスを持つ要素のオーバーライドを削除 - タイトルなどに影響しないように */
+/* .text-start,
 .text-center,
 .text-end {
   text-align: left !important;
   text-align-last: left !important;
   direction: ltr !important;
   text-indent: 0 !important;
-}
+} */
