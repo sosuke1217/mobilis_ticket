@@ -64,7 +64,7 @@
 
 <!-- チケット削除確認モーダル -->
 <div class="modal fade" id="deleteTicketModal" tabindex="-1" aria-labelledby="deleteTicketModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
     <div class="modal-content">
       <div class="modal-header bg-danger text-white">
         <h5 class="modal-title" id="deleteTicketModalLabel">
@@ -73,22 +73,21 @@
         </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body p-4">
         <div class="text-center">
           <i class="fas fa-trash-alt fa-3x text-danger mb-3"></i>
-          <p class="mb-2">以下のチケットを削除しますか？</p>
-          <div class="alert alert-warning">
+          <p class="mb-3">以下のチケットを削除しますか？</p>
+          <div class="alert alert-warning mb-3">
             <strong>チケット名:</strong> <span id="deleteTicketName"></span><br>
-            <strong>ユーザー:</strong> <span id="deleteTicketUser"></span><br>
-            <strong>注意:</strong> この操作は取り消すことができません
+            <strong>ユーザー:</strong> <span id="deleteTicketUser"></span>
           </div>
-          <p class="text-muted small mt-2 mb-0">
+          <p class="text-muted small mb-0">
             <i class="fas fa-info-circle me-1"></i>
             この操作は取り消すことができません
           </p>
         </div>
       </div>
-      <div class="modal-footer justify-content-center">
+      <div class="modal-footer justify-content-center p-3">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="cleanupModalBackground()">
           <i class="fas fa-times me-1"></i>キャンセル
         </button>
