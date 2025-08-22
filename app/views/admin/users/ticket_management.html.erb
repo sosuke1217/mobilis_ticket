@@ -566,8 +566,24 @@ function handleTicketDelete(e) {
       return;
     }
     
+    // 削除ボタンの詳細情報をログ出力
+    console.log('🔍 削除ボタンの詳細:', {
+      element: deleteBtn,
+      classList: deleteBtn.classList.toString(),
+      attributes: {
+        'data-ticket-id': deleteBtn.getAttribute('data-ticket-id'),
+        'data-ticket-name': deleteBtn.getAttribute('data-ticket-name')
+      },
+      innerHTML: deleteBtn.innerHTML
+    });
+    
     const ticketId = deleteBtn.getAttribute('data-ticket-id');
     const ticketName = deleteBtn.getAttribute('data-ticket-name');
+    
+    if (!ticketId || !ticketName) {
+      console.error('❌ 削除ボタンに必要な属性が設定されていません:', { ticketId, ticketName });
+      return;
+    }
     
     console.log('🎫 削除対象:', { ticketId, ticketName });
     
@@ -578,9 +594,48 @@ function handleTicketDelete(e) {
       return;
     }
     
-    const remainingCountElement = ticketRow.querySelector('td:nth-child(2) .badge');
+    console.log('🔍 チケット行の詳細:', {
+      element: ticketRow,
+      innerHTML: ticketRow.innerHTML,
+      children: ticketRow.children.length
+    });
+    
+    // 残り回数要素を複数の方法で検索
+    let remainingCountElement = ticketRow.querySelector('td:nth-child(2) .badge');
+    
     if (!remainingCountElement) {
-      console.error('❌ 残り回数要素が見つかりません');
+      console.log('⚠️ 1番目の方法で見つからなかったため、別の方法を試行');
+      // 2番目の方法: クラス名で検索
+      remainingCountElement = ticketRow.querySelector('.badge');
+    }
+    
+    if (!remainingCountElement) {
+      console.log('⚠️ 2番目の方法でも見つからなかったため、別の方法を試行');
+      // 3番目の方法: テキスト内容で検索
+      const allTds = ticketRow.querySelectorAll('td');
+      console.log('🔍 全td要素:', Array.from(allTds).map((td, index) => ({
+        index: index + 1,
+        textContent: td.textContent.trim(),
+        innerHTML: td.innerHTML
+      })));
+      
+      // 残り回数を含むtdを探す（例: "3/4" のような形式）
+      for (let i = 0; i < allTds.length; i++) {
+        const td = allTds[i];
+        if (td.textContent.includes('/')) {
+          const badge = td.querySelector('.badge');
+          if (badge) {
+            remainingCountElement = badge;
+            console.log(`✅ ${i + 1}番目のtdで残り回数要素を発見:`, badge.textContent);
+            break;
+          }
+        }
+      }
+    }
+    
+    if (!remainingCountElement) {
+      console.error('❌ 残り回数要素が見つかりません。行の構造を確認してください');
+      console.log('🔍 行の完全なHTML:', ticketRow.outerHTML);
       return;
     }
     
@@ -749,6 +804,7 @@ function deleteTicket(ticketId, ticketRow) {
       
       // 新チケットの行を作成
       const newRow = document.createElement('tr');
+      newRow.setAttribute('data-ticket-id', ticket.id);
       newRow.innerHTML = `
         <td>
           <strong>${ticket.ticket_template.name}</strong>
