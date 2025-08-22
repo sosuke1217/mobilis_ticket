@@ -41,8 +41,11 @@
     <% if admin_user_signed_in? %>
       <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
-          <a class="navbar-brand" href="<%= root_path %>">
-            <i class="fas fa-spa me-2"></i>Mobilis
+          <a class="navbar-brand d-flex align-items-center" href="<%= root_path %>">
+            <div class="logo-container me-2">
+              <%= image_tag "mobilis-logo.svg", alt: "Mobilis Logo", class: "navbar-logo" %>
+            </div>
+            <span class="brand-text">Mobilis</span>
           </a>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
             aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -143,6 +146,26 @@
         }
       }
     </script>
+    
+    <!-- ナビゲーションロゴスタイリング -->
+    <style>
+      .navbar-logo {
+        width: 32px;
+        height: 32px;
+        filter: brightness(0) invert(1);
+        transition: all 0.3s ease;
+      }
+      
+      .navbar-brand:hover .navbar-logo {
+        transform: scale(1.1);
+        filter: brightness(0) invert(1) drop-shadow(0 2px 4px rgba(255, 255, 255, 0.3));
+      }
+      
+      .brand-text {
+        font-weight: 600;
+        font-size: 1.2rem;
+      }
+    </style>
     
     <!-- Application JavaScript (importmap) -->
     <%= javascript_importmap_tags %>
