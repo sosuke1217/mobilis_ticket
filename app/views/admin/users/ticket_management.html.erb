@@ -377,8 +377,7 @@ function handleTicketSubmit(e) {
       console.log('🗑️ 「保有チケットがありません」の行を削除中...');
       // 「保有チケットがありません」の行を削除
       tbody.innerHTML = '';
-      // 新しく作成されたチケットを追加
-      addNewTicketToList(data.ticket);
+      // 新しく作成されたチケットを追加（既にaddNewTicketToListで追加済み）
       console.log('✅ 新チケットを追加完了');
       
       // 残額を更新（新チケット追加後）
@@ -721,6 +720,7 @@ function deleteTicket(ticketId, ticketRow) {
       // 新チケットを一覧に追加
       tbody.appendChild(newRow);
       console.log('✅ 新チケットを一覧に追加完了');
+      console.log('🔍 追加後のtbody行数:', tbody.querySelectorAll('tr').length);
       
     } catch (error) {
       console.error('❌ 新チケット追加中にエラーが発生しました:', error);
@@ -731,6 +731,18 @@ function deleteTicket(ticketId, ticketRow) {
   function updateTicketCounts() {
     try {
       console.log('🔄 チケット数更新開始');
+      
+      // 現在のtbodyの状態を確認
+      const tbody = document.querySelector('tbody');
+      const allRows = tbody.querySelectorAll('tr');
+      console.log('🔍 現在のtbody状態:', {
+        totalRows: allRows.length,
+        rows: Array.from(allRows).map((row, index) => ({
+          index: index + 1,
+          hasColspan: row.querySelector('td[colspan]') !== null,
+          content: row.textContent.trim()
+        }))
+      });
       
       // 残りチケット数を再計算
       const remainingTickets = document.querySelectorAll('tbody tr').length;
@@ -763,10 +775,20 @@ function deleteTicket(ticketId, ticketRow) {
         const ticketRows = document.querySelectorAll('tbody tr');
         
         console.log(`💰 残額計算開始: ${ticketRows.length}件のチケットを処理`);
+        console.log('🔍 全tbody行の内容:');
+        ticketRows.forEach((row, index) => {
+          console.log(`行${index + 1}:`, row.innerHTML);
+        });
         
         ticketRows.forEach((row, index) => {
           const badge = row.querySelector('td:nth-child(2) .badge');
           const priceElement = row.querySelector('td:nth-child(1) small');
+          
+          console.log(`🔍 行${index + 1}の要素:`, {
+            badge: badge?.textContent,
+            priceElement: priceElement?.textContent,
+            rowHTML: row.innerHTML
+          });
           
           if (badge && priceElement) {
             const count = parseInt(badge.textContent.split('/')[0].trim());
