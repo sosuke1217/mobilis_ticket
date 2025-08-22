@@ -133,11 +133,23 @@
     transition: all 0.3s ease;
     text-align: center !important;
     text-align-last: center !important;
+    direction: ltr !important;
+  }
+  
+  /* より具体的なセレクターで優先順位を上げる */
+  input[type="submit"].btn-primary,
+  button.btn-primary {
+    text-align: center !important;
+    text-align-last: center !important;
+    direction: ltr !important;
   }
   
   .btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+    text-align: center !important;
+    text-align-last: center !important;
+    direction: ltr !important;
   }
   
   /* テキスト位置の基本設定 */
@@ -159,6 +171,7 @@
   document.addEventListener('DOMContentLoaded', function() {
     const emailInput = document.querySelector('input[type="email"]');
     const passwordInput = document.querySelector('input[type="password"]');
+    const loginButton = document.querySelector('.btn-primary');
     
     function forceLeftAlign(input) {
       if (input && input.tagName === 'INPUT') {  // 入力フィールドのみに限定
@@ -171,13 +184,26 @@
       }
     }
     
+    function forceCenterAlign(button) {
+      if (button) {
+        button.style.textAlign = 'center';
+        button.style.textAlignLast = 'center';
+        button.style.direction = 'ltr';
+      }
+    }
+    
     function applyLeftAlign() {
       forceLeftAlign(emailInput);
       forceLeftAlign(passwordInput);
     }
     
+    function applyCenterAlign() {
+      forceCenterAlign(loginButton);
+    }
+    
     // 初期設定
     applyLeftAlign();
+    applyCenterAlign();
     
     // フォーカス時に適用
     if (emailInput) {
@@ -196,6 +222,7 @@
     setInterval(function() {
       if (emailInput && emailInput.tagName === 'INPUT') applyLeftAlign();
       if (passwordInput && passwordInput.tagName === 'INPUT') applyLeftAlign();
+      if (loginButton) applyCenterAlign();
     }, 100);
   });
 </script>

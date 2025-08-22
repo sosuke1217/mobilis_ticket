@@ -34,13 +34,24 @@ select {
   margin-right: 0 !important;
 }
 
-/* ログインボタンのみ中央寄せに */
+/* ログインボタンのみ中央寄せに - 初期状態から確実に適用 */
 .btn-primary,
 .btn-primary:focus,
 .btn-primary:hover,
-.btn-primary:active {
+.btn-primary:active,
+.btn-primary:visited,
+.btn-primary:link {
   text-align: center !important;
   text-align-last: center !important;
+  direction: ltr !important;
+}
+
+/* より具体的なセレクターで優先順位を上げる */
+input[type="submit"].btn-primary,
+button.btn-primary {
+  text-align: center !important;
+  text-align-last: center !important;
+  direction: ltr !important;
 }
 
 /* プレースホルダーのスタイル - 入力フィールドのみ */
