@@ -1142,8 +1142,26 @@ function deleteTicket(ticketId, ticketRow) {
   
   // モーダル背景のクリーンアップ関数
   function cleanupModalBackground() {
-    console.log('🔄 背景クリーンアップ開始');
-    
-    // 即座に背景をクリーンアップ
-    const backdrops = document.querySelectorAll('.modal-backdrop');
-    console.log(`
+    try {
+      console.log('🔄 モーダル背景クリーンアップ開始');
+      
+      // モーダル背景要素を削除
+      const modalBackdrops = document.querySelectorAll('.modal-backdrop');
+      modalBackdrops.forEach(backdrop => {
+        backdrop.remove();
+        console.log('🗑️ モーダル背景要素を削除しました');
+      });
+      
+      // bodyの状態をリセット
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+      
+      console.log('✅ モーダル背景クリーンアップ完了');
+    } catch (error) {
+      console.error('❌ モーダル背景クリーンアップ中にエラーが発生しました:', error);
+    }
+  }
+  
+  console.log('🎫 チケット管理初期化完了');
+</script>
