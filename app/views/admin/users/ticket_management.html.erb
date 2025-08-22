@@ -186,7 +186,7 @@
                 <tr>
                   <td>
                     <strong><%= ticket.ticket_template.name %></strong>
-                    <br><small class="text-muted">¥<%= ticket.ticket_template.price.to_s(:delimited) %></small>
+                    <br><small class="text-muted">¥<%= number_with_delimiter(ticket.ticket_template.price) %></small>
                   </td>
                   <td>
                     <span class="badge bg-primary">
