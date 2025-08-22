@@ -92,19 +92,9 @@
               </a>
               <ul class="dropdown-menu dropdown-menu-end">
                 <li>
-                  <%= button_to "ログアウト", destroy_admin_user_session_path, 
-                      method: :delete, 
-                      class: "dropdown-item",
-                      form: { 
-                        data: { 
-                          turbo: false,
-                          "turbo-method": false,
-                          "turbo-frame": false
-                        }
-                      },
-                      data: { 
-                        confirm: "本当にログアウトしますか？"
-                      } %>
+                  <button type="button" class="dropdown-item" onclick="logout()">
+                    <i class="fas fa-sign-out-alt me-2"></i>ログアウト
+                  </button>
                 </li>
               </ul>
             </li>
@@ -125,6 +115,40 @@
     
     <script src="https://unpkg.com/fullcalendar@6.1.8/index.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    
+    <!-- ログアウト機能 -->
+    <script>
+      function logout() {
+        if (confirm('本当にログアウトしますか？')) {
+          // CSRFトークンを取得
+          const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+          
+          // フォームを作成して送信
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = '<%= destroy_admin_user_session_path %>';
+          form.style.display = 'none';
+          
+          // CSRFトークンを追加
+          const csrfInput = document.createElement('input');
+          csrfInput.type = 'hidden';
+          csrfInput.name = 'authenticity_token';
+          csrfInput.value = token;
+          form.appendChild(csrfInput);
+          
+          // methodをDELETEに設定
+          const methodInput = document.createElement('input');
+          methodInput.type = 'hidden';
+          methodInput.name = '_method';
+          methodInput.value = 'DELETE';
+          form.appendChild(methodInput);
+          
+          // フォームを送信
+          document.body.appendChild(form);
+          form.submit();
+        }
+      }
+    </script>
     
     <!-- Application JavaScript (importmap) -->
     <%= javascript_importmap_tags %>
