@@ -174,72 +174,69 @@
             </tr>
           </thead>
           <tbody>
-            <% @tickets.each do |ticket| %>
+            <% if @tickets.empty? %>
               <tr>
-                <td>
-                  <strong><%= ticket.ticket_template.name %></strong>
-                  <br>
-                  <small class="text-muted">¥<%= number_with_delimiter(ticket.ticket_template.price) %></small>
-                </td>
-                <td>
-                  <span class="badge bg-<%= ticket.remaining_count > 0 ? 'success' : 'secondary' %>">
-                    <%= ticket.remaining_count %> / <%= ticket.total_count %>
-                  </span>
-                </td>
-                <td><%= l(ticket.purchase_date.to_date) if ticket.purchase_date %></td>
-                <td>
-                  <% if ticket.expiry_date %>
-                    <%= l(ticket.expiry_date.to_date) %>
-                    <% if ticket.expiry_date < Date.current %>
-                      <span class="badge bg-danger">期限切れ</span>
-                    <% end %>
-                  <% else %>
-                    <span class="text-muted">なし</span>
-                  <% end %>
-                </td>
-                <td>
-                  <% if ticket.expiry_date && ticket.expiry_date < Date.current %>
-                    <span class="badge bg-danger">期限切れ</span>
-                  <% elsif ticket.remaining_count <= 0 %>
-                    <span class="badge bg-secondary">使用済み</span>
-                  <% elsif ticket.remaining_count <= 2 %>
-                    <span class="badge bg-warning">残り少ない</span>
-                  <% else %>
-                    <span class="badge bg-success">利用可能</span>
-                  <% end %>
-                </td>
-                <td>
-                  <% if ticket.remaining_count > 0 && (!ticket.expiry_date || ticket.expiry_date >= Date.current) %>
-                    <button type="button" 
-                            class="btn btn-sm btn-outline-primary use-ticket-btn"
-                            data-ticket-id="<%= ticket.id %>"
-                            data-ticket-name="<%= ticket.ticket_template.name %>">
-                      使用
-                    </button>
-                  <% else %>
-                    <span class="text-muted">使用不可</span>
-                  <% end %>
-                  
-                  <!-- 削除ボタン -->
-                  <button type="button" 
-                          class="btn btn-sm btn-outline-danger delete-ticket-btn ms-1"
-                          data-ticket-id="<%= ticket.id %>"
-                          data-ticket-name="<%= ticket.ticket_template.name %>">
-                    <i class="fas fa-trash"></i>
-                  </button>
+                <td colspan="6" class="text-center py-4">
+                  <i class="fas fa-ticket-alt fa-3x text-muted mb-3"></i>
+                  <p class="text-muted">保有チケットがありません</p>
                 </td>
               </tr>
+            <% else %>
+              <% @tickets.each do |ticket| %>
+                <tr>
+                  <td>
+                    <strong><%= ticket.ticket_template.name %></strong>
+                    <br><small class="text-muted">¥<%= ticket.ticket_template.price.to_s(:delimited) %></small>
+                  </td>
+                  <td>
+                    <span class="badge bg-primary">
+                      <%= ticket.remaining_count %> / <%= ticket.total_count %>
+                    </span>
+                  </td>
+                  <td><%= ticket.purchase_date&.strftime('%Y/%m/%d') %></td>
+                  <td>
+                    <%= ticket.expiry_date&.strftime('%Y/%m/%d') || '無期限' %>
+                    <% if ticket.expiry_date && ticket.expiry_date < Date.current %>
+                      <span class="badge bg-danger">期限切れ</span>
+                    <% end %>
+                  </td>
+                  <td>
+                    <% if ticket.expiry_date && ticket.expiry_date < Date.current %>
+                      <span class="badge bg-danger">期限切れ</span>
+                    <% elsif ticket.remaining_count <= 0 %>
+                      <span class="badge bg-secondary">使用済み</span>
+                    <% elsif ticket.remaining_count <= 2 %>
+                      <span class="badge bg-warning">残り少ない</span>
+                    <% else %>
+                      <span class="badge bg-success">利用可能</span>
+                    <% end %>
+                  </td>
+                  <td>
+                    <% if ticket.remaining_count > 0 && (!ticket.expiry_date || ticket.expiry_date >= Date.current) %>
+                      <button type="button" 
+                              class="btn btn-sm btn-outline-primary use-ticket-btn"
+                              data-ticket-id="<%= ticket.id %>"
+                              data-ticket-name="<%= ticket.ticket_template.name %>">
+                        使用
+                      </button>
+                    <% else %>
+                      <span class="text-muted">使用不可</span>
+                    <% end %>
+                    
+                    <!-- 削除ボタン -->
+                    <button type="button" 
+                            class="btn btn-sm btn-outline-danger delete-ticket-btn ms-1"
+                            data-ticket-id="<%= ticket.id %>"
+                            data-ticket-name="<%= ticket.ticket_template.name %>">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              <% end %>
             <% end %>
           </tbody>
         </table>
       </div>
-
-      <% if @tickets.empty? %>
-        <div class="text-center py-4">
-          <i class="fas fa-ticket-alt fa-3x text-muted mb-3"></i>
-          <p class="text-muted">保有チケットがありません</p>
-        </div>
-      <% end %>
     </div>
   </div>
 </div>
@@ -384,13 +381,13 @@ function handleTicketSubmit(e) {
       addNewTicketToList(data.ticket);
       console.log('✅ 新チケットを追加完了');
       
-      // 再度残額を更新（新チケット追加後）
+      // 残額を更新（新チケット追加後）
       setTimeout(() => {
         updateTicketCounts();
         console.log('🔄 遅延後の残額更新完了');
       }, 200);
     } else {
-      // 既存のチケットがある場合は、新チケットを追加してから更新
+      // 既存のチケットがある場合は、残額を更新
       setTimeout(() => {
         updateTicketCounts();
         console.log('🔄 既存チケットありの場合の残額更新完了');
@@ -697,24 +694,24 @@ function deleteTicket(ticketId, ticketRow) {
       const newRow = document.createElement('tr');
       newRow.innerHTML = `
         <td>
-          <strong>${ticket.ticket_template.title}</strong>
+          <strong>${ticket.ticket_template.name}</strong>
           <br><small class="text-muted">¥${ticket.ticket_template.price.toLocaleString()}</small>
         </td>
         <td>
-          <span class="badge bg-primary">${ticket.remaining_count}/${ticket.ticket_template.count}</span>
+          <span class="badge bg-primary">${ticket.remaining_count}/${ticket.total_count}</span>
         </td>
-        <td>${ticket.created_at}</td>
-        <td>${ticket.expires_at || '無期限'}</td>
+        <td>${ticket.purchase_date ? new Date(ticket.purchase_date).toLocaleDateString('ja-JP') : 'なし'}</td>
+        <td>${ticket.expiry_date ? new Date(ticket.expiry_date).toLocaleDateString('ja-JP') : '無期限'}</td>
+        <td>
+          <span class="badge bg-success">利用可能</span>
+        </td>
         <td>
           <button class="btn btn-sm btn-outline-primary use-ticket-btn" 
                   data-ticket-id="${ticket.id}" 
-                  data-ticket-name="${ticket.ticket_template.title}"
-                  ${ticket.remaining_count <= 0 ? 'disabled' : ''}>
+                  data-ticket-name="${ticket.ticket_template.name}">
             <i class="fas fa-ticket-alt me-1"></i>使用
           </button>
-        </td>
-        <td>
-          <button class="btn btn-sm btn-outline-danger delete-ticket-btn" 
+          <button class="btn btn-sm btn-outline-danger delete-ticket-btn ms-1" 
                   data-ticket-id="${ticket.id}">
             <i class="fas fa-trash me-1"></i>削除
           </button>
@@ -817,13 +814,6 @@ function deleteTicket(ticketId, ticketRow) {
         }
       } else {
         console.warn('⚠️ デバッグ情報コンテナが見つかりません');
-      }
-      
-      // 残額合計の詳細ログ（既存の要素を使用）
-      if (remainingValueElement) {
-        console.log('💰 残額合計要素を発見:', remainingValueElement.textContent);
-      } else {
-        console.warn('⚠️ 残額合計要素が見つかりません');
       }
       
       console.log('🔄 チケット数更新完了');
