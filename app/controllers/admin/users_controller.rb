@@ -212,7 +212,7 @@ class Admin::UsersController < ApplicationController
         
         # LINEボットコントローラーのメソッドを使用
         linebot_controller = LinebotController.new
-        result = linebot_controller.update_user_profile(@user, @user.line_user_id)
+        result = linebot_controller.send(:update_user_profile, @user, @user.line_user_id)
         
         if result
           Rails.logger.info "LINE情報更新成功: ユーザーID #{@user.id}"
