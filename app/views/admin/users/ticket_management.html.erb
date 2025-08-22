@@ -96,7 +96,7 @@
                 <div class="col-md-6">
                   <p class="mb-1"><strong>登録日:</strong> <%= l(@user.created_at.to_date) %></p>
                   <p class="mb-1" id="remainingTicketCount"><strong>残チケット:</strong> <%= @user.active_ticket_count %> 回</p>
-                  <p class="mb-1" id="remainingTicketValue"><strong>残額合計:</strong> <%= number_to_currency(@user.remaining_ticket_value, unit: "¥", precision: 0) %></p>
+                  <p class="mb-1" id="remainingTicketValue"><strong>チケット価格合計:</strong> <%= number_to_currency(@user.remaining_ticket_value, unit: "¥", precision: 0) %></p>
                   
                   <!-- デバッグ情報 -->
                   <% if Rails.env.development? %>
@@ -784,11 +784,11 @@ function deleteTicket(ticketId, ticketRow) {
       // 残額合計も更新
       const remainingValueElement = document.getElementById('remainingTicketValue');
       if (remainingValueElement) {
-        // 残額合計の計算（実際のチケット価格に基づく）
+        // チケット1枚あたりの価格を表示（残り回数分の総額ではない）
         let totalValue = 0;
         const ticketRows = document.querySelectorAll('tbody tr');
         
-        console.log(`💰 残額計算開始: ${ticketRows.length}件のチケットを処理`);
+        console.log(`💰 チケット価格計算開始: ${ticketRows.length}件のチケットを処理`);
         console.log('🔍 全tbody行の内容:');
         ticketRows.forEach((row, index) => {
           console.log(`行${index + 1}:`, row.innerHTML);
@@ -812,17 +812,17 @@ function deleteTicket(ticketId, ticketRow) {
             const price = parseInt(priceElement.textContent.replace('¥', '').replace(/,/g, ''));
             
             if (!isNaN(count) && !isNaN(price)) {
-              // 重複チェック（同じ価格と回数の組み合わせが既に処理済みかチェック）
-              const ticketKey = `${price}-${count}`;
+              // 重複チェック（同じ価格のチケットが既に処理済みかチェック）
+              const ticketKey = `${price}`;
               if (processedTickets.has(ticketKey)) {
-                console.warn(`⚠️ 重複チケットをスキップ: 価格=${price}, 回数=${count}`);
+                console.warn(`⚠️ 重複価格のチケットをスキップ: 価格=${price}`);
                 return;
               }
               processedTickets.add(ticketKey);
               
-              const rowValue = count * price;
-              totalValue += rowValue;
-              console.log(`💰 チケット${index + 1}: 残り回数=${count}, 価格=${price}, 小計=${rowValue}, 累計=${totalValue}`);
+              // チケット1枚あたりの価格を累積（回数は考慮しない）
+              totalValue += price;
+              console.log(`💰 チケット${index + 1}: 価格=${price}, 累計価格=${totalValue}`);
             } else {
               console.warn(`⚠️ チケット${index + 1}: 無効な値 - 回数:${count}, 価格:${price}`);
             }
@@ -831,9 +831,9 @@ function deleteTicket(ticketId, ticketRow) {
           }
         });
         
-        console.log(`💰 最終残額合計: ${totalValue}`);
-        remainingValueElement.innerHTML = `<strong>残額合計:</strong> ¥${totalValue.toLocaleString()}`;
-        console.log('✅ 残額合計表示を更新しました:', totalValue);
+        console.log(`💰 最終チケット価格合計: ${totalValue}`);
+        remainingValueElement.innerHTML = `<strong>チケット価格合計:</strong> ¥${totalValue.toLocaleString()}`;
+        console.log('✅ チケット価格合計表示を更新しました:', totalValue);
       } else {
         console.warn('⚠️ 残額合計要素が見つかりません');
       }
