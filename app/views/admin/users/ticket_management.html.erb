@@ -7,13 +7,14 @@
   
   #deleteTicketModal .modal-body {
     overflow: hidden;
-    padding: 1.5rem;
+    padding: 1.5rem 1.5rem 1rem 1.5rem;
   }
   
   #deleteTicketModal .modal-footer {
     border-top: 1px solid #dee2e6;
-    padding: 1rem 1.5rem;
+    padding: 0.75rem 1.5rem;
     background-color: #f8f9fa;
+    margin-top: 0;
   }
   
   #deleteTicketModal .alert {
@@ -34,6 +35,21 @@
   
   #deleteTicketModal .text-muted {
     color: #6c757d !important;
+  }
+  
+  /* モーダル背景の暗さを調整 */
+  #deleteTicketModal.modal-backdrop {
+    opacity: 0.3 !important;
+  }
+  
+  /* モーダルが閉じた後の背景を明るくする */
+  body.modal-open {
+    background-color: rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  /* モーダル背景の透明度を調整 */
+  .modal-backdrop.show {
+    opacity: 0.3 !important;
   }
 </style>
 <div class="container-lg my-5">
@@ -238,14 +254,14 @@
             <strong>チケット名:</strong> <span id="deleteTicketName"></span><br>
             <strong>残り回数:</strong> <span id="deleteTicketRemaining"></span> 回
           </div>
-          <p class="text-muted small mt-2">
+          <p class="text-muted small mt-2 mb-0">
             <i class="fas fa-info-circle me-1"></i>
             この操作は取り消すことができません
           </p>
         </div>
       </div>
       <div class="modal-footer justify-content-center">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="cleanupModalBackground()">
           <i class="fas fa-times me-1"></i>キャンセル
         </button>
         <button type="button" class="btn btn-danger" id="confirmDeleteTicketBtn">
@@ -527,6 +543,16 @@ function handleTicketDelete(e) {
   document.getElementById('confirmDeleteTicketBtn').onclick = function() {
     deleteTicket(ticketId, ticketRow);
     deleteModal.hide();
+    
+    // モーダルが完全に閉じた後に背景を明るくする
+    setTimeout(() => {
+      const backdrop = document.querySelector('.modal-backdrop');
+      if (backdrop) {
+        backdrop.style.opacity = '0';
+        backdrop.style.transition = 'opacity 0.3s ease';
+      }
+      document.body.classList.remove('modal-open');
+    }, 300);
   };
 }
 
@@ -771,5 +797,17 @@ function deleteTicket(ticketId, ticketRow) {
     document.addEventListener('DOMContentLoaded', initializeTicketManagement);
   } else {
     initializeTicketManagement();
+  }
+  
+  // モーダル背景のクリーンアップ関数
+  function cleanupModalBackground() {
+    setTimeout(() => {
+      const backdrop = document.querySelector('.modal-backdrop');
+      if (backdrop) {
+        backdrop.style.opacity = '0';
+        backdrop.style.transition = 'opacity 0.3s ease';
+      }
+      document.body.classList.remove('modal-open');
+    }, 300);
   }
 </script> 
