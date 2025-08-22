@@ -279,32 +279,41 @@
 </div>
 
 <script>
-// 初期化関数
-function initializeTicketManagement() {
-  console.log('🎫 チケット管理初期化開始');
-  
-  // 新規チケット発行フォーム
-  const newTicketForm = document.getElementById('newTicketForm');
-  if (newTicketForm) {
-    console.log('✅ チケット発行フォームを発見');
-    
-    // 既存のイベントリスナーを削除
-    newTicketForm.removeEventListener('submit', handleTicketSubmit);
-    newTicketForm.addEventListener('submit', handleTicketSubmit);
-  } else {
-    console.error('❌ チケット発行フォームが見つかりません');
-  }
-  
-  // チケット使用・削除ボタンのイベントリスナーを設定
-  setupTicketButtons();
-  
-  console.log('🎫 チケット管理初期化完了');
-}
+  // グローバル変数で処理状態を管理
+  let isProcessing = false;
+  let isInitialized = false;
 
-// チケット発行処理
-function handleTicketSubmit(e) {
+  // 初期化関数
+  function initializeTicketManagement() {
+    if (isInitialized) {
+      console.log('⚠️ 既に初期化済みです');
+      return;
+    }
+    
+    console.log('🎫 チケット管理初期化開始');
+    
+    // チケット発行フォームの設定
+    const ticketForm = document.getElementById('newTicketForm');
+    if (ticketForm) {
+      console.log('✅ チケット発行フォームを発見');
+      ticketForm.addEventListener('submit', handleTicketSubmit);
+    }
+    
+    // チケットボタンの設定
+    setupTicketButtons();
+    
+    isInitialized = true;
+    console.log('🎫 チケット管理初期化完了');
+  }
+
+  // チケット発行処理
+  function handleTicketSubmit(e) {
+    if (isProcessing) {
+      console.log('⚠️ 処理中です。重複実行を防ぎます');
+      return;
+    }
     e.preventDefault();
-  console.log('🎫 チケット発行処理開始');
+    console.log('🎫 チケット発行処理開始');
     
     const templateId = document.getElementById('ticketTemplate').value;
     const count = document.getElementById('ticketCount').value;
@@ -396,6 +405,9 @@ function handleTicketSubmit(e) {
           alertDiv.remove();
         }
       }, 3000);
+      
+      // 処理中フラグを解除
+      isProcessing = false;
     })
     .catch(error => {
       console.error('❌ Error creating ticket:', error);
@@ -422,45 +434,46 @@ function handleTicketSubmit(e) {
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalText;
     });
-}
+  }
 
-// チケットボタンの設定
-function setupTicketButtons() {
-  try {
+  // チケットボタンの設定
+  function setupTicketButtons() {
     console.log('🔘 チケットボタンの設定開始');
     
-    // 既存のイベントリスナーを削除（重複防止）
+    // 既存のイベントリスナーを削除
     document.removeEventListener('click', handleTicketButtonClick);
     
-    // 新しいイベントリスナーを設定
+    // 新しいイベントリスナーを追加
     document.addEventListener('click', handleTicketButtonClick);
     
     console.log('🔘 チケットボタンの設定完了');
-  } catch (error) {
-    console.error('❌ チケットボタン設定中にエラーが発生しました:', error);
   }
-}
 
-// チケットボタンクリック処理
-function handleTicketButtonClick(e) {
-  // チケット使用ボタン
+  // チケットボタンクリックの処理
+  function handleTicketButtonClick(e) {
+    if (isProcessing) {
+      console.log('⚠️ 処理中です。重複実行を防ぎます');
+      return;
+    }
+    
     if (e.target.classList.contains('use-ticket-btn')) {
-    handleTicketUse(e);
+      e.preventDefault();
+      e.stopPropagation();
+      handleTicketUse(e);
+    } else if (e.target.classList.contains('delete-ticket-btn')) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleTicketDelete(e);
+    }
   }
-  
-  // チケット削除ボタン
-  if (e.target.classList.contains('delete-ticket-btn') || e.target.closest('.delete-ticket-btn')) {
-    handleTicketDelete(e);
-  }
-}
 
-// チケット使用処理
-function handleTicketUse(e) {
-  // 既に処理中の場合は何もしない
-  if (e.target.disabled) {
-    console.log('⚠️ 既に処理中のため、重複実行をスキップ');
-    return;
-  }
+  // チケット使用処理
+  function handleTicketUse(e) {
+    if (isProcessing) {
+      console.log('⚠️ 処理中です。重複実行を防ぎます');
+      return;
+    }
+    isProcessing = true; // 処理中フラグを立てる
   
       const ticketId = e.target.getAttribute('data-ticket-id');
       const ticketName = e.target.getAttribute('data-ticket-name');
@@ -469,6 +482,7 @@ function handleTicketUse(e) {
       
       if (!confirm(`「${ticketName}」を1回使用しますか？`)) {
     console.log('❌ ユーザーがチケット使用をキャンセル');
+        isProcessing = false; // 処理中フラグを解除
         return;
       }
       
@@ -552,17 +566,24 @@ function handleTicketUse(e) {
         e.target.disabled = false;
         e.target.innerHTML = originalText;
     console.log('🔄 チケット使用処理完了');
+    isProcessing = false; // 処理中フラグを解除
   });
 }
 
 // チケット削除処理
 function handleTicketDelete(e) {
+  if (isProcessing) {
+    console.log('⚠️ 処理中です。重複実行を防ぎます');
+    return;
+  }
+  isProcessing = true; // 処理中フラグを立てる
   try {
     console.log('🗑️ チケット削除処理開始');
     
     const deleteBtn = e.target.classList.contains('delete-ticket-btn') ? e.target : e.target.closest('.delete-ticket-btn');
     if (!deleteBtn) {
       console.error('❌ 削除ボタンが見つかりません');
+      isProcessing = false; // 処理中フラグを解除
       return;
     }
     
@@ -612,6 +633,7 @@ function handleTicketDelete(e) {
       const directTicketName = deleteBtn['data-ticket-name'];
       console.log('🔍 直接属性アクセスの取得結果:', { directTicketId, directTicketName });
       
+      isProcessing = false; // 処理中フラグを解除
       return;
     }
     
@@ -621,6 +643,7 @@ function handleTicketDelete(e) {
     const ticketRow = deleteBtn.closest('tr');
     if (!ticketRow) {
       console.error('❌ チケット行が見つかりません');
+      isProcessing = false; // 処理中フラグを解除
       return;
     }
     
@@ -666,6 +689,7 @@ function handleTicketDelete(e) {
     if (!remainingCountElement) {
       console.error('❌ 残り回数要素が見つかりません。行の構造を確認してください');
       console.log('🔍 行の完全なHTML:', ticketRow.outerHTML);
+      isProcessing = false; // 処理中フラグを解除
       return;
     }
     
@@ -688,6 +712,7 @@ function handleTicketDelete(e) {
         if (!deleteTicketName || !deleteTicketRemaining) {
           console.error('❌ 再試行後もモーダル要素が見つかりません');
           alert('削除確認モーダルの準備に失敗しました。ページを再読み込みしてください。');
+          isProcessing = false; // 処理中フラグを解除
           return;
         }
         
@@ -704,6 +729,7 @@ function handleTicketDelete(e) {
   } catch (error) {
     console.error('❌ チケット削除処理中にエラーが発生しました:', error);
     alert('削除処理の準備中にエラーが発生しました: ' + error.message);
+    isProcessing = false; // 処理中フラグを解除
   }
 }
 
@@ -719,6 +745,7 @@ function showDeleteModal(ticketId, ticketName, remainingCount, ticketRow) {
     if (!deleteTicketName || !deleteTicketRemaining) {
       console.error('❌ モーダル表示時に要素が見つかりません');
       alert('削除確認モーダルの準備に失敗しました。ページを再読み込みしてください。');
+      isProcessing = false; // 処理中フラグを解除
       return;
     }
     
@@ -747,6 +774,7 @@ function showDeleteModal(ticketId, ticketName, remainingCount, ticketRow) {
   } catch (error) {
     console.error('❌ モーダル表示中にエラーが発生しました:', error);
     alert('モーダル表示中にエラーが発生しました: ' + error.message);
+    isProcessing = false; // 処理中フラグを解除
   }
 }
 
@@ -835,6 +863,9 @@ function deleteTicket(ticketId, ticketRow) {
           alertDiv.remove();
         }
       }, 3000);
+      
+      // 処理中フラグを解除
+      isProcessing = false;
     })
     .catch(error => {
       console.error('❌ Error deleting ticket:', error);
@@ -859,6 +890,9 @@ function deleteTicket(ticketId, ticketRow) {
       // ボタンを元に戻す
       deleteBtn.disabled = false;
       deleteBtn.innerHTML = originalText;
+      
+      // 処理中フラグを解除
+      isProcessing = false;
     });
   }
   
@@ -1142,16 +1176,31 @@ function deleteTicket(ticketId, ticketRow) {
   setTimeout(initializeTicketManagement, 100);
   setTimeout(initializeTicketManagement, 500);
   
-  // ページが表示された後に初期化を実行
+  // ページ読み込み完了時の初期化
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('🎫 readyState loading - DOMContentLoaded イベント発生');
-      setTimeout(initializeTicketManagement, 100);
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('🎫 DOMContentLoaded イベントで初期化');
+      setTimeout(() => {
+        initializeTicketManagement();
+      }, 100);
     });
   } else {
     console.log('🎫 readyState 既に完了 - 即座に初期化');
-    setTimeout(initializeTicketManagement, 100);
+    setTimeout(() => {
+      initializeTicketManagement();
+    }, 100);
   }
+
+  // ページ完全読み込み後の初期化（バックアップ）
+  window.addEventListener('load', () => {
+    console.log('🎫 window.load イベントで初期化');
+    setTimeout(() => {
+      if (!isInitialized) {
+        console.log('🔄 初期化が完了していないため、再試行します');
+        initializeTicketManagement();
+      }
+    }, 200);
+  });
   
   // ページ読み込み直後の背景クリーンアップ
   function cleanupPageBackground() {
