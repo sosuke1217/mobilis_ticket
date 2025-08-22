@@ -13,12 +13,14 @@
 <body>
   <header>
     <h1>管理ダッシュボード</h1>
-    <!-- ログアウトボタン - 直接的なフォーム送信 -->
-    <form action="<%= destroy_admin_user_session_path %>" method="post" style="display: inline;">
-      <input name="_method" type="hidden" value="delete" />
-      <input name="authenticity_token" type="hidden" value="<%= form_authenticity_token %>" />
-      <button type="submit" class="btn btn-outline-danger" onclick="return confirm('本当にログアウトしますか？')">ログアウト</button>
-    </form>
+    <!-- ログアウトボタン - 直接的なリンク -->
+    <%= link_to "ログアウト", destroy_admin_user_session_path, 
+        method: :delete, 
+        class: "btn btn-outline-danger",
+        data: { 
+          confirm: "本当にログアウトしますか？",
+          turbo: false
+        } %>
   </header>
   <main>
     <%= yield %>
