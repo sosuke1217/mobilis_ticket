@@ -34,12 +34,11 @@ select {
   margin-right: 0 !important;
 }
 
-/* ボタンのテキストは中央寄せに */
-button,
-.btn,
-input[type="submit"],
-input[type="button"],
-input[type="reset"] {
+/* ログインボタンのみ中央寄せに */
+.btn-primary,
+.btn-primary:focus,
+.btn-primary:hover,
+.btn-primary:active {
   text-align: center !important;
   text-align-last: center !important;
 }
