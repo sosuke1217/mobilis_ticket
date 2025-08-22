@@ -1377,7 +1377,6 @@ class LinebotController < ApplicationController
         line_user_id: user_id,
         name: profile['displayName'],
         display_name: profile['displayName'],
-        picture_url: profile['pictureUrl'],
         status_message: profile['statusMessage'],
         language: profile['language']
       )
