@@ -460,8 +460,8 @@
 
         .break-detail-select:focus, .break-detail-input:focus, .break-detail-textarea:focus {
             outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+            border-color: #666;
+            box-shadow: 0 0 0 2px rgba(102, 102, 102, 0.1);
         }
 
         .break-detail-textarea {
@@ -491,12 +491,12 @@
         }
 
         .break-detail-btn-save {
-            background: #007bff;
+            background: #666;
             color: white;
         }
 
         .break-detail-btn-save:hover {
-            background: #0056b3;
+            background: #555;
         }
 
         .break-detail-btn-delete {
