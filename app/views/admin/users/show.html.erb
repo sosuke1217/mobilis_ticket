@@ -628,12 +628,45 @@
 
   <script>
   (function() {
-    // Turbo.jsの競合を防ぐ
-    if (window.turbo) {
-      document.addEventListener('turbo:load', initializeDeleteModal);
-      document.addEventListener('turbo:before-render', cleanupDeleteModal);
-    } else {
-      document.addEventListener('DOMContentLoaded', initializeDeleteModal);
+    console.log('🚀 削除モーダルスクリプト開始');
+    
+    // 複数のイベントで初期化を試行
+    function tryInitialize() {
+      console.log('🔄 初期化試行中...');
+      const deleteBtn = document.getElementById('deleteUserBtn');
+      const modal = document.getElementById('deleteUserModal');
+      
+      if (deleteBtn && modal) {
+        console.log('✅ 要素が見つかりました、初期化を実行');
+        initializeDeleteModal();
+        return true;
+      } else {
+        console.log('⏳ 要素が見つかりません、再試行します');
+        return false;
+      }
+    }
+    
+    // 即座に初期化を試行
+    if (!tryInitialize()) {
+      // 要素が見つからない場合は複数のイベントで待機
+      document.addEventListener('DOMContentLoaded', tryInitialize);
+      document.addEventListener('turbo:load', tryInitialize);
+      document.addEventListener('turbo:render', tryInitialize);
+      
+      // さらに確実にするため、短い間隔で再試行
+      let retryCount = 0;
+      const maxRetries = 10;
+      const retryInterval = setInterval(() => {
+        retryCount++;
+        console.log(`🔄 再試行 ${retryCount}/${maxRetries}`);
+        
+        if (tryInitialize() || retryCount >= maxRetries) {
+          clearInterval(retryInterval);
+          if (retryCount >= maxRetries) {
+            console.error('❌ 最大再試行回数に達しました');
+          }
+        }
+      }, 100);
     }
     
     function initializeDeleteModal() {
@@ -673,7 +706,11 @@
     // 削除ボタンクリック時
     const clickHandler = function(e) {
       e.preventDefault();
-      console.log('削除ボタンがクリックされました');
+      e.stopPropagation();
+      console.log('🎯 削除ボタンがクリックされました');
+      console.log('🔍 イベント詳細:', e);
+      console.log('🔍 this要素:', this);
+      console.log('🔍 クリックされた要素:', e.target);
       
       currentUserId = this.getAttribute('data-user-id');
       currentUserName = this.getAttribute('data-user-name');
@@ -739,8 +776,23 @@
     };
     
     // イベントリスナーを追加し、参照を保存
+    console.log('🔗 イベントリスナーを登録中...');
+    
+    // 既存のイベントリスナーを削除（重複防止）
+    if (deleteBtn.clickHandler) {
+      deleteBtn.removeEventListener('click', deleteBtn.clickHandler);
+      console.log('🔄 既存のイベントリスナーを削除');
+    }
+    
     deleteBtn.addEventListener('click', clickHandler);
     deleteBtn.clickHandler = clickHandler;
+    
+    console.log('✅ 削除ボタンのイベントリスナーを登録完了');
+    
+    // テスト用：クリックイベントが登録されているか確認
+    console.log('🔍 イベントリスナー確認:');
+    console.log('  - deleteBtn.clickHandler:', deleteBtn.clickHandler);
+    console.log('  - deleteBtn.onclick:', deleteBtn.onclick);
     
     // バリデーション関数
     function validateForm() {
@@ -886,17 +938,29 @@
     
     // クリーンアップ関数
     function cleanupDeleteModal() {
+      console.log('🧹 クリーンアップ開始');
       const deleteBtn = document.getElementById('deleteUserBtn');
       const modal = document.getElementById('deleteUserModal');
       
-      if (deleteBtn) {
+      if (deleteBtn && deleteBtn.clickHandler) {
         deleteBtn.removeEventListener('click', deleteBtn.clickHandler);
+        console.log('✅ 削除ボタンのイベントリスナーを削除');
       }
       
-      if (modal) {
+      if (modal && modal.hiddenHandler) {
         modal.removeEventListener('hidden.bs.modal', modal.hiddenHandler);
+        console.log('✅ モーダルのイベントリスナーを削除');
       }
     }
+    
+    // グローバル関数として公開（デバッグ用）
+    window.debugDeleteModal = {
+      tryInitialize: tryInitialize,
+      initializeDeleteModal: initializeDeleteModal,
+      cleanupDeleteModal: cleanupDeleteModal
+    };
+    
+    console.log('🚀 削除モーダルスクリプト完了');
   })(); // IIFEを閉じる
   </script>
   
