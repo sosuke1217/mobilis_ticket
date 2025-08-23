@@ -6,60 +6,50 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = ["form", "ticketList", "ticketCount", "totalPrice", "modal", "modalName", "modalRemaining", "confirmButton"]
   
+  // コントローラーが接続されたときの処理
   connect() {
-    console.log('🎫 チケット管理ページコントローラー接続開始')
-    
-    // 重複実行チェック
-    if (this.isAlreadyInitialized()) {
-      console.log('⚠️ 既に初期化済みです')
-      return
+    try {
+      console.log('🔌 チケット管理コントローラーが接続されました')
+      
+      // 初期化処理を実行
+      this.initialize()
+      
+    } catch (error) {
+      console.error('❌ コントローラー接続中にエラーが発生しました:', error)
     }
-    
-    this.initialize()
   }
-  
+
+  // コントローラーが切断されたときの処理
   disconnect() {
-    console.log('🎫 チケット管理ページコントローラー切断')
-    this.cleanup()
-  }
-  
-  // 重複初期化チェック
-  isAlreadyInitialized() {
-    return window.ticketManagementControllerInitialized === true
-  }
-  
-  // 初期化完了マーク
-  markAsInitialized() {
-    window.ticketManagementControllerInitialized = true
-    console.log('✅ チケット管理ページコントローラー初期化完了フラグを設定')
+    try {
+      console.log('🔌 チケット管理コントローラーが切断されました')
+      
+      // イベントリスナーのクリーンアップ
+      this.cleanup()
+      
+    } catch (error) {
+      console.error('❌ コントローラー切断中にエラーが発生しました:', error)
+    }
   }
   
   // 初期化処理
   initialize() {
     try {
-      console.log('🎫 チケット管理ページ初期化開始')
+      console.log('🚀 チケット管理コントローラーの初期化開始')
       
-      // チケット発行フォームの確認
-      if (!this.hasFormTarget) {
-        console.error('❌ チケット発行フォームが見つかりません')
-        return
-      }
-      
-      console.log('✅ チケット発行フォームを発見')
-      
-      // フォームのイベントリスナーを設定
+      // フォームハンドラーの設定
       this.setupFormHandlers()
       
-      // チケットボタンのイベントリスナーを設定
+      // チケットボタンの設定
       this.setupTicketButtons()
       
-      // 初期化完了をマーク
-      this.markAsInitialized()
+      // チケット数の初期表示
+      this.updateTicketCounts()
       
-      console.log('✅ チケット管理ページ初期化完了')
+      console.log('✅ チケット管理コントローラーの初期化完了')
       
     } catch (error) {
-      console.error('❌ チケット管理ページ初期化中にエラーが発生しました:', error)
+      console.error('❌ 初期化中にエラーが発生しました:', error)
     }
   }
   
@@ -78,19 +68,13 @@ export default class extends Controller {
     try {
       console.log('🔘 チケットボタンの設定開始')
       
-      // 既存のイベントリスナーを削除
-      const existingButtons = document.querySelectorAll('.use-ticket-btn, .delete-ticket-btn')
-      existingButtons.forEach(button => {
-        button.removeEventListener('click', this.handleTicketButtonClick)
-      })
-      
       // 使用ボタンの設定
       const useButtons = document.querySelectorAll('.use-ticket-btn')
       useButtons.forEach(button => {
-        console.log('🔘 使用ボタンを設定:', button.dataset)
+        const ticketId = button.getAttribute('data-ticket-id')
+        const ticketName = button.getAttribute('data-ticket-name')
         
-        // 既存のイベントリスナーを削除
-        button.removeEventListener('click', this.handleTicketButtonClick)
+        console.log('🔘 使用ボタンを設定:', { ticketId, ticketName })
         
         // 新しいイベントリスナーを追加
         button.addEventListener('click', (e) => {
@@ -101,9 +85,6 @@ export default class extends Controller {
             console.log('⏳ ボタンが無効化されているため、処理をスキップします')
             return
           }
-          
-          const ticketId = button.getAttribute('data-ticket-id')
-          const ticketName = button.getAttribute('data-ticket-name')
           
           if (!ticketId) {
             console.error('❌ チケットIDが設定されていません')
@@ -125,10 +106,10 @@ export default class extends Controller {
       // 削除ボタンの設定
       const deleteButtons = document.querySelectorAll('.delete-ticket-btn')
       deleteButtons.forEach(button => {
-        console.log('🔘 削除ボタンを設定:', button.dataset)
+        const ticketId = button.getAttribute('data-ticket-id')
+        const ticketName = button.getAttribute('data-ticket-name')
         
-        // 既存のイベントリスナーを削除
-        button.removeEventListener('click', this.handleTicketButtonClick)
+        console.log('🔘 削除ボタンを設定:', { ticketId, ticketName })
         
         // 新しいイベントリスナーを追加
         button.addEventListener('click', (e) => {
@@ -139,9 +120,6 @@ export default class extends Controller {
             console.log('⏳ ボタンが無効化されているため、処理をスキップします')
             return
           }
-          
-          const ticketId = button.getAttribute('data-ticket-id')
-          const ticketName = button.getAttribute('data-ticket-name')
           
           if (!ticketId) {
             console.error('❌ チケットIDが設定されていません')
@@ -1003,7 +981,18 @@ export default class extends Controller {
   
   // クリーンアップ処理
   cleanup() {
-    // イベントリスナーの削除など
-    console.log('🧹 チケット管理ページコントローラークリーンアップ完了')
+    try {
+      console.log('🧹 チケット管理コントローラーのクリーンアップ開始')
+      
+      // フォームのイベントリスナーを削除
+      if (this.hasFormTarget) {
+        this.formTarget.removeEventListener('submit', this.handleTicketSubmit)
+      }
+      
+      console.log('✅ チケット管理コントローラーのクリーンアップ完了')
+      
+    } catch (error) {
+      console.error('❌ クリーンアップ中にエラーが発生しました:', error)
+    }
   }
 }
