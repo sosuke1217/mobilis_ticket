@@ -291,7 +291,7 @@ class Admin::ReservationsController < ApplicationController
           customer: reservation.name || reservation.user&.name || '未設定',
           phone: reservation.user&.phone_number || '',
           email: reservation.user&.email || '',
-          is_break: false, // is_break column doesn't exist in database
+          is_break: false, # is_break column doesn't exist in database
           note: reservation.note || '',
           status: reservation.status,
           createdAt: reservation.created_at.iso8601,
@@ -563,7 +563,7 @@ class Admin::ReservationsController < ApplicationController
           email: reservation.user&.email || '',
           note: reservation.note || '',
           status: reservation.status,
-          is_break: false, // is_break column doesn't exist in database
+          is_break: false, # is_break column doesn't exist in database
           createdAt: reservation.created_at.iso8601,
           updatedAt: reservation.updated_at.iso8601,
           userId: reservation.user_id,
