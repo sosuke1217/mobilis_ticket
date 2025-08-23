@@ -24,6 +24,7 @@ Rails.application.routes.draw do
         delete 'delete_reservation'
         get 'search_users'
         get 'test_by_day_of_week', to: 'reservations#test_by_day_of_week'
+        get 'simple_test', to: 'reservations#simple_test'
         get 'by_day_of_week', to: 'reservations#by_day_of_week'
       end
       member do

@@ -1440,6 +1440,11 @@ class Admin::ReservationsController < ApplicationController
     render json: { message: "by_day_of_week test works", timestamp: Time.current }
   end
 
+  # 超シンプルテスト - デプロイが動作するかチェック
+  def simple_test
+    render json: { message: "SIMPLE TEST WORKS!", method: "simple_test" }
+  end
+
   # 特定の曜日の全予約を取得（定期的なスケジュール変更の影響チェック用）
   def by_day_of_week
     Rails.logger.info "🔍 by_day_of_week called - FIXED VISIBILITY"
