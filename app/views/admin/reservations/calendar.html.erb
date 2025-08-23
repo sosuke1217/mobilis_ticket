@@ -7620,6 +7620,46 @@ function showMessage(message, type = 'info') {
         document.addEventListener('DOMContentLoaded', function() {
             setupUserSearch();
         });
+        
+        // グローバル関数として公開（onclick属性で使用される関数）
+        window.openBookingModal = openBookingModal;
+        window.openBreakModal = openBreakModal;
+        window.closeSlotOptionsMenu = closeSlotOptionsMenu;
+        window.openBulkReservationModal = openBulkReservationModal;
+        window.closeBulkReservationModal = closeBulkReservationModal;
+        window.previewBulkReservations = previewBulkReservations;
+        window.createBulkReservations = createBulkReservations;
+        window.openSettingsModal = openSettingsModal;
+        window.closeSettingsModal = closeSettingsModal;
+        window.switchTab = switchTab;
+        window.saveSettings = saveSettings;
+        window.openUserSelectionModal = openUserSelectionModal;
+        window.closeUserSelectionModal = closeUserSelectionModal;
+        window.saveUserSelection = saveUserSelection;
+        window.selectUserForModal = selectUserForModal;
+        window.selectUser = selectUser;
+        window.previousWeek = previousWeek;
+        window.nextWeek = nextWeek;
+        window.toggleMiniCalendar = toggleMiniCalendar;
+        window.previousMiniCalendarYear = previousMiniCalendarYear;
+        window.previousMiniCalendarMonth = previousMiniCalendarMonth;
+        window.nextMiniCalendarMonth = nextMiniCalendarMonth;
+        window.nextMiniCalendarYear = nextMiniCalendarYear;
+        window.toggleCancellationDisplay = toggleCancellationDisplay;
+        window.clearCancellationDisplay = clearCancellationDisplay;
+        window.closeBookingModal = closeBookingModal;
+        window.createBooking = createBooking;
+        window.closeBreakModal = closeBreakModal;
+        window.createBreak = createBreak;
+        window.closeBreakDetailModal = closeBreakDetailModal;
+        window.saveBreakChanges = saveBreakChanges;
+        window.deleteBreakReservation = deleteBreakReservation;
+        window.closeReservationDetailModal = closeReservationDetailModal;
+        window.toggleDay = toggleDay;
+        window.addTimeSlot = addTimeSlot;
+        window.removeTimeSlot = removeTimeSlot;
+        
+        console.log('✅ All global functions exposed for onclick attributes');
         })(); // IIFEを閉じる
 </script> 
 </body>
