@@ -353,32 +353,28 @@
         .break-detail-modal-content {
             background: white;
             margin: 5% auto;
-            border: none;
+            border: 1px solid #ddd;
             width: 90%;
             max-width: 500px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             overflow: hidden;
         }
 
-
-
         .break-detail-modal-header {
-            background: #e3f2fd;
-            color: #1976d2;
+            background: #f8f9fa;
+            color: #333;
             padding: 20px 25px;
             text-align: center;
             position: relative;
-            border-bottom: 2px solid #2196f3;
+            border-bottom: 1px solid #ddd;
         }
-
-
 
         .break-detail-modal-header h2 {
             margin: 0;
             font-size: 20px;
             font-weight: 600;
-            color: #1976d2;
+            color: #333;
         }
 
         .break-detail-modal-close {
@@ -411,26 +407,24 @@
         }
 
         .break-detail-info {
-            background: #f3f8ff;
-            border: 1px solid #bbdefb;
-            border-radius: 8px;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
             padding: 20px;
             margin-bottom: 20px;
             text-align: center;
         }
 
-
-
         .break-detail-datetime {
             font-size: 18px;
-            color: #1976d2;
+            color: #333;
             font-weight: 600;
             margin-bottom: 8px;
         }
 
         .break-detail-duration {
             font-size: 16px;
-            color: #42a5f5;
+            color: #666;
             font-weight: 500;
         }
 
@@ -440,8 +434,6 @@
             gap: 20px;
         }
 
-
-
         .break-detail-field {
             display: flex;
             flex-direction: column;
@@ -449,27 +441,15 @@
             position: relative;
         }
 
-
-
         .break-detail-label {
             font-weight: 600;
             font-size: 14px;
-            color: #1976d2;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .break-detail-label::before {
-            content: '✨';
-            font-size: 12px;
-            opacity: 0.8;
-            color: #42a5f5;
+            color: #333;
         }
 
         .break-detail-select, .break-detail-input, .break-detail-textarea {
             padding: 12px 16px;
-            border: 1px solid #bbdefb;
+            border: 1px solid #ddd;
             border-radius: 6px;
             font-size: 14px;
             transition: all 0.2s ease;
@@ -478,35 +458,10 @@
             font-family: inherit;
         }
 
-        /* Make break type options more prominent with blue styling */
-        .break-detail-select option {
-            background: white;
-            color: #1976d2;
-            padding: 8px;
-        }
-
-        .break-detail-select option:hover {
-            background: #e3f2fd;
-        }
-
         .break-detail-select:focus, .break-detail-input:focus, .break-detail-textarea:focus {
             outline: none;
-            border-color: #2196f3;
-            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
-        }
-
-        /* Enhanced blue styling for select elements */
-        .break-detail-select {
-            background-image: linear-gradient(45deg, transparent 50%, #1976d2 50%), linear-gradient(135deg, #1976d2 50%, transparent 50%);
-            background-position: calc(100% - 20px) calc(1em + 2px), calc(100% - 15px) calc(1em + 2px);
-            background-size: 5px 5px, 5px 5px;
-            background-repeat: no-repeat;
-            background-color: white;
-        }
-
-        .break-detail-select:hover {
-            border-color: #42a5f5;
-            background-color: #f8fbff;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
         }
 
         .break-detail-textarea {
@@ -517,11 +472,11 @@
 
         .break-detail-modal-footer {
             padding: 20px 25px;
-            background: #e3f2fd;
+            background: #f8f9fa;
             display: flex;
             gap: 12px;
             justify-content: center;
-            border-top: 1px solid #bbdefb;
+            border-top: 1px solid #ddd;
         }
 
         .break-detail-btn {
@@ -536,12 +491,12 @@
         }
 
         .break-detail-btn-save {
-            background: #2196f3;
+            background: #007bff;
             color: white;
         }
 
         .break-detail-btn-save:hover {
-            background: #1976d2;
+            background: #0056b3;
         }
 
         .break-detail-btn-delete {
