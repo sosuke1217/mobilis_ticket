@@ -1373,7 +1373,7 @@
             
             try {
                 // バックエンドから該当曜日の全予約を取得
-                const response = await fetch(`/admin/test/by_day_of_week?day_of_week=${dayOfWeek}&from_date=${new Date().toISOString().split('T')[0]}`, {
+                const response = await fetch(`/admin/reservations/by_day_of_week?day_of_week=${dayOfWeek}&from_date=${new Date().toISOString().split('T')[0]}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',

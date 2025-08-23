@@ -23,6 +23,7 @@ Rails.application.routes.draw do
         post 'create_booking'
         delete 'delete_reservation'
         get 'search_users'
+        get 'by_day_of_week'
       end
       member do
         patch 'update_interval'
