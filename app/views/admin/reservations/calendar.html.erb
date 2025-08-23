@@ -771,11 +771,34 @@
                 body: JSON.stringify(formData)
             })
             .then(response => {
+                console.log('📡 Response status:', response.status);
+                console.log('📡 Response headers:', response.headers);
+                
                 if (!response.ok) {
-                    return response.json().then(errorData => {
-                        throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.message || 'Unknown error'}`);
-                    }).catch(() => {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                    // Try to get error details from response
+                    return response.text().then(responseText => {
+                        console.log('📡 Error response text:', responseText);
+                        
+                        let errorMessage = `HTTP error! status: ${response.status}`;
+                        
+                        // Try to parse as JSON for detailed error message
+                        try {
+                            const errorData = JSON.parse(responseText);
+                            if (errorData.message) {
+                                errorMessage += `, message: ${errorData.message}`;
+                            }
+                            if (errorData.errors) {
+                                errorMessage += `, errors: ${JSON.stringify(errorData.errors)}`;
+                            }
+                        } catch (e) {
+                            console.log('📡 Could not parse error response as JSON:', e);
+                            // If it's not JSON, use the raw text if it's not too long
+                            if (responseText && responseText.length < 200) {
+                                errorMessage += `, response: ${responseText}`;
+                            }
+                        }
+                        
+                        throw new Error(errorMessage);
                     });
                 }
                 return response.json();
