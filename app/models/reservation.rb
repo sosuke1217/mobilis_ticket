@@ -108,7 +108,7 @@ class Reservation < ApplicationRecord
 
   # 休憩予約かどうかを判定
   def is_break?
-    is_break == true
+    self[:is_break] == true
   end
   
   # デバッグ用：バリデーション前の状態をログ出力
