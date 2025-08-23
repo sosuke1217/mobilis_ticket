@@ -1442,7 +1442,7 @@ class Admin::ReservationsController < ApplicationController
 
   # 特定の曜日の全予約を取得（定期的なスケジュール変更の影響チェック用）
   def by_day_of_week
-    Rails.logger.info "🔍 by_day_of_week called"
+    Rails.logger.info "🔍 by_day_of_week called - FIXED VISIBILITY"
     Rails.logger.info "📝 Params: #{params.inspect}"
     
     begin
