@@ -102,17 +102,19 @@
 </div>
 
 <style>
-/* モーダルの高さを調整 */
+/* モーダルのレイアウトを調整 */
 #deleteTicketModal .modal-dialog {
   max-height: 98vh !important;
   margin: 0.5rem auto !important;
-  min-height: 80vh !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 #deleteTicketModal .modal-content {
   max-height: 98vh !important;
   overflow: hidden !important;
-  min-height: 80vh !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 #deleteTicketModal .modal-body {
@@ -120,12 +122,16 @@
   max-height: none !important;
   padding: 2rem !important;
   flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
 }
 
 #deleteTicketModal .modal-footer {
   padding: 1rem 2rem !important;
-  margin-top: 1rem !important;
+  margin-top: 0 !important;
   flex-shrink: 0 !important;
+  border-top: 1px solid #dee2e6 !important;
 }
 
 /* モーダルの背景を明るく */

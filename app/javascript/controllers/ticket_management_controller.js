@@ -65,6 +65,92 @@ export default class extends Controller {
     console.log('📝 フォームハンドラーの設定完了')
   }
   
+  // 特定の行のボタンにイベントリスナーを設定
+  setupButtonsForRow(row) {
+    try {
+      console.log('🔘 行のボタン設定開始:', row)
+      
+      // 使用ボタンの設定
+      const useButton = row.querySelector('.use-ticket-btn')
+      if (useButton) {
+        const ticketId = useButton.getAttribute('data-ticket-id')
+        const ticketName = useButton.getAttribute('data-ticket-name')
+        
+        console.log('🔘 使用ボタンを設定:', { ticketId, ticketName })
+        
+        // 既存のイベントリスナーを削除
+        useButton.removeEventListener('click', this.handleTicketButtonClick)
+        
+        // 新しいイベントリスナーを追加
+        useButton.addEventListener('click', (e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          
+          if (e.target.disabled) {
+            console.log('⏳ ボタンが無効化されているため、処理をスキップします')
+            return
+          }
+          
+          if (!ticketId) {
+            console.error('❌ チケットIDが設定されていません')
+            this.showAlert('danger', 'チケットIDが設定されていません')
+            return
+          }
+          
+          console.log('🎫 使用ボタンクリック:', { ticketId, ticketName })
+          
+          // 確認ダイアログを表示
+          if (confirm(`「${ticketName || 'チケット'}」を1回使用しますか？`)) {
+            this.useTicket(ticketId, useButton)
+          }
+        })
+        
+        console.log('✅ 使用ボタンの設定完了:', ticketId)
+      }
+      
+      // 削除ボタンの設定
+      const deleteButton = row.querySelector('.delete-ticket-btn')
+      if (deleteButton) {
+        const ticketId = deleteButton.getAttribute('data-ticket-id')
+        const ticketName = deleteButton.getAttribute('data-ticket-name')
+        
+        console.log('🔘 削除ボタンを設定:', { ticketId, ticketName })
+        
+        // 既存のイベントリスナーを削除
+        deleteButton.removeEventListener('click', this.handleTicketButtonClick)
+        
+        // 新しいイベントリスナーを追加
+        deleteButton.addEventListener('click', (e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          
+          if (e.target.disabled) {
+            console.log('⏳ ボタンが無効化されているため、処理をスキップします')
+            return
+          }
+          
+          if (!ticketId) {
+            console.error('❌ チケットIDが設定されていません')
+            this.showAlert('danger', 'チケットIDが設定されていません')
+            return
+          }
+          
+          console.log('🗑️ 削除ボタンクリック:', { ticketId, ticketName })
+          
+          // 削除確認モーダルを表示
+          this.handleTicketDelete(deleteButton)
+        })
+        
+        console.log('✅ 削除ボタンの設定完了:', ticketId)
+      }
+      
+      console.log('✅ 行のボタン設定完了')
+      
+    } catch (error) {
+      console.error('❌ 行のボタン設定中にエラーが発生しました:', error)
+    }
+  }
+
   // チケットボタンの設定
   setupTicketButtons() {
     try {
@@ -276,59 +362,70 @@ export default class extends Controller {
     throw new Error('ユーザーIDを取得できませんでした')
   }
   
-  // 新チケットを一覧に追加
+  // 新規チケットをリストに追加
   addNewTicketToList(ticket) {
     try {
-      console.log('🎫 新チケット追加開始:', ticket)
+      console.log('➕ 新規チケットをリストに追加:', ticket)
       
-      // 「保有チケットがありません」の行を削除
-      const noTicketsRow = this.element.querySelector('tbody tr td[colspan]')
+      // "保有チケットがありません"の行を削除
+      const noTicketsRow = this.ticketListTarget.querySelector('tr:has(td[colspan="6"])')
       if (noTicketsRow) {
-        console.log('🗑️ 「保有チケットがありません」の行を削除')
-        noTicketsRow.closest('tr').remove()
+        noTicketsRow.remove()
+        console.log('✅ "保有チケットがありません"の行を削除')
       }
       
-      // チケット一覧のtbodyを取得
-      const tbody = this.element.querySelector('tbody')
-      if (!tbody) {
-        console.error('❌ tbodyが見つかりません')
-        return
-      }
-      
-      // 新しいチケット行を作成
+      // 新しい行を作成
       const newRow = document.createElement('tr')
       newRow.setAttribute('data-ticket-id', ticket.id)
+      
+      // チケット情報を設定
       newRow.innerHTML = `
         <td>
           <strong>${ticket.ticket_template.name}</strong>
           <br><small class="text-muted">¥${ticket.ticket_template.price.toLocaleString()}</small>
         </td>
         <td>
-          <span class="badge bg-primary">${ticket.remaining_count}/${ticket.total_count}</span>
+          <span class="badge bg-primary">
+            ${ticket.remaining_count} / ${ticket.total_count}
+          </span>
         </td>
-        <td>${ticket.purchase_date ? new Date(ticket.purchase_date).toLocaleDateString('ja-JP') : 'なし'}</td>
+        <td>${ticket.purchase_date ? new Date(ticket.purchase_date).toLocaleDateString('ja-JP') : '不明'}</td>
         <td>${ticket.expiry_date ? new Date(ticket.expiry_date).toLocaleDateString('ja-JP') : '無期限'}</td>
         <td>
           <span class="badge bg-success">利用可能</span>
         </td>
         <td>
-          <button class="btn btn-sm btn-outline-primary use-ticket-btn" data-ticket-id="${ticket.id}" data-ticket-name="${ticket.ticket_template.name}">
-            <i class="fas fa-ticket-alt me-1"></i>使用
+          <button type="button" 
+                  class="btn btn-sm btn-outline-primary use-ticket-btn"
+                  data-ticket-id="${ticket.id}"
+                  data-ticket-name="${ticket.ticket_template.name || '不明'}">
+            使用
           </button>
-          <button class="btn btn-sm btn-outline-danger delete-ticket-btn ms-1" data-ticket-id="${ticket.id}" data-ticket-name="${ticket.ticket_template.name}">
-            <i class="fas fa-trash me-1"></i>削除
+          <button type="button" 
+                  class="btn btn-sm btn-outline-danger delete-ticket-btn ms-1"
+                  data-ticket-id="${ticket.id}"
+                  data-ticket-name="${ticket.ticket_template.name || '不明'}">
+            <i class="fas fa-trash"></i>
           </button>
         </td>
       `
       
-      // 新しい行をtbodyに追加
-      tbody.appendChild(newRow)
+      // リストに追加
+      this.ticketListTarget.appendChild(newRow)
+      console.log('✅ 新規チケット行を追加')
       
-      console.log('✅ 新チケットを一覧に追加完了')
-      console.log('🔍 追加後のtbody行数:', tbody.children.length)
+      // 新しく追加された行のボタンにイベントリスナーを設定
+      this.setupButtonsForRow(newRow)
+      
+      // チケット数を更新
+      this.updateTicketCounts()
+      
+      // 成功メッセージを表示
+      this.showAlert('success', 'チケットを発行しました')
       
     } catch (error) {
-      console.error('❌ 新チケット追加中にエラーが発生しました:', error)
+      console.error('❌ 新規チケットの追加中にエラーが発生しました:', error)
+      this.showAlert('danger', 'チケットの追加中にエラーが発生しました')
     }
   }
   
