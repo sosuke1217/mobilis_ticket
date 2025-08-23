@@ -7331,12 +7331,24 @@ function showMessage(message, type = 'info') {
         
         function selectUser(userId, name, phone, email, nameFieldId, phoneFieldId, emailFieldId) {
             // フォームフィールドを更新
-            document.getElementById(nameFieldId).value = name;
-            document.getElementById(phoneFieldId).value = phone;
-            document.getElementById(emailFieldId).value = email;
+            const nameField = document.getElementById(nameFieldId);
+            const phoneField = document.getElementById(phoneFieldId);
+            const emailField = document.getElementById(emailFieldId);
             
-            // 検索結果を隠す
-            hideUserSearchResults(document.getElementById(nameFieldId).closest('.position-relative').querySelector('.user-search-results'));
+            if (nameField) nameField.value = name;
+            if (phoneField) phoneField.value = phone;
+            if (emailField) emailField.value = email;
+            
+            // 検索結果を隠す（安全に実行）
+            if (nameField) {
+                const positionRelative = nameField.closest('.position-relative');
+                if (positionRelative) {
+                    const searchResults = positionRelative.querySelector('.user-search-results');
+                    if (searchResults) {
+                        hideUserSearchResults(searchResults);
+                    }
+                }
+            }
             
             // 成功メッセージ
             showMessage(`既存ユーザー「${name}」を選択しました`, 'success');
