@@ -455,22 +455,23 @@
     </div>
 
     <script>
-        // 今日の週の開始日（日曜日）を計算
-        let globalCurrentDate = new Date();
-        let currentWeekStart = new Date(globalCurrentDate);
-        currentWeekStart.setDate(globalCurrentDate.getDate() - globalCurrentDate.getDay()); // 日曜日に設定
-        let weeklySchedules = {}; // 週別スケジュール（週のキーで保存）
-        let defaultSchedule = {}; // デフォルトスケジュール
-        let reservations = {}; // 予約データ
-        let miniCalendarMonth = new Date(globalCurrentDate.getFullYear(), globalCurrentDate.getMonth(), 1); // ミニカレンダーの表示月（現在の月）
-        let clickedDate = null; // クリックされた日付
-        let currentReservation = null; // 現在表示中の予約
-        let searchTimeout = null; // 検索のデバウンス用
-        let isEditingReservation = false; // 予約編集モードフラグ
-        let reservationToEdit = null; // 編集対象の予約データ
-        let cancelledReservations = []; // キャンセルされた予約のリスト
-        let cancellationDisplayReady = false; // キャンセル表示の準備完了フラグ
-        let domReady = false; // DOMの準備完了フラグ
+        (function() {
+            // 今日の週の開始日（日曜日）を計算
+            let globalCurrentDate = new Date();
+            let currentWeekStart = new Date(globalCurrentDate);
+            currentWeekStart.setDate(globalCurrentDate.getDate() - globalCurrentDate.getDay()); // 日曜日に設定
+            let weeklySchedules = {}; // 週別スケジュール（週のキーで保存）
+            let defaultSchedule = {}; // デフォルトスケジュール
+            let reservations = {}; // 予約データ
+            let miniCalendarMonth = new Date(globalCurrentDate.getFullYear(), globalCurrentDate.getMonth(), 1); // ミニカレンダーの表示月（現在の月）
+            let clickedDate = null; // クリックされた日付
+            let currentReservation = null; // 現在表示中の予約
+            let searchTimeout = null; // 検索のデバウンス用
+            let isEditingReservation = false; // 予約編集モードフラグ
+            let reservationToEdit = null; // 編集対象の予約データ
+            let cancelledReservations = []; // キャンセルされた予約のリスト
+            let cancellationDisplayReady = false; // キャンセル表示の準備完了フラグ
+            let domReady = false; // DOMの準備完了フラグ
 
         // ローカルストレージからキャンセル履歴を読み込み
         function loadCancelledReservations() {
@@ -7496,6 +7497,7 @@ function showMessage(message, type = 'info') {
         document.addEventListener('DOMContentLoaded', function() {
             setupUserSearch();
         });
+        })(); // IIFEを閉じる
 </script> 
 </body>
 </html> 
