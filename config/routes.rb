@@ -25,6 +25,7 @@ Rails.application.routes.draw do
       end
       member do
         patch 'update_interval'
+        patch 'update_booking'
       end
     end
     
