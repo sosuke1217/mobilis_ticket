@@ -2666,10 +2666,10 @@
             const block = document.createElement('div');
             
             // 休憩かどうかで異なるクラスを設定
-            if (false) { // 休憩機能は無効化
-                block.className = `reservation-block spanning break-block`;
+            if (reservation.customer === '休憩' || reservation.customer === '準備時間' || reservation.customer === '業務' || reservation.customer === 'ミーティング' || reservation.customer === 'その他') {
+                block.className = `reservation-block spanning break-block ${reservation.status}`;
             } else {
-            block.className = `reservation-block spanning ${reservation.status}`;
+                block.className = `reservation-block spanning ${reservation.status}`;
             }
             
             block.draggable = true; // メインブロックをドラッグ可能に変更
