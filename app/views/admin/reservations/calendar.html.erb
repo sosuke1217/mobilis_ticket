@@ -7658,6 +7658,12 @@ function showMessage(message, type = 'info') {
         window.toggleDay = toggleDay;
         window.addTimeSlot = addTimeSlot;
         window.removeTimeSlot = removeTimeSlot;
+        window.updateIntervalOnChange = updateIntervalOnChange;
+        window.handleBreakTitleChange = handleBreakTitleChange;
+        window.handleEditBreakTitleChange = handleEditBreakTitleChange;
+        window.updateCalendarOnStatusChange = updateCalendarOnStatusChange;
+        window.updateCalendarOnCourseChange = updateCalendarOnCourseChange;
+        window.updateTimeSlot = updateTimeSlot;
         
         console.log('✅ All global functions exposed for onclick attributes');
         })(); // IIFEを閉じる
