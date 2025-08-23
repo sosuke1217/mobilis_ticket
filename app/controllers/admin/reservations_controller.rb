@@ -830,8 +830,9 @@ class Admin::ReservationsController < ApplicationController
       week_start_date = params[:week_start_date]
       
       if is_recurring
-        # デフォルトスケジュールを保存
-        weekly_schedule = WeeklySchedule.find_or_initialize_by(week_start_date: nil)
+        # デフォルトスケジュールを保存 - 使用する特別な日付（例：1900-01-01）
+        default_date = Date.new(1900, 1, 1)
+        weekly_schedule = WeeklySchedule.find_or_initialize_by(week_start_date: default_date)
         weekly_schedule.update!(schedule: schedule_data)
       else
         # 特定の週のスケジュールを保存
@@ -873,8 +874,17 @@ class Admin::ReservationsController < ApplicationController
         Rails.logger.info "✅ Found custom schedule for week #{week_start_date}"
       else
         # 週固有スケジュールがない場合、デフォルトを使用
-        current_week_schedule = default_schedule
-        Rails.logger.info "ℹ️ No custom schedule for week #{week_start_date}, using default"
+        # デフォルトスケジュールをデータベースから取得
+        default_date = Date.new(1900, 1, 1)
+        default_weekly_schedule = WeeklySchedule.find_by(week_start_date: default_date)
+        
+        if default_weekly_schedule
+          current_week_schedule = default_weekly_schedule.schedule_for_javascript
+          Rails.logger.info "✅ Found default schedule in database"
+        else
+          current_week_schedule = default_schedule
+          Rails.logger.info "ℹ️ No default schedule in database, using hardcoded default"
+        end
       end
       
       render json: {
