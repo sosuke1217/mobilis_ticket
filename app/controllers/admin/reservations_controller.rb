@@ -831,14 +831,13 @@ class Admin::ReservationsController < ApplicationController
       
       if is_recurring
         # デフォルトスケジュールを保存
-        weekly_schedule = WeeklySchedule.default_schedule
-        weekly_schedule.update!(schedule_data: schedule_data)
+        weekly_schedule = WeeklySchedule.find_or_initialize_by(week_start_date: nil)
+        weekly_schedule.update!(schedule: schedule_data)
       else
         # 特定の週のスケジュールを保存
         weekly_schedule = WeeklySchedule.find_or_initialize_by(week_start_date: week_start_date)
         weekly_schedule.update!(
-          schedule_data: schedule_data,
-          is_recurring: false
+          schedule: schedule_data
         )
       end
       
