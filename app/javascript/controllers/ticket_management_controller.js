@@ -699,6 +699,28 @@ export default class extends Controller {
           }
           
           console.log('✅ 使用済みチケットとして表示を更新')
+        } else if (parseInt(remainingCount) <= 2) {
+          // 残り回数が2以下の場合のステータス更新
+          const statusCell = ticketRow.querySelector('td:nth-child(5)')
+          if (statusCell) {
+            const statusBadge = statusCell.querySelector('.badge')
+            if (statusBadge) {
+              statusBadge.className = 'badge bg-warning'
+              statusBadge.textContent = '残り少ない'
+              console.log('✅ 残り少ないチケットとしてステータスを更新')
+            }
+          }
+        } else {
+          // 残り回数が3以上の場合のステータス更新
+          const statusCell = ticketRow.querySelector('td:nth-child(5)')
+          if (statusCell) {
+            const statusBadge = statusCell.querySelector('.badge')
+            if (statusBadge) {
+              statusBadge.className = 'badge bg-success'
+              statusBadge.textContent = '利用可能'
+              console.log('✅ 利用可能チケットとしてステータスを更新')
+            }
+          }
         }
       }
       
