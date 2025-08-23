@@ -62,41 +62,32 @@
   </div>
 </div>
 
-<!-- チケット削除確認モーダル -->
-<div class="modal fade" id="deleteTicketModal" tabindex="-1" aria-labelledby="deleteTicketModalLabel" aria-hidden="true"
-     data-ticket-list-target="modal">
+<!-- 削除確認モーダル -->
+<div class="modal fade" id="deleteTicketModal" tabindex="-1" aria-labelledby="deleteTicketModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header bg-danger text-white">
-        <h5 class="modal-title" id="deleteTicketModalLabel">
-          <i class="fas fa-exclamation-triangle me-2"></i>
-          チケット削除の確認
-        </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteTicketModalLabel">チケット削除の確認</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body p-4">
-        <div class="text-center">
-          <i class="fas fa-trash-alt fa-3x text-danger mb-3"></i>
-          <p class="mb-3">以下のチケットを削除しますか？</p>
-          <div class="alert alert-warning mb-3">
-            <strong>チケット名:</strong> <span id="deleteTicketName" data-ticket-list-target="modalName"></span><br>
-            <strong>ユーザー:</strong> <span id="deleteTicketUser" data-ticket-list-target="modalUser"></span><br>
-            <strong>残り回数:</strong> <span id="deleteTicketRemaining" data-ticket-list-target="modalRemaining"></span> 回<br>
-            <strong>注意:</strong> この操作は取り消すことができません
-          </div>
-          <p class="text-muted small mb-0">
-            <i class="fas fa-info-circle me-1"></i>
-            この操作は取り消すことができません
-          </p>
+      <div class="modal-body">
+        <p>以下のチケットを削除してもよろしいですか？</p>
+        <div class="row">
+          <div class="col-4"><strong>チケット名:</strong></div>
+          <div class="col-8" id="deleteTicketName"></div>
+        </div>
+        <div class="row">
+          <div class="col-4"><strong>ユーザー名:</strong></div>
+          <div class="col-8" id="deleteTicketUser"></div>
+        </div>
+        <div class="row">
+          <div class="col-4"><strong>残り回数:</strong></div>
+          <div class="col-8" id="deleteTicketRemaining"></div>
         </div>
       </div>
-      <div class="modal-footer justify-content-center p-3">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-          <i class="fas fa-times me-1"></i>キャンセル
-        </button>
-        <button type="button" class="btn btn-danger" id="confirmDeleteTicketBtn" data-ticket-list-target="confirmButton">
-          <i class="fas fa-trash me-1"></i>削除する
-        </button>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteTicketBtn">削除する</button>
       </div>
     </div>
   </div>

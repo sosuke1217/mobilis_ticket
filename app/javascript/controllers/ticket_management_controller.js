@@ -307,95 +307,187 @@ export default class extends Controller {
   
   // チケット使用実行
   useTicket(ticketId, button) {
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-    
-    if (!csrfToken) {
-      throw new Error('CSRFトークンが見つかりません')
+    if (this.isProcessing) {
+      console.log('⏳ 処理中のため、チケット使用をスキップします')
+      return
     }
     
-    fetch(`/admin/tickets/${ticketId}/use`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-CSRF-Token': csrfToken
-      }
-    })
-    .then(response => {
-      if (!response.ok) {
-        return response.json().then(data => {
-          throw new Error(data.error || 'チケット使用に失敗しました')
-        })
-      }
-      return response.json()
-    })
-    .then(data => {
-      console.log('✅ Ticket used:', data)
+    this.isProcessing = true
+    button.disabled = true
+    
+    try {
+      console.log('🎫 チケット使用開始:', ticketId)
       
-      if (data.success) {
-        // 成功メッセージを表示
-        this.showAlert('success', 'チケットを使用しました')
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+      
+      fetch(`/admin/tickets/${ticketId}/use`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-Token': csrfToken
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        return response.json()
+      })
+      .then(data => {
+        console.log('✅ チケット使用成功:', data)
         
-        // チケット表示を即座に更新
-        this.updateTicketDisplayAfterUse(ticketId, data.remaining_count, data.total_count)
+        // 残り回数と総回数を取得
+        const remainingCount = data.remaining_count || data.remainingCount
+        const totalCount = data.total_count || data.totalCount
         
-        // チケット数を更新
-        setTimeout(() => {
+        if (remainingCount !== undefined && totalCount !== undefined) {
+          console.log('📊 残り回数情報:', { remainingCount, totalCount })
+          
+          // 表示を即座に更新
+          this.updateTicketDisplayAfterUse(ticketId, remainingCount, totalCount)
+          
+          // ボタンを元の状態に戻す
+          button.disabled = false
+          
+        } else {
+          console.error('❌ 残り回数情報が取得できませんでした:', data)
+          // 情報が取得できない場合は、チケット数を再計算
           this.updateTicketCounts()
-        }, 100)
-      }
+          button.disabled = false
+        }
+      })
+      .catch(error => {
+        console.error('❌ チケット使用中にエラーが発生しました:', error)
+        
+        // エラーメッセージを表示
+        let errorMessage = 'チケットの使用中にエラーが発生しました'
+        if (error.message.includes('HTTP error')) {
+          errorMessage = 'サーバーエラーが発生しました。しばらく待ってから再試行してください。'
+        }
+        
+        this.showAlert('danger', errorMessage)
+        
+        // ボタンを元の状態に戻す
+        button.disabled = false
+      })
+      .finally(() => {
+        this.isProcessing = false
+        console.log('🎫 チケット使用処理完了')
+      })
       
+    } catch (error) {
+      console.error('❌ チケット使用処理の初期化中にエラーが発生しました:', error)
+      this.showAlert('danger', 'チケット使用処理の初期化に失敗しました')
+      button.disabled = false
       this.isProcessing = false
-    })
-    .catch(error => {
-      console.error('❌ Error using ticket:', error)
-      this.showAlert('danger', `チケット使用エラー: ${error.message}`)
-      this.isProcessing = false
-    })
+    }
   }
   
   // チケット使用後の表示更新
   updateTicketDisplayAfterUse(ticketId, remainingCount, totalCount) {
     try {
-      const ticketRow = this.element.querySelector(`tr[data-ticket-id="${ticketId}"]`)
+      console.log('🔄 チケット使用後の表示更新開始:', { ticketId, remainingCount, totalCount })
+      
+      // チケット行を検索（複数の方法で）
+      let ticketRow = document.querySelector(`tr[data-ticket-id="${ticketId}"]`)
+      
       if (!ticketRow) {
-        console.error('❌ チケット行が見つかりません')
+        // 代替方法1: より柔軟なセレクター
+        ticketRow = document.querySelector(`tr:has([data-ticket-id="${ticketId}"])`)
+      }
+      
+      if (!ticketRow) {
+        // 代替方法2: テーブル内の全行を検索
+        const allRows = document.querySelectorAll('tbody tr')
+        ticketRow = Array.from(allRows).find(row => {
+          const ticketIdCell = row.querySelector('[data-ticket-id]')
+          return ticketIdCell && ticketIdCell.getAttribute('data-ticket-id') === ticketId
+        })
+      }
+      
+      if (!ticketRow) {
+        console.error('❌ チケット行が見つかりません:', ticketId)
+        // 行が見つからない場合は、チケット数を再計算してページを更新
+        this.updateTicketCounts()
         return
       }
       
-      // 残り回数を更新（改行や空白を含む形式に対応）
-      const badgeElement = ticketRow.querySelector('.badge')
-      if (badgeElement) {
+      console.log('✅ チケット行を発見:', ticketRow)
+      
+      // 残り回数セルを検索（複数の方法で）
+      let remainingCountCell = ticketRow.querySelector('.badge')
+      
+      if (!remainingCountCell) {
+        // 代替方法1: 残り回数を含むセルを検索
+        remainingCountCell = Array.from(ticketRow.children).find(cell => 
+          cell.textContent.includes('/') || cell.textContent.includes('回')
+        )
+      }
+      
+      if (!remainingCountCell) {
+        // 代替方法2: 4番目のセル（残り回数が表示される位置）
+        const cells = ticketRow.children
+        if (cells.length >= 4) {
+          remainingCountCell = cells[3]
+        }
+      }
+      
+      if (!remainingCountCell) {
+        console.error('❌ 残り回数セルが見つかりません')
+        // セルが見つからない場合は、チケット数を再計算
+        this.updateTicketCounts()
+        return
+      }
+      
+      console.log('✅ 残り回数セルを発見:', remainingCountCell)
+      
+      // 残り回数を更新
+      if (remainingCountCell) {
+        // 既存のbadge要素を探す
+        let badgeElement = remainingCountCell.querySelector('.badge')
+        
+        if (!badgeElement) {
+          // badge要素がない場合は新しく作成
+          badgeElement = document.createElement('span')
+          badgeElement.className = 'badge bg-primary'
+          remainingCountCell.appendChild(badgeElement)
+        }
+        
         // 改行や空白を除去してテキストを設定
         badgeElement.textContent = `${remainingCount}/${totalCount}`
+        console.log('✅ 残り回数を更新:', `${remainingCount}/${totalCount}`)
         
-        // 残り回数に応じてバッジの色を変更
-        if (remainingCount === 0) {
-          badgeElement.className = 'badge bg-secondary'
-          const statusElement = ticketRow.querySelector('.badge.bg-success')
-          if (statusElement) {
-            statusElement.className = 'badge bg-secondary'
-            statusElement.textContent = '使用済み'
+        // 残り回数が0になった場合の処理
+        if (parseInt(remainingCount) === 0) {
+          // 行の背景色を変更して使用済みであることを示す
+          ticketRow.classList.add('table-secondary')
+          ticketRow.classList.add('text-muted')
+          
+          // 使用ボタンを無効化
+          const useButton = ticketRow.querySelector('.use-ticket-btn')
+          if (useButton) {
+            useButton.disabled = true
+            useButton.classList.add('disabled')
+            useButton.title = '使用済み'
           }
-        } else if (remainingCount < totalCount) {
-          badgeElement.className = 'badge bg-warning'
+          
+          console.log('✅ 使用済みチケットとして表示を更新')
         }
       }
       
-      // 使用ボタンを無効化（残り回数が0の場合）
-      if (remainingCount === 0) {
-        const useButton = ticketRow.querySelector('.use-ticket-btn')
-        if (useButton) {
-          useButton.disabled = true
-          useButton.className = 'btn btn-sm btn-secondary me-1'
-          useButton.innerHTML = '<i class="fas fa-ticket-alt me-1"></i>使用済み'
-        }
-      }
+      // チケット数を再計算
+      this.updateTicketCounts()
       
-      console.log('✅ チケット表示を更新しました')
+      // 成功メッセージを表示
+      this.showAlert('success', 'チケットを使用しました')
+      
+      console.log('✅ チケット使用後の表示更新完了')
       
     } catch (error) {
-      console.error('❌ チケット表示更新中にエラーが発生しました:', error)
+      console.error('❌ チケット使用後の表示更新中にエラーが発生しました:', error)
+      // エラーが発生した場合は、チケット数を再計算
+      this.updateTicketCounts()
     }
   }
   
