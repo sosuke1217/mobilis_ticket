@@ -75,25 +75,94 @@ export default class extends Controller {
   
   // チケットボタンの設定
   setupTicketButtons() {
-    console.log('🔘 チケットボタンの設定開始')
-    
-    // 使用ボタンと削除ボタンのイベントリスナーを設定
-    this.element.addEventListener('click', (e) => {
-      const useBtn = e.target.closest('.use-ticket-btn')
-      const deleteBtn = e.target.closest('.delete-ticket-btn')
+    try {
+      console.log('🔘 チケットボタンの設定開始')
       
-      if (useBtn && !useBtn.disabled) {
-        e.preventDefault()
-        e.stopPropagation()
-        this.handleTicketUse(useBtn)
-      } else if (deleteBtn && !deleteBtn.disabled) {
-        e.preventDefault()
-        e.stopPropagation()
-        this.handleTicketDelete(deleteBtn)
-      }
-    })
-    
-    console.log('🔘 チケットボタンの設定完了')
+      // 既存のイベントリスナーを削除
+      const existingButtons = document.querySelectorAll('.use-ticket-btn, .delete-ticket-btn')
+      existingButtons.forEach(button => {
+        button.removeEventListener('click', this.handleTicketButtonClick)
+      })
+      
+      // 使用ボタンの設定
+      const useButtons = document.querySelectorAll('.use-ticket-btn')
+      useButtons.forEach(button => {
+        console.log('🔘 使用ボタンを設定:', button.dataset)
+        
+        // 既存のイベントリスナーを削除
+        button.removeEventListener('click', this.handleTicketButtonClick)
+        
+        // 新しいイベントリスナーを追加
+        button.addEventListener('click', (e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          
+          if (e.target.disabled) {
+            console.log('⏳ ボタンが無効化されているため、処理をスキップします')
+            return
+          }
+          
+          const ticketId = button.getAttribute('data-ticket-id')
+          const ticketName = button.getAttribute('data-ticket-name')
+          
+          if (!ticketId) {
+            console.error('❌ チケットIDが設定されていません')
+            this.showAlert('danger', 'チケットIDが設定されていません')
+            return
+          }
+          
+          console.log('🎫 使用ボタンクリック:', { ticketId, ticketName })
+          
+          // 確認ダイアログを表示
+          if (confirm(`「${ticketName || 'チケット'}」を1回使用しますか？`)) {
+            this.useTicket(ticketId, button)
+          }
+        })
+        
+        console.log('✅ 使用ボタンの設定完了:', ticketId)
+      })
+      
+      // 削除ボタンの設定
+      const deleteButtons = document.querySelectorAll('.delete-ticket-btn')
+      deleteButtons.forEach(button => {
+        console.log('🔘 削除ボタンを設定:', button.dataset)
+        
+        // 既存のイベントリスナーを削除
+        button.removeEventListener('click', this.handleTicketButtonClick)
+        
+        // 新しいイベントリスナーを追加
+        button.addEventListener('click', (e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          
+          if (e.target.disabled) {
+            console.log('⏳ ボタンが無効化されているため、処理をスキップします')
+            return
+          }
+          
+          const ticketId = button.getAttribute('data-ticket-id')
+          const ticketName = button.getAttribute('data-ticket-name')
+          
+          if (!ticketId) {
+            console.error('❌ チケットIDが設定されていません')
+            this.showAlert('danger', 'チケットIDが設定されていません')
+            return
+          }
+          
+          console.log('🗑️ 削除ボタンクリック:', { ticketId, ticketName })
+          
+          // 削除確認モーダルを表示
+          this.handleTicketDelete(button)
+        })
+        
+        console.log('✅ 削除ボタンの設定完了:', ticketId)
+      })
+      
+      console.log('✅ チケットボタンの設定完了')
+      
+    } catch (error) {
+      console.error('❌ チケットボタンの設定中にエラーが発生しました:', error)
+    }
   }
   
   // チケット発行処理
@@ -274,7 +343,7 @@ export default class extends Controller {
   }
   
   // チケット使用処理
-  handleTicketUse(button) {
+  useTicket(ticketId, button) {
     if (this.isProcessing) {
       console.log('⚠️ 既に処理中のため、重複実行をスキップ')
       return
@@ -458,6 +527,18 @@ export default class extends Controller {
         badgeElement.textContent = `${remainingCount}/${totalCount}`
         console.log('✅ 残り回数を更新:', `${remainingCount}/${totalCount}`)
         
+        // 残り回数に応じてバッジの色を変更
+        if (parseInt(remainingCount) === 0) {
+          badgeElement.className = 'badge bg-secondary'
+          console.log('✅ 使用済みチケットとして表示を更新')
+        } else if (parseInt(remainingCount) <= 2) {
+          badgeElement.className = 'badge bg-warning'
+          console.log('✅ 残り少ないチケットとして表示を更新')
+        } else {
+          badgeElement.className = 'badge bg-primary'
+          console.log('✅ 利用可能チケットとして表示を更新')
+        }
+        
         // 残り回数が0になった場合の処理
         if (parseInt(remainingCount) === 0) {
           // 行の背景色を変更して使用済みであることを示す
@@ -470,6 +551,17 @@ export default class extends Controller {
             useButton.disabled = true
             useButton.classList.add('disabled')
             useButton.title = '使用済み'
+            useButton.innerHTML = '<i class="fas fa-ticket-alt me-1"></i>使用済み'
+          }
+          
+          // ステータスセルを更新
+          const statusCell = ticketRow.querySelector('td:nth-child(5)')
+          if (statusCell) {
+            const statusBadge = statusCell.querySelector('.badge')
+            if (statusBadge) {
+              statusBadge.className = 'badge bg-secondary'
+              statusBadge.textContent = '使用済み'
+            }
           }
           
           console.log('✅ 使用済みチケットとして表示を更新')
