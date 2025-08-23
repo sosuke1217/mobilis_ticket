@@ -26,10 +26,10 @@ function validateReservationForm() {
   // 過去の日付チェック
   if (date) {
     const selectedDate = new Date(date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
     
-    if (selectedDate < today) {
+    if (selectedDate < currentDate) {
       errors.push('過去の日付は選択できません');
     }
   }
@@ -159,10 +159,10 @@ function setupRealtimeValidation() {
   dateField?.addEventListener('change', function() {
     if (this.value) {
       const selectedDate = new Date(this.value);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      const currentDate = new Date();
+      currentDate.setHours(0, 0, 0, 0);
       
-      if (selectedDate < today) {
+      if (selectedDate < currentDate) {
         showMessage('過去の日付は選択できません', 'warning');
         this.value = '';
       }
