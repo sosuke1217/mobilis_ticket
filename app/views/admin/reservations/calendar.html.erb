@@ -1974,6 +1974,9 @@
         function closeUserSelectionModal() {
             document.getElementById('userSelectionModal').style.display = 'none';
         }
+        
+        // グローバル関数として公開
+        window.closeUserSelectionModal = closeUserSelectionModal;
 
         // ユーザー選択を保存
         function saveUserSelection() {
@@ -5133,6 +5136,9 @@ function showMessage(message, type = 'info') {
                 showMessage('休憩の削除中にエラーが発生しました。', 'error');
             });
         }
+        
+        // グローバル関数として公開
+        window.deleteBreakReservation = deleteBreakReservation;
 
         // 時間枠クリック時の選択肢を表示
         function showSlotOptions(date, time, cellElement) {
@@ -5818,6 +5824,9 @@ function showMessage(message, type = 'info') {
             document.getElementById('reservationDetailModal').style.display = 'none';
             currentReservation = null; // 現在の予約をリセット
         }
+        
+        // グローバル関数として公開
+        window.closeReservationDetailModal = closeReservationDetailModal;
 
         // モーダル外クリックで閉じる機能
         function setupModalClickOutside() {
@@ -6216,7 +6225,7 @@ function showMessage(message, type = 'info') {
             showMessage('予約を編集できます。', 'info');
         }
 
-        // 予約を削除
+                // 予約を削除
         function deleteReservation() {
             console.log('🗑️ deleteReservation関数が呼び出されました');
             console.log('🔍 currentReservation:', currentReservation);
@@ -6265,8 +6274,8 @@ function showMessage(message, type = 'info') {
                 }
             })
             .then(response => response.json())
-  .then(data => {
-    if (data.success) {
+            .then(data => {
+                if (data.success) {
                     console.log('✅ Reservation deleted successfully');
                     
                     // ローカルデータから予約を削除
@@ -6301,15 +6310,15 @@ function showMessage(message, type = 'info') {
                             delete reservations[foundDateKey];
                             console.log(`🗑️ Deleted empty date key: ${foundDateKey}`);
                         }
-  } else {
+                    } else {
                         console.warn(`⚠️ Reservation ID ${currentReservation.id} not found in any date key`);
                         console.warn(`⚠️ Available reservations:`, reservations);
                     }
                     
                     // カレンダーを再描画
                     generateTimeSlots();
-      
-      // モーダルを閉じる
+                    
+                    // モーダルを閉じる
                     closeReservationDetailModal();
                     
                     // 成功メッセージを表示
@@ -6317,16 +6326,19 @@ function showMessage(message, type = 'info') {
                     
                     // デバッグ: 削除後の予約データを確認
                     console.log('✅ After deletion - reservations data:', reservations);
-    } else {
+                } else {
                     console.error('❌ Failed to delete reservation:', data.message);
                     showMessage(`予約の削除に失敗しました: ${data.message}`, 'error');
-    }
-  })
-  .catch(error => {
+                }
+            })
+            .catch(error => {
                 console.error('❌ Error deleting reservation:', error);
                 showMessage('予約の削除中にエラーが発生しました。', 'error');
             });
         }
+        
+        // グローバル関数として公開
+        window.deleteReservation = deleteReservation;
 
         // 予約をキャンセル（削除）
         function cancelReservation() {
@@ -6344,13 +6356,15 @@ function showMessage(message, type = 'info') {
 
             
             // バックエンドに削除リクエストを送信
-            fetch('/admin/reservations/delete_reservation', {
+            const deleteUrl = `/admin/reservations/${currentReservation.id}`;
+            console.log('🌐 キャンセルURL:', deleteUrl);
+            
+            fetch(deleteUrl, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-                },
-                body: JSON.stringify({ reservation_id: currentReservation.id })
+                }
             })
             .then(response => response.json())
   .then(data => {
@@ -6422,6 +6436,9 @@ function showMessage(message, type = 'info') {
                 showMessage('予約のキャンセル中にエラーが発生しました。', 'error');
             });
         }
+        
+        // グローバル関数として公開
+        window.cancelReservation = cancelReservation;
 
         // コースから時間を抽出する関数
         function extractDurationFromCourse(courseString) {
