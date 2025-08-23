@@ -665,6 +665,19 @@ export default class extends Controller {
         if (parseInt(remainingCount) === 0) {
           badgeElement.className = 'badge bg-secondary'
           console.log('✅ 使用済みチケットとして表示を更新')
+          
+          // 残り回数が0になった場合は行を削除
+          ticketRow.remove()
+          console.log('✅ 使用済みチケットの行を削除')
+          
+          // チケット数を再計算（即座に実行）
+          this.updateTicketCounts()
+          
+          // 成功メッセージを表示
+          this.showAlert('success', 'チケットを使用しました')
+          
+          console.log('✅ チケット使用後の表示更新完了')
+          return
         } else if (parseInt(remainingCount) <= 2) {
           badgeElement.className = 'badge bg-warning'
           console.log('✅ 残り少ないチケットとして表示を更新')
@@ -673,33 +686,8 @@ export default class extends Controller {
           console.log('✅ 利用可能チケットとして表示を更新')
         }
         
-        // 残り回数が0になった場合の処理
-        if (parseInt(remainingCount) === 0) {
-          // 行の背景色を変更して使用済みであることを示す
-          ticketRow.classList.add('table-secondary')
-          ticketRow.classList.add('text-muted')
-          
-          // 使用ボタンを無効化
-          const useButton = ticketRow.querySelector('.use-ticket-btn')
-          if (useButton) {
-            useButton.disabled = true
-            useButton.classList.add('disabled')
-            useButton.title = '使用済み'
-            useButton.innerHTML = '<i class="fas fa-ticket-alt me-1"></i>使用済み'
-          }
-          
-          // ステータスセルを更新
-          const statusCell = ticketRow.querySelector('td:nth-child(5)')
-          if (statusCell) {
-            const statusBadge = statusCell.querySelector('.badge')
-            if (statusBadge) {
-              statusBadge.className = 'badge bg-secondary'
-              statusBadge.textContent = '使用済み'
-            }
-          }
-          
-          console.log('✅ 使用済みチケットとして表示を更新')
-        } else if (parseInt(remainingCount) <= 2) {
+        // 残り回数が2以下の場合のステータス更新
+        if (parseInt(remainingCount) <= 2) {
           // 残り回数が2以下の場合のステータス更新
           const statusCell = ticketRow.querySelector('td:nth-child(5)')
           if (statusCell) {
@@ -722,15 +710,14 @@ export default class extends Controller {
             }
           }
         }
-      }
-      
-      // チケット数を再計算（即座に実行）
-      this.updateTicketCounts()
-      
-      // 成功メッセージを表示
-      this.showAlert('success', 'チケットを使用しました')
-      
-      console.log('✅ チケット使用後の表示更新完了')
+        
+        // チケット数を再計算（即座に実行）
+        this.updateTicketCounts()
+        
+        // 成功メッセージを表示
+        this.showAlert('success', 'チケットを使用しました')
+        
+        console.log('✅ チケット使用後の表示更新完了')
       
     } catch (error) {
       console.error('❌ チケット使用後の表示更新中にエラーが発生しました:', error)
