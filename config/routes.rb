@@ -65,6 +65,12 @@ Rails.application.routes.draw do
     # 通知管理
     resources :notification_logs, only: [:index]
     resources :notification_preferences, only: [:index]
+    
+    # テスト用コントローラー
+    namespace :test do
+      get 'simple'
+      get 'by_day_of_week_test'
+    end
   end
   
   # 一般ユーザー用ルート
