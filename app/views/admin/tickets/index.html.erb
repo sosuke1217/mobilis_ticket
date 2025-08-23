@@ -104,24 +104,28 @@
 <style>
 /* モーダルの高さを調整 */
 #deleteTicketModal .modal-dialog {
-  max-height: 95vh !important;
-  margin: 1rem auto !important;
+  max-height: 98vh !important;
+  margin: 0.5rem auto !important;
+  min-height: 80vh !important;
 }
 
 #deleteTicketModal .modal-content {
-  max-height: 95vh !important;
+  max-height: 98vh !important;
   overflow: hidden !important;
+  min-height: 80vh !important;
 }
 
 #deleteTicketModal .modal-body {
   overflow: visible !important;
   max-height: none !important;
   padding: 2rem !important;
+  flex: 1 !important;
 }
 
 #deleteTicketModal .modal-footer {
   padding: 1rem 2rem !important;
   margin-top: 1rem !important;
+  flex-shrink: 0 !important;
 }
 
 /* モーダルの背景を明るく */

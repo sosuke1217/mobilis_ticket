@@ -40,8 +40,10 @@ export default class extends Controller {
       // フォームハンドラーの設定
       this.setupFormHandlers()
       
-      // チケットボタンの設定
-      this.setupTicketButtons()
+      // チケットボタンの設定（少し遅延させて実行）
+      setTimeout(() => {
+        this.setupTicketButtons()
+      }, 100)
       
       // チケット数の初期表示
       this.updateTicketCounts()
@@ -70,11 +72,16 @@ export default class extends Controller {
       
       // 使用ボタンの設定
       const useButtons = document.querySelectorAll('.use-ticket-btn')
-      useButtons.forEach(button => {
+      console.log('🔍 使用ボタンの数:', useButtons.length)
+      
+      useButtons.forEach((button, index) => {
         const ticketId = button.getAttribute('data-ticket-id')
         const ticketName = button.getAttribute('data-ticket-name')
         
-        console.log('🔘 使用ボタンを設定:', { ticketId, ticketName })
+        console.log(`🔘 使用ボタン${index + 1}を設定:`, { ticketId, ticketName })
+        
+        // 既存のイベントリスナーを削除
+        button.removeEventListener('click', this.handleTicketButtonClick)
         
         // 新しいイベントリスナーを追加
         button.addEventListener('click', (e) => {
@@ -100,16 +107,21 @@ export default class extends Controller {
           }
         })
         
-        console.log('✅ 使用ボタンの設定完了:', ticketId)
+        console.log(`✅ 使用ボタン${index + 1}の設定完了:`, ticketId)
       })
       
       // 削除ボタンの設定
       const deleteButtons = document.querySelectorAll('.delete-ticket-btn')
-      deleteButtons.forEach(button => {
+      console.log('🔍 削除ボタンの数:', deleteButtons.length)
+      
+      deleteButtons.forEach((button, index) => {
         const ticketId = button.getAttribute('data-ticket-id')
         const ticketName = button.getAttribute('data-ticket-name')
         
-        console.log('🔘 削除ボタンを設定:', { ticketId, ticketName })
+        console.log(`🔘 削除ボタン${index + 1}を設定:`, { ticketId, ticketName })
+        
+        // 既存のイベントリスナーを削除
+        button.removeEventListener('click', this.handleTicketButtonClick)
         
         // 新しいイベントリスナーを追加
         button.addEventListener('click', (e) => {
@@ -133,7 +145,7 @@ export default class extends Controller {
           this.handleTicketDelete(button)
         })
         
-        console.log('✅ 削除ボタンの設定完了:', ticketId)
+        console.log(`✅ 削除ボタン${index + 1}の設定完了:`, ticketId)
       })
       
       console.log('✅ チケットボタンの設定完了')
@@ -359,19 +371,19 @@ export default class extends Controller {
         let totalCount = null
         
         // 形式1: remaining_count, total_count
-        if (data.remaining_count !== undefined) {
+        if (data.remaining_count !== undefined && data.total_count !== undefined) {
           remainingCount = data.remaining_count
           totalCount = data.total_count
           console.log('📊 形式1で残り回数情報を取得:', { remainingCount, totalCount })
         }
         // 形式2: remainingCount, totalCount
-        else if (data.remainingCount !== undefined) {
+        else if (data.remainingCount !== undefined && data.totalCount !== undefined) {
           remainingCount = data.remainingCount
           totalCount = data.totalCount
           console.log('📊 形式2で残り回数情報を取得:', { remainingCount, totalCount })
         }
         // 形式3: remaining, total
-        else if (data.remaining !== undefined) {
+        else if (data.remaining !== undefined && data.total !== undefined) {
           remainingCount = data.remaining
           totalCount = data.total
           console.log('📊 形式3で残り回数情報を取得:', { remainingCount, totalCount })
@@ -396,14 +408,36 @@ export default class extends Controller {
           }
         }
         
-        if (remainingCount !== null && totalCount !== null) {
+        // 値の検証
+        if (remainingCount === null || totalCount === null || 
+            isNaN(remainingCount) || isNaN(totalCount)) {
+          console.error('❌ 残り回数情報が無効です:', { remainingCount, totalCount })
+          
+          // 現在の行から再度情報を取得
+          const currentRow = document.querySelector(`tr[data-ticket-id="${ticketId}"]`)
+          if (currentRow) {
+            const badgeElement = currentRow.querySelector('.badge')
+            if (badgeElement) {
+              const badgeText = badgeElement.textContent.trim()
+              const match = badgeText.match(/(\d+)\s*\/\s*(\d+)/)
+              if (match) {
+                remainingCount = parseInt(match[1]) - 1 // 1回使用したので-1
+                totalCount = parseInt(match[2])
+                console.log('📊 再取得した残り回数情報:', { remainingCount, totalCount })
+              }
+            }
+          }
+        }
+        
+        if (remainingCount !== null && totalCount !== null && 
+            !isNaN(remainingCount) && !isNaN(totalCount)) {
           console.log('📊 最終的な残り回数情報:', { remainingCount, totalCount })
           
           // 表示を即座に更新
           this.updateTicketDisplayAfterUse(ticketId, remainingCount, totalCount)
           
         } else {
-          console.error('❌ 残り回数情報が取得できませんでした:', data)
+          console.error('❌ 残り回数情報が取得できませんでした:', { remainingCount, totalCount })
           // 情報が取得できない場合は、チケット数を再計算
           this.updateTicketCounts()
         }
