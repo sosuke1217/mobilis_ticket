@@ -3857,6 +3857,18 @@ function showMessage(message, type = 'info') {
             window.currentBreakReservation = null;
         }
 
+        // 休憩詳細モーダルの外側クリックで閉じる機能を設定
+        document.addEventListener('DOMContentLoaded', function() {
+            const breakDetailModal = document.getElementById('breakDetailModal');
+            if (breakDetailModal) {
+                breakDetailModal.addEventListener('click', function(event) {
+                    if (event.target === breakDetailModal) {
+                        closeBreakDetailModal();
+                    }
+                });
+            }
+        });
+
         // 編集時の休憩タイトル選択処理
         function handleEditBreakTitleChange() {
             const breakTitle = document.getElementById('editBreakTitle');

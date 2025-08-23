@@ -448,10 +448,35 @@
             font-family: inherit;
         }
 
+        /* Make break type options more prominent with blue styling */
+        .break-detail-select option {
+            background: white;
+            color: #1976d2;
+            padding: 8px;
+        }
+
+        .break-detail-select option:hover {
+            background: #e3f2fd;
+        }
+
         .break-detail-select:focus, .break-detail-input:focus, .break-detail-textarea:focus {
             outline: none;
             border-color: #2196f3;
             box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+        }
+
+        /* Enhanced blue styling for select elements */
+        .break-detail-select {
+            background-image: linear-gradient(45deg, transparent 50%, #1976d2 50%), linear-gradient(135deg, #1976d2 50%, transparent 50%);
+            background-position: calc(100% - 20px) calc(1em + 2px), calc(100% - 15px) calc(1em + 2px);
+            background-size: 5px 5px, 5px 5px;
+            background-repeat: no-repeat;
+            background-color: white;
+        }
+
+        .break-detail-select:hover {
+            border-color: #42a5f5;
+            background-color: #f8fbff;
         }
 
         .break-detail-textarea {
