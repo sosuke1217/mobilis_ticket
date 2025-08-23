@@ -40,13 +40,19 @@
             font-weight: 600;
         }
 
-        /* Break block styles - Maximum specificity to override all other styles */
+        /* Break block styles - ULTIMATE specificity with ALL properties !important */
         .reservation-block.break-block,
         .reservation-block.break-block.confirmed,
         .reservation-block.break-block.tentative,
-        .reservation-block.break-block.completed {
+        .reservation-block.break-block.completed,
+        .reservation-block.spanning.break-block,
+        .reservation-block.spanning.break-block.confirmed,
+        .reservation-block.spanning.break-block.tentative,
+        .reservation-block.spanning.break-block.completed {
             background: linear-gradient(135deg, #3498db 0%, #74b9ff 100%) !important;
+            background-color: #3498db !important;
             border: 2px solid #0984e3 !important;
+            border-color: #0984e3 !important;
             color: white !important;
             box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4) !important;
         }
@@ -54,30 +60,28 @@
         .reservation-block.break-block:hover,
         .reservation-block.break-block.confirmed:hover,
         .reservation-block.break-block.tentative:hover,
-        .reservation-block.break-block.completed:hover {
-            background: linear-gradient(135deg, #2980b9 0%, #6c5ce7 100%) !important;
-            box-shadow: 0 6px 16px rgba(41, 128, 185, 0.5) !important;
-            transform: translateY(-1px);
-        }
-
-        /* Also handle spanning break blocks with maximum specificity */
-        .reservation-block.spanning.break-block,
-        .reservation-block.spanning.break-block.confirmed,
-        .reservation-block.spanning.break-block.tentative,
-        .reservation-block.spanning.break-block.completed {
-            background: linear-gradient(135deg, #3498db 0%, #74b9ff 100%) !important;
-            border: 2px solid #0984e3 !important;
-            color: white !important;
-            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4) !important;
-        }
-
+        .reservation-block.break-block.completed:hover,
         .reservation-block.spanning.break-block:hover,
         .reservation-block.spanning.break-block.confirmed:hover,
         .reservation-block.spanning.break-block.tentative:hover,
         .reservation-block.spanning.break-block.completed:hover {
             background: linear-gradient(135deg, #2980b9 0%, #6c5ce7 100%) !important;
+            background-color: #2980b9 !important;
             box-shadow: 0 6px 16px rgba(41, 128, 185, 0.5) !important;
-            transform: translateY(-1px);
+            transform: translateY(-1px) !important;
+        }
+
+        /* Additional aggressive targeting for any break-related elements */
+        [class*="break"] {
+            background: linear-gradient(135deg, #3498db 0%, #74b9ff 100%) !important;
+            background-color: #3498db !important;
+            border-color: #0984e3 !important;
+            color: white !important;
+        }
+
+        [class*="break"]:hover {
+            background: linear-gradient(135deg, #2980b9 0%, #6c5ce7 100%) !important;
+            background-color: #2980b9 !important;
         }
 
         /* Orange button styles */
