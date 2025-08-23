@@ -106,10 +106,10 @@ class Reservation < ApplicationRecord
     !cancelled? && start_time > Time.current
   end
 
-  # 休憩予約かどうかを判定
-  def is_break?
-    self[:is_break] == true
-  end
+  # 休憩予約機能は現在無効化（is_breakカラムが存在しないため）
+  # def is_break?
+  #   self[:is_break] == true
+  # end
   
   # デバッグ用：バリデーション前の状態をログ出力
   def log_validation_state

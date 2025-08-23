@@ -291,7 +291,7 @@ class Admin::ReservationsController < ApplicationController
           customer: reservation.name || reservation.user&.name || '未設定',
           phone: reservation.user&.phone_number || '',
           email: reservation.user&.email || '',
-          is_break: reservation.is_break || false,
+          is_break: false, // is_break column doesn't exist in database
           note: reservation.note || '',
           status: reservation.status,
           createdAt: reservation.created_at.iso8601,
@@ -563,7 +563,7 @@ class Admin::ReservationsController < ApplicationController
           email: reservation.user&.email || '',
           note: reservation.note || '',
           status: reservation.status,
-          is_break: reservation.is_break || false,
+          is_break: false, // is_break column doesn't exist in database
           createdAt: reservation.created_at.iso8601,
           updatedAt: reservation.updated_at.iso8601,
           userId: reservation.user_id,
@@ -729,27 +729,16 @@ class Admin::ReservationsController < ApplicationController
         Rails.logger.info "🔄 Updating reservation name to: #{user.name}"
       end
       
-      # バリデーション設定（休憩の場合は営業時間と重複をチェック）
+      # バリデーション設定（管理者用の制限をスキップ）
       Rails.logger.info "🔍 Setting validation flags for reservation #{@reservation.id}"
-      Rails.logger.info "🔍 Reservation is_break: #{@reservation.is_break?}"
       
-      if @reservation.is_break?
-        # 要望に合わせて、通常予約と同様に管理者用の制限をスキップ
-        @reservation.skip_business_hours_validation = true
-        @reservation.skip_advance_booking_validation = true
-        @reservation.skip_advance_notice_validation = true
-        @reservation.skip_time_validation = true
-        @reservation.skip_overlap_validation = true
-        Rails.logger.info "🔄 Break reservation will behave like regular: skipping admin validations"
-      else
-        # 通常予約の場合は管理者用の制限をスキップ
-        @reservation.skip_business_hours_validation = true
-        @reservation.skip_advance_booking_validation = true
-        @reservation.skip_advance_notice_validation = true
-        @reservation.skip_time_validation = true
-        @reservation.skip_overlap_validation = true
-        Rails.logger.info "🔄 Regular reservation validation flags: skip_time=#{@reservation.skip_time_validation}, skip_business_hours=#{@reservation.skip_business_hours_validation}, skip_overlap=#{@reservation.skip_overlap_validation}"
-      end
+      # 管理者用の制限をスキップ
+      @reservation.skip_business_hours_validation = true
+      @reservation.skip_advance_booking_validation = true
+      @reservation.skip_advance_notice_validation = true
+      @reservation.skip_time_validation = true
+      @reservation.skip_overlap_validation = true
+      Rails.logger.info "🔄 Admin validation flags: skip_time=#{@reservation.skip_time_validation}, skip_business_hours=#{@reservation.skip_business_hours_validation}, skip_overlap=#{@reservation.skip_overlap_validation}"
       
       Rails.logger.info "🔍 Final validation flags: skip_time=#{@reservation.skip_time_validation}, skip_business_hours=#{@reservation.skip_business_hours_validation}, skip_overlap=#{@reservation.skip_overlap_validation}"
       
@@ -1259,7 +1248,7 @@ class Admin::ReservationsController < ApplicationController
   def reservation_params
     params.require(:reservation).permit(
       :start_time, :end_time, :course, :status, :cancellation_reason, :note, :user_id,
-      :name, :date, :time, :ticket_id, :individual_interval_minutes, :is_break,
+              :name, :date, :time, :ticket_id, :individual_interval_minutes,
       user_attributes: [:name, :phone_number, :email]
     )
   end
