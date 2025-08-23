@@ -1373,14 +1373,21 @@
             
             try {
                 // バックエンドから該当曜日の全予約を取得
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                console.log('🔐 CSRF Token:', csrfToken ? 'Found' : 'Missing');
+                
                 const response = await fetch(`/admin/reservations/by_day_of_week?day_of_week=${dayOfWeek}&from_date=${new Date().toISOString().split('T')[0]}`, {
                     method: 'GET',
-                    credentials: 'same-origin',
+                    credentials: 'include',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-Token': csrfToken
                     }
                 });
+                
+                console.log('📡 Response status:', response.status, response.statusText);
+                console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
                 
                 if (response.ok) {
                     const allReservations = await response.json();
