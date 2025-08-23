@@ -2718,7 +2718,7 @@
             const endTime = `${String(Math.floor(endTimeInMinutes / 60)).padStart(2, '0')}:${String(endTimeInMinutes % 60).padStart(2, '0')}`;
             
             // 休憩ブロックの場合は異なるスタイルで表示            
-            if (false) { // 休憩機能は無効化
+            if (reservation.customer === '休憩' || reservation.customer === '準備時間' || reservation.customer === '業務' || reservation.customer === 'ミーティング' || reservation.customer === 'その他') {
                 // 休憩タイプに応じたアイコンを選択
                 const breakIcons = {
                     '休憩': '☕',
