@@ -18,6 +18,7 @@ Rails.application.routes.draw do
         get 'calendar'
         get 'cancellation_stats'
         get 'load_shift_settings'
+        post 'save_shift_settings'
         get 'load_reservations'
         post 'create_booking'
         delete 'delete_reservation'
