@@ -515,13 +515,17 @@ class Reservation < ApplicationRecord
   def start_and_and_end_must_be_on_10_minute_interval
     return unless start_time && end_time
     
-    if start_time.min % 10 != 0 || end_time.min % 10 != 0
-      error_msg = "開始時間と終了時間は10分刻みで入力してください"
-      Rails.logger.error "❌ 10-minute interval validation failed: #{error_msg}"
+    # インターバル設定に基づいて動的に検証
+    interval = effective_interval_minutes || 10
+    return if interval == 0 # インターバルが0の場合は検証をスキップ
+    
+    if start_time.min % interval != 0 || end_time.min % interval != 0
+      error_msg = "開始時間と終了時間は#{interval}分刻みで入力してください"
+      Rails.logger.error "❌ #{interval}-minute interval validation failed: #{error_msg}"
       
       errors.add(:base, error_msg)
     else
-      Rails.logger.info "✅ 10-minute interval validation passed"
+      Rails.logger.info "✅ #{interval}-minute interval validation passed"
     end
   end
   
