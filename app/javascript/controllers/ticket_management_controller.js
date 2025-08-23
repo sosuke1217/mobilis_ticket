@@ -500,6 +500,8 @@ export default class extends Controller {
       
       // 残り回数を更新
       if (remainingCountCell) {
+        console.log('🔍 残り回数セルの現在の内容:', remainingCountCell.innerHTML)
+        
         // 既存のbadge要素を探す
         let badgeElement = remainingCountCell.querySelector('.badge')
         
@@ -510,9 +512,16 @@ export default class extends Controller {
           remainingCountCell.appendChild(badgeElement)
         }
         
+        // 既存の内容をクリアしてから新しい内容を設定
+        remainingCountCell.innerHTML = ''
+        badgeElement = document.createElement('span')
+        badgeElement.className = 'badge bg-primary'
+        remainingCountCell.appendChild(badgeElement)
+        
         // 改行や空白を除去してテキストを設定
         badgeElement.textContent = `${remainingCount}/${totalCount}`
         console.log('✅ 残り回数を更新:', `${remainingCount}/${totalCount}`)
+        console.log('🔍 更新後の残り回数セルの内容:', remainingCountCell.innerHTML)
         
         // 残り回数に応じてバッジの色を変更
         if (parseInt(remainingCount) === 0) {
