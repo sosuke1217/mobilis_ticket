@@ -1445,6 +1445,11 @@ class Admin::ReservationsController < ApplicationController
     render json: { message: "SIMPLE TEST WORKS!", method: "simple_test" }
   end
 
+  # 最小限テスト - 基本的な動作確認
+  def minimal_test
+    render plain: "MINIMAL TEST WORKS!"
+  end
+
   # 特定の曜日の全予約を取得（定期的なスケジュール変更の影響チェック用）
   def by_day_of_week
     Rails.logger.info "🔍 by_day_of_week called - FIXED VISIBILITY"
