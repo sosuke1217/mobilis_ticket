@@ -334,12 +334,12 @@
 
 
         .break-detail-modal-header {
-            background: #f8f9fa;
-            color: #333;
+            background: #e3f2fd;
+            color: #1976d2;
             padding: 20px 25px;
             text-align: center;
             position: relative;
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 2px solid #2196f3;
         }
 
 
@@ -348,7 +348,7 @@
             margin: 0;
             font-size: 20px;
             font-weight: 600;
-            color: #333;
+            color: #1976d2;
         }
 
         .break-detail-modal-close {
@@ -381,8 +381,8 @@
         }
 
         .break-detail-info {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
+            background: #f3f8ff;
+            border: 1px solid #bbdefb;
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 20px;
@@ -393,14 +393,14 @@
 
         .break-detail-datetime {
             font-size: 18px;
-            color: #333;
+            color: #1976d2;
             font-weight: 600;
             margin-bottom: 8px;
         }
 
         .break-detail-duration {
             font-size: 16px;
-            color: #666;
+            color: #42a5f5;
             font-weight: 500;
         }
 
@@ -424,7 +424,7 @@
         .break-detail-label {
             font-weight: 600;
             font-size: 14px;
-            color: #333;
+            color: #1976d2;
             display: flex;
             align-items: center;
             gap: 6px;
@@ -433,12 +433,13 @@
         .break-detail-label::before {
             content: '✨';
             font-size: 12px;
-            opacity: 0.7;
+            opacity: 0.8;
+            color: #42a5f5;
         }
 
         .break-detail-select, .break-detail-input, .break-detail-textarea {
             padding: 12px 16px;
-            border: 1px solid #ddd;
+            border: 1px solid #bbdefb;
             border-radius: 6px;
             font-size: 14px;
             transition: all 0.2s ease;
@@ -449,8 +450,8 @@
 
         .break-detail-select:focus, .break-detail-input:focus, .break-detail-textarea:focus {
             outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+            border-color: #2196f3;
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
         }
 
         .break-detail-textarea {
@@ -461,11 +462,11 @@
 
         .break-detail-modal-footer {
             padding: 20px 25px;
-            background: #f8f9fa;
+            background: #e3f2fd;
             display: flex;
             gap: 12px;
             justify-content: center;
-            border-top: 1px solid #e9ecef;
+            border-top: 1px solid #bbdefb;
         }
 
         .break-detail-btn {
@@ -480,12 +481,12 @@
         }
 
         .break-detail-btn-save {
-            background: #007bff;
+            background: #2196f3;
             color: white;
         }
 
         .break-detail-btn-save:hover {
-            background: #0056b3;
+            background: #1976d2;
         }
 
         .break-detail-btn-delete {
