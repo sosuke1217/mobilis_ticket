@@ -718,7 +718,7 @@ export default class extends Controller {
         this.showAlert('success', 'チケットを使用しました')
         
         console.log('✅ チケット使用後の表示更新完了')
-      
+      }
     } catch (error) {
       console.error('❌ チケット使用後の表示更新中にエラーが発生しました:', error)
       // エラーが発生した場合は、チケット数を再計算
