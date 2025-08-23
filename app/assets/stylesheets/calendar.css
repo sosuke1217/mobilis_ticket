@@ -40,48 +40,20 @@
             font-weight: 600;
         }
 
-        /* Break block styles - ULTIMATE specificity with ALL properties !important */
+        /* Break block styles - with proper class targeting */
         .reservation-block.break-block,
-        .reservation-block.break-block.confirmed,
-        .reservation-block.break-block.tentative,
-        .reservation-block.break-block.completed,
-        .reservation-block.spanning.break-block,
-        .reservation-block.spanning.break-block.confirmed,
-        .reservation-block.spanning.break-block.tentative,
-        .reservation-block.spanning.break-block.completed {
+        .reservation-block.spanning.break-block {
             background: linear-gradient(135deg, #3498db 0%, #74b9ff 100%) !important;
-            background-color: #3498db !important;
             border: 2px solid #0984e3 !important;
-            border-color: #0984e3 !important;
             color: white !important;
             box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4) !important;
         }
 
         .reservation-block.break-block:hover,
-        .reservation-block.break-block.confirmed:hover,
-        .reservation-block.break-block.tentative:hover,
-        .reservation-block.break-block.completed:hover,
-        .reservation-block.spanning.break-block:hover,
-        .reservation-block.spanning.break-block.confirmed:hover,
-        .reservation-block.spanning.break-block.tentative:hover,
-        .reservation-block.spanning.break-block.completed:hover {
+        .reservation-block.spanning.break-block:hover {
             background: linear-gradient(135deg, #2980b9 0%, #6c5ce7 100%) !important;
-            background-color: #2980b9 !important;
             box-shadow: 0 6px 16px rgba(41, 128, 185, 0.5) !important;
-            transform: translateY(-1px) !important;
-        }
-
-        /* Additional aggressive targeting for any break-related elements */
-        [class*="break"] {
-            background: linear-gradient(135deg, #3498db 0%, #74b9ff 100%) !important;
-            background-color: #3498db !important;
-            border-color: #0984e3 !important;
-            color: white !important;
-        }
-
-        [class*="break"]:hover {
-            background: linear-gradient(135deg, #2980b9 0%, #6c5ce7 100%) !important;
-            background-color: #2980b9 !important;
+            transform: translateY(-1px);
         }
 
         /* Orange button styles */
@@ -162,7 +134,7 @@
             color: #495057;
         }
 
-        /* Break Modal Styles - Simple */
+        /* Break Modal Styles */
         .break-modal {
             display: none;
             position: fixed;
@@ -172,32 +144,45 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
         }
 
         .break-modal-content {
-            background: white;
+            background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
             margin: 5% auto;
-            border: 1px solid #ddd;
+            border: none;
             width: 90%;
             max-width: 500px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(255, 159, 67, 0.3);
             overflow: hidden;
+            animation: breakModalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes breakModalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
 
         .break-modal-header {
-            background: #f8f9fa;
-            color: #333;
+            background: linear-gradient(135deg, #3498db 0%, #74b9ff 100%);
+            color: white;
             padding: 20px 24px;
             text-align: center;
             position: relative;
-            border-bottom: 1px solid #ddd;
         }
 
         .break-modal-header h2 {
             margin: 0;
             font-size: 20px;
             font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .break-modal-close {
@@ -207,7 +192,7 @@
             transform: translateY(-50%);
             font-size: 24px;
             font-weight: bold;
-            color: #666;
+            color: white;
             cursor: pointer;
             width: 32px;
             height: 32px;
@@ -219,8 +204,8 @@
         }
 
         .break-modal-close:hover {
-            background-color: #e9ecef;
-            color: #333;
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-50%) scale(1.1);
         }
 
         .break-modal-body {
@@ -228,9 +213,9 @@
         }
 
         .break-info-section {
-            background: #f8f9fa;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+            background: linear-gradient(135deg, #fff8f0 0%, #fff4e6 100%);
+            border: 2px solid #ff9f43;
+            border-radius: 12px;
             padding: 16px;
             margin-bottom: 20px;
             text-align: center;
@@ -238,7 +223,7 @@
 
         .break-datetime {
             font-size: 16px;
-            color: #333;
+            color: #e67e22;
             font-weight: 500;
         }
 
@@ -327,128 +312,173 @@
 
         /* Break Detail Modal Styles - Simple Clean Design */
         .break-detail-modal {
-            display: none !important;
-            position: fixed !important;
-            z-index: 11000 !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            background-color: rgba(0, 0, 0, 0.5) !important;
+            display: none;
+            position: fixed;
+            z-index: 11000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
         }
 
         .break-detail-modal-content {
-            background: white !important;
-            margin: 5% auto !important;
-            border: 1px solid #ddd !important;
-            width: 90% !important;
-            max-width: 500px !important;
-            border-radius: 8px !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-            overflow: hidden !important;
+            background: white;
+            margin: 5% auto;
+            border: none;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
         }
+
+
 
         .break-detail-modal-header {
-            background: #f8f9fa !important;
-            color: #333 !important;
-            padding: 20px 25px !important;
-            text-align: center !important;
-            position: relative !important;
-            border-bottom: 1px solid #ddd !important;
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 20px 25px;
+            text-align: center;
+            position: relative;
+            border-bottom: 2px solid #2196f3;
         }
 
+
+
         .break-detail-modal-header h2 {
-            margin: 0 !important;
-            font-size: 20px !important;
-            font-weight: 600 !important;
-            color: #333 !important;
+            margin: 0;
+            font-size: 20px;
+            font-weight: 600;
+            color: #1976d2;
         }
 
         .break-detail-modal-close {
-            position: absolute !important;
-            right: 20px !important;
-            top: 50% !important;
-            transform: translateY(-50%) !important;
-            font-size: 24px !important;
-            font-weight: bold !important;
-            color: #666 !important;
-            cursor: pointer !important;
-            width: 30px !important;
-            height: 30px !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            border-radius: 50% !important;
-            transition: all 0.2s ease !important;
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
         }
 
         .break-detail-modal-close:hover {
-            background-color: #e9ecef !important;
-            color: #333 !important;
+            background-color: #e9ecef;
+            color: #333;
         }
 
         .break-detail-modal-body {
-            padding: 25px !important;
-            background: white !important;
-            color: #333 !important;
+            padding: 25px;
+            background: white;
+            color: #333;
         }
 
         .break-detail-info {
-            background: #f8f9fa !important;
-            border: 1px solid #ddd !important;
-            border-radius: 6px !important;
-            padding: 20px !important;
-            margin-bottom: 20px !important;
-            text-align: center !important;
+            background: #f3f8ff;
+            border: 1px solid #bbdefb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
         }
 
+
+
         .break-detail-datetime {
-            font-size: 18px !important;
-            color: #333 !important;
-            font-weight: 600 !important;
-            margin-bottom: 8px !important;
+            font-size: 18px;
+            color: #1976d2;
+            font-weight: 600;
+            margin-bottom: 8px;
         }
 
         .break-detail-duration {
-            font-size: 16px !important;
-            color: #666 !important;
-            font-weight: 500 !important;
+            font-size: 16px;
+            color: #42a5f5;
+            font-weight: 500;
         }
 
         .break-detail-form {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 20px !important;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
+
+
 
         .break-detail-field {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 10px !important;
-            position: relative !important;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: relative;
         }
 
+
+
         .break-detail-label {
-            font-weight: 600 !important;
-            font-size: 14px !important;
-            color: #333 !important;
+            font-weight: 600;
+            font-size: 14px;
+            color: #1976d2;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .break-detail-label::before {
+            content: '✨';
+            font-size: 12px;
+            opacity: 0.8;
+            color: #42a5f5;
         }
 
         .break-detail-select, .break-detail-input, .break-detail-textarea {
-            padding: 12px 16px !important;
-            border: 1px solid #ddd !important;
-            border-radius: 6px !important;
-            font-size: 14px !important;
-            transition: all 0.2s ease !important;
-            background: white !important;
-            color: #333 !important;
-            font-family: inherit !important;
+            padding: 12px 16px;
+            border: 1px solid #bbdefb;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            background: white;
+            color: #333;
+            font-family: inherit;
+        }
+
+        /* Make break type options more prominent with blue styling */
+        .break-detail-select option {
+            background: white;
+            color: #1976d2;
+            padding: 8px;
+        }
+
+        .break-detail-select option:hover {
+            background: #e3f2fd;
         }
 
         .break-detail-select:focus, .break-detail-input:focus, .break-detail-textarea:focus {
-            outline: none !important;
-            border-color: #666 !important;
-            box-shadow: 0 0 0 2px rgba(102, 102, 102, 0.1) !important;
+            outline: none;
+            border-color: #2196f3;
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+        }
+
+        /* Enhanced blue styling for select elements */
+        .break-detail-select {
+            background-image: linear-gradient(45deg, transparent 50%, #1976d2 50%), linear-gradient(135deg, #1976d2 50%, transparent 50%);
+            background-position: calc(100% - 20px) calc(1em + 2px), calc(100% - 15px) calc(1em + 2px);
+            background-size: 5px 5px, 5px 5px;
+            background-repeat: no-repeat;
+            background-color: white;
+        }
+
+        .break-detail-select:hover {
+            border-color: #42a5f5;
+            background-color: #f8fbff;
         }
 
         .break-detail-textarea {
@@ -458,54 +488,50 @@
         }
 
         .break-detail-modal-footer {
-            padding: 20px 25px !important;
-            background: #f8f9fa !important;
-            display: flex !important;
-            gap: 12px !important;
-            justify-content: center !important;
-            border-top: 1px solid #ddd !important;
+            padding: 20px 25px;
+            background: #e3f2fd;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            border-top: 1px solid #bbdefb;
         }
 
         .break-detail-btn {
-            padding: 10px 20px !important;
-            border: none !important;
-            border-radius: 6px !important;
-            font-weight: 500 !important;
-            font-size: 14px !important;
-            color: white !important;
-            cursor: pointer !important;
-            transition: all 0.2s ease !important;
-            min-width: 100px !important;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 100px;
         }
 
         .break-detail-btn-save {
-            background: #666 !important;
-            color: white !important;
+            background: #2196f3;
+            color: white;
         }
 
         .break-detail-btn-save:hover {
-            background: #555 !important;
-            color: white !important;
+            background: #1976d2;
         }
 
         .break-detail-btn-delete {
-            background: #dc3545 !important;
-            color: white !important;
+            background: #dc3545;
+            color: white;
         }
 
         .break-detail-btn-delete:hover {
-            background: #c82333 !important;
-            color: white !important;
+            background: #c82333;
         }
 
         .break-detail-btn-cancel {
-            background: #6c757d !important;
-            color: white !important;
+            background: #6c757d;
+            color: white;
         }
 
         .break-detail-btn-cancel:hover {
-            background: #5a6268 !important;
-            color: white !important;
+            background: #5a6268;
         }
 
 
