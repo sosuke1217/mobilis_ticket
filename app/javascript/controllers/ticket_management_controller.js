@@ -363,9 +363,10 @@ export default class extends Controller {
         return
       }
       
-      // 残り回数を更新
+      // 残り回数を更新（改行や空白を含む形式に対応）
       const badgeElement = ticketRow.querySelector('.badge')
       if (badgeElement) {
+        // 改行や空白を除去してテキストを設定
         badgeElement.textContent = `${remainingCount}/${totalCount}`
         
         // 残り回数に応じてバッジの色を変更
@@ -462,16 +463,62 @@ export default class extends Controller {
         return
       }
       
-      // 残り回数を抽出（例: "4/4" から "4" を取得）
-      const remainingCountMatch = remainingCountCell.textContent.match(/(\d+)\/(\d+)/)
+      // 残り回数を抽出（改行や空白を含む形式に対応）
+      const remainingCountText = remainingCountCell.textContent.trim()
+      console.log('🔍 残り回数セルのテキスト:', `"${remainingCountText}"`)
+      
+      // 複数の形式に対応した正規表現
+      let remainingCountMatch = remainingCountText.match(/(\d+)\s*\/\s*(\d+)/)
+      
       if (!remainingCountMatch) {
-        console.error('❌ 残り回数の形式が期待と異なります:', remainingCountCell.textContent)
+        // 代替方法: より柔軟な正規表現
+        remainingCountMatch = remainingCountText.match(/(\d+).*?(\d+)/)
+      }
+      
+      if (!remainingCountMatch) {
+        console.error('❌ 残り回数の形式が期待と異なります:', `"${remainingCountText}"`)
+        console.log('🔍 セルの完全なHTML:', remainingCountCell.innerHTML)
+        
+        // 最後の手段: badge要素から直接取得
+        const badgeElement = remainingCountCell.querySelector('.badge')
+        if (badgeElement) {
+          const badgeText = badgeElement.textContent.trim()
+          console.log('🔍 badge要素のテキスト:', `"${badgeText}"`)
+          
+          remainingCountMatch = badgeText.match(/(\d+)\s*\/\s*(\d+)/)
+          if (!remainingCountMatch) {
+            remainingCountMatch = badgeText.match(/(\d+).*?(\d+)/)
+          }
+        }
+      }
+      
+      if (!remainingCountMatch) {
+        console.error('❌ 残り回数の抽出に失敗しました。セルの内容を詳しく調査します...')
+        
+        // セルの詳細な内容をログ出力
+        console.log('🔍 セルの詳細調査:')
+        console.log('- textContent:', `"${remainingCountCell.textContent}"`)
+        console.log('- innerHTML:', remainingCountCell.innerHTML)
+        console.log('- children:', remainingCountCell.children.length)
+        
+        if (remainingCountCell.children.length > 0) {
+          Array.from(remainingCountCell.children).forEach((child, index) => {
+            console.log(`  - child${index}:`, {
+              tagName: child.tagName,
+              className: child.className,
+              textContent: `"${child.textContent}"`,
+              innerHTML: child.innerHTML
+            })
+          })
+        }
+        
         this.isProcessing = false
         return
       }
       
       const remainingCount = remainingCountMatch[1]
-      console.log('📊 残り回数:', remainingCount)
+      const totalCount = remainingCountMatch[2]
+      console.log('📊 残り回数:', remainingCount, '/', totalCount)
       
       // 削除確認モーダルを表示
       this.showDeleteModal(ticketId, ticketName, remainingCount)
@@ -632,8 +679,20 @@ export default class extends Controller {
       rows.forEach(row => {
         const badgeElement = row.querySelector('.badge')
         if (badgeElement && badgeElement.textContent.includes('/')) {
-          const match = badgeElement.textContent.match(/(\d+)\/(\d+)/)
-          if (match) {
+          // 改行や空白を含む形式に対応した正規表現
+          const match = badgeElement.textContent.trim().match(/(\d+)\s*\/\s*(\d+)/)
+          if (!match) {
+            // 代替方法: より柔軟な正規表現
+            const altMatch = badgeElement.textContent.trim().match(/(\d+).*?(\d+)/)
+            if (altMatch) {
+              const remaining = parseInt(altMatch[1])
+              const total = parseInt(altMatch[2])
+              if (remaining > 0) {
+                remainingTickets++
+                totalRemainingCount += remaining
+              }
+            }
+          } else {
             const remaining = parseInt(match[1])
             const total = parseInt(match[2])
             if (remaining > 0) {
