@@ -21,6 +21,7 @@ Rails.application.routes.draw do
         get 'load_reservations'
         post 'create_booking'
         delete 'delete_reservation'
+        get 'search_users'
       end
     end
     
