@@ -2675,3 +2675,177 @@
         height: 100vh;
         background-color: rgba(0, 0, 0, 0.5);
     }
+
+    /* Booking Modal Styles - Distinct from Break Modal */
+    .booking-modal {
+        display: none;
+        position: fixed;
+        z-index: 10000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+    }
+
+    .booking-modal-content {
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        margin: 5% auto;
+        border: none;
+        width: 90%;
+        max-width: 500px;
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(52, 152, 219, 0.3);
+        overflow: hidden;
+        animation: bookingModalSlideIn 0.3s ease-out;
+    }
+
+    @keyframes bookingModalSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-30px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .booking-modal-header {
+        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        color: white;
+        padding: 20px 24px;
+        text-align: center;
+        position: relative;
+    }
+
+    .booking-modal-header h2 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 600;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .booking-modal-close {
+        position: absolute;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 24px;
+        font-weight: bold;
+        color: white;
+        cursor: pointer;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+    }
+
+    .booking-modal-close:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+        transform: translateY(-50%) scale(1.1);
+    }
+
+    .booking-modal-body {
+        padding: 24px;
+    }
+
+    .booking-info-section {
+        background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+        border: 2px solid #28a745;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .booking-datetime {
+        font-size: 16px;
+        color: #155724;
+        font-weight: 500;
+    }
+
+    .booking-form-section {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .booking-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .booking-label {
+        font-weight: 600;
+        font-size: 14px;
+        color: #2c3e50;
+    }
+
+    .booking-select, .booking-input, .booking-textarea {
+        padding: 12px 16px;
+        border: 2px solid #2ecc71;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.2s ease;
+        background: white;
+    }
+
+    .booking-select:focus, .booking-input:focus, .booking-textarea:focus {
+        outline: none;
+        border-color: #27ae60;
+        box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1);
+        transform: translateY(-1px);
+    }
+
+    .booking-textarea {
+        resize: vertical;
+        min-height: 60px;
+        font-family: inherit;
+    }
+
+    .booking-modal-footer {
+        padding: 20px 24px;
+        background: #f8f9fa;
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+    }
+
+    .booking-btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        min-width: 120px;
+    }
+
+    .booking-btn-create {
+        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+    }
+
+    .booking-btn-create:hover {
+        background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(46, 204, 113, 0.4);
+    }
+
+    .booking-btn-cancel {
+        background: #6c757d;
+        color: white;
+    }
+
+    .booking-btn-cancel:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }

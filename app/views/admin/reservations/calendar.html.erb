@@ -125,25 +125,25 @@
         </div>
 
     <!-- 予約作成モーダル -->
-    <div id="bookingModal" class="break-modal">
-        <div class="break-modal-content">
-            <div class="break-modal-header">
+    <div id="bookingModal" class="booking-modal">
+        <div class="booking-modal-content">
+            <div class="booking-modal-header">
                 <h2>📅 新規予約作成</h2>
-                <span class="break-modal-close" onclick="closeBookingModal()">&times;</span>
+                <span class="booking-modal-close" onclick="closeBookingModal()">&times;</span>
             </div>
-            <div class="break-modal-body">
+            <div class="booking-modal-body">
                 <!-- 予約日時情報セクション -->
-                <div class="break-info-section">
-                    <div class="break-datetime">
+                <div class="booking-info-section">
+                    <div class="booking-datetime">
                         <span id="bookingDisplayDate"></span> <strong id="bookingDisplayTime"></strong>
                     </div>
                 </div>
 
                 <!-- 予約フォームセクション -->
-                <div class="break-form-section">
-                    <div class="break-field">
-                        <label class="break-label">🎯 コース選択</label>
-                        <select id="bookingDuration" class="break-select" required>
+                <div class="booking-form-section">
+                    <div class="booking-field">
+                        <label class="booking-label">🎯 コース選択</label>
+                        <select id="bookingDuration" class="booking-select" required>
                             <option value="">コースを選択してください</option>
                             <option value="40">40分コース</option>
                             <option value="60">60分コース</option>
@@ -151,39 +151,39 @@
                         </select>
                     </div>
                     
-                    <div class="break-field">
-                        <label class="break-label">👤 お客様名 <span style="color: #e74c3c; font-weight: 700;">*</span></label>
-                        <input type="text" id="customerName" class="break-input" required placeholder="山田太郎" autocomplete="off">
+                    <div class="booking-field">
+                        <label class="booking-label">👤 お客様名 <span style="color: #e74c3c; font-weight: 700;">*</span></label>
+                        <input type="text" id="customerName" class="booking-input" required placeholder="山田太郎" autocomplete="off">
                         <div id="userSearchResults" class="user-search-results" style="display: none;"></div>
                     </div>
                     
-                    <div class="break-field">
-                        <label class="break-label">📞 電話番号 <span style="color: #e74c3c; font-weight: 700;">*</span></label>
-                        <input type="tel" id="customerPhone" class="break-input" required placeholder="090-1234-5678">
+                    <div class="booking-field">
+                        <label class="booking-label">📞 電話番号 <span style="color: #e74c3c; font-weight: 700;">*</span></label>
+                        <input type="tel" id="customerPhone" class="booking-input" required placeholder="090-1234-5678">
                     </div>
                     
-                    <div class="break-field">
-                        <label class="break-label">📧 メールアドレス</label>
-                        <input type="email" id="customerEmail" class="break-input" placeholder="example@email.com">
+                    <div class="booking-field">
+                        <label class="booking-label">📧 メールアドレス</label>
+                        <input type="email" id="customerEmail" class="booking-input" placeholder="example@email.com">
                     </div>
                     
-                    <div class="break-field">
-                        <label class="break-label">📝 備考・ご要望</label>
-                        <textarea id="bookingNote" class="break-textarea" rows="3" placeholder="ご要望やご質問があればご記入ください"></textarea>
+                    <div class="booking-field">
+                        <label class="booking-label">📝 備考・ご要望</label>
+                        <textarea id="bookingNote" class="booking-textarea" rows="3" placeholder="ご要望やご質問があればご記入ください"></textarea>
                     </div>
                     
-                    <div class="break-field">
-                        <label class="break-label">🏷️ 予約ステータス</label>
-                        <select id="bookingStatus" class="break-select">
+                    <div class="booking-field">
+                        <label class="booking-label">🏷️ 予約ステータス</label>
+                        <select id="bookingStatus" class="booking-select">
                             <option value="tentative">仮予約</option>
                             <option value="confirmed">確定</option>
                         </select>
                     </div>
                 </div>
             </div>
-            <div class="break-modal-footer">
-                <button type="button" class="break-btn break-btn-cancel" onclick="closeBookingModal()">キャンセル</button>
-                <button type="button" class="break-btn break-btn-create" id="submitBookingBtn" onclick="createBooking()">📅 予約作成</button>
+            <div class="booking-modal-footer">
+                <button type="button" class="booking-btn booking-btn-cancel" onclick="closeBookingModal()">キャンセル</button>
+                <button type="button" class="booking-btn booking-btn-create" id="submitBookingBtn" onclick="createBooking()">📅 予約作成</button>
             </div>
         </div>
     </div>
