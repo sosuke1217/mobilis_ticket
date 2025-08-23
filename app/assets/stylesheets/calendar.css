@@ -308,7 +308,7 @@
             transform: translateY(-1px);
         }
 
-        /* Break Detail Modal Styles - Beautiful Modern Design */
+        /* Break Detail Modal Styles - Simple Clean Design */
         .break-detail-modal {
             display: none;
             position: fixed;
@@ -317,159 +317,100 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(10px);
+            background-color: rgba(0, 0, 0, 0.5);
         }
 
         .break-detail-modal-content {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            margin: 3% auto;
+            background: white;
+            margin: 5% auto;
             border: none;
             width: 90%;
-            max-width: 600px;
-            border-radius: 24px;
-            box-shadow: 0 30px 60px rgba(102, 126, 234, 0.4), 0 0 40px rgba(102, 126, 234, 0.3);
+            max-width: 500px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             overflow: hidden;
-            animation: breakDetailModalSlideIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            border: 3px solid rgba(255, 255, 255, 0.2);
         }
 
-        @keyframes breakDetailModalSlideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-50px) scale(0.85) rotateX(15deg);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1) rotateX(0deg);
-            }
-        }
+
 
         .break-detail-modal-header {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            padding: 30px 32px;
+            background: #f8f9fa;
+            color: #333;
+            padding: 20px 25px;
             text-align: center;
             position: relative;
-            box-shadow: 0 6px 20px rgba(240, 147, 251, 0.4);
-            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            border-bottom: 1px solid #e9ecef;
         }
 
-        @keyframes rainbow {
-            0% { filter: hue-rotate(0deg); }
-            100% { filter: hue-rotate(360deg); }
-        }
+
 
         .break-detail-modal-header h2 {
             margin: 0;
-            font-size: 24px;
-            font-weight: 800;
-            text-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
-            letter-spacing: 1px;
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
         }
 
         .break-detail-modal-close {
             position: absolute;
-            right: 28px;
+            right: 20px;
             top: 50%;
             transform: translateY(-50%);
-            font-size: 28px;
+            font-size: 24px;
             font-weight: bold;
-            color: white;
+            color: #666;
             cursor: pointer;
-            width: 40px;
-            height: 40px;
+            width: 30px;
+            height: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 50%;
-            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.2s ease;
         }
 
         .break-detail-modal-close:hover {
-            background-color: rgba(255, 255, 255, 0.25);
-            transform: translateY(-50%) scale(1.2) rotate(90deg);
-            border-color: rgba(255, 255, 255, 0.6);
+            background-color: #e9ecef;
+            color: #333;
         }
 
         .break-detail-modal-body {
-            padding: 35px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
-            color: white;
+            padding: 25px;
+            background: white;
+            color: #333;
         }
 
         .break-detail-info {
-            background: rgba(255, 255, 255, 0.15);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 18px;
-            padding: 24px;
-            margin-bottom: 28px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
             text-align: center;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-            position: relative;
-            overflow: hidden;
-            backdrop-filter: blur(10px);
         }
 
-        .break-detail-info::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transform: rotate(45deg);
-            animation: shimmer 3s infinite;
-        }
 
-        @keyframes shimmer {
-            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
-        }
 
         .break-detail-datetime {
-            font-size: 20px;
-            color: white;
-            font-weight: 700;
-            margin-bottom: 10px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            font-size: 18px;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
         }
 
         .break-detail-duration {
-            font-size: 18px;
-            color: rgba(255, 255, 255, 0.9);
-            font-weight: 600;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            font-size: 16px;
+            color: #666;
+            font-weight: 500;
         }
 
         .break-detail-form {
             display: flex;
             flex-direction: column;
-            gap: 24px;
-            position: relative;
+            gap: 20px;
         }
 
-        .break-detail-form::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, #8a2be2, #9370db, #ba55d3, #8a2be2);
-            background-size: 200% 100%;
-            animation: gradientMove 3s ease-in-out infinite;
-        }
 
-        @keyframes gradientMove {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
 
         .break-detail-field {
             display: flex;
@@ -478,51 +419,38 @@
             position: relative;
         }
 
-        .break-detail-field::after {
-            content: '';
-            position: absolute;
-            bottom: -12px;
-            left: 0;
-            width: 100%;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(138, 43, 226, 0.3), transparent);
-        }
+
 
         .break-detail-label {
-            font-weight: 700;
-            font-size: 16px;
-            color: white;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .break-detail-label::before {
             content: '✨';
-            font-size: 14px;
-            opacity: 0.9;
+            font-size: 12px;
+            opacity: 0.7;
         }
 
         .break-detail-select, .break-detail-input, .break-detail-textarea {
-            padding: 16px 20px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 12px;
-            font-size: 16px;
-            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            background: white;
+            color: #333;
             font-family: inherit;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px);
         }
 
         .break-detail-select:focus, .break-detail-input:focus, .break-detail-textarea:focus {
             outline: none;
-            border-color: rgba(255, 255, 255, 0.6);
-            box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.1);
-            transform: translateY(-3px) scale(1.02);
-            background: rgba(255, 255, 255, 0.15);
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
         }
 
         .break-detail-textarea {
@@ -532,104 +460,53 @@
         }
 
         .break-detail-modal-footer {
-            padding: 28px 32px;
-            background: rgba(255, 255, 255, 0.08);
+            padding: 20px 25px;
+            background: #f8f9fa;
             display: flex;
-            gap: 16px;
+            gap: 12px;
             justify-content: center;
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
-            border-top: 2px solid rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
+            border-top: 1px solid #e9ecef;
         }
 
         .break-detail-btn {
-            padding: 16px 32px;
+            padding: 10px 20px;
             border: none;
-            border-radius: 12px;
-            font-weight: 800;
-            font-size: 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 14px;
             cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            min-width: 140px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .break-detail-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .break-detail-btn:hover::before {
-            left: 100%;
+            transition: all 0.2s ease;
+            min-width: 100px;
         }
 
         .break-detail-btn-save {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #007bff;
             color: white;
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-            border: 2px solid rgba(255, 255, 255, 0.3);
         }
 
         .break-detail-btn-save:hover {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-            transform: translateY(-4px) scale(1.05);
-            box-shadow: 0 12px 25px rgba(102, 126, 234, 0.6);
-            border-color: rgba(255, 255, 255, 0.5);
+            background: #0056b3;
         }
 
         .break-detail-btn-delete {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            background: #dc3545;
             color: white;
-            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
-            border: 2px solid #ee5a52;
         }
 
         .break-detail-btn-delete:hover {
-            background: linear-gradient(135deg, #ee5a52 0%, #ff6b6b 100%);
-            transform: translateY(-4px) scale(1.05);
-            box-shadow: 0 12px 25px rgba(255, 107, 107, 0.6);
-            border-color: #ff6b6b;
+            background: #c82333;
         }
 
         .break-detail-btn-cancel {
-            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            background: #6c757d;
             color: white;
-            border: 2px solid #495057;
-            box-shadow: 0 8px 20px rgba(108, 117, 125, 0.4);
         }
 
         .break-detail-btn-cancel:hover {
-            background: linear-gradient(135deg, #495057 0%, #6c757d 100%);
-            transform: translateY(-4px) scale(1.05);
-            box-shadow: 0 12px 25px rgba(108, 117, 125, 0.6);
-            border-color: #6c757d;
+            background: #5a6268;
         }
 
-        /* Enhanced hover effects for all break detail elements */
-        .break-detail-modal-content:hover {
-            transform: scale(1.01);
-            transition: transform 0.3s ease;
-        }
 
-        /* Special focus states for form elements */
-        .break-detail-select:focus,
-        .break-detail-input:focus,
-        .break-detail-textarea:focus {
-            animation: pulseGlow 2s ease-in-out infinite alternate;
-        }
-
-        @keyframes pulseGlow {
-            from { box-shadow: 0 0 0 6px rgba(138, 43, 226, 0.2); }
-            to { box-shadow: 0 0 0 8px rgba(138, 43, 226, 0.4); }
-        }
 
         /* Responsive design for break detail modal */
         @media (max-width: 768px) {
