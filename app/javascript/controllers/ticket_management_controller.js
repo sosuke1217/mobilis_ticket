@@ -328,7 +328,9 @@ export default class extends Controller {
     }
     
     this.isProcessing = true
+    const originalButtonText = button.innerHTML
     button.disabled = true
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>使用中...'
     
     try {
       console.log('🎫 チケット使用開始:', ticketId)
@@ -352,24 +354,58 @@ export default class extends Controller {
       .then(data => {
         console.log('✅ チケット使用成功:', data)
         
-        // 残り回数と総回数を取得
-        const remainingCount = data.remaining_count || data.remainingCount
-        const totalCount = data.total_count || data.totalCount
+        // 残り回数と総回数を取得（複数の形式に対応）
+        let remainingCount = null
+        let totalCount = null
         
-        if (remainingCount !== undefined && totalCount !== undefined) {
-          console.log('📊 残り回数情報:', { remainingCount, totalCount })
+        // 形式1: remaining_count, total_count
+        if (data.remaining_count !== undefined) {
+          remainingCount = data.remaining_count
+          totalCount = data.total_count
+          console.log('📊 形式1で残り回数情報を取得:', { remainingCount, totalCount })
+        }
+        // 形式2: remainingCount, totalCount
+        else if (data.remainingCount !== undefined) {
+          remainingCount = data.remainingCount
+          totalCount = data.totalCount
+          console.log('📊 形式2で残り回数情報を取得:', { remainingCount, totalCount })
+        }
+        // 形式3: remaining, total
+        else if (data.remaining !== undefined) {
+          remainingCount = data.remaining
+          totalCount = data.total
+          console.log('📊 形式3で残り回数情報を取得:', { remainingCount, totalCount })
+        }
+        // 形式4: 現在の行から情報を取得
+        else {
+          console.log('⚠️ APIレスポンスに残り回数情報が含まれていません。現在の行から情報を取得します。')
+          
+          // 現在の行から残り回数情報を取得
+          const currentRow = document.querySelector(`tr[data-ticket-id="${ticketId}"]`)
+          if (currentRow) {
+            const badgeElement = currentRow.querySelector('.badge')
+            if (badgeElement) {
+              const badgeText = badgeElement.textContent.trim()
+              const match = badgeText.match(/(\d+)\s*\/\s*(\d+)/)
+              if (match) {
+                remainingCount = parseInt(match[1]) - 1 // 1回使用したので-1
+                totalCount = parseInt(match[2])
+                console.log('📊 現在の行から残り回数情報を取得:', { remainingCount, totalCount })
+              }
+            }
+          }
+        }
+        
+        if (remainingCount !== null && totalCount !== null) {
+          console.log('📊 最終的な残り回数情報:', { remainingCount, totalCount })
           
           // 表示を即座に更新
           this.updateTicketDisplayAfterUse(ticketId, remainingCount, totalCount)
-          
-          // ボタンを元の状態に戻す
-          button.disabled = false
           
         } else {
           console.error('❌ 残り回数情報が取得できませんでした:', data)
           // 情報が取得できない場合は、チケット数を再計算
           this.updateTicketCounts()
-          button.disabled = false
         }
       })
       .catch(error => {
@@ -382,11 +418,12 @@ export default class extends Controller {
         }
         
         this.showAlert('danger', errorMessage)
-        
-        // ボタンを元の状態に戻す
-        button.disabled = false
       })
       .finally(() => {
+        // ボタンを元の状態に戻す
+        button.disabled = false
+        button.innerHTML = originalButtonText
+        
         this.isProcessing = false
         console.log('🎫 チケット使用処理完了')
       })
@@ -394,7 +431,11 @@ export default class extends Controller {
     } catch (error) {
       console.error('❌ チケット使用処理の初期化中にエラーが発生しました:', error)
       this.showAlert('danger', 'チケット使用処理の初期化に失敗しました')
+      
+      // ボタンを元の状態に戻す
       button.disabled = false
+      button.innerHTML = originalButtonText
+      
       this.isProcessing = false
     }
   }
@@ -515,9 +556,7 @@ export default class extends Controller {
       }
       
       // チケット数を再計算（即座に実行）
-      setTimeout(() => {
-        this.updateTicketCounts()
-      }, 100)
+      this.updateTicketCounts()
       
       // 成功メッセージを表示
       this.showAlert('success', 'チケットを使用しました')
