@@ -190,7 +190,7 @@
                     <br><small class="text-muted">¥<%= number_with_delimiter(ticket.ticket_template.price) %></small>
                 </td>
                 <td>
-                    <span class="badge bg-primary">
+                    <span class="badge bg-primary fs-6 fw-bold">
                     <%= ticket.remaining_count %> / <%= ticket.total_count %>
                   </span>
                 </td>
@@ -203,13 +203,13 @@
                 </td>
                 <td>
                   <% if ticket.expiry_date && ticket.expiry_date < Date.current %>
-                    <span class="badge bg-danger">期限切れ</span>
+                    <span class="badge bg-danger fs-6 fw-bold">期限切れ</span>
                   <% elsif ticket.remaining_count <= 0 %>
-                    <span class="badge bg-secondary">使用済み</span>
+                    <span class="badge bg-secondary fs-6 fw-bold">使用済み</span>
                   <% elsif ticket.remaining_count <= 2 %>
-                    <span class="badge bg-warning">残り少ない</span>
+                    <span class="badge bg-warning fs-6 fw-bold">残り少ない</span>
                   <% else %>
-                    <span class="badge bg-success">利用可能</span>
+                    <span class="badge bg-success fs-6 fw-bold">利用可能</span>
                   <% end %>
                 </td>
                 <td>
