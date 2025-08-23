@@ -1279,8 +1279,6 @@ class Admin::ReservationsController < ApplicationController
     end
   end
 
-  
-
   def process_reservation_params(params)
     processed_params = params.permit(
       :name, :course, :status, :note, :user_id, :ticket_id,
