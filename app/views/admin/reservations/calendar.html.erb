@@ -2678,14 +2678,16 @@
             block.dataset.originalDateKey = dateKey;
             block.dataset.originalTimeStr = timeStr;
             
-            // クリックイベントを追加
-            block.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('🎯 スパニング予約ブロックがクリックされました:', reservation);
-                console.log('🔍 予約ID:', reservation.id);
-                openReservationDetailModal(reservation);
-            });
+            // クリックイベントを追加（休憩の場合は後で個別に設定）
+            if (!(reservation.customer === '休憩' || reservation.customer === '準備時間' || reservation.customer === '業務' || reservation.customer === 'ミーティング' || reservation.customer === 'その他')) {
+                block.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🎯 スパニング予約ブロックがクリックされました:', reservation);
+                    console.log('🔍 予約ID:', reservation.id);
+                    openReservationDetailModal(reservation);
+                });
+            }
             
             const statusIcon = {
                 'tentative': '⏳',
