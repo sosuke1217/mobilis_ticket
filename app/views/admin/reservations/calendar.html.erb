@@ -4028,18 +4028,18 @@ function showMessage(message, type = 'info') {
             const previewList = document.getElementById('bulkPreviewList');
             previewList.innerHTML = '';
             
-            let currentDate = new Date(startDate);
+            let previewDate = new Date(startDate);
             let reservationCount = 0;
             let conflictCount = 0;
             
-            while (currentDate <= endDate) {
-                if (selectedDays.includes(currentDate.getDay())) {
-                    const dateStr = `${currentDate.getFullYear()}年${String(currentDate.getMonth() + 1).padStart(2, '0')}月${String(currentDate.getDate()).padStart(2, '0')}日`;
+            while (previewDate <= endDate) {
+                if (selectedDays.includes(previewDate.getDay())) {
+                    const dateStr = `${previewDate.getFullYear()}年${String(previewDate.getMonth() + 1).padStart(2, '0')}月${String(previewDate.getDate()).padStart(2, '0')}日`;
                     const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
-                    const dayName = dayNames[currentDate.getDay()];
+                    const dayName = dayNames[previewDate.getDay()];
                     
                     // 既存の予約との重複チェック
-                    const hasConflict = checkReservationConflict(currentDate, startTime, duration);
+                    const hasConflict = checkReservationConflict(previewDate, startTime, duration);
                     
                     const previewItem = document.createElement('div');
                     previewItem.className = 'bulk-preview-item';
@@ -4060,7 +4060,7 @@ function showMessage(message, type = 'info') {
                     }
                     previewList.appendChild(previewItem);
                 }
-                currentDate.setDate(currentDate.getDate() + 1);
+                previewDate.setDate(previewDate.getDate() + 1);
             }
             
             if (conflictCount > 0) {
@@ -4563,16 +4563,16 @@ function showMessage(message, type = 'info') {
             console.log('🔍 Performing final conflict check...');
             
             const conflicts = [];
-            let currentDate = new Date(startDate);
+            let conflictDate = new Date(startDate);
             
-            while (currentDate <= endDate) {
-                if (selectedDays.includes(currentDate.getDay())) {
-                    const hasConflict = checkReservationConflict(currentDate, startTime, duration);
+            while (conflictDate <= endDate) {
+                if (selectedDays.includes(conflictDate.getDay())) {
+                    const hasConflict = checkReservationConflict(conflictDate, startTime, duration);
                     if (hasConflict) {
-                        conflicts.push(currentDate.toLocaleDateString('ja-JP'));
+                        conflicts.push(conflictDate.toLocaleDateString('ja-JP'));
                     }
                 }
-                currentDate.setDate(currentDate.getDate() + 1);
+                conflictDate.setDate(conflictDate.getDate() + 1);
             }
             
             // 追加: カレンダー表示から直接重複をチェック
