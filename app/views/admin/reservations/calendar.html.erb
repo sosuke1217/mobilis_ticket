@@ -456,13 +456,13 @@
 
     <script>
         // 今日の週の開始日（日曜日）を計算
-        let today = new Date();
-        let currentWeekStart = new Date(today);
-        currentWeekStart.setDate(today.getDate() - today.getDay()); // 日曜日に設定
+        let currentDate = new Date();
+        let currentWeekStart = new Date(currentDate);
+        currentWeekStart.setDate(currentDate.getDate() - currentDate.getDay()); // 日曜日に設定
         let weeklySchedules = {}; // 週別スケジュール（週のキーで保存）
         let defaultSchedule = {}; // デフォルトスケジュール
         let reservations = {}; // 予約データ
-        let miniCalendarMonth = new Date(today.getFullYear(), today.getMonth(), 1); // ミニカレンダーの表示月（現在の月）
+        let miniCalendarMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1); // ミニカレンダーの表示月（現在の月）
         let clickedDate = null; // クリックされた日付
         let currentReservation = null; // 現在表示中の予約
         let searchTimeout = null; // 検索のデバウンス用
@@ -3567,8 +3567,8 @@ function showMessage(message, type = 'info') {
                 }
                 
                 // 今日の日付
-                const today = new Date();
-                if (current.toDateString() === today.toDateString()) {
+                const currentDate = new Date();
+                if (current.toDateString() === currentDate.toDateString()) {
                     dayDiv.classList.add('today');
                 }
                 
@@ -3833,18 +3833,18 @@ function showMessage(message, type = 'info') {
             document.getElementById('bulkReservationForm').reset();
             
             // 現在の日付を設定
-            const today = new Date();
-            const startDateValue = today.toISOString().split('T')[0];
+            const currentDate = new Date();
+            const startDateValue = currentDate.toISOString().split('T')[0];
             document.getElementById('bulkStartDate').value = startDateValue;
             
             // 1週間後を終了日として設定
-            const nextWeek = new Date(today);
-            nextWeek.setDate(today.getDate() + 7);
+            const nextWeek = new Date(currentDate);
+            nextWeek.setDate(currentDate.getDate() + 7);
             const endDateValue = nextWeek.toISOString().split('T')[0];
             document.getElementById('bulkEndDate').value = endDateValue;
             
             // 現在時刻を設定
-            const currentTime = `${String(today.getHours()).padStart(2, '0')}:${String(Math.floor(today.getMinutes() / 10) * 10).padStart(2, '0')}`;
+            const currentTime = `${String(currentDate.getHours()).padStart(2, '0')}:${String(Math.floor(currentDate.getMinutes() / 10) * 10).padStart(2, '0')}`;
             document.getElementById('bulkStartTime').value = currentTime;
             
             // 曜日チェックボックスを全てチェック
