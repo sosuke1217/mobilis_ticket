@@ -637,20 +637,35 @@
     }
     
     function initializeDeleteModal() {
-    const deleteBtn = document.getElementById('deleteUserBtn');
-    const modal = document.getElementById('deleteUserModal');
-    const confirmCheck = document.getElementById('confirmDeletionCheck');
-    const confirmationText = document.getElementById('confirmationText');
-    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+      console.log('🔧 削除モーダル初期化開始');
+      
+      const deleteBtn = document.getElementById('deleteUserBtn');
+      const modal = document.getElementById('deleteUserModal');
+      const confirmCheck = document.getElementById('confirmDeletionCheck');
+      const confirmationText = document.getElementById('confirmationText');
+      const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+      
+      console.log('🔍 要素の確認:');
+      console.log('  - deleteBtn:', deleteBtn);
+      console.log('  - modal:', modal);
+      console.log('  - confirmCheck:', confirmCheck);
+      console.log('  - confirmationText:', confirmationText);
+      console.log('  - confirmDeleteBtn:', confirmDeleteBtn);
+      
+      // Bootstrapの確認
+      console.log('🔍 Bootstrap確認:');
+      console.log('  - window.bootstrap:', typeof window.bootstrap !== 'undefined');
+      console.log('  - bootstrap.Modal:', typeof bootstrap !== 'undefined' && bootstrap.Modal);
+      console.log('  - window.$:', typeof window.$ !== 'undefined');
     
-    console.log('削除ボタン初期化開始');
-    console.log('deleteBtn:', deleteBtn);
-    console.log('modal:', modal);
-    
-    if (!deleteBtn || !modal) {
-      console.error('必要な要素が見つかりません');
-      return;
-    }
+      if (!deleteBtn || !modal) {
+        console.error('❌ 必要な要素が見つかりません');
+        console.error('  - deleteBtn:', deleteBtn);
+        console.error('  - modal:', modal);
+        return;
+      }
+      
+      console.log('✅ 必要な要素が見つかりました');
     
     let currentUserId = null;
     let currentUserName = null;
@@ -690,15 +705,36 @@
       
       // モーダルを表示
       try {
-        const bootstrapModal = new bootstrap.Modal(modal);
-        bootstrapModal.show();
-        console.log('モーダルを表示しました');
+        // Bootstrap 5の適切な初期化
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+          const bootstrapModal = new bootstrap.Modal(modal);
+          bootstrapModal.show();
+          console.log('Bootstrap 5モーダルを表示しました');
+        } else {
+          // Bootstrap 4またはフォールバック
+          $(modal).modal('show');
+          console.log('Bootstrap 4モーダルを表示しました');
+        }
       } catch (error) {
         console.error('モーダル表示エラー:', error);
         // フォールバック: 直接スタイルを変更
         modal.style.display = 'block';
         modal.classList.add('show');
         document.body.classList.add('modal-open');
+        modal.setAttribute('aria-hidden', 'false');
+        modal.setAttribute('aria-modal', 'true');
+        
+        // 背景のオーバーレイを追加
+        const backdrop = document.createElement('div');
+        backdrop.className = 'modal-backdrop fade show';
+        backdrop.id = 'modalBackdrop';
+        document.body.appendChild(backdrop);
+        
+        // スクロールを無効化
+        document.body.style.overflow = 'hidden';
+        document.body.style.paddingRight = '0px';
+        
+        console.log('フォールバックモーダルを表示しました');
       }
     };
     
@@ -786,6 +822,41 @@
       });
     }
     
+    // モーダルを閉じる処理
+    function closeModal() {
+      try {
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+          const bootstrapModal = bootstrap.Modal.getInstance(modal);
+          if (bootstrapModal) {
+            bootstrapModal.hide();
+          }
+        } else if (typeof $ !== 'undefined') {
+          $(modal).modal('hide');
+        } else {
+          // フォールバック: 直接スタイルを変更
+          modal.style.display = 'none';
+          modal.classList.remove('show');
+          document.body.classList.remove('modal-open');
+          modal.setAttribute('aria-hidden', 'true');
+          modal.setAttribute('aria-modal', 'false');
+          
+          // 背景のオーバーレイを削除
+          const backdrop = document.getElementById('modalBackdrop');
+          if (backdrop) {
+            backdrop.remove();
+          }
+          
+          // スクロールを有効化
+          document.body.style.overflow = '';
+          document.body.style.paddingRight = '';
+        }
+      } catch (error) {
+        console.error('モーダルを閉じるエラー:', error);
+        // フォールバック
+        modal.style.display = 'none';
+      }
+    }
+    
     // モーダルが閉じられたときのクリーンアップ
     if (modal) {
       const hiddenHandler = function() {
@@ -802,6 +873,12 @@
       
       modal.addEventListener('hidden.bs.modal', hiddenHandler);
       modal.hiddenHandler = hiddenHandler;
+      
+      // キャンセルボタンにもイベントを追加
+      const cancelBtn = modal.querySelector('[data-bs-dismiss="modal"]');
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', closeModal);
+      }
     }
     
     console.log('削除ボタン初期化完了');
