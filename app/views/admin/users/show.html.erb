@@ -627,7 +627,16 @@
   </div>
 
   <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  (function() {
+    // Turbo.jsの競合を防ぐ
+    if (window.turbo) {
+      document.addEventListener('turbo:load', initializeDeleteModal);
+      document.addEventListener('turbo:before-render', cleanupDeleteModal);
+    } else {
+      document.addEventListener('DOMContentLoaded', initializeDeleteModal);
+    }
+    
+    function initializeDeleteModal() {
     const deleteBtn = document.getElementById('deleteUserBtn');
     const modal = document.getElementById('deleteUserModal');
     const confirmCheck = document.getElementById('confirmDeletionCheck');
@@ -647,7 +656,7 @@
     let currentUserName = null;
     
     // 削除ボタンクリック時
-    deleteBtn.addEventListener('click', function(e) {
+    const clickHandler = function(e) {
       e.preventDefault();
       console.log('削除ボタンがクリックされました');
       
@@ -670,7 +679,7 @@
       if (userNameElement) userNameElement.textContent = currentUserName;
       if (userIdElement) userIdElement.textContent = currentUserId;
       if (activeTicketsElement) activeTicketsElement.textContent = activeTickets;
-      if (totalUsagesElement) totalUsagesElement.textContent = totalUsages;
+      if (totalUsagesElement) activeTicketsElement.textContent = totalUsages;
       if (remainingValueElement) remainingValueElement.textContent = remainingValue;
       if (confirmUserNameElement) confirmUserNameElement.textContent = currentUserName;
       
@@ -691,7 +700,11 @@
         modal.classList.add('show');
         document.body.classList.add('modal-open');
       }
-    });
+    };
+    
+    // イベントリスナーを追加し、参照を保存
+    deleteBtn.addEventListener('click', clickHandler);
+    deleteBtn.clickHandler = clickHandler;
     
     // バリデーション関数
     function validateForm() {
@@ -775,7 +788,7 @@
     
     // モーダルが閉じられたときのクリーンアップ
     if (modal) {
-      modal.addEventListener('hidden.bs.modal', function() {
+      const hiddenHandler = function() {
         if (confirmCheck) confirmCheck.checked = false;
         if (confirmationText) {
           confirmationText.value = '';
@@ -785,11 +798,29 @@
           confirmDeleteBtn.disabled = true;
           confirmDeleteBtn.innerHTML = '<i class="fas fa-trash me-1"></i>削除を実行';
         }
-      });
+      };
+      
+      modal.addEventListener('hidden.bs.modal', hiddenHandler);
+      modal.hiddenHandler = hiddenHandler;
     }
     
     console.log('削除ボタン初期化完了');
-  });
+    }
+    
+    // クリーンアップ関数
+    function cleanupDeleteModal() {
+      const deleteBtn = document.getElementById('deleteUserBtn');
+      const modal = document.getElementById('deleteUserModal');
+      
+      if (deleteBtn) {
+        deleteBtn.removeEventListener('click', deleteBtn.clickHandler);
+      }
+      
+      if (modal) {
+        modal.removeEventListener('hidden.bs.modal', modal.hiddenHandler);
+      }
+    }
+  })(); // IIFEを閉じる
   </script>
   
   <div class="card mb-4 shadow-sm">
