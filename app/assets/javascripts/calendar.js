@@ -401,9 +401,9 @@
                         cell.addEventListener('dragenter', handleDragEnter);
                         cell.addEventListener('dragleave', handleDragLeave);
                         
-                        const currentDate = new Date(currentWeekStart);
-                        currentDate.setDate(currentDate.getDate() + day);
-                        const dateKey = formatDateKey(currentDate);
+                        const scheduleDate = new Date(currentWeekStart);
+                        scheduleDate.setDate(scheduleDate.getDate() + day);
+                        const dateKey = formatDateKey(scheduleDate);
                         
                                                 // 営業時間チェック
                         if (isBusinessHour(day, timeStr)) {
@@ -1288,8 +1288,8 @@ function showMessage(message, type = 'info') {
                 }
                 
                 // 今日の日付
-                const currentDate = new Date();
-                if (current.toDateString() === currentDate.toDateString()) {
+                const todayDate = new Date();
+                if (current.toDateString() === todayDate.toDateString()) {
                     dayDiv.classList.add('today');
                 }
                 
@@ -1375,10 +1375,10 @@ function showMessage(message, type = 'info') {
         }
 
         function previousMiniCalendarMonth() {
-            const currentDate = miniCalendarMonth;
+            const prevMonthDate = miniCalendarMonth;
             const prevMonth = new Date(
-                currentDate.getFullYear(),
-                currentDate.getMonth() - 1,
+                prevMonthDate.getFullYear(),
+                prevMonthDate.getMonth() - 1,
                 15, // 月の中旬に設定
                 12, 0, 0, 0
             );
@@ -1389,10 +1389,10 @@ function showMessage(message, type = 'info') {
         }
 
         function nextMiniCalendarMonth() {
-            const currentDate = miniCalendarMonth;
+            const nextMonthDate = miniCalendarMonth;
             const nextMonth = new Date(
-                currentDate.getFullYear(),
-                currentDate.getMonth() + 1,
+                nextMonthDate.getFullYear(),
+                nextMonthDate.getMonth() + 1,
                 15, // 月の中旬に設定
                 12, 0, 0, 0
             );
@@ -1403,10 +1403,10 @@ function showMessage(message, type = 'info') {
         }
 
         function previousMiniCalendarYear() {
-            const currentDate = miniCalendarMonth;
+            const prevYearDate = miniCalendarMonth;
             const prevYear = new Date(
-                currentDate.getFullYear() - 1,
-                currentDate.getMonth(),
+                prevYearDate.getFullYear() - 1,
+                prevYearDate.getMonth(),
                 15, // 月の中旬に設定
                 12, 0, 0, 0
             );
@@ -1417,10 +1417,10 @@ function showMessage(message, type = 'info') {
         }
 
         function nextMiniCalendarYear() {
-            const currentDate = miniCalendarMonth;
+            const nextYearDate = miniCalendarMonth;
             const nextYear = new Date(
-                currentDate.getFullYear() + 1,
-                currentDate.getMonth(),
+                nextYearDate.getFullYear() + 1,
+                nextYearDate.getMonth(),
                 15, // 月の中旬に設定
                 12, 0, 0, 0
             );
