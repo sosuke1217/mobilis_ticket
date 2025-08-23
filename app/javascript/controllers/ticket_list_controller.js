@@ -103,30 +103,192 @@ export default class extends Controller {
       const remainingCount = this.getRemainingCount(ticketId)
       console.log('📊 残り回数:', remainingCount)
       
-      // モーダルにデータを設定
-      if (this.hasModalTarget) {
-        this.modalNameTarget.textContent = ticketName || '不明'
-        this.modalUserTarget.textContent = userName || '不明'
-        this.modalRemainingTarget.textContent = remainingCount || '不明'
-        
-        // モーダルを表示
-        const modal = new bootstrap.Modal(this.modalTarget)
-        modal.show()
-        
-        // 削除実行ボタンのイベントリスナー
-        if (this.hasConfirmButtonTarget) {
-          this.confirmButtonTarget.onclick = () => {
-            this.deleteTicket(ticketId)
-            modal.hide()
-            this.cleanupModalBackground()
-          }
-        }
-        
-        console.log('✅ 削除確認モーダル表示完了')
-      } else {
-        console.error('❌ モーダル要素が見つかりません')
-        alert('削除確認モーダルの準備に失敗しました。ページを再読み込みしてください。')
+      // モーダル要素を複数の方法で検索
+      let deleteTicketModal = null
+      let deleteTicketName = null
+      let deleteTicketUser = null
+      let deleteTicketRemaining = null
+      
+      // 方法1: 直接的なID検索
+      deleteTicketModal = document.querySelector('#deleteTicketModal')
+      deleteTicketName = document.querySelector('#deleteTicketName')
+      deleteTicketUser = document.querySelector('#deleteTicketUser')
+      deleteTicketRemaining = document.querySelector('#deleteTicketRemaining')
+      
+      console.log('🔍 方法1での検索結果:', {
+        modal: !!deleteTicketModal,
+        name: !!deleteTicketName,
+        user: !!deleteTicketUser,
+        remaining: !!deleteTicketRemaining
+      })
+      
+      // 方法2: より柔軟な検索（IDの一部を含む要素）
+      if (!deleteTicketModal) {
+        deleteTicketModal = document.querySelector('[id*="deleteTicketModal"]')
+        console.log('🔍 方法2でのモーダル検索結果:', !!deleteTicketModal)
       }
+      
+      if (!deleteTicketName) {
+        deleteTicketName = document.querySelector('[id*="deleteTicketName"]')
+        console.log('🔍 方法2での名前要素検索結果:', !!deleteTicketName)
+      }
+      
+      if (!deleteTicketUser) {
+        deleteTicketUser = document.querySelector('[id*="deleteTicketUser"]')
+        console.log('🔍 方法2でのユーザー要素検索結果:', !!deleteTicketUser)
+      }
+      
+      if (!deleteTicketRemaining) {
+        deleteTicketRemaining = document.querySelector('[id*="deleteTicketRemaining"]')
+        console.log('🔍 方法2での残り回数要素検索結果:', !!deleteTicketRemaining)
+      }
+      
+      // 方法3: ページ全体からモーダル要素を検索
+      if (!deleteTicketModal) {
+        const allModals = document.querySelectorAll('.modal')
+        console.log('🔍 ページ内の全モーダル要素:', allModals.length)
+        
+        allModals.forEach((modal, index) => {
+          console.log(`  - モーダル${index + 1}:`, {
+            id: modal.id,
+            className: modal.className,
+            visible: modal.style.display !== 'none'
+          })
+        })
+        
+        // 削除関連のモーダルを探す
+        deleteTicketModal = Array.from(allModals).find(modal => 
+          modal.id.includes('delete') || 
+          modal.querySelector('[id*="delete"]') ||
+          modal.textContent.includes('削除')
+        )
+        
+        if (deleteTicketModal) {
+          console.log('✅ 削除関連のモーダルを発見:', deleteTicketModal.id)
+        }
+      }
+      
+      // 方法4: データ属性による検索
+      if (!deleteTicketModal) {
+        deleteTicketModal = document.querySelector('[data-ticket-list-target="modal"]')
+        console.log('🔍 データ属性でのモーダル検索結果:', !!deleteTicketModal)
+      }
+      
+      // 必要な要素の存在確認
+      if (!deleteTicketModal) {
+        console.error('❌ モーダル本体が見つかりません')
+        console.log('🔍 ページ内の全要素の詳細調査:')
+        console.log('- body要素:', !!document.body)
+        console.log('- 全モーダル要素:', document.querySelectorAll('.modal').length)
+        console.log('- 削除関連の要素:', document.querySelectorAll('[id*="delete"]').length)
+        
+        // ページのHTML構造を確認
+        const pageHTML = document.body.innerHTML.substring(0, 1000)
+        console.log('🔍 ページHTML（最初の1000文字）:', pageHTML)
+        
+        alert('削除確認モーダルの準備に失敗しました。ページを再読み込みしてください。')
+        return
+      }
+      
+      if (!deleteTicketName) {
+        console.error('❌ チケット名要素が見つかりません')
+        // 代替要素を探す
+        deleteTicketName = deleteTicketModal.querySelector('[id*="Name"]') || 
+                          deleteTicketModal.querySelector('[class*="name"]') ||
+                          deleteTicketModal.querySelector('span, div')
+        
+        if (deleteTicketName) {
+          console.log('✅ 代替のチケット名要素を発見:', deleteTicketName.tagName, deleteTicketName.className)
+        }
+      }
+      
+      if (!deleteTicketUser) {
+        console.error('❌ ユーザー名要素が見つかりません')
+        // 代替要素を探す
+        deleteTicketUser = deleteTicketModal.querySelector('[id*="User"]') || 
+                          deleteTicketModal.querySelector('[class*="user"]') ||
+                          deleteTicketModal.querySelector('span, div')
+        
+        if (deleteTicketUser) {
+          console.log('✅ 代替のユーザー名要素を発見:', deleteTicketUser.tagName, deleteTicketUser.className)
+        }
+      }
+      
+      if (!deleteTicketRemaining) {
+        console.error('❌ 残り回数要素が見つかりません')
+        // 代替要素を探す
+        deleteTicketRemaining = deleteTicketModal.querySelector('[id*="Remaining"]') || 
+                               deleteTicketModal.querySelector('[class*="remaining"]') ||
+                               deleteTicketModal.querySelector('span, div')
+        
+        if (deleteTicketRemaining) {
+          console.log('✅ 代替の残り回数要素を発見:', deleteTicketRemaining.tagName, deleteTicketRemaining.className)
+        }
+      }
+      
+      // 最低限必要な要素の確認
+      if (!deleteTicketModal) {
+        console.error('❌ モーダル本体が絶対に見つかりません')
+        alert('削除確認モーダルの準備に失敗しました。ページを再読み込みしてください。')
+        return
+      }
+      
+      // モーダルにデータを設定（要素が見つからない場合は警告を表示）
+      if (deleteTicketName) {
+        deleteTicketName.textContent = ticketName || '不明'
+      } else {
+        console.warn('⚠️ チケット名要素が見つからないため、モーダルに表示できません')
+      }
+      
+      if (deleteTicketUser) {
+        deleteTicketUser.textContent = userName || '不明'
+      } else {
+        console.warn('⚠️ ユーザー名要素が見つからないため、モーダルに表示できません')
+      }
+      
+      if (deleteTicketRemaining) {
+        deleteTicketRemaining.textContent = remainingCount || '不明'
+      } else {
+        console.warn('⚠️ 残り回数要素が見つからないため、モーダルに表示できません')
+      }
+      
+      // モーダルを表示
+      try {
+        const modal = new bootstrap.Modal(deleteTicketModal)
+        modal.show()
+        console.log('✅ モーダル表示成功')
+      } catch (modalError) {
+        console.error('❌ モーダル表示中にエラーが発生しました:', modalError)
+        alert('モーダルの表示に失敗しました: ' + modalError.message)
+        return
+      }
+      
+      // 削除実行ボタンのイベントリスナー
+      const confirmBtn = deleteTicketModal.querySelector('#confirmDeleteTicketBtn') ||
+                        deleteTicketModal.querySelector('[id*="confirm"]') ||
+                        deleteTicketModal.querySelector('.btn-danger')
+      
+      if (confirmBtn) {
+        console.log('✅ 削除確認ボタンを発見:', confirmBtn.tagName, confirmBtn.className)
+        confirmBtn.onclick = () => {
+          this.deleteTicket(ticketId)
+          try {
+            const modal = bootstrap.Modal.getInstance(deleteTicketModal)
+            if (modal) {
+              modal.hide()
+            }
+          } catch (e) {
+            console.warn('⚠️ モーダルを閉じる際にエラーが発生しました:', e)
+          }
+          this.cleanupModalBackground()
+        }
+      } else {
+        console.error('❌ 削除確認ボタンが見つかりません')
+        alert('削除確認ボタンが見つかりません。ページを再読み込みしてください。')
+        return
+      }
+      
+      console.log('✅ 削除確認モーダル表示完了')
       
     } catch (error) {
       console.error('❌ モーダル表示中にエラーが発生しました:', error)
