@@ -6280,7 +6280,7 @@ function showMessage(message, type = 'info') {
             // 正しいAPIエンドポイントを使用
             console.log('🔍 Debug - currentReservation:', currentReservation);
             console.log('🔍 Debug - currentReservation.id:', currentReservation.id);
-            const deleteUrl = `/admin/reservations/${currentReservation.id}`;
+            const deleteUrl = `/admin/reservations/delete_reservation`;
             console.log('🌐 削除URL:', deleteUrl);
             
             // バックエンドに削除リクエストを送信
@@ -6292,7 +6292,10 @@ function showMessage(message, type = 'info') {
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-                }
+                },
+                body: JSON.stringify({
+                    reservation_id: currentReservation.id
+                })
             })
             .then(response => {
                 console.log('📡 Response status:', response.status);
