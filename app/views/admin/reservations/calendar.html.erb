@@ -248,7 +248,7 @@
     </div>
 
     <!-- 休憩詳細モーダル -->
-    <div id="breakDetailModal" class="break-detail-modal" style="border: 10px solid #ff0000 !important; background: #ff0000 !important;">
+    <div id="breakDetailModal" class="break-detail-modal" style="border: 20px solid #ff0000 !important; background: #ff0000 !important; position: fixed !important; z-index: 99999 !important; display: none !important;">
         <div class="break-detail-modal-content" style="border: 10px solid #00ff00 !important; background: #00ff00 !important; transform: rotate(10deg) !important;">
             <div class="break-detail-modal-header" style="background: #0000ff !important; border: 10px solid #ffff00 !important;">
                 <h2 id="breakDetailTitle">☕ 休憩詳細</h2>
@@ -3795,6 +3795,10 @@ function showMessage(message, type = 'info') {
         // 休憩詳細モーダルを開く
         function openBreakDetailModal(reservation) {
             console.log('🔄 Opening break detail modal for reservation:', reservation);
+            console.log('🔍 Modal element:', document.getElementById('breakDetailModal'));
+            console.log('🔍 Modal display style:', document.getElementById('breakDetailModal').style.display);
+            console.log('🔍 Modal inline styles:', document.getElementById('breakDetailModal').getAttribute('style'));
+            
             window.currentBreakReservation = reservation;
             
             // 日付と時間の表示用フォーマット - より安全な方法
@@ -3847,6 +3851,9 @@ function showMessage(message, type = 'info') {
             handleEditBreakTitleChange();
             
             document.getElementById('breakDetailModal').style.display = 'block';
+            console.log('🔍 Modal display set to block');
+            console.log('🔍 Modal should now be visible with red background and green content');
+            console.log('🔍 Current modal styles:', document.getElementById('breakDetailModal').getAttribute('style'));
         }
 
         // 休憩詳細モーダルを閉じる
