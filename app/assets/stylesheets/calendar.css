@@ -308,7 +308,7 @@
             transform: translateY(-1px);
         }
 
-        /* Break Detail Modal Styles - Enhanced Distinct Design */
+        /* Break Detail Modal Styles - Beautiful Modern Design */
         .break-detail-modal {
             display: none;
             position: fixed;
@@ -317,27 +317,21 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(8px);
-            /* FORCE DISTINCT STYLING - SHOULD BE IMPOSSIBLE TO MISS */
-            border: 5px solid #ff00ff !important;
-            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff00ff) !important;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
         }
 
         .break-detail-modal-content {
-            background: linear-gradient(135deg, #f8f9ff 0%, #e8eaff 100%);
-            margin: 2% auto;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 3% auto;
             border: none;
             width: 90%;
             max-width: 600px;
             border-radius: 24px;
-            box-shadow: 0 30px 60px rgba(138, 43, 226, 0.4);
+            box-shadow: 0 30px 60px rgba(102, 126, 234, 0.4), 0 0 40px rgba(102, 126, 234, 0.3);
             overflow: hidden;
             animation: breakDetailModalSlideIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            border: 4px solid #8a2be2;
-            /* FORCE DISTINCT STYLING - SHOULD BE IMPOSSIBLE TO MISS */
-            transform: rotate(2deg) !important;
-            box-shadow: 0 0 50px #ff00ff, 0 30px 60px rgba(138, 43, 226, 0.4) !important;
+            border: 3px solid rgba(255, 255, 255, 0.2);
         }
 
         @keyframes breakDetailModalSlideIn {
@@ -352,17 +346,13 @@
         }
 
         .break-detail-modal-header {
-            background: linear-gradient(135deg, #8a2be2 0%, #9370db 50%, #ba55d3 100%);
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             color: white;
-            padding: 28px 32px;
+            padding: 30px 32px;
             text-align: center;
             position: relative;
-            box-shadow: 0 6px 20px rgba(138, 43, 226, 0.4);
-            border-bottom: 3px solid #4b0082;
-            /* FORCE DISTINCT STYLING - SHOULD BE IMPOSSIBLE TO MISS */
-            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff00ff) !important;
-            border: 3px solid #ffff00 !important;
-            animation: rainbow 2s linear infinite !important;
+            box-shadow: 0 6px 20px rgba(240, 147, 251, 0.4);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
         }
 
         @keyframes rainbow {
@@ -405,20 +395,23 @@
         }
 
         .break-detail-modal-body {
-            padding: 32px;
-            background: linear-gradient(135deg, #fafbff 0%, #f0f2ff 100%);
+            padding: 35px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            color: white;
         }
 
         .break-detail-info {
-            background: linear-gradient(135deg, #e6e6fa 0%, #d8bfd8 100%);
-            border: 4px solid #8a2be2;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 18px;
             padding: 24px;
             margin-bottom: 28px;
             text-align: center;
-            box-shadow: 0 8px 25px rgba(138, 43, 226, 0.25);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
             position: relative;
             overflow: hidden;
+            backdrop-filter: blur(10px);
         }
 
         .break-detail-info::before {
@@ -440,17 +433,17 @@
 
         .break-detail-datetime {
             font-size: 20px;
-            color: #4b0082;
+            color: white;
             font-weight: 700;
             margin-bottom: 10px;
-            text-shadow: 0 1px 3px rgba(75, 0, 130, 0.2);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .break-detail-duration {
             font-size: 18px;
-            color: #6a5acd;
+            color: rgba(255, 255, 255, 0.9);
             font-weight: 600;
-            text-shadow: 0 1px 2px rgba(106, 90, 205, 0.2);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
 
         .break-detail-form {
@@ -496,10 +489,10 @@
         }
 
         .break-detail-label {
-            font-weight: 800;
+            font-weight: 700;
             font-size: 16px;
-            color: #4b0082;
-            text-shadow: 0 1px 2px rgba(75, 0, 130, 0.1);
+            color: white;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -508,26 +501,28 @@
         .break-detail-label::before {
             content: '✨';
             font-size: 14px;
-            opacity: 0.8;
+            opacity: 0.9;
         }
 
         .break-detail-select, .break-detail-input, .break-detail-textarea {
             padding: 16px 20px;
-            border: 3px solid #8a2be2;
+            border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 12px;
             font-size: 16px;
             transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
             font-family: inherit;
-            box-shadow: 0 4px 12px rgba(138, 43, 226, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
         }
 
         .break-detail-select:focus, .break-detail-input:focus, .break-detail-textarea:focus {
             outline: none;
-            border-color: #6a5acd;
-            box-shadow: 0 0 0 6px rgba(138, 43, 226, 0.2);
+            border-color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.1);
             transform: translateY(-3px) scale(1.02);
-            background: linear-gradient(135deg, #ffffff 0%, #f0f2ff 100%);
+            background: rgba(255, 255, 255, 0.15);
         }
 
         .break-detail-textarea {
@@ -538,12 +533,13 @@
 
         .break-detail-modal-footer {
             padding: 28px 32px;
-            background: linear-gradient(135deg, #f0f2ff 0%, #e6e6fa 100%);
+            background: rgba(255, 255, 255, 0.08);
             display: flex;
             gap: 16px;
             justify-content: center;
-            box-shadow: 0 -4px 20px rgba(138, 43, 226, 0.15);
-            border-top: 2px solid rgba(138, 43, 226, 0.2);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+            border-top: 2px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
         }
 
         .break-detail-btn {
@@ -576,17 +572,17 @@
         }
 
         .break-detail-btn-save {
-            background: linear-gradient(135deg, #8a2be2 0%, #9370db 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            box-shadow: 0 8px 20px rgba(138, 43, 226, 0.4);
-            border: 2px solid #6a5acd;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.3);
         }
 
         .break-detail-btn-save:hover {
-            background: linear-gradient(135deg, #6a5acd 0%, #8a2be2 100%);
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
             transform: translateY(-4px) scale(1.05);
-            box-shadow: 0 12px 25px rgba(138, 43, 226, 0.6);
-            border-color: #8a2be2;
+            box-shadow: 0 12px 25px rgba(102, 126, 234, 0.6);
+            border-color: rgba(255, 255, 255, 0.5);
         }
 
         .break-detail-btn-delete {

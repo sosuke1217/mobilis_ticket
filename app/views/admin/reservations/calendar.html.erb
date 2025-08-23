@@ -189,9 +189,9 @@
     </div>
 
     <!-- 休憩作成モーダル -->
-    <div id="breakModal" class="break-modal" style="border: 10px solid #ff00ff !important; background: #ff00ff !important;">
-        <div class="break-modal-content" style="border: 10px solid #00ffff !important; background: #00ffff !important; transform: rotate(-5deg) !important;">
-            <div class="break-modal-header" style="background: #ff8800 !important; border: 10px solid #8800ff !important;">
+    <div id="breakModal" class="break-modal">
+        <div class="break-modal-content">
+            <div class="break-modal-header">
                 <h2>☕ 休憩作成</h2>
                 <span class="break-modal-close" onclick="closeBreakModal()">&times;</span>
             </div>
@@ -248,9 +248,9 @@
     </div>
 
     <!-- 休憩詳細モーダル -->
-    <div id="breakDetailModal" class="break-detail-modal" style="border: 20px solid #ff0000 !important; background: #ff0000 !important; position: fixed !important; z-index: 99999 !important; display: none !important;">
-        <div class="break-detail-modal-content" style="border: 10px solid #00ff00 !important; background: #00ff00 !important; transform: rotate(10deg) !important;">
-            <div class="break-detail-modal-header" style="background: #0000ff !important; border: 10px solid #ffff00 !important;">
+    <div id="breakDetailModal" class="break-detail-modal">
+        <div class="break-detail-modal-content">
+            <div class="break-detail-modal-header">
                 <h2 id="breakDetailTitle">☕ 休憩詳細</h2>
                 <span class="break-detail-modal-close" onclick="closeBreakDetailModal()">&times;</span>
             </div>
@@ -3796,10 +3796,6 @@ function showMessage(message, type = 'info') {
 
         // 休憩詳細モーダルを開く
         function openBreakDetailModal(reservation) {
-            console.log('🔄 Opening break detail modal for reservation:', reservation);
-            console.log('🔍 Modal element:', document.getElementById('breakDetailModal'));
-            console.log('🔍 Modal display style:', document.getElementById('breakDetailModal').style.display);
-            console.log('🔍 Modal inline styles:', document.getElementById('breakDetailModal').getAttribute('style'));
             
             window.currentBreakReservation = reservation;
             
@@ -3853,9 +3849,6 @@ function showMessage(message, type = 'info') {
             handleEditBreakTitleChange();
             
             document.getElementById('breakDetailModal').style.display = 'block';
-            console.log('🔍 Modal display set to block');
-            console.log('🔍 Modal should now be visible with red background and green content');
-            console.log('🔍 Current modal styles:', document.getElementById('breakDetailModal').getAttribute('style'));
         }
 
         // 休憩詳細モーダルを閉じる
