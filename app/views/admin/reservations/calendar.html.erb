@@ -3221,25 +3221,37 @@
 
         // 前週へ
         function previousWeek() {
+            console.log('🔄 Previous week clicked - current week start before:', currentWeekStart);
             currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+            console.log('🔄 Previous week clicked - current week start after:', currentWeekStart);
+            
             Promise.all([
                 loadShiftSettingsFromBackend(),
                 loadReservationsFromBackend()
             ]).then(() => {
+                console.log('🔄 Previous week - data loaded, rendering week view');
                 renderWeekView();
                 updateCancellationDisplay(); // キャンセル履歴を更新
+            }).catch(error => {
+                console.error('❌ Error loading data for previous week:', error);
             });
         }
 
         // 次週へ
         function nextWeek() {
+            console.log('🔄 Next week clicked - current week start before:', currentWeekStart);
             currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+            console.log('🔄 Next week clicked - current week start after:', currentWeekStart);
+            
             Promise.all([
                 loadShiftSettingsFromBackend(),
                 loadReservationsFromBackend()
             ]).then(() => {
+                console.log('🔄 Next week - data loaded, rendering week view');
                 renderWeekView();
                 updateCancellationDisplay(); // キャンセル履歴を更新
+            }).catch(error => {
+                console.error('❌ Error loading data for next week:', error);
             });
         }
 
