@@ -385,7 +385,7 @@ export default class extends Controller {
           <br><small class="text-muted">¥${ticket.ticket_template.price.toLocaleString()}</small>
         </td>
         <td>
-          <span class="badge bg-primary fs-6">
+          <span class="badge bg-primary">
             ${ticket.remaining_count} / ${ticket.total_count}
           </span>
         </td>
@@ -646,7 +646,7 @@ export default class extends Controller {
         // 既存の内容をクリアしてから新しい内容を設定
         remainingCountCell.innerHTML = ''
         badgeElement = document.createElement('span')
-        badgeElement.className = 'badge bg-primary fs-6'
+        badgeElement.className = 'badge bg-primary'
         remainingCountCell.appendChild(badgeElement)
         
         // 改行や空白を除去してテキストを設定
@@ -656,13 +656,13 @@ export default class extends Controller {
         
         // 残り回数に応じてバッジの色を変更（重複を防ぐ）
         if (parseInt(remainingCount) === 0) {
-          badgeElement.className = 'badge bg-secondary fs-6'
+          badgeElement.className = 'badge bg-secondary'
           console.log('✅ 使用済みチケットとして表示を更新')
         } else if (parseInt(remainingCount) <= 2) {
-          badgeElement.className = 'badge bg-warning fs-6'
+          badgeElement.className = 'badge bg-warning'
           console.log('✅ 残り少ないチケットとして表示を更新')
         } else {
-          badgeElement.className = 'badge bg-primary fs-6'
+          badgeElement.className = 'badge bg-primary'
           console.log('✅ 利用可能チケットとして表示を更新')
         }
         
@@ -686,7 +686,7 @@ export default class extends Controller {
           if (statusCell) {
             const statusBadge = statusCell.querySelector('.badge')
             if (statusBadge) {
-              statusBadge.className = 'badge bg-secondary fs-6'
+              statusBadge.className = 'badge bg-secondary'
               statusBadge.textContent = '使用済み'
             }
           }
