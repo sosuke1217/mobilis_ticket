@@ -443,9 +443,9 @@ class Admin::ReservationsController < ApplicationController
         return
       end
       
-      # 名前、電話番号、メールアドレスで検索（SQLite対応）
+      # 名前、電話番号、メールアドレスで検索（PostgreSQL対応）
       users = User.where(
-        "name LIKE ? COLLATE NOCASE OR phone_number LIKE ? COLLATE NOCASE OR email LIKE ? COLLATE NOCASE",
+        "LOWER(name) LIKE LOWER(?) OR LOWER(phone_number) LIKE LOWER(?) OR LOWER(email) LIKE LOWER(?)",
         "%#{query}%", "%#{query}%", "%#{query}%"
       ).limit(10).order(:name)
       
