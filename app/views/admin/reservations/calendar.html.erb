@@ -2606,6 +2606,15 @@
             block.dataset.reservationId = reservation.id;
             block.dataset.reservationData = JSON.stringify(reservation);
             
+            // クリックイベントを追加
+            block.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🎯 予約ブロックがクリックされました:', reservation);
+                console.log('🔍 予約ID:', reservation.id);
+                openReservationDetailModal(reservation);
+            });
+            
             const statusIcon = {
                 'tentative': '⏳',
                 'confirmed': '✓',
@@ -2642,6 +2651,15 @@
             block.dataset.reservationData = JSON.stringify(reservation);
             block.dataset.originalDateKey = dateKey;
             block.dataset.originalTimeStr = timeStr;
+            
+            // クリックイベントを追加
+            block.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🎯 スパニング予約ブロックがクリックされました:', reservation);
+                console.log('🔍 予約ID:', reservation.id);
+                openReservationDetailModal(reservation);
+            });
             
             const statusIcon = {
                 'tentative': '⏳',
@@ -5039,25 +5057,38 @@ function showMessage(message, type = 'info') {
 
         // 休憩予約を削除
         function deleteBreakReservation() {
+            console.log('🗑️ deleteBreakReservation関数が呼び出されました');
             const reservation = window.currentBreakReservation;
+            console.log('🔍 currentBreakReservation:', reservation);
+            
             if (!reservation) {
                 console.error('❌ No current break reservation to delete');
+                showMessage('削除する休憩が見つかりませんでした。', 'error');
                 return;
             }
+            
+            if (!reservation.id) {
+                console.error('❌ reservation.idが未定義です:', reservation);
+                showMessage('休憩IDが見つかりませんでした。', 'error');
+                return;
+            }
+            
+            console.log('✅ 休憩ID確認:', reservation.id);
             
             if (!confirm('この休憩を削除しますか？')) return;
             
             console.log('🗑️ Deleting break reservation:', reservation.id);
             
-            fetch('/admin/reservations/delete_reservation', {
+            // 正しいAPIエンドポイントを使用
+            const deleteUrl = `/admin/reservations/${reservation.id}`;
+            console.log('🌐 削除URL:', deleteUrl);
+            
+            fetch(deleteUrl, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-                },
-                body: JSON.stringify({
-                    reservation_id: reservation.id
-                })
+                }
             })
             .then(response => {
                 if (response.status === 404) {
@@ -6187,11 +6218,23 @@ function showMessage(message, type = 'info') {
 
         // 予約を削除
         function deleteReservation() {
+            console.log('🗑️ deleteReservation関数が呼び出されました');
+            console.log('🔍 currentReservation:', currentReservation);
+            
             if (!currentReservation) {
                 showMessage('削除する予約が見つかりませんでした。', 'error');
-    return;
-  }
-  
+                console.error('❌ currentReservationが未定義です');
+                return;
+            }
+            
+            if (!currentReservation.id) {
+                showMessage('予約IDが見つかりませんでした。', 'error');
+                console.error('❌ currentReservation.idが未定義です:', currentReservation);
+                return;
+            }
+            
+            console.log('✅ 予約ID確認:', currentReservation.id);
+            
             const confirmed = confirm(`この予約を完全に削除しますか？\n\nお客様: ${currentReservation.customer}\n日時: ${currentReservation.time}\nコース: ${currentReservation.duration}分\n\nこの操作は取り消せません。`);
             
             if (!confirmed) {
@@ -6209,17 +6252,18 @@ function showMessage(message, type = 'info') {
                 }
             });
             
+            // 正しいAPIエンドポイントを使用
+            const deleteUrl = `/admin/reservations/${currentReservation.id}`;
+            console.log('🌐 削除URL:', deleteUrl);
+            
             // バックエンドに削除リクエストを送信
-            fetch('/admin/reservations/delete_reservation', {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
+            fetch(deleteUrl, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
                     'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-    },
-                body: JSON.stringify({
-                    reservation_id: currentReservation.id
-  })
-  })
+                }
+            })
             .then(response => response.json())
   .then(data => {
     if (data.success) {
@@ -7084,23 +7128,27 @@ function showMessage(message, type = 'info') {
 
         // 予約データの妥当性をチェックする関数
         function validateReservationData(reservation) {
+            console.log('🔍 予約データ妥当性チェック開始:', reservation);
+            
             if (!reservation) {
                 console.error('❌ Reservation is null or undefined');
                 return false;
             }
             
-            if (!reservation.id || reservation.id === 'null' || reservation.id === null) {
+            if (!reservation.id || reservation.id === 'null' || reservation.id === null || reservation.id === undefined) {
                 console.error('❌ Invalid reservation ID:', reservation.id);
+                console.error('❌ Reservation object:', reservation);
                 return false;
             }
+            
+            console.log('✅ 予約ID確認:', reservation.id);
             
             if (!reservation.userId || reservation.userId === 'null' || reservation.userId === null) {
                 console.warn('⚠️ No user ID for reservation:', reservation.id);
                 // Don't return false - allow modal to open without userId
             }
             
-
-            
+            console.log('✅ 予約データ妥当性チェック完了');
             return true;
         }
 
