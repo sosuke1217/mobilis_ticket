@@ -327,111 +327,111 @@
 
         /* Break Detail Modal Styles - Simple Clean Design */
         .break-detail-modal {
-            display: none;
-            position: fixed;
-            z-index: 11000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            display: none !important;
+            position: fixed !important;
+            z-index: 11000 !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background-color: rgba(0, 0, 0, 0.5) !important;
         }
 
         .break-detail-modal-content {
-            background: white;
-            margin: 5% auto;
-            border: 1px solid #ddd;
-            width: 90%;
-            max-width: 500px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            overflow: hidden;
+            background: white !important;
+            margin: 5% auto !important;
+            border: 1px solid #ddd !important;
+            width: 90% !important;
+            max-width: 500px !important;
+            border-radius: 8px !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+            overflow: hidden !important;
         }
 
         .break-detail-modal-header {
-            background: #f8f9fa;
-            color: #333;
-            padding: 20px 25px;
-            text-align: center;
-            position: relative;
-            border-bottom: 1px solid #ddd;
+            background: #f8f9fa !important;
+            color: #333 !important;
+            padding: 20px 25px !important;
+            text-align: center !important;
+            position: relative !important;
+            border-bottom: 1px solid #ddd !important;
         }
 
         .break-detail-modal-header h2 {
-            margin: 0;
-            font-size: 20px;
-            font-weight: 600;
-            color: #333;
+            margin: 0 !important;
+            font-size: 20px !important;
+            font-weight: 600 !important;
+            color: #333 !important;
         }
 
         .break-detail-modal-close {
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 24px;
-            font-weight: bold;
-            color: #666;
-            cursor: pointer;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            transition: all 0.2s ease;
+            position: absolute !important;
+            right: 20px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            font-size: 24px !important;
+            font-weight: bold !important;
+            color: #666 !important;
+            cursor: pointer !important;
+            width: 30px !important;
+            height: 30px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 50% !important;
+            transition: all 0.2s ease !important;
         }
 
         .break-detail-modal-close:hover {
-            background-color: #e9ecef;
-            color: #333;
+            background-color: #e9ecef !important;
+            color: #333 !important;
         }
 
         .break-detail-modal-body {
-            padding: 25px;
-            background: white;
-            color: #333;
+            padding: 25px !important;
+            background: white !important;
+            color: #333 !important;
         }
 
         .break-detail-info {
-            background: #f8f9fa;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 20px;
-            margin-bottom: 20px;
-            text-align: center;
+            background: #f8f9fa !important;
+            border: 1px solid #ddd !important;
+            border-radius: 6px !important;
+            padding: 20px !important;
+            margin-bottom: 20px !important;
+            text-align: center !important;
         }
 
         .break-detail-datetime {
-            font-size: 18px;
-            color: #333;
-            font-weight: 600;
-            margin-bottom: 8px;
+            font-size: 18px !important;
+            color: #333 !important;
+            font-weight: 600 !important;
+            margin-bottom: 8px !important;
         }
 
         .break-detail-duration {
-            font-size: 16px;
-            color: #666;
-            font-weight: 500;
+            font-size: 16px !important;
+            color: #666 !important;
+            font-weight: 500 !important;
         }
 
         .break-detail-form {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 20px !important;
         }
 
         .break-detail-field {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            position: relative;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 10px !important;
+            position: relative !important;
         }
 
         .break-detail-label {
-            font-weight: 600;
-            font-size: 14px;
-            color: #333;
+            font-weight: 600 !important;
+            font-size: 14px !important;
+            color: #333 !important;
         }
 
         .break-detail-select, .break-detail-input, .break-detail-textarea {
@@ -458,12 +458,12 @@
         }
 
         .break-detail-modal-footer {
-            padding: 20px 25px;
-            background: #f8f9fa;
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            border-top: 1px solid #ddd;
+            padding: 20px 25px !important;
+            background: #f8f9fa !important;
+            display: flex !important;
+            gap: 12px !important;
+            justify-content: center !important;
+            border-top: 1px solid #ddd !important;
         }
 
         .break-detail-btn {
@@ -489,19 +489,23 @@
         }
 
         .break-detail-btn-delete {
-            background: #dc3545;
+            background: #dc3545 !important;
+            color: white !important;
         }
 
         .break-detail-btn-delete:hover {
-            background: #c82333;
+            background: #c82333 !important;
+            color: white !important;
         }
 
         .break-detail-btn-cancel {
-            background: #6c757d;
+            background: #6c757d !important;
+            color: white !important;
         }
 
         .break-detail-btn-cancel:hover {
-            background: #5a6268;
+            background: #5a6268 !important;
+            color: white !important;
         }
 
 
