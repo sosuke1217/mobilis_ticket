@@ -1288,8 +1288,8 @@ function showMessage(message, type = 'info') {
                 }
                 
                 // 今日の日付
-                const today = new Date();
-                if (current.toDateString() === today.toDateString()) {
+                const currentDate = new Date();
+                if (current.toDateString() === currentDate.toDateString()) {
                     dayDiv.classList.add('today');
                 }
                 
