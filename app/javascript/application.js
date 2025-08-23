@@ -11,12 +11,12 @@ console.log("🚀 Application.js loaded successfully");
 function loadCalendarIfNeeded() {
   // カレンダー要素が存在するページでのみ読み込み
   if (document.querySelector('#calendar') || document.querySelector('.calendar-container')) {
-    console.log("📅 Calendar element found, loading calendar module...");
-    import("/calendar/index.js").then(() => {
-      console.log("✅ Calendar module loaded successfully");
-    }).catch(error => {
-      console.error("❌ Failed to load calendar module:", error);
-    });
+    console.log("📅 Calendar element found, but vendor calendar module disabled to prevent conflicts");
+    // import("/calendar/index.js").then(() => {
+    //   console.log("✅ Calendar module loaded successfully");
+    // }).catch(error => {
+    //   console.error("❌ Failed to load calendar module:", error);
+    // });
   } else {
     console.log("📅 No calendar element found, skipping calendar module");
   }

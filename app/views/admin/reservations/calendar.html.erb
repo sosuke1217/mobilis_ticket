@@ -425,8 +425,8 @@
             </div>
             <div class="modal-footer">
                                  <button type="submit" class="btn btn-primary" form="reservationEditForm" onclick="console.log('💾 Save button clicked')">保存</button>
-                 <button type="button" class="btn btn-warning" onclick="cancelReservation()">キャンセル</button>
-                 <button type="button" class="btn btn-danger" onclick="deleteReservation()">削除</button>
+                 <button type="button" class="btn btn-warning" onclick="cancelReservationFromCalendar()">キャンセル</button>
+                 <button type="button" class="btn btn-danger" onclick="deleteReservationFromCalendar()">削除</button>
                  <button type="button" class="btn btn-secondary" onclick="closeReservationDetailModal()">閉じる</button>
             </div>
         </div>
@@ -5631,6 +5631,8 @@ function showMessage(message, type = 'info') {
             
             // 現在の予約を保存（最新のデータを使用）
             currentReservation = latestReservation;
+            console.log('🔍 Setting currentReservation:', currentReservation);
+            console.log('🔍 currentReservation.id:', currentReservation.id);
             
             // 予約の実際の日付を特定
             let actualDate = '';
@@ -6229,6 +6231,7 @@ function showMessage(message, type = 'info') {
         function deleteReservation() {
             console.log('🗑️ deleteReservation関数が呼び出されました');
             console.log('🔍 currentReservation:', currentReservation);
+            console.log('🔍 Function called from:', new Error().stack);
             
             if (!currentReservation) {
                 showMessage('削除する予約が見つかりませんでした。', 'error');
@@ -6239,6 +6242,19 @@ function showMessage(message, type = 'info') {
             if (!currentReservation.id) {
                 showMessage('予約IDが見つかりませんでした。', 'error');
                 console.error('❌ currentReservation.idが未定義です:', currentReservation);
+                return;
+            }
+            
+            // 追加の検証
+            if (typeof currentReservation.id !== 'number' && typeof currentReservation.id !== 'string') {
+                console.error('❌ currentReservation.id has invalid type:', typeof currentReservation.id, currentReservation.id);
+                showMessage('予約IDの形式が無効です。', 'error');
+                return;
+            }
+            
+            if (currentReservation.id === 'calendar' || currentReservation.id === 'delete_reservation') {
+                console.error('❌ currentReservation.id has invalid value:', currentReservation.id);
+                showMessage('予約IDが無効です。', 'error');
                 return;
             }
             
@@ -6262,10 +6278,15 @@ function showMessage(message, type = 'info') {
             });
             
             // 正しいAPIエンドポイントを使用
+            console.log('🔍 Debug - currentReservation:', currentReservation);
+            console.log('🔍 Debug - currentReservation.id:', currentReservation.id);
             const deleteUrl = `/admin/reservations/${currentReservation.id}`;
             console.log('🌐 削除URL:', deleteUrl);
             
             // バックエンドに削除リクエストを送信
+            console.log('🌐 Making DELETE request to:', deleteUrl);
+            console.log('🔑 CSRF Token:', document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'));
+            
             fetch(deleteUrl, {
                 method: 'DELETE',
                 headers: {
@@ -6273,7 +6294,14 @@ function showMessage(message, type = 'info') {
                     'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('📡 Response status:', response.status);
+                console.log('📡 Response headers:', response.headers);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     console.log('✅ Reservation deleted successfully');
@@ -6338,24 +6366,47 @@ function showMessage(message, type = 'info') {
         }
         
         // グローバル関数として公開
-        window.deleteReservation = deleteReservation;
+        window.deleteReservationFromCalendar = deleteReservation;
 
         // 予約をキャンセル（削除）
         function cancelReservation() {
+            console.log('🗑️ cancelReservation関数が呼び出されました');
+            console.log('🔍 currentReservation:', currentReservation);
+            console.log('🔍 Function called from:', new Error().stack);
+            
             if (!currentReservation) {
                 showMessage('キャンセルする予約が見つかりませんでした。', 'error');
+                return;
+            }
+            
+            if (!currentReservation.id) {
+                console.error('❌ currentReservation.id is undefined:', currentReservation);
+                showMessage('予約IDが見つかりませんでした。', 'error');
+                return;
+            }
+            
+            // 追加の検証
+            if (typeof currentReservation.id !== 'number' && typeof currentReservation.id !== 'string') {
+                console.error('❌ currentReservation.id has invalid type:', typeof currentReservation.id, currentReservation.id);
+                showMessage('予約IDの形式が無効です。', 'error');
+                return;
+            }
+            
+            if (currentReservation.id === 'calendar' || currentReservation.id === 'delete_reservation') {
+                console.error('❌ currentReservation.id has invalid value:', currentReservation.id);
+                showMessage('予約IDが無効です。', 'error');
                 return;
             }
             
             const confirmed = confirm(`この予約を完全に削除しますか？\n\nお客様: ${currentReservation.customer}\n日時: ${currentReservation.time}\nコース: ${currentReservation.duration}分\n\nこの操作は取り消せません。`);
             
             if (!confirmed) {
-    return;
-  }
-  
-
+                return;
+            }
             
             // バックエンドに削除リクエストを送信
+            console.log('🔍 Debug - currentReservation:', currentReservation);
+            console.log('🔍 Debug - currentReservation.id:', currentReservation.id);
             const deleteUrl = `/admin/reservations/${currentReservation.id}`;
             console.log('🌐 キャンセルURL:', deleteUrl);
             
@@ -6366,7 +6417,14 @@ function showMessage(message, type = 'info') {
                     'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('📡 Response status:', response.status);
+                console.log('📡 Response headers:', response.headers);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
   .then(data => {
     if (data.success) {
 
@@ -6438,7 +6496,7 @@ function showMessage(message, type = 'info') {
         }
         
         // グローバル関数として公開
-        window.cancelReservation = cancelReservation;
+        window.cancelReservationFromCalendar = cancelReservation;
 
         // コースから時間を抽出する関数
         function extractDurationFromCourse(courseString) {

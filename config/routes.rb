@@ -20,6 +20,7 @@ Rails.application.routes.draw do
         get 'load_shift_settings'
         get 'load_reservations'
         post 'create_booking'
+        delete 'delete_reservation'
       end
     end
     
