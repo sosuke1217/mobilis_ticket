@@ -759,13 +759,23 @@ class Admin::ReservationsController < ApplicationController
         Rails.logger.info "🔄 Current reservation course: #{@reservation.course}"
         
         # 既存のコース時間を使用してend_timeを計算
-        course_duration = extract_course_duration(@reservation.course)
-        new_start_time = Time.zone.parse(reservation_attrs[:start_time])
-        new_end_time = new_start_time + course_duration.minutes
-        
-        reservation_attrs[:end_time] = new_end_time
-        Rails.logger.info "🔄 Recalculated end_time: #{new_end_time} (course: #{course_duration}分)"
-        Rails.logger.info "🔄 Final reservation_attrs: #{reservation_attrs}"
+        if @reservation.course.present?
+          course_duration = extract_course_duration(@reservation.course)
+          begin
+            new_start_time = Time.zone.parse(reservation_attrs[:start_time])
+            new_end_time = new_start_time + course_duration.minutes
+            
+            reservation_attrs[:end_time] = new_end_time
+            Rails.logger.info "🔄 Recalculated end_time: #{new_end_time} (course: #{course_duration}分)"
+            Rails.logger.info "🔄 Final reservation_attrs: #{reservation_attrs}"
+          rescue => e
+            Rails.logger.error "❌ Error parsing start_time: #{e.message}"
+            Rails.logger.error "❌ start_time value: #{reservation_attrs[:start_time]}"
+            # Continue without updating end_time if parsing fails
+          end
+        else
+          Rails.logger.warn "⚠️ No course found for reservation, skipping end_time calculation"
+        end
       else
         Rails.logger.info "🔍 No start_time update, reservation_attrs: #{reservation_attrs}"
       end
