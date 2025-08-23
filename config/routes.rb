@@ -23,6 +23,9 @@ Rails.application.routes.draw do
         delete 'delete_reservation'
         get 'search_users'
       end
+      member do
+        patch 'update_interval'
+      end
     end
     
     # ユーザー管理
