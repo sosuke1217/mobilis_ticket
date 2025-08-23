@@ -323,38 +323,6 @@ export default class extends Controller {
   // チケット使用処理
   useTicket(ticketId, button) {
     if (this.isProcessing) {
-      console.log('⚠️ 既に処理中のため、重複実行をスキップ')
-      return
-    }
-    
-    this.isProcessing = true
-    
-    try {
-      const ticketId = button.getAttribute('data-ticket-id')
-      const ticketName = button.getAttribute('data-ticket-name')
-      
-      console.log('🎫 チケット使用処理開始:', { ticketId, ticketName })
-      
-      // 確認ダイアログ
-      if (!confirm(`「${ticketName}」を1回使用しますか？`)) {
-        console.log('❌ ユーザーがキャンセルしました')
-        this.isProcessing = false
-        return
-      }
-      
-      // チケット使用APIを呼び出し
-      this.useTicket(ticketId, button)
-      
-    } catch (error) {
-      console.error('❌ チケット使用処理中にエラーが発生しました:', error)
-      this.showAlert('danger', `使用処理エラー: ${error.message}`)
-      this.isProcessing = false
-    }
-  }
-  
-  // チケット使用実行
-  useTicket(ticketId, button) {
-    if (this.isProcessing) {
       console.log('⏳ 処理中のため、チケット使用をスキップします')
       return
     }
@@ -546,8 +514,10 @@ export default class extends Controller {
         }
       }
       
-      // チケット数を再計算
-      this.updateTicketCounts()
+      // チケット数を再計算（即座に実行）
+      setTimeout(() => {
+        this.updateTicketCounts()
+      }, 100)
       
       // 成功メッセージを表示
       this.showAlert('success', 'チケットを使用しました')

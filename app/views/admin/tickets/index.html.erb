@@ -102,19 +102,27 @@
 </div>
 
 <style>
-  /* モーダル背景の暗さを調整 */
-  #deleteTicketModal.modal-backdrop {
-    opacity: 0.1 !important;
-  }
-  
-  /* モーダルが閉じた後の背景を明るくする */
-  body.modal-open {
-    background-color: rgba(0, 0, 0, 0.02) !important;
-  }
-  
-  /* モーダル背景の透明度を調整 */
-  .modal-backdrop.show {
-    opacity: 0.1 !important;
-  }
+/* モーダルのスクロールバーを削除 */
+#deleteTicketModal .modal-body {
+  overflow: hidden !important;
+  max-height: none !important;
+}
+
+#deleteTicketModal .modal-content {
+  overflow: hidden !important;
+}
+
+#deleteTicketModal .modal-dialog {
+  max-height: none !important;
+}
+
+/* モーダルの背景を明るく */
+.modal-backdrop {
+  opacity: 0.1 !important;
+}
+
+body.modal-open {
+  background-color: rgba(0, 0, 0, 0.02) !important;
+}
 </style>
 
