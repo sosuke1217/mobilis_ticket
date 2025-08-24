@@ -113,10 +113,6 @@
                              class="btn btn-outline-primary" title="チケット管理">
                             <i class="fas fa-ticket-alt"></i>
                           </a>
-                          <a href="<%= calendar_admin_reservations_path %>?edit=<%= reservation.id %>" 
-                             class="btn btn-outline-secondary" title="予約編集">
-                            <i class="fas fa-edit"></i>
-                          </a>
                           <button type="button" class="btn btn-outline-danger" 
                                   onclick="deleteReservation(<%= reservation.id %>)" title="予約削除">
                             <i class="fas fa-trash"></i>
