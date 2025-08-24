@@ -1604,26 +1604,36 @@ class Admin::ReservationsController < ApplicationController
 
   # インターバルを考慮した時間スロットの空きチェック
   def time_slot_available_with_interval?(start_time, end_time)
-    # 既存の予約との重複チェック
+    # 同じ日付の予約のみを対象とする
+    date = start_time.to_date
+    
+    # 既存の予約との重複チェック（同じ日付のみ）
     overlapping_reservations = Reservation.where(
-      'start_time < ? AND end_time > ?',
-      end_time, start_time
+      'DATE(start_time) = ? AND start_time < ? AND end_time > ?',
+      date, end_time, start_time
     ).where.not(status: :cancelled)
     
-    return false if overlapping_reservations.exists?
+    if overlapping_reservations.exists?
+      Rails.logger.info "❌ Overlapping reservation found: #{overlapping_reservations.first.inspect}"
+      return false
+    end
     
     # インターバル時間を考慮した重複チェック
     interval_minutes = Reservation.interval_minutes
     if interval_minutes > 0
       interval_end_time = end_time + interval_minutes.minutes
       interval_overlapping = Reservation.where(
-        'start_time < ? AND end_time > ?',
-        interval_end_time, start_time
+        'DATE(start_time) = ? AND start_time < ? AND end_time > ?',
+        date, interval_end_time, start_time
       ).where.not(status: :cancelled)
       
-      return false if interval_overlapping.exists?
+      if interval_overlapping.exists?
+        Rails.logger.info "❌ Interval overlapping reservation found: #{interval_overlapping.first.inspect}"
+        return false
+      end
     end
     
+    Rails.logger.info "✅ Time slot available: #{start_time.strftime('%H:%M')} - #{end_time.strftime('%H:%M')}"
     true
   end
 

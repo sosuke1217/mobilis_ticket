@@ -183,14 +183,18 @@ document.addEventListener('DOMContentLoaded', function() {
           data.slots.forEach(slot => {
             const option = document.createElement('option');
             option.value = slot.start_datetime;
-            option.textContent = slot.display;
+            option.textContent = `${slot.display}${slot.interval_info || ''}`;
             timeSelect.appendChild(option);
           });
           timeSelect.disabled = false;
+          
+          // 空き時間の数を表示
+          showMessage(`${data.slots.length}件の空き時間が見つかりました`, 'info');
         } else {
           clearTimeSelect();
           timeSelect.innerHTML = '<option>空き時間がありません</option>';
           timeSelect.disabled = true;
+          showMessage('選択された日付・コースでは空き時間がありません', 'warning');
         }
       })
       .catch(error => {
@@ -198,6 +202,7 @@ document.addEventListener('DOMContentLoaded', function() {
         clearTimeSelect();
         timeSelect.innerHTML = '<option>エラーが発生しました</option>';
         timeSelect.disabled = true;
+        showMessage('空き時間の取得に失敗しました', 'danger');
       });
   }
 
@@ -353,7 +358,23 @@ document.addEventListener('DOMContentLoaded', function() {
   // メッセージ表示
   function showMessage(message, type = 'info') {
     const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'info'} alert-dismissible fade show`;
+    let alertClass = 'alert-info';
+    
+    switch (type) {
+      case 'success':
+        alertClass = 'alert-success';
+        break;
+      case 'warning':
+        alertClass = 'alert-warning';
+        break;
+      case 'danger':
+        alertClass = 'alert-danger';
+        break;
+      default:
+        alertClass = 'alert-info';
+    }
+    
+    alertDiv.className = `alert ${alertClass} alert-dismissible fade show`;
     alertDiv.innerHTML = `
       ${message}
       <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
