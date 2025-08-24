@@ -2722,15 +2722,15 @@
             // 休憩の場合は準備時間なし
             const preparationTime = (reservation.effective_interval_minutes ?? 10); // 休憩機能は無効化
             const totalTime = durationInMinutes + preparationTime;
-                         const rowHeight = 20; // 各時間スロットの高さ（15分間）
-            const exactHeight = (totalTime / 15) * rowHeight; // 正確な高さを計算（15分刻み）
+                         const rowHeight = 20; // 各時間スロットの高さ（10分間）
+            const exactHeight = (totalTime / 10) * rowHeight; // 正確な高さを計算
             
             block.style.height = `${exactHeight}px`;
             block.style.top = '0';
             
             // 準備時間部分を視覚的に区別
-            const bookingHeight = (durationInMinutes / 15) * rowHeight;
-            const preparationHeight = (preparationTime / 15) * rowHeight;
+            const bookingHeight = (durationInMinutes / 10) * rowHeight;
+            const preparationHeight = (preparationTime / 10) * rowHeight;
             
             // 開始時間と終了時間を計算
             const [startHour, startMin] = timeStr.split(':').map(Number);
@@ -3792,7 +3792,7 @@ function showMessage(message, type = 'info') {
         // 休憩作成モーダルを開く（現在時刻で）
         function openBreakModalWithCurrentTime() {
             const now = new Date();
-            const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(Math.floor(now.getMinutes() / 15) * 15).padStart(2, '0')}`;
+            const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(Math.floor(now.getMinutes() / 10) * 10).padStart(2, '0')}`;
             openBreakModal(now, currentTime);
         }
 
@@ -3935,8 +3935,8 @@ function showMessage(message, type = 'info') {
             const endDateValue = nextWeek.toISOString().split('T')[0];
             document.getElementById('bulkEndDate').value = endDateValue;
             
-            // 現在時刻を設定（15分刻みでシステム設定に合わせる）
-            const currentTime = `${String(bulkCurrentDate.getHours()).padStart(2, '0')}:${String(Math.floor(bulkCurrentDate.getMinutes() / 15) * 15).padStart(2, '0')}`;
+            // 現在時刻を設定
+            const currentTime = `${String(bulkCurrentDate.getHours()).padStart(2, '0')}:${String(Math.floor(bulkCurrentDate.getMinutes() / 10) * 10).padStart(2, '0')}`;
             document.getElementById('bulkStartTime').value = currentTime;
             
             // 曜日チェックボックスを全てチェック
@@ -4204,8 +4204,8 @@ function showMessage(message, type = 'info') {
                     // 終了時間を計算
                     const endMinutes = startMinutes + durationMinutes;
                     
-                    // 各時間スロットをチェック（15分刻みでシステム設定に合わせる）
-                    for (let timeInMinutes = startMinutes; timeInMinutes < endMinutes; timeInMinutes += 15) {
+                    // 各時間スロットをチェック
+                    for (let timeInMinutes = startMinutes; timeInMinutes < endMinutes; timeInMinutes += 10) {
                         const timeStr = `${Math.floor(timeInMinutes / 60).toString().padStart(2, '0')}:${(timeInMinutes % 60).toString().padStart(2, '0')}`;
                         
                         // 現在の日付のスケジュールを使用するため、日付を指定してisBusinessHourを呼び出し
@@ -4292,8 +4292,8 @@ function showMessage(message, type = 'info') {
                 // 現在の日付の曜日を取得（デフォルトは月曜日）
                 const dayOfWeek = date ? date.getDay() : 1;
                 
-                // 各時間スロットをチェック（15分刻みでシステム設定に合わせる）
-                for (let timeInMinutes = startMinutes; timeInMinutes < endMinutes; timeInMinutes += 15) {
+                // 各時間スロットをチェック
+                for (let timeInMinutes = startMinutes; timeInMinutes < endMinutes; timeInMinutes += 10) {
                     const timeStr = `${Math.floor(timeInMinutes / 60).toString().padStart(2, '0')}:${(timeInMinutes % 60).toString().padStart(2, '0')}`;
                     const isAvailable = window.isBusinessHour(dayOfWeek, timeStr, date);
                     
