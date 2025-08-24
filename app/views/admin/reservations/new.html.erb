@@ -304,7 +304,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     const resultsHtml = users.map(user => `
-      <div class="user-search-item" onclick="selectUser(${user.id}, '${user.name}', '${user.phone_number || ''}', '${user.email || ''}')">
+      <div class="user-search-item" onclick="window.selectUser(${user.id}, '${user.name}', '${user.phone_number || ''}', '${user.email || ''}')">
         <div class="user-name">${user.name}</div>
         <div class="user-details">
           📞 ${user.phone_number || '未設定'} | 📧 ${user.email || '未設定'}
@@ -338,6 +338,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // 成功メッセージ
     showMessage(`既存ユーザー「${name}」を選択しました`, 'success');
   }
+
+  // グローバルスコープに関数を公開
+  window.selectUser = selectUser;
 
   // 検索結果を隠す
   function hideUserSearchResults(resultsElement) {
