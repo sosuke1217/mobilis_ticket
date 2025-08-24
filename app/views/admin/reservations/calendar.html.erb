@@ -2301,9 +2301,9 @@
             const scheduleBody = document.getElementById('scheduleBody');
             scheduleBody.innerHTML = '';
             
-            // 8:00から21:00まで10分刻みで生成
+            // 8:00から21:00まで15分刻みで生成（システム設定に合わせて）
             for (let hour = 8; hour <= 21; hour++) {
-                for (let minute = 0; minute < 60; minute += 10) {
+                for (let minute = 0; minute < 60; minute += 15) {
                     if (hour === 21 && minute > 0) break; // 21:00で終了
                     
                     const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
@@ -2323,7 +2323,7 @@
                     const timeSlot = document.createElement('div');
                     timeSlot.className = 'time-slot';
                     
-                    // 時間マーカーのスタイルを追加（10分刻みに対応）
+                    // 時間マーカーのスタイルを追加（15分刻みに対応）
                     if (minute === 0) {
                         timeSlot.classList.add('hour-marker');
                     } else if (minute === 30) {
@@ -6602,8 +6602,8 @@ function showMessage(message, type = 'info') {
                 const intervalMinutes = reservation.effective_interval_minutes ?? 10;
                 const reservationEndWithInterval = new Date(reservationEnd.getTime() + intervalMinutes * 60 * 1000);
                 
-                // 現在の予約のインターバル時間（デフォルト10分）
-                const currentIntervalMinutes = 10; // デフォルト10分
+                // 現在の予約のインターバル時間（システムデフォルト15分）
+                const currentIntervalMinutes = 15; // システムデフォルト15分
                 const currentEndWithInterval = new Date(endTime.getTime() + currentIntervalMinutes * 60 * 1000);
                 
                 // 重複判定（インターバル時間も含む）
@@ -6652,8 +6652,8 @@ function showMessage(message, type = 'info') {
                     const intervalMinutes = reservation.effective_interval_minutes ?? 10;
                     const reservationEndWithInterval = new Date(reservationEnd.getTime() + intervalMinutes * 60 * 1000);
                     
-                    // 現在のスロットのインターバル時間（デフォルト10分）
-                    const currentIntervalMinutes = 10; // デフォルト10分
+                    // 現在のスロットのインターバル時間（システムデフォルト15分）
+                    const currentIntervalMinutes = 15; // システムデフォルト15分
                     const slotEndWithInterval = new Date(slotEnd.getTime() + currentIntervalMinutes * 60 * 1000);
                     
                     if (slotStart < reservationEndWithInterval && slotEndWithInterval > reservationStart) {
