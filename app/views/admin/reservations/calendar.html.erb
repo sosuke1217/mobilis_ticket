@@ -1397,7 +1397,7 @@
                     for (const reservation of allReservations) {
                         const reservationTime = reservation.time;
                         const duration = reservation.duration || 60;
-                        const interval = reservation.effective_interval_minutes || 10;
+                        const interval = reservation.effective_interval_minutes || 15;
                         
                         // 予約の開始時間と終了時間を計算
                         const [startHour, startMin] = reservationTime.split(':').map(Number);
@@ -1509,7 +1509,7 @@
                     for (const reservation of dayReservations) {
                         const reservationTime = reservation.time;
                         const duration = reservation.duration || 60;
-                        const interval = reservation.effective_interval_minutes || 10;
+                        const interval = reservation.effective_interval_minutes || 15;
                         
                         const [startHour, startMin] = reservationTime.split(':').map(Number);
                         const startTimeInMinutes = startHour * 60 + startMin;
@@ -2719,8 +2719,8 @@
             
             // 予約の継続時間に基づいて高さを計算
             const durationInMinutes = reservation.duration;
-            // 休憩の場合は準備時間なし
-            const preparationTime = (reservation.effective_interval_minutes ?? 10); // 休憩機能は無効化
+            // 休憩の場合は準備時間なし（システムデフォルト15分を使用）
+            const preparationTime = (reservation.effective_interval_minutes ?? 15); // システムデフォルト15分
             const totalTime = durationInMinutes + preparationTime;
                          const rowHeight = 20; // 各時間スロットの高さ（10分間）
             const exactHeight = (totalTime / 10) * rowHeight; // 正確な高さを計算
@@ -6599,11 +6599,11 @@ function showMessage(message, type = 'info') {
                 const reservationEnd = new Date(reservationStart.getTime() + reservation.duration * 60 * 1000);
                 
                 // インターバル時間を取得（effective_interval_minutesを使用）
-                const intervalMinutes = reservation.effective_interval_minutes ?? 10;
+                const intervalMinutes = reservation.effective_interval_minutes ?? 15;
                 const reservationEndWithInterval = new Date(reservationEnd.getTime() + intervalMinutes * 60 * 1000);
                 
-                // 現在の予約のインターバル時間（デフォルト10分）
-                const currentIntervalMinutes = 10; // デフォルト10分
+                // 現在の予約のインターバル時間（システムデフォルト15分）
+                const currentIntervalMinutes = 15; // システムデフォルト15分
                 const currentEndWithInterval = new Date(endTime.getTime() + currentIntervalMinutes * 60 * 1000);
                 
                 // 重複判定（インターバル時間も含む）
@@ -6649,11 +6649,11 @@ function showMessage(message, type = 'info') {
                     const reservationEnd = new Date(reservationStart.getTime() + reservation.duration * 60 * 1000);
                     
                     // インターバル時間を取得（effective_interval_minutesを使用）
-                    const intervalMinutes = reservation.effective_interval_minutes ?? 10;
+                    const intervalMinutes = reservation.effective_interval_minutes ?? 15;
                     const reservationEndWithInterval = new Date(reservationEnd.getTime() + intervalMinutes * 60 * 1000);
                     
-                    // 現在のスロットのインターバル時間（デフォルト10分）
-                    const currentIntervalMinutes = 10; // デフォルト10分
+                    // 現在のスロットのインターバル時間（システムデフォルト15分）
+                    const currentIntervalMinutes = 15; // システムデフォルト15分
                     const slotEndWithInterval = new Date(slotEnd.getTime() + currentIntervalMinutes * 60 * 1000);
                     
                     if (slotStart < reservationEndWithInterval && slotEndWithInterval > reservationStart) {
