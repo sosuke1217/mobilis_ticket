@@ -1082,8 +1082,8 @@ class Admin::ReservationsController < ApplicationController
           processed_params[:individual_interval_minutes] = nil
         else
           processed_params[:individual_interval_minutes] = processed_params[:individual_interval_minutes].to_i
-    end
-  end
+        end
+      end
 
       # ドラッグ更新の場合はインターバル時間を追加しない
       is_drag_update = params[:is_drag_update] == true
