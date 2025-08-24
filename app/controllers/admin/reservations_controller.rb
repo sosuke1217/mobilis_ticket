@@ -725,18 +725,29 @@ class Admin::ReservationsController < ApplicationController
       is_recurring = params[:is_recurring] || false
       week_start_date = params[:week_start_date]
       
+      Rails.logger.info "🔍 Processing schedule data: #{schedule_data.inspect}"
+      Rails.logger.info "🔍 is_recurring: #{is_recurring}"
+      Rails.logger.info "🔍 week_start_date: #{week_start_date}"
+      
       if is_recurring
         # デフォルトスケジュールを保存 - 使用する特別な日付（例：1900-01-01）
         default_date = Date.new(1900, 1, 1)
+        Rails.logger.info "🔍 Saving recurring schedule with default date: #{default_date}"
         weekly_schedule = WeeklySchedule.find_or_initialize_by(week_start_date: default_date)
-        weekly_schedule.update!(schedule: schedule_data)
+        Rails.logger.info "🔍 Found/created weekly schedule: #{weekly_schedule.inspect}"
+        result = weekly_schedule.update!(schedule: schedule_data)
+        Rails.logger.info "✅ Recurring schedule saved successfully: #{result}"
       else
         # 特定の週のスケジュールを保存
+        Rails.logger.info "🔍 Saving specific week schedule for: #{week_start_date}"
         weekly_schedule = WeeklySchedule.find_or_initialize_by(week_start_date: week_start_date)
-        weekly_schedule.update!(
-          schedule: schedule_data
-        )
+        Rails.logger.info "🔍 Found/created weekly schedule: #{weekly_schedule.inspect}"
+        result = weekly_schedule.update!(schedule: schedule_data)
+        Rails.logger.info "✅ Specific week schedule saved successfully: #{result}"
       end
+      
+      Rails.logger.info "✅ Final weekly_schedule state: #{weekly_schedule.inspect}"
+      Rails.logger.info "✅ Final schedule attribute: #{weekly_schedule.schedule.inspect}"
       
       render json: {
         success: true,
@@ -744,6 +755,7 @@ class Admin::ReservationsController < ApplicationController
       }
     rescue => e
       Rails.logger.error "❌ Error saving shift settings: #{e.message}"
+      Rails.logger.error "❌ Error backtrace: #{e.backtrace.join("\n")}"
       render json: {
         success: false,
         message: "シフト設定の保存に失敗しました: #{e.message}"
