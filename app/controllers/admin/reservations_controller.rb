@@ -1117,6 +1117,135 @@ class Admin::ReservationsController < ApplicationController
     }
   end
 
+  # チケット情報を取得
+  def tickets
+    Rails.logger.info "🔍 Tickets request for reservation ID: #{params[:id]}"
+    
+    @reservation = Reservation.find(params[:id])
+    Rails.logger.info "📋 Found reservation: #{@reservation.inspect}"
+    Rails.logger.info "👤 User ID: #{@reservation.user_id}"
+    
+    if @reservation.user_id.present?
+      user = @reservation.user
+      Rails.logger.info "👤 Found user: #{user.name} (ID: #{user.id})"
+      
+      tickets = user.tickets.includes(:ticket_template)
+        .order(created_at: :desc)
+      
+      Rails.logger.info "🎫 Found #{tickets.count} tickets for user"
+      
+      ticket_data = tickets.map do |ticket|
+        ticket_info = {
+          id: ticket.id,
+          ticket_template_name: ticket.ticket_template.name,
+          remaining_count: ticket.remaining_count,
+          total_count: ticket.total_count,
+          expiry_date: ticket.expiry_date,
+          unit_type: ticket.ticket_template.name.include?('分') ? '分' : '枚'
+        }
+        Rails.logger.info "🎫 Ticket: #{ticket_info}"
+        ticket_info
+      end
+      
+      Rails.logger.info "✅ Returning #{ticket_data.length} tickets"
+      render json: { success: true, tickets: ticket_data }
+    else
+      Rails.logger.warn "⚠️ No user ID for reservation #{@reservation.id}"
+      render json: { success: false, message: 'ユーザー情報がありません' }
+    end
+  end
+
+  # 予約履歴を取得
+  def history
+    @reservation = Reservation.find(params[:id])
+    
+    if @reservation.user_id.present?
+      reservations = @reservation.user.reservations
+        .where.not(id: @reservation.id) # 現在の予約を除外
+        .order(start_time: :desc)
+        .limit(10) # 最新10件
+        .map do |reservation|
+          {
+            id: reservation.id,
+            start_time: reservation.start_time,
+            course: reservation.course,
+            status: reservation.status
+          }
+        end
+      
+      render json: { success: true, reservations: reservations }
+    else
+      render json: { success: false, message: 'ユーザー情報がありません' }
+    end
+  end
+
+  # テスト
+  def test_api
+    render json: { message: "test works" }
+  end
+
+  # テスト用 - by_day_of_week が動作するかチェック
+  def test_by_day_of_week
+    render json: { message: "by_day_of_week test works", timestamp: Time.current }
+  end
+
+  # 超シンプルテスト - デプロイが動作するかチェック
+  def simple_test
+    render json: { message: "SIMPLE TEST WORKS!", method: "simple_test" }
+  end
+
+  # 最小限テスト - 基本的な動作確認
+  def minimal_test
+    render plain: "MINIMAL TEST WORKS!"
+  end
+
+  # 特定の曜日の全予約を取得（定期的なスケジュール変更の影響チェック用）
+  def by_day_of_week
+    Rails.logger.info "🔍 by_day_of_week called - FIXED VISIBILITY"
+    Rails.logger.info "📝 Params: #{params.inspect}"
+    
+    begin
+      day_of_week = params[:day_of_week].to_i
+      from_date = Date.parse(params[:from_date])
+      
+      Rails.logger.info "🔍 Searching for reservations: day_of_week=#{day_of_week}, from_date=#{from_date}"
+      
+      # 指定日以降の全予約を取得してフィルタリング
+      all_reservations = Reservation.includes(:user)
+                                   .where('start_time >= ?', from_date.beginning_of_day)
+                                   .where.not(status: :cancelled)
+                                   .order(:start_time)
+      
+      # 曜日でフィルタリング
+      matching_reservations = all_reservations.select { |r| r.start_time.wday == day_of_week }
+      
+      Rails.logger.info "📊 Found #{matching_reservations.count} reservations for day #{day_of_week} from #{from_date}"
+      
+      reservations_data = matching_reservations.map do |reservation|
+        {
+          id: reservation.id,
+          customer: reservation.name || reservation.user&.name || '未設定',
+          date: reservation.start_time.strftime('%Y-%m-%d'),
+          time: reservation.start_time.strftime('%H:%M'),
+          duration: extract_course_duration(reservation.course),
+          effective_interval_minutes: reservation.individual_interval_minutes || 
+                                     ApplicationSetting.current&.reservation_interval_minutes || 10
+        }
+      end
+      
+      Rails.logger.info "✅ Returning #{reservations_data.count} reservations for validation"
+      
+      render json: reservations_data
+    rescue Date::Error => e
+      Rails.logger.error "❌ Invalid date format: #{e.message}"
+      render json: { error: 'Invalid date format' }, status: :bad_request
+    rescue => e
+      Rails.logger.error "❌ Error fetching reservations by day of week: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      render json: { error: 'Internal server error' }, status: :internal_server_error
+    end
+  end
+
   private
 
   def set_reservation
@@ -1262,135 +1391,115 @@ class Admin::ReservationsController < ApplicationController
     classes
   end
 
-  # チケット情報を取得
-  def tickets
-    Rails.logger.info "🔍 Tickets request for reservation ID: #{params[:id]}"
-    
+  private
+
+  def set_reservation
     @reservation = Reservation.find(params[:id])
-    Rails.logger.info "📋 Found reservation: #{@reservation.inspect}"
-    Rails.logger.info "👤 User ID: #{@reservation.user_id}"
-    
-    if @reservation.user_id.present?
-      user = @reservation.user
-      Rails.logger.info "👤 Found user: #{user.name} (ID: #{user.id})"
-      
-      tickets = user.tickets.includes(:ticket_template)
-        .order(created_at: :desc)
-      
-      Rails.logger.info "🎫 Found #{tickets.count} tickets for user"
-      
-      ticket_data = tickets.map do |ticket|
-        ticket_info = {
-          id: ticket.id,
-          ticket_template_name: ticket.ticket_template.name,
-          remaining_count: ticket.remaining_count,
-          total_count: ticket.total_count,
-          expiry_date: ticket.expiry_date,
-          unit_type: ticket.ticket_template.name.include?('分') ? '分' : '枚'
-        }
-        Rails.logger.info "🎫 Ticket: #{ticket_info}"
-        ticket_info
-      end
-      
-      Rails.logger.info "✅ Returning #{ticket_data.length} tickets"
-      render json: { success: true, tickets: ticket_data }
-    else
-      Rails.logger.warn "⚠️ No user ID for reservation #{@reservation.id}"
-      render json: { success: false, message: 'ユーザー情報がありません' }
-    end
   end
-
-  # 予約履歴を取得
-  def history
-    @reservation = Reservation.find(params[:id])
-    
-    if @reservation.user_id.present?
-      reservations = @reservation.user.reservations
-        .where.not(id: @reservation.id) # 現在の予約を除外
-        .order(start_time: :desc)
-        .limit(10) # 最新10件
-        .map do |reservation|
-          {
-            id: reservation.id,
-            start_time: reservation.start_time,
-            course: reservation.course,
-            status: reservation.status
-          }
-        end
-      
-      render json: { success: true, reservations: reservations }
-    else
-      render json: { success: false, message: 'ユーザー情報がありません' }
-    end
-  end
-
-  # テスト
-  def test_api
-    render json: { message: "test works" }
-  end
-
-  # テスト用 - by_day_of_week が動作するかチェック
-  def test_by_day_of_week
-    render json: { message: "by_day_of_week test works", timestamp: Time.current }
-  end
-
-  # 超シンプルテスト - デプロイが動作するかチェック
-  def simple_test
-    render json: { message: "SIMPLE TEST WORKS!", method: "simple_test" }
-  end
-
-  # 最小限テスト - 基本的な動作確認
-  def minimal_test
-    render plain: "MINIMAL TEST WORKS!"
-  end
-
-  # 特定の曜日の全予約を取得（定期的なスケジュール変更の影響チェック用）
-  def by_day_of_week
-    Rails.logger.info "🔍 by_day_of_week called - FIXED VISIBILITY"
-    Rails.logger.info "📝 Params: #{params.inspect}"
+  
+  # 削除前にキャンセル通知を送信
+  def send_cancellation_notifications_before_delete(reservation)
+    Rails.logger.info "📧 Sending cancellation notifications before delete for reservation #{reservation.id}"
     
     begin
-      day_of_week = params[:day_of_week].to_i
-      from_date = Date.parse(params[:from_date])
+      # 削除前にcancelled_atを設定（通知用）
+      reservation.update_column(:cancelled_at, Time.current) unless reservation.cancelled_at.present?
       
-      Rails.logger.info "🔍 Searching for reservations: day_of_week=#{day_of_week}, from_date=#{from_date}"
-      
-      # 指定日以降の全予約を取得してフィルタリング
-      all_reservations = Reservation.includes(:user)
-                                   .where('start_time >= ?', from_date.beginning_of_day)
-                                   .where.not(status: :cancelled)
-                                   .order(:start_time)
-      
-      # 曜日でフィルタリング
-      matching_reservations = all_reservations.select { |r| r.start_time.wday == day_of_week }
-      
-      Rails.logger.info "📊 Found #{matching_reservations.count} reservations for day #{day_of_week} from #{from_date}"
-      
-      reservations_data = matching_reservations.map do |reservation|
-        {
-          id: reservation.id,
-          customer: reservation.name || reservation.user&.name || '未設定',
-          date: reservation.start_time.strftime('%Y-%m-%d'),
-          time: reservation.start_time.strftime('%H:%M'),
-          duration: extract_course_duration(reservation.course),
-          effective_interval_minutes: reservation.individual_interval_minutes || 
-                                     ApplicationSetting.current&.reservation_interval_minutes || 10
-        }
+      # メール通知
+      if reservation.user&.email.present?
+        ReservationMailer.cancellation_notification(reservation).deliver_now
+        Rails.logger.info "✅ Cancellation email sent to: #{reservation.user.email}"
       end
       
-      Rails.logger.info "✅ Returning #{reservations_data.count} reservations for validation"
+      # LINE通知
+      if reservation.user&.line_user_id.present?
+        LineBookingNotifier.send_cancellation_notification(reservation)
+        Rails.logger.info "✅ LINE cancellation notification sent to: #{reservation.user.line_user_id}"
+      end
       
-      render json: reservations_data
-    rescue Date::Error => e
-      Rails.logger.error "❌ Invalid date format: #{e.message}"
-      render json: { error: 'Invalid date format' }, status: :bad_request
+      Rails.logger.info "📧 Cancellation notifications completed for reservation #{reservation.id}"
     rescue => e
-      Rails.logger.error "❌ Error fetching reservations by day of week: #{e.message}"
-      Rails.logger.error e.backtrace.join("\n")
-      render json: { error: 'Internal server error' }, status: :internal_server_error
+      Rails.logger.error "❌ Error sending cancellation notifications: #{e.message}"
+      # 通知エラーでも削除処理は続行
     end
   end
 
-  private
+  def reservation_params
+    params.require(:reservation).permit(
+      :start_time, :end_time, :course, :status, :cancellation_reason, :note, :user_id,
+              :name, :date, :time, :ticket_id, :individual_interval_minutes,
+      user_attributes: [:name, :phone_number, :email]
+    )
+  end
+
+  def get_status_colors(status)
+    case status.to_s
+    when 'confirmed'
+      { bg: '#28a745', border: '#1e7e34', text: 'white' }
+    when 'tentative'
+      { bg: '#ffc107', border: '#e0a800', text: '#212529' }
+    when 'cancelled'
+      { bg: '#dc3545', border: '#bd2130', text: 'white' }
+    when 'completed'
+      { bg: '#6f42c1', border: '#59359a', text: 'white' }
+    when 'no_show'
+      { bg: '#6c757d', border: '#545b62', text: 'white' }
+    else
+      { bg: '#17a2b8', border: '#138496', text: 'white' }
+    end
+  end
+
+  def process_reservation_params(params)
+    processed_params = params.dup
+    
+    # start_time, end_time が含まれている場合、JST として処理
+    if processed_params[:start_time].present?
+      # ISO8601形式の文字列をJST時間としてパース
+      processed_params[:start_time] = Time.zone.parse(processed_params[:start_time])
+      Rails.logger.info "🕐 Parsed start_time: #{processed_params[:start_time]} (JST)"
+    end
+    
+    if processed_params[:end_time].present?
+      processed_params[:end_time] = Time.zone.parse(processed_params[:end_time])  
+      Rails.logger.info "🕐 Parsed end_time: #{processed_params[:end_time]} (JST)"
+    end
+    
+    # individual_interval_minutesの処理（空文字列をnullに変換）
+    if processed_params[:individual_interval_minutes].present?
+      if processed_params[:individual_interval_minutes].to_s.strip == ''
+        processed_params[:individual_interval_minutes] = nil
+      else
+        processed_params[:individual_interval_minutes] = processed_params[:individual_interval_minutes].to_i
+      end
+    end
+    
+    processed_params
+  end
+
+  def extract_course_duration(course_string)
+    return 60 unless course_string.present?
+    
+    case course_string
+    when /40分/
+      40
+    when /60分/
+      60
+    when /80分/
+      80
+    when /90分/
+      90
+    when /120分/
+      120
+    else
+      60  # デフォルト
+    end
+  end
+
+  def build_event_classes(reservation, has_interval)
+    classes = ['fc-timegrid-event', reservation.status]
+    classes << 'has-interval' if has_interval
+    classes << 'individual-interval' if reservation.individual_interval_minutes.present?
+    classes
+  end
 
 end
