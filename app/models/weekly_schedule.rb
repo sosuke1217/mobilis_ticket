@@ -82,7 +82,7 @@ class WeeklySchedule < ApplicationRecord
       elsif day_schedule[:times] || day_schedule["times"]
         # 新しい形式（times）の場合
         times_data = day_schedule[:times] || day_schedule["times"]
-        enabled_status = day_schedule[:enabled] || day_schedule["enabled"] || true
+        enabled_status = day_schedule.key?(:enabled) ? day_schedule[:enabled] : (day_schedule.key?("enabled") ? day_schedule["enabled"] : true)
         
         schedule_data[day_of_week] = {
           enabled: enabled_status,
