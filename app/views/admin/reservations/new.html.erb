@@ -20,7 +20,20 @@
       <%= form_with model: @reservation, url: admin_reservations_path, local: true do |f| %>
         <div class="mb-3">
           <%= f.label :name, "お名前", class: "form-label" %>
-          <%= f.text_field :name, class: "form-control" %>
+          <div class="position-relative">
+            <%= f.text_field :name, class: "form-control", id: "reservation_name", placeholder: "名前を入力してください（2文字以上）" %>
+            <div class="user-search-results" id="name-search-results" style="display: none;"></div>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <%= f.label :phone_number, "電話番号", class: "form-label" %>
+          <%= f.text_field :phone_number, class: "form-control", id: "reservation_phone_number" %>
+        </div>
+
+        <div class="mb-3">
+          <%= f.label :email, "メールアドレス", class: "form-label" %>
+          <%= f.text_field :email, class: "form-control", id: "reservation_email" %>
         </div>
 
         <!-- 日付ピッカー -->
@@ -58,12 +71,68 @@
   </div>
 </div>
 
+<style>
+/* ユーザー検索結果のスタイル */
+.user-search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+.user-search-item {
+  padding: 10px 15px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.user-search-item:hover {
+  background-color: #f8f9fa;
+}
+
+.user-search-item:last-child {
+  border-bottom: none;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.user-details {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.user-tickets {
+  color: #28a745;
+  font-weight: 600;
+}
+
+/* アラートメッセージのスタイル */
+.alert {
+  margin-bottom: 1rem;
+}
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const datePicker = document.getElementById('date-picker');
   const timeSelect = document.getElementById('time-select');
   const startTimeField = document.getElementById('reservation_start_time');
   const courseSelect = document.querySelector('select[name="reservation[course]"]');
+  
+  // 名前検索機能の初期化
+  initializeUserSearch();
 
   // 日付が選択されたときの処理
   datePicker.addEventListener('change', function(event) {
@@ -163,5 +232,141 @@ document.addEventListener('DOMContentLoaded', function() {
   const today = new Date().toISOString().split('T')[0];
   datePicker.value = today;
   datePicker.dispatchEvent(new Event('change'));
+
+  // 名前検索機能の初期化
+  function initializeUserSearch() {
+    const nameInput = document.getElementById('reservation_name');
+    const resultsElement = document.getElementById('name-search-results');
+    let searchTimeout;
+
+    if (nameInput && resultsElement) {
+      // 入力時の検索
+      nameInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        
+        if (searchTimeout) {
+          clearTimeout(searchTimeout);
+        }
+        
+        if (query.length < 2) {
+          hideUserSearchResults(resultsElement);
+          return;
+        }
+        
+        searchTimeout = setTimeout(() => {
+          searchUsers(query, resultsElement);
+        }, 300);
+      });
+      
+      // フォーカスアウト時に結果を隠す
+      nameInput.addEventListener('blur', function() {
+        setTimeout(() => {
+          hideUserSearchResults(resultsElement);
+        }, 200);
+      });
+      
+      // フォーカス時に結果を表示（入力がある場合）
+      nameInput.addEventListener('focus', function() {
+        const query = this.value.trim();
+        if (query.length >= 2) {
+          searchUsers(query, resultsElement);
+        }
+      });
+    }
+  }
+
+  // ユーザー検索
+  function searchUsers(query, resultsElement) {
+    fetch(`/admin/reservations/search_users?query=${encodeURIComponent(query)}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          displayUserSearchResults(data.users, resultsElement);
+        } else {
+          console.error('❌ User search failed:', data.message);
+          hideUserSearchResults(resultsElement);
+        }
+      })
+      .catch(error => {
+        console.error('❌ Error searching users:', error);
+        hideUserSearchResults(resultsElement);
+      });
+  }
+
+  // 検索結果の表示
+  function displayUserSearchResults(users, resultsElement) {
+    if (!resultsElement) return;
+    
+    if (users.length === 0) {
+      resultsElement.innerHTML = '<div class="user-search-item">該当するユーザーが見つかりません</div>';
+      resultsElement.style.display = 'block';
+      return;
+    }
+    
+    const resultsHtml = users.map(user => `
+      <div class="user-search-item" onclick="selectUser(${user.id}, '${user.name}', '${user.phone_number || ''}', '${user.email || ''}')">
+        <div class="user-name">${user.name}</div>
+        <div class="user-details">
+          📞 ${user.phone_number || '未設定'} | 📧 ${user.email || '未設定'}
+          ${user.active_tickets > 0 ? `<span class="user-tickets"> | 🎫 残${user.active_tickets}枚</span>` : ''}
+          ${user.last_visit !== 'なし' ? ` | 📅 最終来店: ${user.last_visit}` : ''}
+        </div>
+      </div>
+    `).join('');
+    
+    resultsElement.innerHTML = resultsHtml;
+    resultsElement.style.display = 'block';
+  }
+
+  // ユーザー選択
+  function selectUser(userId, name, phone, email) {
+    // フォームフィールドを更新
+    const nameField = document.getElementById('reservation_name');
+    const phoneField = document.getElementById('reservation_phone_number');
+    const emailField = document.getElementById('reservation_email');
+    
+    if (nameField) nameField.value = name;
+    if (phoneField) phoneField.value = phone;
+    if (emailField) emailField.value = email;
+    
+    // 検索結果を隠す
+    const resultsElement = document.getElementById('name-search-results');
+    if (resultsElement) {
+      hideUserSearchResults(resultsElement);
+    }
+    
+    // 成功メッセージ
+    showMessage(`既存ユーザー「${name}」を選択しました`, 'success');
+  }
+
+  // 検索結果を隠す
+  function hideUserSearchResults(resultsElement) {
+    if (resultsElement) {
+      resultsElement.style.display = 'none';
+      resultsElement.innerHTML = '';
+    }
+  }
+
+  // メッセージ表示
+  function showMessage(message, type = 'info') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'info'} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const form = document.querySelector('form');
+    if (form) {
+      form.insertBefore(alertDiv, form.firstChild);
+      
+      // 3秒後に自動で消す
+      setTimeout(() => {
+        if (alertDiv.parentNode) {
+          alertDiv.remove();
+        }
+      }, 3000);
+    }
+  }
 });
 </script>

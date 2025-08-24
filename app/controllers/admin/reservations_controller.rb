@@ -1575,8 +1575,8 @@ class Admin::ReservationsController < ApplicationController
     interval_minutes = Reservation.interval_minutes
     Rails.logger.info "⏱️ Interval minutes: #{interval_minutes}"
     
-    # 30分刻みでスロットを生成
-    slot_interval = 30.minutes
+    # 10分刻みでスロットを生成
+    slot_interval = 10.minutes
     available_slots = []
     
     current_time = opening_time
