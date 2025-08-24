@@ -335,25 +335,42 @@
   font-weight: 500;
 }
 
-/* ステータス別の文字色を調整 */
+/* ステータス別の背景色と文字色を完全にカスタマイズ */
 .status-badge-table.bg-success {
+  background-color: #28a745 !important;
   color: #fff !important;
+  border: 1px solid #1e7e34;
 }
 
 .status-badge-table.bg-warning {
+  background-color: #ffc107 !important;
   color: #000 !important;
+  border: 1px solid #d39e00;
 }
 
 .status-badge-table.bg-info {
+  background-color: #17a2b8 !important;
   color: #fff !important;
+  border: 1px solid #117a8b;
 }
 
 .status-badge-table.bg-danger {
+  background-color: #dc3545 !important;
   color: #fff !important;
+  border: 1px solid #bd2130;
 }
 
 .status-badge-table.bg-secondary {
+  background-color: #6c757d !important;
   color: #fff !important;
+  border: 1px solid #545b62;
+}
+
+/* デフォルトのBootstrapクラスを上書き */
+.status-badge-table {
+  background-color: #6c757d !important;
+  color: #fff !important;
+  border: 1px solid #545b62;
 }
 
 /* 整理時間セル */
