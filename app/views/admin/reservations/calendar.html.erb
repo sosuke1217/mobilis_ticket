@@ -4620,7 +4620,31 @@ function showMessage(message, type = 'info') {
                 
                 const [_, hour, minute] = timeMatch;
                 const reservationStartMinutes = parseInt(hour) * 60 + parseInt(minute);
-                const reservationEndMinutes = reservationStartMinutes + 60; // デフォルト60分
+                
+                // 実際の予約時間を取得（duration属性またはテキストから解析）
+                let reservationDuration = 60; // デフォルト60分
+                
+                // まずdata属性から取得を試行
+                if (element.dataset.duration) {
+                    reservationDuration = parseInt(element.dataset.duration);
+                } else if (element.dataset.reservationData) {
+                    try {
+                        const reservationData = JSON.parse(element.dataset.reservationData);
+                        if (reservationData.duration) {
+                            reservationDuration = reservationData.duration;
+                        }
+                    } catch (e) {
+                        console.log('Could not parse reservation data:', e);
+                    }
+                } else {
+                    // テキストから時間を解析（例：60分、40分コースなど）
+                    const durationMatch = timeText.match(/(\d+)分/);
+                    if (durationMatch) {
+                        reservationDuration = parseInt(durationMatch[1]);
+                    }
+                }
+                
+                const reservationEndMinutes = reservationStartMinutes + reservationDuration;
                 
                 const hasOverlap = (startMinutes < reservationEndMinutes && endMinutes > reservationStartMinutes);
                 
@@ -4628,6 +4652,11 @@ function showMessage(message, type = 'info') {
                     console.log(`🔍 Found overlap in fallback check:`, {
                         elementDate: elementDate,
                         elementTime: `${hour}:${minute}`,
+                        reservationDuration: reservationDuration,
+                        reservationStartMinutes: reservationStartMinutes,
+                        reservationEndMinutes: reservationEndMinutes,
+                        newStartMinutes: startMinutes,
+                        newEndMinutes: endMinutes,
                         hasOverlap: hasOverlap
                     });
                 }
