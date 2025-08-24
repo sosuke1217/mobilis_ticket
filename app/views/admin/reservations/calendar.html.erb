@@ -5428,7 +5428,7 @@ function showMessage(message, type = 'info') {
                             status: reservationData.status,
                             createdAt: reservationData.created_at,
                             updatedAt: reservationData.updated_at,
-                            effective_interval_minutes: reservationData.effective_interval_minutes ?? 10
+                            effective_interval_minutes: reservationData.effective_interval_minutes ?? 15
                         };
                         
                         // 既存の予約を更新
@@ -5481,7 +5481,7 @@ function showMessage(message, type = 'info') {
                             status: reservationData.status,
                             createdAt: reservationData.created_at,
                             updatedAt: reservationData.updated_at,
-                            effective_interval_minutes: reservationData.effective_interval_minutes ?? 10
+                            effective_interval_minutes: reservationData.effective_interval_minutes ?? 15
                         };
 
                         const dateKey = formatDateKey(new Date(reservationData.start_time));
@@ -5777,12 +5777,12 @@ function showMessage(message, type = 'info') {
                                     <span class="header-label">準備時間</span>
                                     <span class="header-value">
                                         <select id="edit-interval" class="interval-select" onchange="updateIntervalOnChange()">
-                                            <option value="0" ${(latestReservation.effective_interval_minutes ?? 10) === 0 ? 'selected' : ''}>0分</option>
-                                            <option value="5" ${(latestReservation.effective_interval_minutes ?? 10) === 5 ? 'selected' : ''}>5分</option>
-                                            <option value="10" ${(latestReservation.effective_interval_minutes ?? 10) === 10 ? 'selected' : ''}>10分</option>
-                                            <option value="15" ${(latestReservation.effective_interval_minutes ?? 10) === 15 ? 'selected' : ''}>15分</option>
-                                            <option value="20" ${(latestReservation.effective_interval_minutes ?? 10) === 20 ? 'selected' : ''}>20分</option>
-                                            <option value="30" ${(latestReservation.effective_interval_minutes ?? 10) === 30 ? 'selected' : ''}>30分</option>
+                                                            <option value="0" ${(latestReservation.effective_interval_minutes ?? 15) === 0 ? 'selected' : ''}>0分</option>
+                <option value="5" ${(latestReservation.effective_interval_minutes ?? 15) === 5 ? 'selected' : ''}>5分</option>
+                <option value="10" ${(latestReservation.effective_interval_minutes ?? 15) === 10 ? 'selected' : ''}>10分</option>
+                <option value="15" ${(latestReservation.effective_interval_minutes ?? 15) === 15 ? 'selected' : ''}>15分</option>
+                <option value="20" ${(latestReservation.effective_interval_minutes ?? 15) === 20 ? 'selected' : ''}>20分</option>
+                <option value="30" ${(latestReservation.effective_interval_minutes ?? 15) === 30 ? 'selected' : ''}>30分</option>
                                         </select>
                                     </span>
                             </div>
