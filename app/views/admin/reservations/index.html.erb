@@ -50,7 +50,7 @@
                       <i class="fas fa-clock me-1"></i>時間
                     </th>
                     <th class="customer-column">
-                      <i class="fas fa-user me-1"></i>顧客名
+                      顧客名
                     </th>
                     <th class="course-column">
                       <i class="fas fa-graduation-cap me-1"></i>コース
@@ -81,9 +81,6 @@
                       </td>
                       <td class="customer-cell">
                         <div class="customer-info">
-                          <div class="customer-avatar-small">
-                            <i class="fas fa-user-circle"></i>
-                          </div>
                           <div class="customer-details">
                             <div class="customer-name">
                               <% if reservation.user_id.present? %>
@@ -97,7 +94,6 @@
                             </div>
                             <% if reservation.user&.phone_number.present? %>
                               <div class="customer-phone">
-                                <i class="fas fa-phone me-1"></i>
                                 <small><%= reservation.user.phone_number %></small>
                               </div>
                             <% end %>
