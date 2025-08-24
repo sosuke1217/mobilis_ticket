@@ -1,5 +1,5 @@
 <!-- 👇 コントローラ追加 -->
-<div class="container my-4" data-controller="reservation-form">
+<div class="container my-4">
   <div class="card shadow-sm">
     <div class="card-header bg-dark text-white">
       <h2 class="mb-0">ご予約フォーム（管理者）</h2>
@@ -66,7 +66,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const courseSelect = document.querySelector('select[name="reservation[course]"]');
 
   // 日付が選択されたときの処理
-  datePicker.addEventListener('change', function() {
+  datePicker.addEventListener('change', function(event) {
+    event.preventDefault();
+    event.stopPropagation();
     const selectedDate = this.value;
     if (selectedDate) {
       loadAvailableTimes(selectedDate);
@@ -74,7 +76,9 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // コースが選択されたときの処理
-  courseSelect.addEventListener('change', function() {
+  courseSelect.addEventListener('change', function(event) {
+    event.preventDefault();
+    event.stopPropagation();
     const selectedDate = datePicker.value;
     if (selectedDate && this.value) {
       loadAvailableTimes(selectedDate);
@@ -85,6 +89,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function loadAvailableTimes(date) {
     const course = courseSelect.value;
     if (!course) {
+      clearTimeSelect();
       timeSelect.innerHTML = '<option>コースを選択してください</option>';
       timeSelect.disabled = true;
       return;
@@ -94,6 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const duration = extractDuration(course);
     
     // ローディング表示
+    clearTimeSelect();
     timeSelect.innerHTML = '<option>空き時間を取得中...</option>';
     timeSelect.disabled = true;
 
@@ -103,6 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
       .then(data => {
         if (data.success && data.slots.length > 0) {
           // 空き時間をセレクトに設定
+          clearTimeSelect();
           timeSelect.innerHTML = '<option value="">時間を選択してください</option>';
           data.slots.forEach(slot => {
             const option = document.createElement('option');
@@ -112,15 +119,31 @@ document.addEventListener('DOMContentLoaded', function() {
           });
           timeSelect.disabled = false;
         } else {
+          clearTimeSelect();
           timeSelect.innerHTML = '<option>空き時間がありません</option>';
           timeSelect.disabled = true;
         }
       })
       .catch(error => {
         console.error('空き時間の取得に失敗しました:', error);
+        clearTimeSelect();
         timeSelect.innerHTML = '<option>エラーが発生しました</option>';
         timeSelect.disabled = true;
       });
+  }
+
+  // セレクトボックスの内容を安全にクリアする関数
+  function clearTimeSelect() {
+    try {
+      // 既存のオプションを安全に削除
+      while (timeSelect.firstChild) {
+        timeSelect.removeChild(timeSelect.firstChild);
+      }
+    } catch (error) {
+      console.warn('セレクトボックスのクリア中にエラーが発生しました:', error);
+      // エラーが発生した場合はinnerHTMLを使用
+      timeSelect.innerHTML = '';
+    }
   }
 
   // 時間が選択されたときの処理
