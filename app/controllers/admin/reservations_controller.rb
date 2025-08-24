@@ -313,6 +313,13 @@ class Admin::ReservationsController < ApplicationController
     @reservation = Reservation.new(reservation_attrs)
     @reservation.status = params[:reservation][:status] || :tentative
     
+    # 明示的にend_timeを設定（バリデーションエラーを防ぐため）
+    if @reservation.start_time.present? && @reservation.course.present?
+      duration = @reservation.get_duration_minutes
+      @reservation.end_time = @reservation.start_time + duration.minutes
+      Rails.logger.info "🔍 Manually set end_time: #{@reservation.start_time} + #{duration} minutes = #{@reservation.end_time}"
+    end
+    
     # 管理者用の制限をスキップ
     @reservation.skip_business_hours_validation = true
     @reservation.skip_advance_booking_validation = true
