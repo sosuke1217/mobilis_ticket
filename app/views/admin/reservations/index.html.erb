@@ -139,7 +139,6 @@
             </div>
           <% end %>
         </div>
-      <% end %>
       <% else %>
         <div class="no-reservations">
           <i class="fas fa-calendar-times fa-4x mb-4"></i>
@@ -150,23 +149,6 @@
           </a>
         </div>
       <% end %>
-    </div>
-  </div>
-</div>
-
-<!-- 予約編集モーダル -->
-<div class="modal fade" id="reservationModal" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="reservationModalLabel">
-          <i class="fas fa-edit me-2"></i>予約編集
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <!-- モーダルの内容はカレンダーページと同じ -->
-      </div>
     </div>
   </div>
 </div>
@@ -409,12 +391,6 @@
 </style>
 
 <script>
-// 予約編集モーダルを開く
-function openReservationModal(reservationId) {
-  // カレンダーページのモーダル機能を再利用
-  window.location.href = '/admin/reservations/calendar?edit=' + reservationId;
-}
-
 // 予約削除
 function deleteReservation(reservationId) {
   if (confirm('この予約を削除しますか？')) {
