@@ -79,11 +79,14 @@ class WeeklySchedule < ApplicationRecord
           enabled: true,
           times: day_schedule[:business_hours].map { |h| { start: h[:start], end: h[:end] } }
         }
-      elsif day_schedule[:times]
+      elsif day_schedule[:times] || day_schedule["times"]
         # 新しい形式（times）の場合
+        times_data = day_schedule[:times] || day_schedule["times"]
+        enabled_status = day_schedule[:enabled] || day_schedule["enabled"] || true
+        
         schedule_data[day_of_week] = {
-          enabled: day_schedule[:enabled] || true,
-          times: day_schedule[:times]
+          enabled: enabled_status,
+          times: times_data
         }
       else
         # フォールバック: デフォルト形式
