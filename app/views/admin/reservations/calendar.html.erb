@@ -4896,20 +4896,21 @@ function showMessage(message, type = 'info') {
                 while (createReservationsDate <= endDate) {
                     if (selectedDays.includes(createReservationsDate.getDay())) {
                         try {
-                            const reservationData = {
-                                reservation: {
-                                    start_time: `${createReservationsDate.toISOString().split('T')[0]} ${startTime}`,
-                                    course: getCourseFromDuration(duration),
+                                                    const reservationData = {
+                            reservation: {
+                                start_time: `${createReservationsDate.toISOString().split('T')[0]} ${startTime}`,
+                                course: getCourseFromDuration(duration),
+                                name: customerName,
+                                note: note,
+                                status: status,
+                                individual_interval_minutes: 15, // 明示的に15分間隔を設定
+                                user_attributes: {
                                     name: customerName,
-                                    note: note,
-                                    status: status,
-                                    user_attributes: {
-                                        name: customerName,
-                                        phone_number: customerPhone,
-                                        email: customerEmail
-                                    }
+                                    phone_number: customerPhone,
+                                    email: customerEmail
                                 }
-                            };
+                            }
+                        };
                             
                             // デバッグ用：送信データをログ
                             console.log(`🔍 Sending reservation data for ${createReservationsDate.toLocaleDateString('ja-JP')}:`, reservationData);
@@ -5334,7 +5335,7 @@ function showMessage(message, type = 'info') {
             const reservationDate = new Date(dateStr);
             const dayOfWeek = reservationDate.getDay();
             const newDuration = parseInt(duration);
-            const defaultInterval = 10; // 新規予約のデフォルト間隔
+            const defaultInterval = 15; // 新規予約のデフォルト間隔（システム設定に合わせて15分）
             
             const validation = validateReservationTimeWithinBusinessHours({
                 time: timeStr,
@@ -5367,6 +5368,7 @@ function showMessage(message, type = 'info') {
                     name: customerName,
                     note: bookingNote,
                     status: bookingStatus,
+                    individual_interval_minutes: 15, // 明示的に15分間隔を設定
                     user_attributes: {
                         name: customerName,
                         phone_number: customerPhone,
