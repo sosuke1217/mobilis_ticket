@@ -861,10 +861,16 @@ class Admin::ReservationsController < ApplicationController
 
   # 空き時間取得用のAPIエンドポイント
   def available_times
+    Rails.logger.info "🔍 Available times request received: #{params.inspect}"
+    
     date = Date.parse(params[:date])
     duration = params[:duration].to_i
     
+    Rails.logger.info "📅 Date: #{date}, Duration: #{duration} minutes"
+    
     available_slots = get_available_time_slots(date, duration)
+    
+    Rails.logger.info "✅ Found #{available_slots.length} available slots"
     
     render json: {
       success: true,
@@ -877,6 +883,8 @@ class Admin::ReservationsController < ApplicationController
       }}
     }
   rescue => e
+    Rails.logger.error "❌ Error in available_times: #{e.message}"
+    Rails.logger.error "❌ Backtrace: #{e.backtrace.first(5).join("\n")}"
     render json: { success: false, error: e.message }
   end
 
@@ -1555,12 +1563,17 @@ class Admin::ReservationsController < ApplicationController
 
   # 空き時間スロットを取得
   def get_available_time_slots(date, duration)
+    Rails.logger.info "🔍 Getting available time slots for #{date}, duration: #{duration} minutes"
+    
     # 営業時間の設定
     opening_time = Time.zone.parse("#{date} 10:00")
     closing_time = Time.zone.parse("#{date} 19:00")
     
+    Rails.logger.info "🕐 Business hours: #{opening_time.strftime('%H:%M')} - #{closing_time.strftime('%H:%M')}"
+    
     # インターバル時間を取得
     interval_minutes = Reservation.interval_minutes
+    Rails.logger.info "⏱️ Interval minutes: #{interval_minutes}"
     
     # 30分刻みでスロットを生成
     slot_interval = 30.minutes
@@ -1577,11 +1590,15 @@ class Admin::ReservationsController < ApplicationController
           end_time: end_time,
           interval_info: interval_minutes > 0 ? "（準備時間#{interval_minutes}分含む）" : ""
         }
+        Rails.logger.info "✅ Available slot: #{current_time.strftime('%H:%M')} - #{end_time.strftime('%H:%M')}"
+      else
+        Rails.logger.info "❌ Slot not available: #{current_time.strftime('%H:%M')} - #{end_time.strftime('%H:%M')}"
       end
       
       current_time += slot_interval
     end
     
+    Rails.logger.info "📊 Total available slots: #{available_slots.length}"
     available_slots
   end
 

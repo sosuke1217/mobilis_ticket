@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (datePicker) {
     datePicker.addEventListener("change", () => {
       const date = datePicker.value;
-      fetch(`/admin/reservations/available_slots?date=${date}`)
+      fetch(`/admin/reservations/available_times?date=${date}`)
         .then(res => res.text())
         .then(html => {
           document.getElementById("available-times").innerHTML = html;

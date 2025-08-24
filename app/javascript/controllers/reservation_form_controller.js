@@ -13,7 +13,7 @@ export default class extends Controller {
         const selectedDate = dateInput.value;
         if (!selectedDate) return;
 
-        fetch(`/admin/reservations/available_slots?date=${selectedDate}`)
+        fetch(`/admin/reservations/available_times?date=${selectedDate}`)
           .then((res) => res.text())
           .then((html) => {
             availableTimesContainer.innerHTML = html;
