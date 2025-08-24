@@ -137,10 +137,12 @@
                       </td>
                       <td class="action-cell">
                         <div class="action-buttons-table">
-                          <a href="<%= ticket_management_admin_user_path(reservation.user_id) %>" 
-                             class="btn btn-outline-primary btn-sm" title="チケット管理">
-                            <i class="fas fa-ticket-alt me-1"></i>チケット
-                          </a>
+                          <% if reservation.user_id.present? %>
+                            <a href="<%= ticket_management_admin_user_path(reservation.user_id) %>" 
+                               class="btn btn-outline-primary btn-sm" title="チケット管理">
+                              <i class="fas fa-ticket-alt me-1"></i>チケット
+                            </a>
+                          <% end %>
                           <button type="button" class="btn btn-outline-danger btn-sm" 
                                   onclick="deleteReservation(<%= reservation.id %>)" title="予約削除">
                             <i class="fas fa-trash me-1"></i>削除
