@@ -332,41 +332,67 @@
 }
 
 /* ステータス別の背景色と文字色を左ボーダーと同じ色に統一 */
-.status-badge-table.bg-success {
+.badge.status-badge-table.bg-success {
   background-color: #28a745 !important;
   color: #fff !important;
   border: 1px solid #28a745;
 }
 
-.status-badge-table.bg-warning {
+.badge.status-badge-table.bg-warning {
   background-color: #ffc107 !important;
   color: #000 !important;
   border: 1px solid #ffc107;
 }
 
-.status-badge-table.bg-info {
+.badge.status-badge-table.bg-info {
   background-color: #17a2b8 !important;
   color: #fff !important;
   border: 1px solid #17a2b8;
 }
 
-.status-badge-table.bg-danger {
+.badge.status-badge-table.bg-danger {
   background-color: #dc3545 !important;
   color: #fff !important;
   border: 1px solid #dc3545;
 }
 
-.status-badge-table.bg-secondary {
+.badge.status-badge-table.bg-secondary {
   background-color: #6c757d !important;
   color: #fff !important;
   border: 1px solid #6c757d;
 }
 
-/* デフォルトのBootstrapクラスを上書き */
-.status-badge-table {
+/* デフォルトのBootstrapクラスを上書き - より具体的なセレクター */
+.badge.status-badge-table {
   background-color: #6c757d !important;
   color: #fff !important;
   border: 1px solid #6c757d;
+}
+
+/* Bootstrapのbadgeクラスを強制的に上書き */
+.badge.bg-success {
+  background-color: #28a745 !important;
+  color: #fff !important;
+}
+
+.badge.bg-warning {
+  background-color: #ffc107 !important;
+  color: #000 !important;
+}
+
+.badge.bg-info {
+  background-color: #17a2b8 !important;
+  color: #fff !important;
+}
+
+.badge.bg-danger {
+  background-color: #dc3545 !important;
+  color: #fff !important;
+}
+
+.badge.bg-secondary {
+  background-color: #6c757d !important;
+  color: #fff !important;
 }
 
 /* 整理時間セル */
