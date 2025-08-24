@@ -218,6 +218,18 @@ class Reservation < ApplicationRecord
     end
   end
 
+  # ステータス用Bootstrapクラス名
+  def status_bootstrap_class
+    case status
+    when 'confirmed' then 'bg-success'
+    when 'tentative' then 'bg-warning'
+    when 'cancelled' then 'bg-danger'
+    when 'completed' then 'bg-secondary'
+    when 'no_show' then 'bg-warning'
+    else 'bg-info'
+    end
+  end
+
   def text_color_for_status(status)
     case status.to_s
     when 'tentative'

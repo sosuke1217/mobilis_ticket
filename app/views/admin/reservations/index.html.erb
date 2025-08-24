@@ -107,7 +107,8 @@
                         </span>
                       </td>
                       <td class="status-cell">
-                        <span class="badge <%= reservation.status_color %> status-badge-table">
+                        <span class="badge status-badge-table <%= reservation.status_bootstrap_class %>" 
+                              style="background-color: <%= reservation.status_color %> !important; color: <%= reservation.text_color_for_status(reservation.status) %> !important; border: 1px solid <%= reservation.status_color %>;">
                           <%= reservation.status_text %>
                         </span>
                       </td>
