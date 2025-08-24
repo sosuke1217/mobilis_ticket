@@ -772,38 +772,48 @@ class Admin::ReservationsController < ApplicationController
       
       # デフォルトスケジュールを取得（クラスメソッドを使用）
       default_schedule = WeeklySchedule.schedule_for_javascript
+      Rails.logger.info "🔍 Default schedule: #{default_schedule.inspect}"
       
       # 特定の週のスケジュールを取得
       weekly_schedule = WeeklySchedule.find_by(week_start_date: week_start_date)
+      Rails.logger.info "🔍 Weekly schedule record: #{weekly_schedule.inspect}"
       
       if weekly_schedule
         # 既存の週固有スケジュールがある場合
+        Rails.logger.info "🔍 Raw schedule from database: #{weekly_schedule.schedule.inspect}"
         current_week_schedule = weekly_schedule.schedule_for_javascript
-        Rails.logger.info "✅ Found custom schedule for week #{week_start_date}"
+        Rails.logger.info "✅ Found custom schedule for week #{week_start_date}: #{current_week_schedule.inspect}"
       else
         # 週固有スケジュールがない場合、デフォルトを使用
         # デフォルトスケジュールをデータベースから取得
         default_date = Date.new(1900, 1, 1)
         default_weekly_schedule = WeeklySchedule.find_by(week_start_date: default_date)
+        Rails.logger.info "🔍 Default weekly schedule from DB: #{default_weekly_schedule.inspect}"
         
         if default_weekly_schedule
+          Rails.logger.info "🔍 Raw default schedule from DB: #{default_weekly_schedule.schedule.inspect}"
           current_week_schedule = default_weekly_schedule.schedule_for_javascript
-          Rails.logger.info "✅ Found default schedule in database"
+          Rails.logger.info "✅ Found default schedule in database: #{current_week_schedule.inspect}"
         else
           current_week_schedule = default_schedule
-          Rails.logger.info "ℹ️ No default schedule in database, using hardcoded default"
+          Rails.logger.info "ℹ️ No default schedule in database, using hardcoded default: #{current_week_schedule.inspect}"
         end
       end
       
-      render json: {
+      response_data = {
         success: true,
         default_schedule: default_schedule,
         current_week_schedule: current_week_schedule,
         has_custom_schedule: weekly_schedule.present?,
         week_start_date: week_start_date
       }
+      
+      Rails.logger.info "🔍 Final response data: #{response_data.inspect}"
+      
+      render json: response_data
     rescue => e
       Rails.logger.error "❌ Error loading shift settings: #{e.message}"
+      Rails.logger.error "❌ Error backtrace: #{e.backtrace.join("\n")}"
       render json: {
         success: false,
         message: "シフト設定の読み込みに失敗しました: #{e.message}"
