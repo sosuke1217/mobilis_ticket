@@ -258,62 +258,7 @@ class Admin::ReservationsController < ApplicationController
       .order(:start_time)
   end
 
-  def load_reservations
-    Rails.logger.info "🔄 Load reservations called"
-    
-    begin
-      week_start_date = params[:week_start_date]
-      Rails.logger.info "📅 Loading reservations for week: #{week_start_date}"
-      
-      # 指定された週の予約データを取得
-      start_date = Date.parse(week_start_date)
-      end_date = start_date + 6.days
-      
-      reservations = Reservation.includes(:user)
-        .where(start_time: start_date.beginning_of_day..end_date.end_of_day)
-        .where.not(status: :cancelled)
-        .order(:start_time)
-      
-      # JavaScript用の形式に変換
-      reservations_data = {}
-      reservations.each do |reservation|
-        date_key = reservation.start_time.strftime('%Y-%m-%d')
-        if !reservations_data[date_key]
-          reservations_data[date_key] = []
-        end
-        
-        reservations_data[date_key] << {
-          id: reservation.id,
-          time: reservation.start_time.strftime('%H:%M'),
-          start_time: reservation.start_time.iso8601, # Add start_time for validation
-          date: reservation.start_time.strftime('%Y-%m-%d'), # Add date for validation
-          duration: extract_course_duration(reservation.course),
-          customer: reservation.name || reservation.user&.name || '未設定',
-          phone: reservation.user&.phone_number || '',
-          email: reservation.user&.email || '',
-          is_break: false, # is_break column doesn't exist in database
-          note: reservation.note || '',
-          status: reservation.status,
-          createdAt: reservation.created_at.iso8601,
-          userId: reservation.user_id
-        }
-      end
-      
-      Rails.logger.info "✅ Loaded #{reservations.count} reservations for week #{week_start_date}"
-      
-      render json: {
-        success: true,
-        reservations: reservations_data,
-        week_start_date: week_start_date
-      }
-    rescue => e
-      Rails.logger.error "❌ Error loading reservations: #{e.message}"
-      render json: {
-        success: false,
-        message: "予約データの読み込みに失敗しました: #{e.message}"
-      }, status: :unprocessable_entity
-    end
-  end
+
 
   def create_booking
     Rails.logger.info "🔄 Create booking called"
@@ -584,56 +529,7 @@ class Admin::ReservationsController < ApplicationController
     end
   end
 
-  def history
-    Rails.logger.info "🔄 history called for reservation #{params[:id]}"
-    
-    begin
-      @reservation = Reservation.find(params[:id])
-      
-      if @reservation.user_id
-        # Get ticket usages for this user
-        usages = TicketUsage.includes(ticket: :ticket_template)
-          .where(user_id: @reservation.user_id)
-          .order(used_at: :desc)
-          .limit(10)
-        
-        usages_data = usages.map do |usage|
-          {
-            id: usage.id,
-            usage_date: usage.used_at.iso8601,
-            ticket_name: usage.ticket&.ticket_template&.name || '不明なチケット',
-            quantity: 1, # TicketUsage doesn't seem to have quantity field
-            note: usage.note || ''
-          }
-        end
-        
-        Rails.logger.info "✅ Found #{usages_data.length} usages for user #{@reservation.user_id}"
-        
-        render json: {
-          success: true,
-          usages: usages_data
-        }
-      else
-        Rails.logger.warn "⚠️ No user ID for reservation #{params[:id]}"
-        render json: {
-          success: false,
-          message: 'ユーザー情報がありません'
-        }
-      end
-    rescue ActiveRecord::RecordNotFound
-      Rails.logger.error "❌ Reservation #{params[:id]} not found"
-      render json: {
-        success: false,
-        message: '予約が見つかりませんでした'
-      }, status: :not_found
-    rescue => e
-      Rails.logger.error "❌ Error in history: #{e.message}"
-      render json: {
-        success: false,
-        message: "履歴の取得中にエラーが発生しました: #{e.message}"
-      }, status: :unprocessable_entity
-    end
-  end
+
 
   def update_interval
     Rails.logger.info "🔄 update_interval called"
