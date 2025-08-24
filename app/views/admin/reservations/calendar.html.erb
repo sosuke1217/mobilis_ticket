@@ -2157,21 +2157,30 @@
         // バックエンドからシフト設定を読み込み
         function loadShiftSettingsFromBackend() {
             const weekStartStr = formatDateKey(currentWeekStart);
+            console.log('🔄 Loading shift settings for week:', weekStartStr);
+            console.log('🔍 Current week start:', currentWeekStart);
             
             return fetch(`/admin/reservations/load_shift_settings?week_start_date=${weekStartStr}`)
                 .then(response => response.json())
                 .then(data => {
+                    console.log('📡 Shift settings response:', data);
                     if (data.success) {
                         defaultSchedule = data.default_schedule;
                         weeklySchedules[weekStartStr] = data.current_week_schedule;
                         
-
+                        console.log('✅ Shift settings loaded successfully');
+                        console.log('🔍 Default schedule:', defaultSchedule);
+                        console.log('🔍 Current week schedule:', data.current_week_schedule);
+                        console.log('🔍 Weekly schedules object:', weeklySchedules);
+                        console.log('🔍 Stored in weeklySchedules[' + weekStartStr + ']:', weeklySchedules[weekStartStr]);
                         
                         // 週固有のスケジュールがない場合のログ
                         if (!data.has_custom_schedule) {
-    
+                            console.log('ℹ️ No custom schedule for this week, using default');
+                        } else {
+                            console.log('✅ Custom schedule found for this week');
                         }
-  } else {
+                    } else {
                         console.error('❌ Failed to load shift settings:', data.message);
                         // フォールバック: デフォルトスケジュールを初期化
                         initializeDefaultSchedule();
@@ -2440,13 +2449,17 @@
                 weekKey = formatDateKey(currentWeekStart);
             }
             
+            console.log('🔍 getCurrentWeekSchedule called with weekKey:', weekKey);
+            console.log('🔍 Available weeklySchedules keys:', Object.keys(weeklySchedules));
+            console.log('🔍 weeklySchedules[' + weekKey + ']:', weeklySchedules[weekKey]);
+            
             if (!weeklySchedules[weekKey]) {
                 // 週固有のスケジュールがない場合はデフォルトを使用（コピーは作成しない）
                 console.log(`🔍 No custom schedule for ${weekKey}, using default schedule`);
                 return defaultSchedule;
             }
             
-            console.log(`🔍 Using custom schedule for ${weekKey}`);
+            console.log(`🔍 Using custom schedule for ${weekKey}:`, weeklySchedules[weekKey]);
             return weeklySchedules[weekKey];
         }
 
