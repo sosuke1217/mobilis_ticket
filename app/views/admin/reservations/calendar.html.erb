@@ -3935,8 +3935,8 @@ function showMessage(message, type = 'info') {
             const endDateValue = nextWeek.toISOString().split('T')[0];
             document.getElementById('bulkEndDate').value = endDateValue;
             
-            // 現在時刻を設定
-            const currentTime = `${String(bulkCurrentDate.getHours()).padStart(2, '0')}:${String(Math.floor(bulkCurrentDate.getMinutes() / 10) * 10).padStart(2, '0')}`;
+            // 現在時刻を設定（15分刻みでシステム設定に合わせる）
+            const currentTime = `${String(bulkCurrentDate.getHours()).padStart(2, '0')}:${String(Math.floor(bulkCurrentDate.getMinutes() / 15) * 15).padStart(2, '0')}`;
             document.getElementById('bulkStartTime').value = currentTime;
             
             // 曜日チェックボックスを全てチェック
@@ -4204,8 +4204,8 @@ function showMessage(message, type = 'info') {
                     // 終了時間を計算
                     const endMinutes = startMinutes + durationMinutes;
                     
-                    // 各時間スロットをチェック
-                    for (let timeInMinutes = startMinutes; timeInMinutes < endMinutes; timeInMinutes += 10) {
+                    // 各時間スロットをチェック（15分刻みでシステム設定に合わせる）
+                    for (let timeInMinutes = startMinutes; timeInMinutes < endMinutes; timeInMinutes += 15) {
                         const timeStr = `${Math.floor(timeInMinutes / 60).toString().padStart(2, '0')}:${(timeInMinutes % 60).toString().padStart(2, '0')}`;
                         
                         // 現在の日付のスケジュールを使用するため、日付を指定してisBusinessHourを呼び出し
