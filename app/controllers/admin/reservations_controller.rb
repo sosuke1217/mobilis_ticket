@@ -859,6 +859,27 @@ class Admin::ReservationsController < ApplicationController
     @reservation = Reservation.new
   end
 
+  # 空き時間取得用のAPIエンドポイント
+  def available_times
+    date = Date.parse(params[:date])
+    duration = params[:duration].to_i
+    
+    available_slots = get_available_time_slots(date, duration)
+    
+    render json: {
+      success: true,
+      slots: available_slots.map { |slot| {
+        time: slot[:start_time].strftime('%H:%M'),
+        display: "#{slot[:start_time].strftime('%H:%M')} - #{slot[:end_time].strftime('%H:%M')}",
+        value: slot[:start_time].strftime('%H:%M'),
+        start_datetime: slot[:start_time].iso8601,
+        end_datetime: slot[:end_time].iso8601
+      }}
+    }
+  rescue => e
+    render json: { success: false, error: e.message }
+  end
+
   def create
     Rails.logger.info "🔄 Create reservation"
     Rails.logger.info "📝 Params: #{params.inspect}"
@@ -1530,6 +1551,63 @@ class Admin::ReservationsController < ApplicationController
     classes << 'has-interval' if has_interval
     classes << 'individual-interval' if reservation.individual_interval_minutes.present?
     classes
+  end
+
+  # 空き時間スロットを取得
+  def get_available_time_slots(date, duration)
+    # 営業時間の設定
+    opening_time = Time.zone.parse("#{date} 10:00")
+    closing_time = Time.zone.parse("#{date} 19:00")
+    
+    # インターバル時間を取得
+    interval_minutes = Reservation.interval_minutes
+    
+    # 30分刻みでスロットを生成
+    slot_interval = 30.minutes
+    available_slots = []
+    
+    current_time = opening_time
+    while current_time + duration.minutes <= closing_time
+      end_time = current_time + duration.minutes
+      
+      # インターバルを考慮した空きチェック
+      if time_slot_available_with_interval?(current_time, end_time)
+        available_slots << {
+          start_time: current_time,
+          end_time: end_time,
+          interval_info: interval_minutes > 0 ? "（準備時間#{interval_minutes}分含む）" : ""
+        }
+      end
+      
+      current_time += slot_interval
+    end
+    
+    available_slots
+  end
+
+  # インターバルを考慮した時間スロットの空きチェック
+  def time_slot_available_with_interval?(start_time, end_time)
+    # 既存の予約との重複チェック
+    overlapping_reservations = Reservation.where(
+      'start_time < ? AND end_time > ?',
+      end_time, start_time
+    ).where.not(status: :cancelled)
+    
+    return false if overlapping_reservations.exists?
+    
+    # インターバル時間を考慮した重複チェック
+    interval_minutes = Reservation.interval_minutes
+    if interval_minutes > 0
+      interval_end_time = end_time + interval_minutes.minutes
+      interval_overlapping = Reservation.where(
+        'start_time < ? AND end_time > ?',
+        interval_end_time, start_time
+      ).where.not(status: :cancelled)
+      
+      return false if interval_overlapping.exists?
+    end
+    
+    true
   end
 
 end

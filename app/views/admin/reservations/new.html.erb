@@ -33,7 +33,7 @@
         <div class="mb-3">
           <label class="form-label">空き時間</label>
           <div id="available-times">
-            <select class="form-select" disabled>
+            <select class="form-select" id="time-select" disabled>
               <option>日付を選択してください</option>
             </select>
           </div>
@@ -57,3 +57,88 @@
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const datePicker = document.getElementById('date-picker');
+  const timeSelect = document.getElementById('time-select');
+  const startTimeField = document.getElementById('reservation_start_time');
+  const courseSelect = document.querySelector('select[name="reservation[course]"]');
+
+  // 日付が選択されたときの処理
+  datePicker.addEventListener('change', function() {
+    const selectedDate = this.value;
+    if (selectedDate) {
+      loadAvailableTimes(selectedDate);
+    }
+  });
+
+  // コースが選択されたときの処理
+  courseSelect.addEventListener('change', function() {
+    const selectedDate = datePicker.value;
+    if (selectedDate && this.value) {
+      loadAvailableTimes(selectedDate);
+    }
+  });
+
+  // 空き時間を取得
+  function loadAvailableTimes(date) {
+    const course = courseSelect.value;
+    if (!course) {
+      timeSelect.innerHTML = '<option>コースを選択してください</option>';
+      timeSelect.disabled = true;
+      return;
+    }
+
+    // コースの時間を抽出
+    const duration = extractDuration(course);
+    
+    // ローディング表示
+    timeSelect.innerHTML = '<option>空き時間を取得中...</option>';
+    timeSelect.disabled = true;
+
+    // APIから空き時間を取得
+    fetch(`/admin/reservations/available_times?date=${date}&duration=${duration}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success && data.slots.length > 0) {
+          // 空き時間をセレクトに設定
+          timeSelect.innerHTML = '<option value="">時間を選択してください</option>';
+          data.slots.forEach(slot => {
+            const option = document.createElement('option');
+            option.value = slot.start_datetime;
+            option.textContent = slot.display;
+            timeSelect.appendChild(option);
+          });
+          timeSelect.disabled = false;
+        } else {
+          timeSelect.innerHTML = '<option>空き時間がありません</option>';
+          timeSelect.disabled = true;
+        }
+      })
+      .catch(error => {
+        console.error('空き時間の取得に失敗しました:', error);
+        timeSelect.innerHTML = '<option>エラーが発生しました</option>';
+        timeSelect.disabled = true;
+      });
+  }
+
+  // 時間が選択されたときの処理
+  timeSelect.addEventListener('change', function() {
+    if (this.value) {
+      startTimeField.value = this.value;
+    }
+  });
+
+  // コースの時間を抽出する関数
+  function extractDuration(courseString) {
+    const match = courseString.match(/(\d+)分/);
+    return match ? parseInt(match[1]) : 60;
+  }
+
+  // 今日の日付をデフォルトで設定
+  const today = new Date().toISOString().split('T')[0];
+  datePicker.value = today;
+  datePicker.dispatchEvent(new Event('change'));
+});
+</script>
