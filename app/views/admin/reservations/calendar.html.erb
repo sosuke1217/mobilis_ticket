@@ -4497,8 +4497,8 @@ function showMessage(message, type = 'info') {
             
             if (!dayCell) {
                 console.log(`🔍 Day cell still not found for ${dateKey}, using fallback method`);
-                // フォールバック: 予約要素を直接検索
-                return checkConflictFromReservationElements(startTime, duration);
+                // フォールバック: 予約要素を直接検索（日付を指定）
+                return checkConflictFromReservationElements(startTime, duration, dateKey);
             }
             
             console.log(`🔍 Found day cell:`, dayCell);
@@ -4507,7 +4507,7 @@ function showMessage(message, type = 'info') {
             const reservationElements = dayCell.querySelectorAll('.reservation-item, .break-item, .reservation-block, [class*="reservation"]');
             if (reservationElements.length === 0) {
                 console.log(`🔍 No reservation elements found in day cell for ${dateKey}, trying global search`);
-                return checkConflictFromReservationElements(startTime, duration);
+                return checkConflictFromReservationElements(startTime, duration, dateKey);
             }
             
             const [startHour, startMinute] = startTime.split(':').map(Number);
@@ -4586,8 +4586,8 @@ function showMessage(message, type = 'info') {
         }
         
         // 予約要素を直接検索して重複をチェック（フォールバック方法）
-        function checkConflictFromReservationElements(startTime, duration) {
-            console.log(`🔍 Using fallback method: checking all reservation elements`);
+        function checkConflictFromReservationElements(startTime, duration, targetDate = null) {
+            console.log(`🔍 Using fallback method: checking all reservation elements${targetDate ? ` for date: ${targetDate}` : ''}`);
             
             const [startHour, startMinute] = startTime.split(':').map(Number);
             const startMinutes = startHour * 60 + startMinute;
@@ -4610,6 +4610,11 @@ function showMessage(message, type = 'info') {
                 
                 if (!elementDate) {
                     console.log(`🔍 Element has no date attribute:`, element);
+                    return false;
+                }
+                
+                // 日付フィルタリング: 指定された日付と異なる場合はスキップ
+                if (targetDate && elementDate !== targetDate) {
                     return false;
                 }
                 
@@ -4651,13 +4656,15 @@ function showMessage(message, type = 'info') {
                 if (hasOverlap) {
                     console.log(`🔍 Found overlap in fallback check:`, {
                         elementDate: elementDate,
+                        targetDate: targetDate,
                         elementTime: `${hour}:${minute}`,
                         reservationDuration: reservationDuration,
                         reservationStartMinutes: reservationStartMinutes,
                         reservationEndMinutes: reservationEndMinutes,
                         newStartMinutes: startMinutes,
                         newEndMinutes: endMinutes,
-                        hasOverlap: hasOverlap
+                        hasOverlap: hasOverlap,
+                        dateFiltered: targetDate ? (elementDate === targetDate) : 'N/A'
                     });
                 }
                 
