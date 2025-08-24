@@ -66,7 +66,8 @@ class WeeklySchedule < ApplicationRecord
     (0..6).each do |day_of_week|
       # schedule属性がnilの場合はデフォルトスケジュールを使用
       if schedule.present? && schedule.is_a?(Hash)
-        day_schedule = schedule[day_of_week.to_s] || self.class.default_schedule[day_of_week]
+        # 文字列キーとシンボルキーの両方をチェック
+        day_schedule = schedule[day_of_week.to_s] || schedule[day_of_week] || self.class.default_schedule[day_of_week]
       else
         day_schedule = self.class.default_schedule[day_of_week]
       end
