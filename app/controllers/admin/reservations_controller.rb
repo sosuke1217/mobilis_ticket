@@ -325,6 +325,7 @@ class Admin::ReservationsController < ApplicationController
     @reservation.skip_advance_booking_validation = true
     @reservation.skip_advance_notice_validation = true
     @reservation.skip_overlap_validation = true
+    @reservation.skip_time_validation = true  # 時間間隔バリデーションもスキップ
     
     if @reservation.save
       render json: {
