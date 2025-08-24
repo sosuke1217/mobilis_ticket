@@ -1571,6 +1571,17 @@ class Admin::ReservationsController < ApplicationController
     
     Rails.logger.info "🕐 Business hours: #{opening_time.strftime('%H:%M')} - #{closing_time.strftime('%H:%M')}"
     
+    # 既存の予約を確認
+    existing_reservations = Reservation.where(
+      'DATE(start_time) = ?',
+      date
+    ).where.not(status: :cancelled).order(:start_time)
+    
+    Rails.logger.info "📋 Existing reservations for #{date}: #{existing_reservations.count}"
+    existing_reservations.each do |reservation|
+      Rails.logger.info "  - #{reservation.start_time.strftime('%H:%M')} - #{reservation.end_time.strftime('%H:%M')} (#{reservation.course})"
+    end
+    
     # インターバル時間を取得
     interval_minutes = Reservation.interval_minutes
     Rails.logger.info "⏱️ Interval minutes: #{interval_minutes}"
@@ -1607,14 +1618,25 @@ class Admin::ReservationsController < ApplicationController
     # 同じ日付の予約のみを対象とする
     date = start_time.to_date
     
+    Rails.logger.info "🔍 Checking availability for: #{start_time.strftime('%H:%M')} - #{end_time.strftime('%H:%M')} on #{date}"
+    
     # 既存の予約との重複チェック（同じ日付のみ）
+    # 重複の条件：
+    # 1. 新規予約の開始時間 < 既存予約の終了時間 AND 新規予約の終了時間 > 既存予約の開始時間
+    # 2. または、新規予約が既存予約の時間内に完全に含まれる場合
     overlapping_reservations = Reservation.where(
-      'DATE(start_time) = ? AND start_time < ? AND end_time > ?',
-      date, end_time, start_time
+      'DATE(start_time) = ? AND (
+        (start_time < ? AND end_time > ?) OR
+        (start_time >= ? AND end_time <= ?) OR
+        (start_time < ? AND end_time > ?)
+      )',
+      date, end_time, start_time, start_time, end_time, start_time, end_time
     ).where.not(status: :cancelled)
     
     if overlapping_reservations.exists?
-      Rails.logger.info "❌ Overlapping reservation found: #{overlapping_reservations.first.inspect}"
+      overlapping = overlapping_reservations.first
+      Rails.logger.info "❌ Overlapping reservation found: #{overlapping.start_time.strftime('%H:%M')} - #{overlapping.end_time.strftime('%H:%M')}"
+      Rails.logger.info "❌ New reservation: #{start_time.strftime('%H:%M')} - #{end_time.strftime('%H:%M')}"
       return false
     end
     
@@ -1622,13 +1644,21 @@ class Admin::ReservationsController < ApplicationController
     interval_minutes = Reservation.interval_minutes
     if interval_minutes > 0
       interval_end_time = end_time + interval_minutes.minutes
+      Rails.logger.info "🔍 Checking interval: #{end_time.strftime('%H:%M')} - #{interval_end_time.strftime('%H:%M')}"
+      
       interval_overlapping = Reservation.where(
-        'DATE(start_time) = ? AND start_time < ? AND end_time > ?',
-        date, interval_end_time, start_time
+        'DATE(start_time) = ? AND (
+          (start_time < ? AND end_time > ?) OR
+          (start_time >= ? AND end_time <= ?) OR
+          (start_time < ? AND end_time > ?)
+        )',
+        date, interval_end_time, end_time, end_time, interval_end_time, end_time, interval_end_time
       ).where.not(status: :cancelled)
       
       if interval_overlapping.exists?
-        Rails.logger.info "❌ Interval overlapping reservation found: #{interval_overlapping.first.inspect}"
+        overlapping = interval_overlapping.first
+        Rails.logger.info "❌ Interval overlapping reservation found: #{overlapping.start_time.strftime('%H:%M')} - #{overlapping.end_time.strftime('%H:%M')}"
+        Rails.logger.info "❌ Interval time: #{end_time.strftime('%H:%M')} - #{interval_end_time.strftime('%H:%M')}"
         return false
       end
     end
