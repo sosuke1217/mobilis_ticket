@@ -268,11 +268,11 @@ textarea.form-control {
 
 @keyframes slideIn {
     from {
-        transform: translateY(-50px);
+        transform: translateY(-20px) scale(0.98);
         opacity: 0;
     }
     to {
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
         opacity: 1;
     }
 }
