@@ -1432,6 +1432,8 @@ function showMessage(message, type = 'info') {
 
         // 予約作成モーダルを開く
         function openBookingModal(date, time) {
+            console.log('🔧 Opening booking modal for date:', date, 'time:', time);
+            
             document.getElementById('bookingDate').value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${time}`;
             document.getElementById('bookingTime').value = time;
             document.getElementById('bookingDuration').value = ''; // コース選択をリセット
@@ -1440,7 +1442,22 @@ function showMessage(message, type = 'info') {
             document.getElementById('customerEmail').value = '';
             document.getElementById('bookingNote').value = '';
             document.getElementById('bookingStatus').value = 'tentative';
-            document.getElementById('bookingModal').style.display = 'block';
+            
+            const modal = document.getElementById('bookingModal');
+            modal.style.display = 'block';
+            
+            // モーダルが開かれた後に外側クリックで閉じる機能を再設定
+            console.log('🔧 Re-setting up click outside for booking modal...');
+            modal.addEventListener('click', function(event) {
+                console.log('🎯 bookingModal clicked after opening, target:', event.target);
+                console.log('🎯 modal element:', modal);
+                if (event.target === modal) {
+                    console.log('✅ Closing bookingModal via click outside after opening');
+                    closeBookingModal();
+                }
+            });
+            
+            console.log('✅ Booking modal opened and click outside functionality set up');
         }
 
         // 予約作成モーダルを閉じる
@@ -1877,38 +1894,58 @@ function showMessage(message, type = 'info') {
 
         // モーダル外クリックで閉じる機能
         function setupModalClickOutside() {
+            console.log('🔧 Setting up modal click outside functionality...');
+            
             // 予約詳細モーダル
             const reservationDetailModal = document.getElementById('reservationDetailModal');
             if (reservationDetailModal) {
+                console.log('✅ Found reservationDetailModal, setting up click outside...');
                 reservationDetailModal.addEventListener('click', function(event) {
+                    console.log('🎯 reservationDetailModal clicked, target:', event.target);
                     // モーダル背景（.modal）をクリックした場合のみ閉じる
                     if (event.target === reservationDetailModal) {
+                        console.log('✅ Closing reservationDetailModal via click outside');
                         closeReservationDetailModal();
                     }
                 });
+            } else {
+                console.log('❌ reservationDetailModal not found');
             }
             
             // 新規予約作成モーダル
             const bookingModal = document.getElementById('bookingModal');
             if (bookingModal) {
+                console.log('✅ Found bookingModal, setting up click outside...');
                 bookingModal.addEventListener('click', function(event) {
+                    console.log('🎯 bookingModal clicked, target:', event.target);
+                    console.log('🎯 bookingModal element:', bookingModal);
                     // モーダル背景（.booking-modal）をクリックした場合のみ閉じる
                     if (event.target === bookingModal) {
+                        console.log('✅ Closing bookingModal via click outside');
                         closeBookingModal();
                     }
                 });
+            } else {
+                console.log('❌ bookingModal not found');
             }
             
             // 休憩作成モーダル
             const breakModal = document.getElementById('breakModal');
             if (breakModal) {
+                console.log('✅ Found breakModal, setting up click outside...');
                 breakModal.addEventListener('click', function(event) {
+                    console.log('🎯 breakModal clicked, target:', event.target);
                     // モーダル背景（.break-modal）をクリックした場合のみ閉じる
                     if (event.target === breakModal) {
+                        console.log('✅ Closing breakModal via click outside');
                         closeBreakModal();
                     }
                 });
+            } else {
+                console.log('❌ breakModal not found');
             }
+            
+            console.log('🔧 Modal click outside setup completed');
         }
 
         // チケットと利用履歴を読み込み

@@ -3798,6 +3798,8 @@ function showMessage(message, type = 'info') {
 
         // 休憩作成モーダルを開く
         function openBreakModal(date, time) {
+            console.log('🔧 Opening break modal for date:', date, 'time:', time);
+            
             // 日付と時間の表示用フォーマット
             const displayDate = `${date.getFullYear()}年${String(date.getMonth() + 1)}月${String(date.getDate())}日`;
             const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
@@ -3817,7 +3819,20 @@ function showMessage(message, type = 'info') {
             document.getElementById('customBreakTitle').style.display = 'none';
             document.getElementById('breakNote').value = '';
             
-            document.getElementById('breakModal').style.display = 'block';
+            const modal = document.getElementById('breakModal');
+            modal.style.display = 'block';
+            
+            // モーダルが開かれた後に外側クリックで閉じる機能を再設定
+            console.log('🔧 Re-setting up click outside for break modal...');
+            modal.addEventListener('click', function(event) {
+                console.log('🎯 breakModal clicked after opening, target:', event.target);
+                if (event.target === modal) {
+                    console.log('✅ Closing breakModal via click outside after opening');
+                    closeBreakModal();
+                }
+            });
+            
+            console.log('✅ Break modal opened and click outside functionality set up');
         }
 
 
