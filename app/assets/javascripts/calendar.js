@@ -1877,12 +1877,35 @@ function showMessage(message, type = 'info') {
 
         // モーダル外クリックで閉じる機能
         function setupModalClickOutside() {
-            const modal = document.getElementById('reservationDetailModal');
-            if (modal) {
-                modal.addEventListener('click', function(event) {
+            // 予約詳細モーダル
+            const reservationDetailModal = document.getElementById('reservationDetailModal');
+            if (reservationDetailModal) {
+                reservationDetailModal.addEventListener('click', function(event) {
                     // モーダル背景（.modal）をクリックした場合のみ閉じる
-                    if (event.target === modal) {
+                    if (event.target === reservationDetailModal) {
                         closeReservationDetailModal();
+                    }
+                });
+            }
+            
+            // 新規予約作成モーダル
+            const bookingModal = document.getElementById('bookingModal');
+            if (bookingModal) {
+                bookingModal.addEventListener('click', function(event) {
+                    // モーダル背景（.booking-modal）をクリックした場合のみ閉じる
+                    if (event.target === bookingModal) {
+                        closeBookingModal();
+                    }
+                });
+            }
+            
+            // 休憩作成モーダル
+            const breakModal = document.getElementById('breakModal');
+            if (breakModal) {
+                breakModal.addEventListener('click', function(event) {
+                    // モーダル背景（.break-modal）をクリックした場合のみ閉じる
+                    if (event.target === breakModal) {
+                        closeBreakModal();
                     }
                 });
             }
