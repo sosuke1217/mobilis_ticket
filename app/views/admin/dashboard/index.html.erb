@@ -5,16 +5,18 @@
       <h2 class="card-title mb-4">
         <i class="fas fa-chart-bar me-2"></i>月ごとのテンプレート別使用数
       </h2>
-      <%= form_with url: admin_root_path, method: :get, local: true do %>
+      <%= form_with url: admin_root_path, method: :get, local: true, id: "month-select-form" do %>
         <div class="row g-3 align-items-end mb-4">
           <div class="col-auto">
             <%= label_tag :month, "月を選択", class: "form-label" %>
             <%= select_tag :month,
                   options_for_select(@available_months.map { |m| [m.strftime("%Y年%m月"), m.strftime("%Y-%m")] }, @selected_month.strftime("%Y-%m")),
-                  class: "form-select" %>
+                  class: "form-select",
+                  id: "month-select",
+                  onchange: "document.getElementById('month-select-form').submit();" %>
           </div>
           <div class="col-auto">
-            <%= submit_tag "表示", class: "btn btn-primary" %>
+            <%= submit_tag "表示", class: "btn btn-primary", id: "submit-btn" %>
           </div>
         </div>
       <% end %>
@@ -73,3 +75,22 @@
   </div>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // 月選択が変更されたときの処理
+  const monthSelect = document.getElementById('month-select');
+  if (monthSelect) {
+    monthSelect.addEventListener('change', function() {
+      // フォームを自動送信
+      document.getElementById('month-select-form').submit();
+    });
+  }
+  
+  // 選択された月をハイライト
+  const selectedMonth = '<%= @selected_month.strftime("%Y-%m") %>';
+  if (monthSelect && selectedMonth) {
+    monthSelect.value = selectedMonth;
+  }
+});
+</script>

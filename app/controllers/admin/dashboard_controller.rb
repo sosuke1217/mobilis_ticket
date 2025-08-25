@@ -33,17 +33,35 @@ class Admin::DashboardController < ApplicationController
 
   def setup_ticket_statistics
     # 月選択（パラメータがない場合は今月）
-    @selected_month = params[:month].present? ? Date.strptime(params[:month], "%Y-%m") : Time.zone.today.beginning_of_month
+    @selected_month = if params[:month].present?
+      begin
+        Date.strptime(params[:month], "%Y-%m")
+      rescue ArgumentError
+        Time.zone.today.beginning_of_month
+      end
+    else
+      Time.zone.today.beginning_of_month
+    end
   
-    # セレクトタグ用の月リスト
-    @available_months = TicketUsage.distinct
+    # セレクトタグ用の月リスト（過去12ヶ月分を生成）
+    @available_months = []
+    
+    # 過去12ヶ月分の月を生成
+    12.times do |i|
+      month = Time.zone.today.beginning_of_month - i.months
+      @available_months << month
+    end
+    
+    # データベースから実際にデータがある月も追加
+    db_months = TicketUsage.distinct
       .pluck(Arel.sql("TO_CHAR(used_at, 'YYYY-MM')"))
       .compact
       .map { |m| Date.strptime(m, "%Y-%m") }
       .uniq
-      .sort
-      .reverse
-  
+    
+    # 重複を除去してソート
+    @available_months = (@available_months + db_months).uniq.sort.reverse
+    
     # 集計対象の範囲
     start_date = @selected_month.beginning_of_month
     end_date = @selected_month.end_of_month
