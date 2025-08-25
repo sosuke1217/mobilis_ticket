@@ -1434,9 +1434,26 @@ function showMessage(message, type = 'info') {
         function openBookingModal(date, time) {
             console.log('🔧 Opening booking modal for date:', date, 'time:', time);
             
-            document.getElementById('bookingDate').value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${time}`;
-            document.getElementById('bookingTime').value = time;
-            document.getElementById('bookingDuration').value = ''; // コース選択をリセット
+            // 正しいIDを参照
+            const displayDateElement = document.getElementById('bookingDisplayDate');
+            const displayTimeElement = document.getElementById('bookingDisplayTime');
+            
+            if (displayDateElement && displayTimeElement) {
+                // 日付と時間の表示用フォーマット
+                const displayDate = `${date.getFullYear()}年${String(date.getMonth() + 1)}月${String(date.getDate())}日`;
+                const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+                const dayName = dayNames[date.getDay()];
+                
+                displayDateElement.textContent = `${displayDate}(${dayName})`;
+                displayTimeElement.textContent = time;
+            }
+            
+            // 内部的に日付と時間を保存（後で使用する場合）
+            window.selectedBookingDate = date;
+            window.selectedBookingTime = time;
+            
+            // フォームフィールドをリセット
+            document.getElementById('bookingDuration').value = '';
             document.getElementById('customerName').value = '';
             document.getElementById('customerPhone').value = '';
             document.getElementById('customerEmail').value = '';
@@ -1475,11 +1492,14 @@ function showMessage(message, type = 'info') {
                 console.log('🎯 target tagName:', event.target.tagName);
                 console.log('🎯 currentTarget:', event.currentTarget);
                 console.log('🎯 target === currentTarget:', event.target === event.currentTarget);
+                console.log('🎯 target parentElement:', event.target.parentElement);
+                console.log('🎯 target parentElement classList:', event.target.parentElement?.classList);
                 
                 // モーダルの背景部分（.booking-modal）をクリックした場合のみ閉じる
                 if (event.target === freshModal || 
                     event.target === event.currentTarget || 
-                    event.target.classList.contains('booking-modal')) {
+                    event.target.classList.contains('booking-modal') ||
+                    (event.target.parentElement && event.target.parentElement.classList.contains('booking-modal'))) {
                     console.log('✅ Closing bookingModal via click outside after opening');
                     closeBookingModal();
                 }

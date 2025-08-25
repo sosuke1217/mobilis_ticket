@@ -149,7 +149,10 @@
 
         .break-modal-content {
             background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
-            margin: 5% auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             border: none;
             width: 90%;
             max-width: 500px;
@@ -2760,7 +2763,10 @@
 
     .booking-modal-content {
         background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-        margin: 3% auto;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
         border: none;
         width: 90%;
         max-width: 500px;
