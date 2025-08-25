@@ -144,6 +144,7 @@
             height: 100%;
             background-color: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(4px);
+            pointer-events: auto; /* モーダル背景のクリックイベントを有効化 */
         }
 
         .break-modal-content {
@@ -156,7 +157,7 @@
             box-shadow: 0 20px 40px rgba(255, 159, 67, 0.3);
             overflow: hidden;
             animation: breakModalSlideIn 0.3s ease-out;
-            pointer-events: none; /* モーダル内容のクリックイベントを無効化 */
+            pointer-events: auto; /* モーダル内容のクリックイベントを有効化 */
         }
 
         @keyframes breakModalSlideIn {
@@ -2754,6 +2755,7 @@
         height: 100%;
         background-color: rgba(0, 0, 0, 0.5);
         backdrop-filter: blur(4px);
+        pointer-events: auto; /* モーダル背景のクリックイベントを有効化 */
     }
 
     .booking-modal-content {
@@ -2769,7 +2771,7 @@
         animation: bookingModalSlideIn 0.3s ease-out;
         display: flex;
         flex-direction: column;
-        pointer-events: none; /* モーダル内容のクリックイベントを無効化 */
+        pointer-events: auto; /* モーダル内容のクリックイベントを有効化 */
     }
 
     @keyframes bookingModalSlideIn {

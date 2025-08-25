@@ -1456,18 +1456,41 @@ function showMessage(message, type = 'info') {
             // 新しいモーダル要素を取得
             const freshModal = document.getElementById('bookingModal');
             
+            // モーダルの内容部分のクリックイベントを停止
+            const modalContent = freshModal.querySelector('.booking-modal-content');
+            if (modalContent) {
+                modalContent.addEventListener('click', function(event) {
+                    console.log('🎯 Modal content clicked, stopping propagation');
+                    event.stopPropagation();
+                });
+            }
+            
             // 外側クリックで閉じる機能を設定
             freshModal.addEventListener('click', function(event) {
                 console.log('🎯 bookingModal clicked after opening, target:', event.target);
                 console.log('🎯 modal element:', freshModal);
                 console.log('🎯 target === modal:', event.target === freshModal);
                 console.log('🎯 target classList:', event.target.classList);
+                console.log('🎯 target id:', event.target.id);
+                console.log('🎯 target tagName:', event.target.tagName);
+                console.log('🎯 currentTarget:', event.currentTarget);
+                console.log('🎯 target === currentTarget:', event.target === event.currentTarget);
                 
-                if (event.target === freshModal) {
+                // モーダルの背景部分（.booking-modal）をクリックした場合のみ閉じる
+                if (event.target === freshModal || 
+                    event.target === event.currentTarget || 
+                    event.target.classList.contains('booking-modal')) {
                     console.log('✅ Closing bookingModal via click outside after opening');
                     closeBookingModal();
                 }
             });
+            
+            // 追加のデバッグ: モーダルの構造を確認
+            console.log('🔍 Modal structure check:');
+            console.log('  - Modal element:', freshModal);
+            console.log('  - Modal classes:', freshModal.className);
+            console.log('  - Modal children count:', freshModal.children.length);
+            console.log('  - First child classes:', freshModal.children[0]?.className);
             
             console.log('✅ Booking modal opened and click outside functionality set up');
         }
