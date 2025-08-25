@@ -151,8 +151,8 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.1); /* 0.3から0.1に変更してさらに薄く */
-            backdrop-filter: blur(1px); /* 2pxから1pxに変更してさらに薄く */
+            background-color: rgba(0, 0, 0, 0.05); /* 0.1から0.05に変更してほぼ完全に透明に */
+            backdrop-filter: blur(0.5px); /* 1pxから0.5pxに変更してほぼ完全に透明に */
             cursor: pointer; /* 背景部分にカーソルを表示 */
         }
 
@@ -2775,8 +2775,8 @@
         top: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.1); /* 0.3から0.1に変更してさらに薄く */
-        backdrop-filter: blur(1px); /* 2pxから1pxに変更してさらに薄く */
+        background-color: rgba(0, 0, 0, 0.05); /* 0.1から0.05に変更してほぼ完全に透明に */
+        backdrop-filter: blur(0.5px); /* 1pxから0.5pxに変更してほぼ完全に透明に */
         cursor: pointer; /* 背景部分にカーソルを表示 */
     }
 
