@@ -1494,25 +1494,57 @@ function showMessage(message, type = 'info') {
                 console.log('🎯 target === currentTarget:', event.target === event.currentTarget);
                 console.log('🎯 target parentElement:', event.target.parentElement);
                 console.log('🎯 target parentElement classList:', event.target.parentElement?.classList);
+                console.log('🎯 target parentElement id:', event.target.parentElement?.id);
+                console.log('🎯 target parentElement tagName:', event.target.parentElement?.tagName);
+                console.log('🎯 target parentElement === modal:', event.target.parentElement === freshModal);
                 
                 // モーダルの背景部分（.booking-modal）をクリックした場合のみ閉じる
                 if (event.target === freshModal || 
                     event.target === event.currentTarget || 
                     event.target.classList.contains('booking-modal') ||
-                    (event.target.parentElement && event.target.parentElement.classList.contains('booking-modal'))) {
+                    (event.target.parentElement && event.target.parentElement.classList.contains('booking-modal')) ||
+                    event.target.parentElement === freshModal) {
                     console.log('✅ Closing bookingModal via click outside after opening');
                     closeBookingModal();
+                } else {
+                    console.log('❌ Not closing - target does not match modal background');
+                    console.log('❌ Target details:', {
+                        element: event.target,
+                        classList: event.target.classList,
+                        id: event.target.id,
+                        tagName: event.target.tagName,
+                        parentElement: event.target.parentElement,
+                        parentClassList: event.target.parentElement?.classList,
+                        parentId: event.target.parentElement?.id
+                    });
                 }
             });
             
-            // 追加のデバッグ: モーダルの構造を確認
-            console.log('🔍 Modal structure check:');
-            console.log('  - Modal element:', freshModal);
-            console.log('  - Modal classes:', freshModal.className);
-            console.log('  - Modal children count:', freshModal.children.length);
-            console.log('  - First child classes:', freshModal.children[0]?.className);
+            // 追加の方法: モーダルの背景部分に直接イベントリスナーを設定
+            console.log('🔧 Setting up additional click outside detection...');
             
-            console.log('✅ Booking modal opened and click outside functionality set up');
+            // モーダルの背景部分（半透明の黒い部分）に直接イベントリスナーを設定
+            const modalBackground = freshModal;
+            
+            // 複数のイベントタイプで背景クリックを検出
+            const eventTypes = ['click', 'mousedown', 'touchstart'];
+            
+            eventTypes.forEach(eventType => {
+                modalBackground.addEventListener(eventType, function(event) {
+                    console.log(`🖱️ Modal background ${eventType} event:`, event.target);
+                    console.log(`🖱️ Target === modal:`, event.target === modalBackground);
+                    console.log(`🖱️ Event type:`, eventType);
+                    
+                    if (event.target === modalBackground) {
+                        console.log(`✅ ${eventType} on modal background - closing modal`);
+                        event.preventDefault();
+                        event.stopPropagation();
+                        closeBookingModal();
+                    }
+                });
+            });
+            
+            console.log('✅ Additional click outside detection set up');
         }
 
         // 予約作成モーダルを閉じる

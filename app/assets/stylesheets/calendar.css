@@ -2759,6 +2759,7 @@
         background-color: rgba(0, 0, 0, 0.5);
         backdrop-filter: blur(4px);
         pointer-events: auto; /* モーダル背景のクリックイベントを有効化 */
+        cursor: pointer; /* 背景部分にカーソルを表示 */
     }
 
     .booking-modal-content {
@@ -2778,6 +2779,7 @@
         display: flex;
         flex-direction: column;
         pointer-events: auto; /* モーダル内容のクリックイベントを有効化 */
+        cursor: default; /* 内容部分は通常のカーソル */
     }
 
     @keyframes bookingModalSlideIn {
