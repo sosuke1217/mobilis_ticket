@@ -93,8 +93,8 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // 初期設定
-  updateMonthOptions();
+  // 初期設定：データがある月のみを表示
+  loadMonthOptionsForYear(document.getElementById('year-select').value);
   
   // 年選択が変更されたときの処理
   const yearSelect = document.getElementById('year-select');
@@ -169,45 +169,6 @@ function loadMonthOptionsForYear(selectedYear) {
       }
       monthSelect.value = '01';
     });
-}
-
-// 月のオプションを更新（初期表示用）
-function updateMonthOptions() {
-  const yearSelect = document.getElementById('year-select');
-  const monthSelect = document.getElementById('month-select');
-  
-  if (!yearSelect || !monthSelect) return;
-  
-  const selectedYear = yearSelect.value;
-  const currentYear = new Date().getFullYear().toString();
-  const currentMonth = (new Date().getMonth() + 1).toString().padStart(2, '0');
-  
-  // 月のオプションをクリア
-  monthSelect.innerHTML = '';
-  
-  // 選択された年が現在の年の場合、現在の月までしか選択できない
-  const maxMonth = (selectedYear === currentYear) ? parseInt(currentMonth) : 12;
-  
-  for (let month = 1; month <= maxMonth; month++) {
-    const option = document.createElement('option');
-    option.value = month.toString().padStart(2, '0');
-    option.textContent = month + '月';
-    
-    // 現在の年月が選択されている場合は選択状態にする
-    if (selectedYear === currentYear && month.toString().padStart(2, '0') === currentMonth) {
-      option.selected = true;
-    }
-    
-    monthSelect.appendChild(option);
-  }
-  
-  // 年が変更された場合は、適切な月を選択するだけ
-  // フォームは自動送信しない
-  if (selectedYear === currentYear) {
-    monthSelect.value = currentMonth;
-  } else {
-    monthSelect.value = '01'; // 過去の年は1月を選択
-  }
 }
 
 // 送信ボタンを強調表示

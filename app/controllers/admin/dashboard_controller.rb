@@ -126,7 +126,7 @@ class Admin::DashboardController < ApplicationController
     
     @available_years = all_years.map { |year| Date.new(year, 1, 1) }
     
-    # セレクトタグ用の月リスト（データがある月のみ）
+    # セレクトタグ用の月リスト（選択された年でデータがある月のみ）
     @available_months = []
     
     # 選択された年でデータがある月を取得
@@ -154,7 +154,7 @@ class Admin::DashboardController < ApplicationController
     # 両方の月を結合して重複を除去
     all_months = (ticket_months + usage_months).uniq.sort
     
-    # データがない場合は1-12月を表示
+    # データがない場合は1-12月を表示（フォールバック）
     if all_months.empty?
       all_months = (1..12).to_a
     end
