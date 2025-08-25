@@ -176,7 +176,7 @@
         @keyframes breakModalSlideIn {
             from {
                 opacity: 0;
-                transform: translateY(-30px) scale(0.95);
+                transform: translateY(-20px) scale(0.98);
             }
             to {
                 opacity: 1;
@@ -2804,7 +2804,7 @@
     @keyframes bookingModalSlideIn {
         from {
             opacity: 0;
-            transform: translateY(-30px) scale(0.95);
+            transform: translateY(-20px) scale(0.98);
         }
         to {
             opacity: 1;
