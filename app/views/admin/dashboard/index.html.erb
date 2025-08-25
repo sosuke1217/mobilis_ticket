@@ -136,8 +136,18 @@ function updateMonthOptions() {
     monthSelect.appendChild(option);
   }
   
-  // フォームを送信
-  submitForm();
+  // 年が変更された場合は、適切な月を選択してからフォームを送信
+  // 現在の年が選択された場合は現在の月、過去の年の場合は1月を選択
+  if (selectedYear === currentYear) {
+    monthSelect.value = currentMonth;
+  } else {
+    monthSelect.value = '01'; // 過去の年は1月を選択
+  }
+  
+  // 少し遅延を入れてからフォームを送信（UIの更新を待つ）
+  setTimeout(function() {
+    submitForm();
+  }, 100);
 }
 
 // フォームを送信
