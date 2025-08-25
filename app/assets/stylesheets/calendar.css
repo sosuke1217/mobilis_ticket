@@ -142,9 +142,18 @@
             top: 0;
             width: 100%;
             height: 100%;
+            pointer-events: auto; /* モーダル背景のクリックイベントを有効化 */
+        }
+
+        .break-modal-background {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
             background-color: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(4px);
-            pointer-events: auto; /* モーダル背景のクリックイベントを有効化 */
+            cursor: pointer; /* 背景部分にカーソルを表示 */
         }
 
         .break-modal-content {
@@ -161,6 +170,7 @@
             overflow: hidden;
             animation: breakModalSlideIn 0.3s ease-out;
             pointer-events: auto; /* モーダル内容のクリックイベントを有効化 */
+            z-index: 1; /* 背景より前面に表示 */
         }
 
         @keyframes breakModalSlideIn {
@@ -2756,9 +2766,17 @@
         top: 0;
         width: 100%;
         height: 100%;
+        pointer-events: auto; /* モーダル背景のクリックイベントを有効化 */
+    }
+
+    .booking-modal-background {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
         background-color: rgba(0, 0, 0, 0.5);
         backdrop-filter: blur(4px);
-        pointer-events: auto; /* モーダル背景のクリックイベントを有効化 */
         cursor: pointer; /* 背景部分にカーソルを表示 */
     }
 
@@ -2780,6 +2798,7 @@
         flex-direction: column;
         pointer-events: auto; /* モーダル内容のクリックイベントを有効化 */
         cursor: default; /* 内容部分は通常のカーソル */
+        z-index: 1; /* 背景より前面に表示 */
     }
 
     @keyframes bookingModalSlideIn {
