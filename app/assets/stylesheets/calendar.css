@@ -151,8 +151,8 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0); /* 0.05から0に変更して完全に透明に */
-            backdrop-filter: none; /* blur(0.5px)からnoneに変更して完全に透明に */
+            background-color: rgba(0, 0, 0, 0.1); /* 軽い透明度を追加 */
+            backdrop-filter: blur(3px); /* 適度なぼやかし効果を追加 */
             cursor: pointer; /* 背景部分にカーソルを表示 */
         }
 
