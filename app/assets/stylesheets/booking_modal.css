@@ -24,7 +24,7 @@
     overflow-y: auto;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    animation: bookingModalSlideIn 0.3s ease-out;
+    /* animation: bookingModalSlideIn 0.3s ease-out; アニメーションを無効化 */
 }
 
 /* ヘッダー部分 */
@@ -268,11 +268,11 @@ textarea.form-control {
 
 @keyframes slideIn {
     from {
-        transform: translateY(-20px) scale(0.98);
-        opacity: 0;
+        transform: none;
+        opacity: 1;
     }
     to {
-        transform: translateY(0) scale(1);
+        transform: none;
         opacity: 1;
     }
 }
