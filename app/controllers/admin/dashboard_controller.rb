@@ -18,6 +18,46 @@ class Admin::DashboardController < ApplicationController
     setup_alerts
   end
 
+  # 指定された年でデータがある月を取得するAPI
+  def month_options
+    year = params[:year].to_i
+    
+    if year <= 0
+      render json: { success: false, error: 'Invalid year' }
+      return
+    end
+    
+    year_start = Date.new(year, 1, 1)
+    year_end = Date.new(year, 12, 31)
+    
+    # チケット発行データがある月を取得
+    ticket_months = Ticket.where(created_at: year_start..year_end)
+      .distinct
+      .pluck(Arel.sql("EXTRACT(MONTH FROM created_at)"))
+      .compact
+      .map(&:to_i)
+      .uniq
+      .sort
+    
+    # チケット使用データがある月を取得
+    usage_months = TicketUsage.where(used_at: year_start..year_end)
+      .distinct
+      .pluck(Arel.sql("EXTRACT(MONTH FROM used_at)"))
+      .compact
+      .map(&:to_i)
+      .uniq
+      .sort
+    
+    # 両方の月を結合して重複を除去
+    all_months = (ticket_months + usage_months).uniq.sort
+    
+    render json: {
+      success: true,
+      year: year,
+      months: all_months
+    }
+  end
+
   # 🆕 予約分析ページ
   def reservation_analytics
     @analytics = ReservationAnalytics.new(1.month.ago, Date.current)
@@ -56,19 +96,70 @@ class Admin::DashboardController < ApplicationController
     # 選択された年月でDateオブジェクトを作成
     @selected_date = Date.new(@selected_year, @selected_month, 1)
   
-    # セレクトタグ用の年リスト（過去5年分）
+    # セレクトタグ用の年リスト（データがある年のみ）
     @available_years = []
-    5.times do |i|
-      year = Time.zone.today.year - i
-      @available_years << Date.new(year, 1, 1)
+    
+    # チケット発行データがある年を取得
+    ticket_years = Ticket.distinct
+      .pluck(Arel.sql("EXTRACT(YEAR FROM created_at)"))
+      .compact
+      .map(&:to_i)
+      .uniq
+      .sort
+      .reverse
+    
+    # チケット使用データがある年を取得
+    usage_years = TicketUsage.distinct
+      .pluck(Arel.sql("EXTRACT(YEAR FROM used_at)"))
+      .compact
+      .map(&:to_i)
+      .uniq
+      .sort
+      .reverse
+    
+    # 両方の年を結合して重複を除去
+    all_years = (ticket_years + usage_years).uniq.sort.reverse
+    
+    # 現在の年も含める（データがない場合でも選択可能にするため）
+    current_year = Time.zone.today.year
+    all_years = [current_year] + all_years unless all_years.include?(current_year)
+    
+    @available_years = all_years.map { |year| Date.new(year, 1, 1) }
+    
+    # セレクトタグ用の月リスト（データがある月のみ）
+    @available_months = []
+    
+    # 選択された年でデータがある月を取得
+    selected_year_start = Date.new(@selected_year, 1, 1)
+    selected_year_end = Date.new(@selected_year, 12, 31)
+    
+    # チケット発行データがある月を取得
+    ticket_months = Ticket.where(created_at: selected_year_start..selected_year_end)
+      .distinct
+      .pluck(Arel.sql("EXTRACT(MONTH FROM created_at)"))
+      .compact
+      .map(&:to_i)
+      .uniq
+      .sort
+    
+    # チケット使用データがある月を取得
+    usage_months = TicketUsage.where(used_at: selected_year_start..selected_year_end)
+      .distinct
+      .pluck(Arel.sql("EXTRACT(MONTH FROM used_at)"))
+      .compact
+      .map(&:to_i)
+      .uniq
+      .sort
+    
+    # 両方の月を結合して重複を除去
+    all_months = (ticket_months + usage_months).uniq.sort
+    
+    # データがない場合は1-12月を表示
+    if all_months.empty?
+      all_months = (1..12).to_a
     end
     
-    # セレクトタグ用の月リスト（1-12月）
-    @available_months = []
-    12.times do |i|
-      month = i + 1
-      @available_months << Date.new(2000, month, 1) # 年は2000年固定（表示用）
-    end
+    @available_months = all_months.map { |month| Date.new(2000, month, 1) }
     
     # 集計対象の範囲
     start_date = @selected_date.beginning_of_month

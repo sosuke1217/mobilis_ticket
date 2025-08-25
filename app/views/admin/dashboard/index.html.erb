@@ -100,7 +100,8 @@ document.addEventListener('DOMContentLoaded', function() {
   const yearSelect = document.getElementById('year-select');
   if (yearSelect) {
     yearSelect.addEventListener('change', function() {
-      updateMonthOptions();
+      // 年が変更されたら月のオプションを動的に更新
+      loadMonthOptionsForYear(yearSelect.value);
       highlightSubmitButton('年変更後');
     });
   }
@@ -114,7 +115,63 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-// 月のオプションを更新
+// 年が変更されたときに月のオプションを動的に読み込む
+function loadMonthOptionsForYear(selectedYear) {
+  const monthSelect = document.getElementById('month-select');
+  if (!monthSelect) return;
+  
+  // 月のオプションをクリア
+  monthSelect.innerHTML = '';
+  
+  // 選択された年でデータがある月を取得するAPIを呼び出す
+  fetch(`/admin/dashboard/month_options?year=${selectedYear}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.success && data.months.length > 0) {
+        // データがある月を表示
+        data.months.forEach(month => {
+          const option = document.createElement('option');
+          option.value = month.toString().padStart(2, '0');
+          option.textContent = month + '月';
+          monthSelect.appendChild(option);
+        });
+        
+        // 適切な月を選択
+        const currentYear = new Date().getFullYear().toString();
+        const currentMonth = (new Date().getMonth() + 1).toString().padStart(2, '0');
+        
+        if (selectedYear === currentYear) {
+          monthSelect.value = currentMonth;
+        } else {
+          monthSelect.value = data.months[0].toString().padStart(2, '0');
+        }
+      } else {
+        // データがない場合は1-12月を表示
+        for (let month = 1; month <= 12; month++) {
+          const option = document.createElement('option');
+          option.value = month.toString().padStart(2, '0');
+          option.textContent = month + '月';
+          monthSelect.appendChild(option);
+        }
+        
+        // 1月を選択
+        monthSelect.value = '01';
+      }
+    })
+    .catch(error => {
+      console.error('月のオプション取得エラー:', error);
+      // エラーの場合は1-12月を表示
+      for (let month = 1; month <= 12; month++) {
+        const option = document.createElement('option');
+        option.value = month.toString().padStart(2, '0');
+        option.textContent = month + '月';
+        monthSelect.appendChild(option);
+      }
+      monthSelect.value = '01';
+    });
+}
+
+// 月のオプションを更新（初期表示用）
 function updateMonthOptions() {
   const yearSelect = document.getElementById('year-select');
   const monthSelect = document.getElementById('month-select');

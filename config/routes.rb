@@ -8,6 +8,7 @@ Rails.application.routes.draw do
   namespace :admin do
     # ダッシュボード
     get 'dashboard', to: 'dashboard#index'
+    get 'dashboard/month_options', to: 'dashboard#month_options'
     
     # 管理者ルート
     root to: 'dashboard#index'
