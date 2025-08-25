@@ -32,39 +32,47 @@ class Admin::DashboardController < ApplicationController
   private
 
   def setup_ticket_statistics
-    # 月選択（パラメータがない場合は今月）
-    @selected_month = if params[:month].present?
+    # 年と月の選択（パラメータがない場合は今月）
+    @selected_year = if params[:year].present?
       begin
-        Date.strptime(params[:month], "%Y-%m")
+        Date.strptime(params[:year], "%Y")
       rescue ArgumentError
-        Time.zone.today.beginning_of_month
+        Time.zone.today.year
       end
     else
-      Time.zone.today.beginning_of_month
+      Time.zone.today.year
     end
+    
+    @selected_month = if params[:month].present?
+      begin
+        Date.strptime(params[:month], "%m")
+      rescue ArgumentError
+        Time.zone.today.month
+      end
+    else
+      Time.zone.today.month
+    end
+    
+    # 選択された年月でDateオブジェクトを作成
+    @selected_date = Date.new(@selected_year, @selected_month, 1)
   
-    # セレクトタグ用の月リスト（過去12ヶ月分を生成）
-    @available_months = []
-    
-    # 過去12ヶ月分の月を生成
-    12.times do |i|
-      month = Time.zone.today.beginning_of_month - i.months
-      @available_months << month
+    # セレクトタグ用の年リスト（過去5年分）
+    @available_years = []
+    5.times do |i|
+      year = Time.zone.today.year - i
+      @available_years << Date.new(year, 1, 1)
     end
     
-    # データベースから実際にデータがある月も追加
-    db_months = TicketUsage.distinct
-      .pluck(Arel.sql("TO_CHAR(used_at, 'YYYY-MM')"))
-      .compact
-      .map { |m| Date.strptime(m, "%Y-%m") }
-      .uniq
-    
-    # 重複を除去してソート
-    @available_months = (@available_months + db_months).uniq.sort.reverse
+    # セレクトタグ用の月リスト（1-12月）
+    @available_months = []
+    12.times do |i|
+      month = i + 1
+      @available_months << Date.new(2000, month, 1) # 年は2000年固定（表示用）
+    end
     
     # 集計対象の範囲
-    start_date = @selected_month.beginning_of_month
-    end_date = @selected_month.end_of_month
+    start_date = @selected_date.beginning_of_month
+    end_date = @selected_date.end_of_month
     
     @monthly_issued_tickets = Ticket
       .includes(:ticket_template, :user)

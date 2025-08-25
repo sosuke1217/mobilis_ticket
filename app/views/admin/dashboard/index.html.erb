@@ -8,12 +8,20 @@
       <%= form_with url: admin_root_path, method: :get, local: true, id: "month-select-form" do %>
         <div class="row g-3 align-items-end mb-4">
           <div class="col-auto">
+            <%= label_tag :year, "年を選択", class: "form-label" %>
+            <%= select_tag :year,
+                  options_for_select(@available_years.map { |y| [y.strftime("%Y年"), y.strftime("%Y")] }, @selected_year.strftime("%Y")),
+                  class: "form-select",
+                  id: "year-select",
+                  onchange: "updateMonthOptions();" %>
+          </div>
+          <div class="col-auto">
             <%= label_tag :month, "月を選択", class: "form-label" %>
             <%= select_tag :month,
-                  options_for_select(@available_months.map { |m| [m.strftime("%Y年%m月"), m.strftime("%Y-%m")] }, @selected_month.strftime("%Y-%m")),
+                  options_for_select(@available_months.map { |m| [m.strftime("%m月"), m.strftime("%m")] }, @selected_month.strftime("%m")),
                   class: "form-select",
                   id: "month-select",
-                  onchange: "document.getElementById('month-select-form').submit();" %>
+                  onchange: "submitForm();" %>
           </div>
           <div class="col-auto">
             <%= submit_tag "表示", class: "btn btn-primary", id: "submit-btn" %>
@@ -78,19 +86,62 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  // 初期設定
+  updateMonthOptions();
+  
+  // 年選択が変更されたときの処理
+  const yearSelect = document.getElementById('year-select');
+  if (yearSelect) {
+    yearSelect.addEventListener('change', function() {
+      updateMonthOptions();
+    });
+  }
+  
   // 月選択が変更されたときの処理
   const monthSelect = document.getElementById('month-select');
   if (monthSelect) {
     monthSelect.addEventListener('change', function() {
-      // フォームを自動送信
-      document.getElementById('month-select-form').submit();
+      submitForm();
     });
   }
-  
-  // 選択された月をハイライト
-  const selectedMonth = '<%= @selected_month.strftime("%Y-%m") %>';
-  if (monthSelect && selectedMonth) {
-    monthSelect.value = selectedMonth;
-  }
 });
+
+// 月のオプションを更新
+function updateMonthOptions() {
+  const yearSelect = document.getElementById('year-select');
+  const monthSelect = document.getElementById('month-select');
+  
+  if (!yearSelect || !monthSelect) return;
+  
+  const selectedYear = yearSelect.value;
+  const currentYear = new Date().getFullYear().toString();
+  const currentMonth = (new Date().getMonth() + 1).toString().padStart(2, '0');
+  
+  // 月のオプションをクリア
+  monthSelect.innerHTML = '';
+  
+  // 選択された年が現在の年の場合、現在の月までしか選択できない
+  const maxMonth = (selectedYear === currentYear) ? parseInt(currentMonth) : 12;
+  
+  for (let month = 1; month <= maxMonth; month++) {
+    const option = document.createElement('option');
+    option.value = month.toString().padStart(2, '0');
+    option.textContent = month + '月';
+    
+    // 現在の年月が選択されている場合は選択状態にする
+    if (selectedYear === currentYear && month.toString().padStart(2, '0') === currentMonth) {
+      option.selected = true;
+    }
+    
+    monthSelect.appendChild(option);
+  }
+  
+  // フォームを送信
+  submitForm();
+}
+
+// フォームを送信
+function submitForm() {
+  document.getElementById('month-select-form').submit();
+}
 </script>
