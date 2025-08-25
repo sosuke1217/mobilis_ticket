@@ -27,6 +27,14 @@
             <%= submit_tag "表示", class: "btn btn-primary", id: "submit-btn" %>
           </div>
         </div>
+        <div class="row mb-3">
+          <div class="col-12">
+            <small class="text-muted">
+              <i class="fas fa-info-circle me-1"></i>
+              年を変更した場合は「表示」ボタンを押してください。月を変更した場合は自動的に更新されます。
+            </small>
+          </div>
+        </div>
       <% end %>
 
       <div class="row mb-4">
@@ -94,6 +102,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (yearSelect) {
     yearSelect.addEventListener('change', function() {
       updateMonthOptions();
+      // 年選択時は自動送信しない
     });
   }
   
@@ -110,6 +119,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function updateMonthOptions() {
   const yearSelect = document.getElementById('year-select');
   const monthSelect = document.getElementById('month-select');
+  const submitBtn = document.getElementById('submit-btn');
   
   if (!yearSelect || !monthSelect) return;
   
@@ -136,18 +146,27 @@ function updateMonthOptions() {
     monthSelect.appendChild(option);
   }
   
-  // 年が変更された場合は、適切な月を選択してからフォームを送信
-  // 現在の年が選択された場合は現在の月、過去の年の場合は1月を選択
+  // 年が変更された場合は、適切な月を選択するだけ
+  // フォームは自動送信しない
   if (selectedYear === currentYear) {
     monthSelect.value = currentMonth;
   } else {
     monthSelect.value = '01'; // 過去の年は1月を選択
   }
   
-  // 少し遅延を入れてからフォームを送信（UIの更新を待つ）
-  setTimeout(function() {
-    submitForm();
-  }, 100);
+  // 年が変更された場合は「表示」ボタンを強調表示
+  if (submitBtn) {
+    submitBtn.classList.add('btn-warning');
+    submitBtn.classList.remove('btn-primary');
+    submitBtn.textContent = '表示（年変更後）';
+    
+    // 月が変更されたら元の状態に戻す
+    monthSelect.addEventListener('change', function() {
+      submitBtn.classList.remove('btn-warning');
+      submitBtn.classList.add('btn-primary');
+      submitBtn.textContent = '表示';
+    }, { once: true });
+  }
 }
 
 // フォームを送信
