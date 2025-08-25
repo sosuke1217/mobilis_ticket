@@ -1446,12 +1446,24 @@ function showMessage(message, type = 'info') {
             const modal = document.getElementById('bookingModal');
             modal.style.display = 'block';
             
-            // モーダルが開かれた後に外側クリックで閉じる機能を再設定
+            // 既存のイベントリスナーを削除してから新しく追加
             console.log('🔧 Re-setting up click outside for booking modal...');
-            modal.addEventListener('click', function(event) {
+            
+            // 既存のイベントリスナーを削除（cloneNodeで新しい要素を作成）
+            const newModal = modal.cloneNode(true);
+            modal.parentNode.replaceChild(newModal, modal);
+            
+            // 新しいモーダル要素を取得
+            const freshModal = document.getElementById('bookingModal');
+            
+            // 外側クリックで閉じる機能を設定
+            freshModal.addEventListener('click', function(event) {
                 console.log('🎯 bookingModal clicked after opening, target:', event.target);
-                console.log('🎯 modal element:', modal);
-                if (event.target === modal) {
+                console.log('🎯 modal element:', freshModal);
+                console.log('🎯 target === modal:', event.target === freshModal);
+                console.log('🎯 target classList:', event.target.classList);
+                
+                if (event.target === freshModal) {
                     console.log('✅ Closing bookingModal via click outside after opening');
                     closeBookingModal();
                 }
