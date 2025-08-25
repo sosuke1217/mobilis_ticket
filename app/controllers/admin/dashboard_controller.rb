@@ -35,7 +35,7 @@ class Admin::DashboardController < ApplicationController
     # 年と月の選択（パラメータがない場合は今月）
     @selected_year = if params[:year].present?
       begin
-        Date.strptime(params[:year], "%Y")
+        params[:year].to_i
       rescue ArgumentError
         Time.zone.today.year
       end
@@ -45,7 +45,7 @@ class Admin::DashboardController < ApplicationController
     
     @selected_month = if params[:month].present?
       begin
-        Date.strptime(params[:month], "%m")
+        params[:month].to_i
       rescue ArgumentError
         Time.zone.today.month
       end

@@ -10,7 +10,7 @@
           <div class="col-auto">
             <%= label_tag :year, "年を選択", class: "form-label" %>
             <%= select_tag :year,
-                  options_for_select(@available_years.map { |y| [y.strftime("%Y年"), y.strftime("%Y")] }, @selected_year.strftime("%Y")),
+                  options_for_select(@available_years.map { |y| [y.strftime("%Y年"), y.strftime("%Y")] }, @selected_year.to_s),
                   class: "form-select",
                   id: "year-select",
                   onchange: "updateMonthOptions();" %>
@@ -18,7 +18,7 @@
           <div class="col-auto">
             <%= label_tag :month, "月を選択", class: "form-label" %>
             <%= select_tag :month,
-                  options_for_select(@available_months.map { |m| [m.strftime("%m月"), m.strftime("%m")] }, @selected_month.strftime("%m")),
+                  options_for_select(@available_months.map { |m| [m.strftime("%m月"), m.strftime("%m")] }, @selected_month.to_s.rjust(2, '0')),
                   class: "form-select",
                   id: "month-select",
                   onchange: "submitForm();" %>
