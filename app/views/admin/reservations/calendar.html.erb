@@ -340,7 +340,10 @@
                     
                     <div class="form-group mb-3">
                         <label for="bulkStartTime" class="form-label">開始時間</label>
-                        <input type="time" id="bulkStartTime" class="form-control" required>
+                        <select id="bulkStartTime" class="form-select" required>
+                            <option value="">時間を選択してください</option>
+                            <!-- 10分刻みの時間オプションはJavaScriptで動的に生成 -->
+                        </select>
                     </div>
                     
                     <div class="form-group mb-3">
@@ -3956,12 +3959,39 @@ function showMessage(message, type = 'info') {
             }
         }
 
+        // 10分刻みの時間オプションを生成する関数
+        function generateTimeOptions() {
+            const timeSelect = document.getElementById('bulkStartTime');
+            if (!timeSelect) return;
+            
+            // 既存のオプションをクリア（最初のプレースホルダーは残す）
+            while (timeSelect.children.length > 1) {
+                timeSelect.removeChild(timeSelect.lastChild);
+            }
+            
+            // 10:00から19:50まで10分刻みで生成
+            for (let hour = 10; hour < 20; hour++) {
+                for (let minute = 0; minute < 60; minute += 10) {
+                    if (hour === 19 && minute > 50) break; // 19:50まで
+                    
+                    const timeValue = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                    const option = document.createElement('option');
+                    option.value = timeValue;
+                    option.textContent = timeValue;
+                    timeSelect.appendChild(option);
+                }
+            }
+        }
+
         // 一括予約作成モーダルを開く
         function openBulkReservationModal() {
             console.log('🔍 Opening bulk reservation modal...');
             
             // フォームをリセット（最初に実行）
             document.getElementById('bulkReservationForm').reset();
+            
+            // 10分刻みの時間オプションを生成
+            generateTimeOptions();
             
             // 現在の日付を設定
             const bulkCurrentDate = new Date();
@@ -3974,9 +4004,25 @@ function showMessage(message, type = 'info') {
             const endDateValue = nextWeek.toISOString().split('T')[0];
             document.getElementById('bulkEndDate').value = endDateValue;
             
-            // 現在時刻を設定（15分刻みでシステム設定に合わせる）
-            const currentTime = `${String(bulkCurrentDate.getHours()).padStart(2, '0')}:${String(Math.floor(bulkCurrentDate.getMinutes() / 15) * 15).padStart(2, '0')}`;
-            document.getElementById('bulkStartTime').value = currentTime;
+            // 現在時刻を設定（10分刻みで最も近い時間を選択）
+            const currentHour = bulkCurrentDate.getHours();
+            const currentMinute = bulkCurrentDate.getMinutes();
+            const roundedMinute = Math.floor(currentMinute / 10) * 10;
+            const currentTime = `${String(currentHour).padStart(2, '0')}:${String(roundedMinute).padStart(2, '0')}`;
+            
+            // 生成された時間オプションから最も近い時間を選択
+            const timeSelect = document.getElementById('bulkStartTime');
+            if (timeSelect) {
+                // 現在時刻が営業時間外の場合は10:00をデフォルトに
+                if (currentHour < 10) {
+                    timeSelect.value = '10:00';
+                } else if (currentHour >= 20) {
+                    timeSelect.value = '19:50';
+                } else {
+                    // 営業時間内の場合は最も近い時間を選択
+                    timeSelect.value = currentTime;
+                }
+            }
             
             // 曜日チェックボックスを全てチェック
             document.querySelectorAll('#bulkDaysOfWeek input[type="checkbox"]').forEach(checkbox => {
@@ -3991,7 +4037,7 @@ function showMessage(message, type = 'info') {
             console.log('🔍 Modal initialized with:', {
                 startDate: startDateValue,
                 endDate: endDateValue,
-                startTime: currentTime,
+                startTime: timeSelect ? timeSelect.value : currentTime,
                 selectedDays: Array.from(document.querySelectorAll('#bulkDaysOfWeek input[type="checkbox"]:checked')).map(cb => cb.value)
             });
             
