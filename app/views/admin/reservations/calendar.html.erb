@@ -953,6 +953,12 @@
                         
                         // 履歴情報を再読み込み
                         loadReservationHistoryForUser(window.currentUserId);
+                        
+                        // その日以降の予約を新しいユーザーで再読み込み
+                        const reservationDate = updatedReservation.date || updatedReservation.start_time?.split('T')[0];
+                        if (reservationDate) {
+                            loadFutureReservations(reservationDate, window.currentUserId);
+                        }
                     } else {
                         console.log('🔍 No user change detected or window.currentUserId not set');
                     }
@@ -2164,6 +2170,12 @@
                     
                     // チケットと履歴を新しいユーザーで更新
                     loadTicketsAndHistoryForUser(updatedUser.id);
+                    
+                    // その日以降の予約を新しいユーザーで再読み込み
+                    const reservationDate = currentReservation.date || currentReservation.start_time?.split('T')[0];
+                    if (reservationDate) {
+                        loadFutureReservations(reservationDate, updatedUser.id);
+                    }
                     
                     // モーダルを閉じる
                     closeUserSelectionModal();
@@ -5949,7 +5961,7 @@ function showMessage(message, type = 'info') {
                     
                     <!-- その日以降の予約 -->
                     <div class="future-reservations-section">
-                        <div class="section-title">📅 その日以降の予約</div>
+                        <div class="section-title" id="future-reservations-title">📅 その日以降の予約</div>
                         <div class="future-reservations-content" id="future-reservations-content">
                             <div class="loading" style="color: #6c757d !important; font-size: 14px !important; text-align: center !important; padding: 20px !important; font-style: italic !important;">読み込み中...</div>
                         </div>
@@ -6035,7 +6047,9 @@ function showMessage(message, type = 'info') {
             // その日以降の予約を読み込み
             const reservationDate = latestReservation.date || latestReservation.start_time?.split('T')[0];
             if (reservationDate) {
-                loadFutureReservations(reservationDate);
+                // ユーザーIDがある場合は、そのユーザーの予約のみを表示
+                const userId = latestReservation.userId;
+                loadFutureReservations(reservationDate, userId);
             }
 
             // チケットと予約履歴を読み込み（ユーザーIDベース）
@@ -6145,12 +6159,22 @@ function showMessage(message, type = 'info') {
             }
         }
 
-        // その日以降の予約を読み込み
-        function loadFutureReservations(reservationDate) {
+        // その日以降の予約を読み込み（特定ユーザーのみ）
+        function loadFutureReservations(reservationDate, userId = null) {
             const futureReservationsContent = document.getElementById('future-reservations-content');
+            const futureReservationsTitle = document.getElementById('future-reservations-title');
             if (!futureReservationsContent) {
                 console.error('❌ Future reservations content element not found');
                 return;
+            }
+            
+            // セクションタイトルを更新
+            if (futureReservationsTitle) {
+                if (userId) {
+                    futureReservationsTitle.textContent = '📅 このお客様のその日以降の予約';
+                } else {
+                    futureReservationsTitle.textContent = '📅 その日以降の予約';
+                }
             }
 
             // 予約日付をDateオブジェクトに変換
@@ -6161,15 +6185,25 @@ function showMessage(message, type = 'info') {
                 return;
             }
 
-            // その日以降の予約をフィルタリング
+            // その日以降の予約をフィルタリング（特定ユーザーのみ）
             const futureReservations = [];
             for (const [dateKey, dayReservations] of Object.entries(reservations)) {
                 const dayDate = new Date(dateKey);
                 if (dayDate >= targetDate) {
-                    // 現在の予約は除外
-                    const filteredReservations = dayReservations.filter(r => 
-                        r.id !== currentReservation?.id
-                    );
+                    // 現在の予約は除外し、特定ユーザーの予約のみをフィルタリング
+                    const filteredReservations = dayReservations.filter(r => {
+                        // 現在の予約は除外
+                        if (r.id === currentReservation?.id) {
+                            return false;
+                        }
+                        
+                        // ユーザーIDが指定されている場合は、そのユーザーの予約のみ
+                        if (userId && r.userId !== userId) {
+                            return false;
+                        }
+                        
+                        return true;
+                    });
                     futureReservations.push(...filteredReservations);
                 }
             }
@@ -6185,7 +6219,8 @@ function showMessage(message, type = 'info') {
             const limitedReservations = futureReservations.slice(0, 10);
 
             if (limitedReservations.length === 0) {
-                futureReservationsContent.innerHTML = '<div class="no-data" style="color: #6c757d !important; font-size: 14px !important; text-align: center !important; padding: 20px !important; font-style: italic !important; background: #f8f9fa !important; border-radius: 6px !important; border: 1px dashed #dee2e6 !important;">その日以降の予約はありません</div>';
+                const message = userId ? 'このお客様のその日以降の予約はありません' : 'その日以降の予約はありません';
+                futureReservationsContent.innerHTML = `<div class="no-data" style="color: #6c757d !important; font-size: 14px !important; text-align: center !important; padding: 20px !important; font-style: italic !important; background: #f8f9fa !important; border-radius: 6px !important; border: 1px dashed #dee2e6 !important;">${message}</div>`;
                 return;
             }
 
