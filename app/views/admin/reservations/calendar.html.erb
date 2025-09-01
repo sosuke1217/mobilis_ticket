@@ -1750,7 +1750,7 @@
                     console.log('🚫 Overlap detected with reservation:', existingReservation.id);
                     return { 
                         valid: false, 
-                        message: `予約時間が既存の予約（${existingReservation.customer}様）と重複するため、この設定はできません。` 
+                        message: `予約時間が既存の予約（${(existingReservation.customer || '').replace(/[`\\]/g, '')}様）と重複するため、この設定はできません。` 
                     };
                 }
             }
@@ -3000,7 +3000,7 @@
                         const affectedReservations = await checkRecurringScheduleImpact(day, '00:00', '00:00');
                         if (affectedReservations.length > 0) {
                             const dayName = ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'][day];
-                            const reservationList = affectedReservations.map(r => `${r.customer}様 (${r.date} ${r.time})`).join(', ');
+                            const reservationList = affectedReservations.map(r => `${(r.customer || '').replace(/[`\\]/g, '')}様 (${r.date} ${r.time})`).join(', ');
                             
                             showMessage(`${dayName}を休業日にすることはできません。以下の予約があります: ${reservationList}`, 'error');
                             return; // Don't proceed with the toggle
@@ -3015,7 +3015,7 @@
                     const affectedReservations = checkCurrentWeekReservationsForDay(day);
                     if (affectedReservations.length > 0) {
                         const dayName = ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'][day];
-                        const reservationList = affectedReservations.map(r => `${r.customer}様 (${r.time})`).join(', ');
+                        const reservationList = affectedReservations.map(r => `${(r.customer || '').replace(/[`\\]/g, '')}様 (${r.time})`).join(', ');
                         
                         showMessage(`${dayName}を休業日にすることはできません。以下の予約があります: ${reservationList}`, 'error');
                         return; // Don't proceed with the toggle
@@ -3171,7 +3171,7 @@
                         const affectedReservations = await checkRecurringScheduleImpact(day, startTime, endTime);
                         if (affectedReservations.length > 0) {
                             const dayName = ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'][day];
-                            const reservationList = affectedReservations.map(r => `${r.customer}様 (${r.date} ${r.time})`).join(', ');
+                            const reservationList = affectedReservations.map(r => `${(r.customer || '').replace(/[`\\]/g, '')}様 (${r.date} ${r.time})`).join(', ');
                             
                             showMessage(`${dayName}の営業時間変更により、以下の予約が営業時間外になります: ${reservationList}`, 'error');
                             
@@ -6595,7 +6595,8 @@ function showMessage(message, type = 'info') {
             
             console.log('✅ 予約ID確認:', currentReservation.id);
             
-            const confirmed = confirm(`この予約を完全に削除しますか？\n\nお客様: ${currentReservation.customer}\n日時: ${currentReservation.time}\nコース: ${currentReservation.duration}分\n\nこの操作は取り消せません。`);
+            const confirmMessage = `この予約を完全に削除しますか？\n\nお客様: ${(currentReservation.customer || '').replace(/[`\\]/g, '')}\n日時: ${currentReservation.time}\nコース: ${currentReservation.duration}分\n\nこの操作は取り消せません。`;
+            const confirmed = confirm(confirmMessage);
             
             if (!confirmed) {
                 return;
@@ -6736,7 +6737,8 @@ function showMessage(message, type = 'info') {
                 return;
             }
             
-            const confirmed = confirm(`この予約を完全に削除しますか？\n\nお客様: ${currentReservation.customer}\n日時: ${currentReservation.time}\nコース: ${currentReservation.duration}分\n\nこの操作は取り消せません。`);
+            const confirmMessage = `この予約を完全に削除しますか？\n\nお客様: ${(currentReservation.customer || '').replace(/[`\\]/g, '')}\n日時: ${currentReservation.time}\nコース: ${currentReservation.duration}分\n\nこの操作は取り消せません。`;
+            const confirmed = confirm(confirmMessage);
             
             if (!confirmed) {
                 return;
