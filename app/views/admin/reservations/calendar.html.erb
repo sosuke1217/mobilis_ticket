@@ -6157,11 +6157,27 @@ function showMessage(message, type = 'info') {
                 return;
             }
 
-            // Sort tickets by newest first (assuming created_at or issued_at field exists)
+            // 回数券をソート：残っている回数券を優先、使い終わった回数券を一番下に
             const sortedTickets = tickets.sort((a, b) => {
-                const dateA = new Date(a.created_at || a.issued_at || a.expires_at || 0);
-                const dateB = new Date(b.created_at || b.issued_at || b.expires_at || 0);
-                return dateB - dateA; // Newest first
+                // まず残数を比較（残数 > 0 を優先）
+                if (a.remaining > 0 && b.remaining === 0) return -1;
+                if (a.remaining === 0 && b.remaining > 0) return 1;
+                
+                // 残数が同じ場合は、有効期限が近い順（残数がある場合）
+                if (a.remaining > 0 && b.remaining > 0) {
+                    const dateA = new Date(a.expires_at || 0);
+                    const dateB = new Date(b.expires_at || 0);
+                    return dateA - dateB; // 有効期限が近い順
+                }
+                
+                // 使い終わった回数券は作成日時が新しい順
+                if (a.remaining === 0 && b.remaining === 0) {
+                    const dateA = new Date(a.created_at || a.issued_at || 0);
+                    const dateB = new Date(b.created_at || b.issued_at || 0);
+                    return dateB - dateA; // 新しい順
+                }
+                
+                return 0;
             });
 
             // Limit to 5 tickets like the original
@@ -6187,8 +6203,6 @@ function showMessage(message, type = 'info') {
 
         // チケット情報を表示
         function displayTickets(tickets) {
-
-            
             const ticketsContent = document.getElementById('tickets-content');
             if (!ticketsContent) {
                 console.error('❌ Tickets content element not found in displayTickets');
@@ -6201,13 +6215,32 @@ function showMessage(message, type = 'info') {
                 return;
             }
 
+            // 回数券をソート：残っている回数券を優先、使い終わった回数券を一番下に
+            const sortedTickets = tickets.sort((a, b) => {
+                // まず残数を比較（残数 > 0 を優先）
+                if (a.remaining_count > 0 && b.remaining_count === 0) return -1;
+                if (a.remaining_count === 0 && b.remaining_count > 0) return 1;
+                
+                // 残数が同じ場合は、有効期限が近い順（残数がある場合）
+                if (a.remaining_count > 0 && b.remaining_count > 0) {
+                    const dateA = new Date(a.expiry_date || 0);
+                    const dateB = new Date(b.expiry_date || 0);
+                    return dateA - dateB; // 有効期限が近い順
+                }
+                
+                // 使い終わった回数券は作成日時が新しい順
+                if (a.remaining_count === 0 && b.remaining_count === 0) {
+                    const dateA = new Date(a.created_at || 0);
+                    const dateB = new Date(b.created_at || 0);
+                    return dateB - dateA; // 新しい順
+                }
+                
+                return 0;
+            });
 
-            
-            const ticketsHtml = tickets.map(ticket => {
+            const ticketsHtml = sortedTickets.map(ticket => {
                 const isExpired = ticket.remaining_count === 0 || new Date(ticket.expiry_date) < new Date();
                 const expiryDate = new Date(ticket.expiry_date).toLocaleDateString('ja-JP');
-                
-
                 
                 return `
                     <div class="ticket-item ${isExpired ? 'expired' : ''}">
@@ -6215,11 +6248,10 @@ function showMessage(message, type = 'info') {
                         <div class="ticket-info">
                             <div class="ticket-name">${ticket.ticket_template_name}</div>
                             <div class="ticket-details">残${ticket.remaining_count}${ticket.unit_type} / 有効期限:${expiryDate}</div>
-          </div>
-        </div>
-      `;
+                        </div>
+                    </div>
+                `;
             }).join('');
-
 
             ticketsContent.innerHTML = ticketsHtml;
         }
