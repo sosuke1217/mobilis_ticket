@@ -6168,23 +6168,32 @@ function showMessage(message, type = 'info') {
                 }
             }
 
-            // 本日の日付を取得（時間は00:00:00に設定）
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
+            // 本日の日付を取得（複数の方法で）
+            const now = new Date();
+            
+            // 方法1: ローカル時間での本日
+            const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            
+            // 方法2: UTC時間での本日
+            const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+            
+            // 方法3: 文字列形式での本日（YYYY-MM-DD）
+            const todayString = now.toISOString().split('T')[0];
             
             // デバッグ用：日付の詳細情報をログ出力
-            console.log('📅 Today\'s date for filtering:', {
-                fullDate: today,
-                isoString: today.toISOString(),
-                dateString: today.toISOString().split('T')[0],
-                year: today.getFullYear(),
-                month: today.getMonth() + 1,
-                day: today.getDate(),
-                timezone: today.getTimezoneOffset()
+            console.log('📅 Date calculation for filtering:', {
+                now: now,
+                todayLocal: todayLocal,
+                todayUTC: todayUTC,
+                todayString: todayString,
+                localYear: now.getFullYear(),
+                localMonth: now.getMonth() + 1,
+                localDay: now.getDate(),
+                utcYear: now.getUTCFullYear(),
+                utcMonth: now.getUTCMonth() + 1,
+                utcDay: now.getUTCDate(),
+                timezone: now.getTimezoneOffset()
             });
-            
-            // 本日の日付を文字列形式でも取得（比較用）
-            const todayString = today.toISOString().split('T')[0];
 
             // 本日以降の予約をフィルタリング（特定ユーザーのみ）
             const futureReservations = [];
@@ -6193,21 +6202,41 @@ function showMessage(message, type = 'info') {
             for (const [dateKey, dayReservations] of Object.entries(reservations)) {
                 const dayDate = new Date(dateKey);
                 const dayDateString = dayDate.toISOString().split('T')[0];
-                const isTodayOrLater = dayDate >= today;
+                
+                // 複数の比較方法で本日以降かチェック
+                const isTodayOrLaterLocal = dayDate >= todayLocal;
+                const isTodayOrLaterUTC = dayDate >= todayUTC;
                 const isTodayOrLaterString = dayDateString >= todayString;
+                
+                // 文字列比較の詳細（デバッグ用）
+                const stringComparison = {
+                    dayDateString,
+                    todayString,
+                    isGreaterOrEqual: dayDateString >= todayString,
+                    dayParts: dayDateString.split('-').map(Number),
+                    todayParts: todayString.split('-').map(Number)
+                };
+                
+                // いずれかの方法で本日以降と判定された場合は含める
+                const isTodayOrLater = isTodayOrLaterLocal || isTodayOrLaterUTC || isTodayOrLaterString;
+                
+                console.log('🔍 String comparison details:', stringComparison);
                 
                 console.log('🔍 Checking date:', {
                     dateKey,
                     dayDate,
                     dayDateString,
-                    isTodayOrLater,
+                    isTodayOrLaterLocal,
+                    isTodayOrLaterUTC,
                     isTodayOrLaterString,
+                    isTodayOrLater,
                     todayString,
+                    todayLocal: todayLocal.toISOString().split('T')[0],
+                    todayUTC: todayUTC.toISOString().split('T')[0],
                     hasReservations: dayReservations ? dayReservations.length : 0
                 });
                 
-                // 日付オブジェクトと文字列の両方で比較（より確実に）
-                if (isTodayOrLater && isTodayOrLaterString) {
+                if (isTodayOrLater) {
                     // 現在の予約は除外し、特定ユーザーの予約のみをフィルタリング
                     const filteredReservations = dayReservations.filter(r => {
                         // 現在の予約は除外
@@ -6259,6 +6288,17 @@ function showMessage(message, type = 'info') {
                 const displayTime = reservation.time || reservation.start_time?.split('T')[1]?.substring(0, 5) || '時間未定';
                 const statusIcon = reservation.status === 'confirmed' ? '✓' : reservation.status === 'tentative' ? '⏳' : '❓';
                 const statusText = reservation.status === 'confirmed' ? '確定' : reservation.status === 'tentative' ? '仮予約' : reservation.status;
+                
+                // デバッグ用：表示される予約の詳細
+                console.log('📋 Displaying reservation:', {
+                    id: reservation.id,
+                    customer: reservation.customer,
+                    date: reservation.date,
+                    start_time: reservation.start_time,
+                    reservationDate: reservationDate,
+                    displayDate,
+                    displayTime
+                });
                 
                 return `
                     <div class="future-reservation-item" style="background: #ffffff !important; border: 1px solid #e9ecef !important; border-radius: 6px !important; padding: 8px 12px !important; margin-bottom: 8px !important; display: flex !important; justify-content: space-between !important; align-items: center !important;">
