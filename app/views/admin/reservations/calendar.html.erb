@@ -1447,10 +1447,34 @@
                         const newStartInMinutes = newStartHour * 60 + newStartMin;
                         const newEndInMinutes = newEndHour * 60 + newEndMin;
                         
-                        // 予約が新しい営業時間外になるかチェック
+                        // 予約が新しい営業時間外になるかチェック（より柔軟な判定）
                         const isStartTimeBefore = startTimeInMinutes < newStartInMinutes;
                         const isEndTimeAfter = endTimeInMinutes > newEndInMinutes;
-                        const isAffected = isStartTimeBefore || isEndTimeAfter;
+                        
+                        // 現在の営業時間を基準として変更の方向性をチェック
+                        const currentStartTime = defaultSchedule[dayOfWeek]?.times?.[0]?.start || '09:00';
+                        const currentEndTime = defaultSchedule[dayOfWeek]?.times?.[0]?.end || '18:00';
+                        const [currentStartHour, currentStartMin] = currentStartTime.split(':').map(Number);
+                        const [currentEndHour, currentEndMin] = currentEndTime.split(':').map(Number);
+                        const currentStartInMinutes = currentStartHour * 60 + currentStartMin;
+                        const currentEndInMinutes = currentEndHour * 60 + currentEndMin;
+                        
+                        // 営業時間変更の方向性をチェック
+                        const isExpandingHours = newStartInMinutes < currentStartInMinutes || newEndInMinutes > currentEndInMinutes;
+                        const isReducingHours = newStartInMinutes > currentStartInMinutes || newEndInMinutes < currentEndInMinutes;
+                        
+                        // 営業時間を拡張する場合は、既存予約の影響を無視
+                        let isAffected = false;
+                        if (isExpandingHours) {
+                            isAffected = false; // 営業時間拡張時は影響なし
+                            console.log('✅ Business hours expanding - no reservations affected');
+                        } else if (isReducingHours) {
+                            // 営業時間短縮時のみ影響をチェック
+                            isAffected = isStartTimeBefore || isEndTimeAfter;
+                        } else {
+                            // 営業時間変更なしの場合は影響なし
+                            isAffected = false;
+                        }
                         
                         // 詳細なログ出力
                         console.log('🔍 Reservation impact check:', {
@@ -1462,12 +1486,18 @@
                             interval,
                             startTimeInMinutes,
                             endTimeInMinutes,
+                            currentStartTime,
+                            currentEndTime,
+                            currentStartInMinutes,
+                            currentEndInMinutes,
                             newStartTime,
                             newEndTime,
                             newStartInMinutes,
                             newEndInMinutes,
                             isStartTimeBefore,
                             isEndTimeAfter,
+                            isExpandingHours,
+                            isReducingHours,
                             isAffected,
                             calculatedEndTime: `${Math.floor(endTimeInMinutes / 60).toString().padStart(2, '0')}:${(endTimeInMinutes % 60).toString().padStart(2, '0')}`
                         });
