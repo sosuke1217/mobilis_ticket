@@ -954,11 +954,8 @@
                         // 履歴情報を再読み込み
                         loadReservationHistoryForUser(window.currentUserId);
                         
-                        // その日以降の予約を新しいユーザーで再読み込み
-                        const reservationDate = updatedReservation.date || updatedReservation.start_time?.split('T')[0];
-                        if (reservationDate) {
-                            loadFutureReservations(reservationDate, window.currentUserId);
-                        }
+                        // 本日以降の予約を新しいユーザーで再読み込み
+                        loadFutureReservations(window.currentUserId);
                     } else {
                         console.log('🔍 No user change detected or window.currentUserId not set');
                     }
@@ -2171,11 +2168,8 @@
                     // チケットと履歴を新しいユーザーで更新
                     loadTicketsAndHistoryForUser(updatedUser.id);
                     
-                    // その日以降の予約を新しいユーザーで再読み込み
-                    const reservationDate = currentReservation.date || currentReservation.start_time?.split('T')[0];
-                    if (reservationDate) {
-                        loadFutureReservations(reservationDate, updatedUser.id);
-                    }
+                    // 本日以降の予約を新しいユーザーで再読み込み
+                    loadFutureReservations(updatedUser.id);
                     
                     // モーダルを閉じる
                     closeUserSelectionModal();
@@ -5959,9 +5953,9 @@ function showMessage(message, type = 'info') {
                         </div>
                     </form>
                     
-                    <!-- その日以降の予約 -->
+                    <!-- 本日以降の予約 -->
                     <div class="future-reservations-section">
-                        <div class="section-title" id="future-reservations-title">📅 その日以降の予約</div>
+                        <div class="section-title" id="future-reservations-title">📅 本日以降の予約</div>
                         <div class="future-reservations-content" id="future-reservations-content">
                             <div class="loading" style="color: #6c757d !important; font-size: 14px !important; text-align: center !important; padding: 20px !important; font-style: italic !important;">読み込み中...</div>
                         </div>
@@ -6044,13 +6038,10 @@ function showMessage(message, type = 'info') {
                 }
             }, 100);
             
-            // その日以降の予約を読み込み
-            const reservationDate = latestReservation.date || latestReservation.start_time?.split('T')[0];
-            if (reservationDate) {
-                // ユーザーIDがある場合は、そのユーザーの予約のみを表示
-                const userId = latestReservation.userId;
-                loadFutureReservations(reservationDate, userId);
-            }
+            // 本日以降の予約を読み込み
+            // ユーザーIDがある場合は、そのユーザーの予約のみを表示
+            const userId = latestReservation.userId;
+            loadFutureReservations(userId);
 
             // チケットと予約履歴を読み込み（ユーザーIDベース）
             if (latestReservation.userId) {
@@ -6159,8 +6150,8 @@ function showMessage(message, type = 'info') {
             }
         }
 
-        // その日以降の予約を読み込み（特定ユーザーのみ）
-        function loadFutureReservations(reservationDate, userId = null) {
+        // 本日以降の予約を読み込み（特定ユーザーのみ）
+        function loadFutureReservations(userId = null) {
             const futureReservationsContent = document.getElementById('future-reservations-content');
             const futureReservationsTitle = document.getElementById('future-reservations-title');
             if (!futureReservationsContent) {
@@ -6171,25 +6162,22 @@ function showMessage(message, type = 'info') {
             // セクションタイトルを更新
             if (futureReservationsTitle) {
                 if (userId) {
-                    futureReservationsTitle.textContent = '📅 このお客様のその日以降の予約';
+                    futureReservationsTitle.textContent = '📅 このお客様の本日以降の予約';
                 } else {
-                    futureReservationsTitle.textContent = '📅 その日以降の予約';
+                    futureReservationsTitle.textContent = '📅 本日以降の予約';
                 }
             }
 
-            // 予約日付をDateオブジェクトに変換
-            const targetDate = new Date(reservationDate);
-            if (isNaN(targetDate.getTime())) {
-                console.error('❌ Invalid reservation date:', reservationDate);
-                futureReservationsContent.innerHTML = '<div class="no-data" style="color: #6c757d !important; font-size: 14px !important; text-align: center !important; padding: 20px !important; font-style: italic !important; background: #f8f9fa !important; border-radius: 6px !important; border: 1px dashed #dee2e6 !important;">日付が無効です</div>';
-                return;
-            }
+            // 本日の日付を取得（時間は00:00:00に設定）
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            console.log('📅 Today\'s date for filtering:', today.toISOString().split('T')[0]);
 
-            // その日以降の予約をフィルタリング（特定ユーザーのみ）
+            // 本日以降の予約をフィルタリング（特定ユーザーのみ）
             const futureReservations = [];
             for (const [dateKey, dayReservations] of Object.entries(reservations)) {
                 const dayDate = new Date(dateKey);
-                if (dayDate >= targetDate) {
+                if (dayDate >= today) {
                     // 現在の予約は除外し、特定ユーザーの予約のみをフィルタリング
                     const filteredReservations = dayReservations.filter(r => {
                         // 現在の予約は除外
@@ -6219,7 +6207,7 @@ function showMessage(message, type = 'info') {
             const limitedReservations = futureReservations.slice(0, 10);
 
             if (limitedReservations.length === 0) {
-                const message = userId ? 'このお客様のその日以降の予約はありません' : 'その日以降の予約はありません';
+                const message = userId ? 'このお客様の本日以降の予約はありません' : '本日以降の予約はありません';
                 futureReservationsContent.innerHTML = `<div class="no-data" style="color: #6c757d !important; font-size: 14px !important; text-align: center !important; padding: 20px !important; font-style: italic !important; background: #f8f9fa !important; border-radius: 6px !important; border: 1px dashed #dee2e6 !important;">${message}</div>`;
                 return;
             }
