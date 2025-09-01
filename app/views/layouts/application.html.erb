@@ -14,12 +14,65 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
-    
-    <!-- 外部CDNリソース -->
+    <!-- 外部CDNリソースを最初に読み込み -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
     <link href="https://unpkg.com/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+    
+    <!-- アプリケーションCSSを最後に読み込み -->
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    
+    <!-- ナビゲーションの初期スタイルを確実に適用 -->
+    <style>
+      /* ナビゲーションの初期スタイル（FOUC防止） */
+      .navbar {
+        min-height: 56px;
+        transition: none !important;
+        animation: none !important;
+        transform: none !important;
+      }
+      
+      .navbar-brand {
+        display: flex !important;
+        align-items: center !important;
+        font-size: 1.2rem !important;
+        font-weight: 600 !important;
+      }
+      
+      .navbar-nav {
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      
+      .nav-link {
+        padding: 0.5rem 1rem !important;
+        font-size: 0.9rem !important;
+      }
+      
+      /* ロゴの初期スタイル */
+      .navbar-logo {
+        width: 40px !important;
+        height: 40px !important;
+        object-fit: contain !important;
+        filter: brightness(0) invert(1) !important;
+        transition: none !important;
+      }
+      
+      .brand-text {
+        font-weight: 600 !important;
+        font-size: 1.2rem !important;
+      }
+      
+      /* ナビゲーションのレスポンシブ設定 */
+      @media (max-width: 991.98px) {
+        .navbar-collapse {
+          background-color: rgba(33, 37, 41, 0.95) !important;
+          border-radius: 8px !important;
+          margin-top: 10px !important;
+          padding: 15px !important;
+        }
+      }
+    </style>
   </head>
 
   <body>
@@ -145,26 +198,47 @@
           form.submit();
         }
       }
+      
+      // ナビゲーションの初期化を確実にする
+      document.addEventListener('DOMContentLoaded', function() {
+        // ナビゲーションのスタイルを確実に適用
+        const navbar = document.querySelector('.navbar');
+        if (navbar) {
+          // 初期スタイルを強制適用
+          navbar.style.minHeight = '56px';
+          navbar.style.transition = 'none';
+          navbar.style.animation = 'none';
+          navbar.style.transform = 'none';
+          
+          // 少し遅延してからトランジションを有効化
+          setTimeout(() => {
+            navbar.style.transition = 'all 0.3s ease';
+          }, 100);
+        }
+        
+        // ロゴのスタイルを確実に適用
+        const logo = document.querySelector('.navbar-logo');
+        if (logo) {
+          logo.style.width = '40px';
+          logo.style.height = '40px';
+          logo.style.objectFit = 'contain';
+          logo.style.filter = 'brightness(0) invert(1)';
+          logo.style.transition = 'none';
+          
+          // 少し遅延してからトランジションを有効化
+          setTimeout(() => {
+            logo.style.transition = 'all 0.3s ease';
+          }, 100);
+        }
+      });
     </script>
     
-    <!-- ナビゲーションロゴスタイリング -->
+    <!-- ナビゲーションロゴスタイリング（ホバー効果のみ） -->
     <style>
-      .navbar-logo {
-        width: 40px;
-        height: 40px;
-        object-fit: contain;
-        filter: brightness(0) invert(1);
-        transition: all 0.3s ease;
-      }
-      
       .navbar-brand:hover .navbar-logo {
         transform: scale(1.1);
         filter: brightness(0) invert(1) drop-shadow(0 2px 4px rgba(255, 255, 255, 0.3));
-      }
-      
-      .brand-text {
-        font-weight: 600;
-        font-size: 1.2rem;
+        transition: all 0.3s ease;
       }
     </style>
     

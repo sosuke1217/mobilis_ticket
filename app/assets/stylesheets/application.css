@@ -14,6 +14,44 @@
  *= require_self
  */
 
+/* ナビゲーションのFOUC問題を完全に解決 */
+.navbar {
+  min-height: 56px !important;
+  transition: none !important;
+  animation: none !important;
+  transform: none !important;
+}
+
+.navbar-brand {
+  display: flex !important;
+  align-items: center !important;
+  font-size: 1.2rem !important;
+  font-weight: 600 !important;
+}
+
+.navbar-nav {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.nav-link {
+  padding: 0.5rem 1rem !important;
+  font-size: 0.9rem !important;
+}
+
+.navbar-logo {
+  width: 40px !important;
+  height: 40px !important;
+  object-fit: contain !important;
+  filter: brightness(0) invert(1) !important;
+  transition: none !important;
+}
+
+.brand-text {
+  font-weight: 600 !important;
+  font-size: 1.2rem !important;
+}
+
 /* グローバルテキスト入力スタイル修正 - 入力フィールドのみに限定 */
 input[type="text"],
 input[type="email"],
