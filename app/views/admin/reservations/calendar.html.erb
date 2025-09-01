@@ -4595,7 +4595,11 @@ function showMessage(message, type = 'info') {
                 // 日付テキストで検索
                 dayCell = Array.from(calendarCells).find(cell => {
                     const cellText = cell.textContent || '';
-                    const datePattern = new RegExp(`${year}年?${month}月?${day}日?|${month}/${day}|${month}-${day}`);
+                    // 正規表現の特殊文字をエスケープ
+                    const escapedYear = year.toString().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const escapedMonth = month.toString().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const escapedDay = day.toString().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const datePattern = new RegExp(`${escapedYear}年?${escapedMonth}月?${escapedDay}日?|${escapedMonth}/${escapedDay}|${escapedMonth}-${escapedDay}`);
                     return datePattern.test(cellText);
                 });
             }
