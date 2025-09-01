@@ -1220,54 +1220,34 @@ class Admin::ReservationsController < ApplicationController
       @reservation = Reservation.find(params[:id])
       Rails.logger.info "🔍 Loading history for reservation ID: #{@reservation.id}, user ID: #{@reservation.user_id}"
       
-      if @reservation.user_id.present?
-        # 予約履歴
-        reservations = @reservation.user.reservations
-          .where.not(id: @reservation.id) # 現在の予約を除外
-          .order(start_time: :desc)
-          .limit(10) # 最新10件
-          .map do |reservation|
-            {
-              type: 'reservation',
-              usage_date: reservation.start_time,
-              ticket_name: reservation.course,
-              status: reservation.status,
-              note: reservation.note
-            }
-          end
-        
-        Rails.logger.info "📅 Found #{reservations.count} reservations"
-        
-        # 回数券使用履歴
-        ticket_usages = TicketUsage.where(user: @reservation.user)
-          .includes(:ticket)
-          .order(created_at: :desc)
-          .limit(10)
-          .map do |usage|
-            begin
-              ticket_name = usage.ticket&.ticket_template&.name || 'Unknown Ticket'
-              {
-                type: 'ticket_usage',
-                usage_date: usage.created_at,
-                ticket_name: ticket_name,
-                status: 'completed',
-                note: usage.note
-              }
-            rescue => e
-              Rails.logger.error "❌ Error processing ticket usage #{usage.id}: #{e.message}"
-              # エラーが発生した場合はスキップして続行
-              next
-            end
-          end.compact # nilを除去
-        
-        Rails.logger.info "🎫 Found #{ticket_usages.count} ticket usages"
-        
-        # 両方を結合して日時でソート
-        all_usages = (reservations + ticket_usages).sort_by { |h| h[:usage_date] }.reverse!
-        
-        Rails.logger.info "✅ Successfully processed #{all_usages.count} history items"
-        
-        render json: { success: true, usages: all_usages }
+              if @reservation.user_id.present?
+          # 回数券使用履歴のみ
+          ticket_usages = TicketUsage.where(user: @reservation.user)
+            .includes(:ticket)
+            .order(created_at: :desc)
+            .limit(10)
+            .map do |usage|
+              begin
+                ticket_name = usage.ticket&.ticket_template&.name || 'Unknown Ticket'
+                {
+                  type: 'ticket_usage',
+                  usage_date: usage.created_at,
+                  ticket_name: ticket_name,
+                  status: 'completed',
+                  note: usage.note
+                }
+              rescue => e
+                Rails.logger.error "❌ Error processing ticket usage #{usage.id}: #{e.message}"
+                # エラーが発生した場合はスキップして続行
+                next
+              end
+            end.compact # nilを除去
+          
+          Rails.logger.info "🎫 Found #{ticket_usages.count} ticket usages"
+          
+          Rails.logger.info "✅ Successfully processed #{ticket_usages.count} ticket usage items"
+          
+          render json: { success: true, usages: ticket_usages }
       else
         Rails.logger.warn "⚠️ No user ID for reservation #{@reservation.id}"
         render json: { success: false, message: 'ユーザー情報がありません' }

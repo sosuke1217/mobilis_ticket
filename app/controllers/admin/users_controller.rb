@@ -150,14 +150,7 @@ class Admin::UsersController < ApplicationController
         begin
           Rails.logger.info "🔍 Loading history for user ID: #{@user.id}"
           
-          # 予約履歴
-          reservations = Reservation.where(user: @user)
-            .order(start_time: :desc)
-            .limit(20)
-          
-          Rails.logger.info "📅 Found #{reservations.count} reservations"
-          
-          # 回数券使用履歴
+          # 回数券使用履歴のみ
           ticket_usages = TicketUsage.where(user: @user)
             .includes(:ticket)
             .order(created_at: :desc)
@@ -167,18 +160,7 @@ class Admin::UsersController < ApplicationController
           
           history_data = []
           
-          # 予約履歴を追加
-          reservations.each do |reservation|
-            history_data << {
-              type: 'reservation',
-              usage_date: reservation.start_time,
-              ticket_name: reservation.course,
-              status: reservation.status,
-              note: reservation.note
-            }
-          end
-          
-          # 回数券使用履歴を追加
+          # 回数券使用履歴のみを追加
           ticket_usages.each do |usage|
             begin
               ticket_name = usage.ticket&.ticket_template&.name || 'Unknown Ticket'
@@ -196,10 +178,7 @@ class Admin::UsersController < ApplicationController
             end
           end
           
-          # 日時でソート
-          history_data.sort_by! { |h| h[:usage_date] }.reverse!
-          
-          Rails.logger.info "✅ Successfully processed #{history_data.count} history items"
+          Rails.logger.info "✅ Successfully processed #{history_data.count} ticket usage items"
           
           render json: { success: true, usages: history_data }
         rescue => e
