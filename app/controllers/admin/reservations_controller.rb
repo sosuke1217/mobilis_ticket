@@ -1240,7 +1240,7 @@ class Admin::ReservationsController < ApplicationController
         
         # 回数券使用履歴
         ticket_usages = TicketUsage.where(user: @reservation.user)
-          .includes(:ticket, :reservation)
+          .includes(:ticket)
           .order(created_at: :desc)
           .limit(10)
           .map do |usage|
