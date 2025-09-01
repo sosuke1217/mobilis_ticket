@@ -634,7 +634,7 @@
             }
             
             const resultsHTML = users.map(user => `
-                <div class="user-result-item" onclick="selectUserForModal({userId: ${user.id}, name: ${JSON.stringify(user.name)}, phone: ${JSON.stringify(user.phone_number)}, email: ${JSON.stringify(user.email)}})">
+                <div class="user-result-item" onclick="selectUserForModal({userId: ${user.id}, name: '${user.name}', phone: '${user.phone_number}', email: '${user.email}'})">
                     <div class="user-name">${user.name}</div>
                     <div class="user-details">${user.phone_number} | ${user.email}</div>
                 </div>
@@ -1750,7 +1750,7 @@
                     console.log('🚫 Overlap detected with reservation:', existingReservation.id);
                     return { 
                         valid: false, 
-                        message: `予約時間が既存の予約（${(existingReservation.customer || '').replace(/[`\\]/g, '')}様）と重複するため、この設定はできません。` 
+                        message: `予約時間が既存の予約（${existingReservation.customer}様）と重複するため、この設定はできません。` 
                     };
                 }
             }
@@ -1971,7 +1971,7 @@
             }
             
             const resultsHtml = users.map(user => `
-                <div class="user-search-item" onclick="selectUserForModal(${user.id}, ${JSON.stringify(user.name)}, ${JSON.stringify(user.phone_number)}, ${JSON.stringify(user.email)})">
+                <div class="user-search-item" onclick="selectUserForModal(${user.id}, '${user.name}', '${user.phone_number}', '${user.email}')">
                     <div class="user-name">${user.name}</div>
                     <div class="user-details">
                         📞 ${user.phone_number || '未設定'} | 📧 ${user.email || '未設定'}
@@ -3000,7 +3000,7 @@
                         const affectedReservations = await checkRecurringScheduleImpact(day, '00:00', '00:00');
                         if (affectedReservations.length > 0) {
                             const dayName = ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'][day];
-                            const reservationList = affectedReservations.map(r => `${(r.customer || '').replace(/[`\\]/g, '')}様 (${r.date} ${r.time})`).join(', ');
+                            const reservationList = affectedReservations.map(r => `${r.customer}様 (${r.date} ${r.time})`).join(', ');
                             
                             showMessage(`${dayName}を休業日にすることはできません。以下の予約があります: ${reservationList}`, 'error');
                             return; // Don't proceed with the toggle
@@ -3015,7 +3015,7 @@
                     const affectedReservations = checkCurrentWeekReservationsForDay(day);
                     if (affectedReservations.length > 0) {
                         const dayName = ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'][day];
-                        const reservationList = affectedReservations.map(r => `${(r.customer || '').replace(/[`\\]/g, '')}様 (${r.time})`).join(', ');
+                        const reservationList = affectedReservations.map(r => `${r.customer}様 (${r.time})`).join(', ');
                         
                         showMessage(`${dayName}を休業日にすることはできません。以下の予約があります: ${reservationList}`, 'error');
                         return; // Don't proceed with the toggle
@@ -3171,7 +3171,7 @@
                         const affectedReservations = await checkRecurringScheduleImpact(day, startTime, endTime);
                         if (affectedReservations.length > 0) {
                             const dayName = ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'][day];
-                            const reservationList = affectedReservations.map(r => `${(r.customer || '').replace(/[`\\]/g, '')}様 (${r.date} ${r.time})`).join(', ');
+                            const reservationList = affectedReservations.map(r => `${r.customer}様 (${r.date} ${r.time})`).join(', ');
                             
                             showMessage(`${dayName}の営業時間変更により、以下の予約が営業時間外になります: ${reservationList}`, 'error');
                             
@@ -4595,17 +4595,8 @@ function showMessage(message, type = 'info') {
                 // 日付テキストで検索
                 dayCell = Array.from(calendarCells).find(cell => {
                     const cellText = cell.textContent || '';
-                    // より安全な文字列マッチングを使用
-                    const yearStr = year.toString();
-                    const monthStr = month.toString();
-                    const dayStr = day.toString();
-                    
-                    // 複数の日付形式をチェック
-                    return cellText.includes(`${yearStr}年${monthStr}月${dayStr}日`) ||
-                           cellText.includes(`${monthStr}/${dayStr}`) ||
-                           cellText.includes(`${monthStr}-${dayStr}`) ||
-                           cellText.includes(`${yearStr}年${monthStr}月${dayStr}`) ||
-                           cellText.includes(`${monthStr}月${dayStr}日`);
+                    const datePattern = new RegExp(`${year}年?${month}月?${day}日?|${month}/${day}|${month}-${day}`);
+                    return datePattern.test(cellText);
                 });
             }
             
@@ -5956,6 +5947,14 @@ function showMessage(message, type = 'info') {
                         </div>
                     </form>
                     
+                    <!-- その日以降の予約 -->
+                    <div class="future-reservations-section">
+                        <div class="section-title">📅 その日以降の予約</div>
+                        <div class="future-reservations-content" id="future-reservations-content">
+                            <div class="loading">読み込み中...</div>
+                        </div>
+                    </div>
+                    
                     <!-- 回数券と利用履歴を横並びで表示 -->
                     <div class="tickets-history-container">
                     <!-- 回数券 -->
@@ -5972,14 +5971,6 @@ function showMessage(message, type = 'info') {
                         <div class="history-content" id="history-content">
                             <div class="loading">読み込み中...</div>
                         </div>
-                        </div>
-                    </div>
-                    
-                    <!-- その日以降の予約 -->
-                    <div class="future-reservations-section">
-                        <div class="section-title">その日以降の予約</div>
-                        <div class="future-reservations-content" id="future-reservations-content">
-                            <div class="loading">読み込み中...</div>
                         </div>
                     </div>
                     
@@ -6041,11 +6032,17 @@ function showMessage(message, type = 'info') {
                 }
             }, 100);
             
+            // その日以降の予約を読み込み
+            const reservationDate = latestReservation.date || latestReservation.start_time?.split('T')[0];
+            if (reservationDate) {
+                loadFutureReservations(reservationDate);
+            }
+
             // チケットと予約履歴を読み込み（ユーザーIDベース）
             if (latestReservation.userId) {
                 loadTicketsAndHistoryForUser(latestReservation.userId);
             } else {
-            loadTicketsAndHistory(latestReservation);
+                loadTicketsAndHistory(latestReservation);
             }
             
             // ユーザーリストは検索時に動的に読み込み
@@ -6079,10 +6076,6 @@ function showMessage(message, type = 'info') {
             loadTickets(reservation);
             // 利用履歴を読み込み
             loadReservationHistory(reservation);
-            // その日以降の予約を表示
-            if (reservation && reservation.date) {
-                displayFutureReservations(reservation.date);
-            }
         }
 
         // ユーザーIDでチケットと利用履歴を読み込み
@@ -6091,10 +6084,6 @@ function showMessage(message, type = 'info') {
             loadTicketsForUser(userId);
             // 利用履歴を読み込み
             loadReservationHistoryForUser(userId);
-            // その日以降の予約を表示
-            if (currentReservation && currentReservation.date) {
-                displayFutureReservations(currentReservation.date);
-            }
         }
 
         // チケット情報を読み込み
@@ -6154,6 +6143,75 @@ function showMessage(message, type = 'info') {
                 console.warn('⚠️ No user ID found for reservation');
                 ticketsContent.innerHTML = '<div class="no-data">ユーザー情報がありません</div>';
             }
+        }
+
+        // その日以降の予約を読み込み
+        function loadFutureReservations(reservationDate) {
+            const futureReservationsContent = document.getElementById('future-reservations-content');
+            if (!futureReservationsContent) {
+                console.error('❌ Future reservations content element not found');
+                return;
+            }
+
+            // 予約日付をDateオブジェクトに変換
+            const targetDate = new Date(reservationDate);
+            if (isNaN(targetDate.getTime())) {
+                console.error('❌ Invalid reservation date:', reservationDate);
+                futureReservationsContent.innerHTML = '<div class="no-data">日付が無効です</div>';
+                return;
+            }
+
+            // その日以降の予約をフィルタリング
+            const futureReservations = [];
+            for (const [dateKey, dayReservations] of Object.entries(reservations)) {
+                const dayDate = new Date(dateKey);
+                if (dayDate >= targetDate) {
+                    // 現在の予約は除外
+                    const filteredReservations = dayReservations.filter(r => 
+                        r.id !== currentReservation?.id
+                    );
+                    futureReservations.push(...filteredReservations);
+                }
+            }
+
+            // 日付順でソート
+            futureReservations.sort((a, b) => {
+                const dateA = new Date(a.date || a.start_time);
+                const dateB = new Date(b.date || b.start_time);
+                return dateA - dateB;
+            });
+
+            // 最大10件まで表示
+            const limitedReservations = futureReservations.slice(0, 10);
+
+            if (limitedReservations.length === 0) {
+                futureReservationsContent.innerHTML = '<div class="no-data">その日以降の予約はありません</div>';
+                return;
+            }
+
+            const reservationsHtml = limitedReservations.map(reservation => {
+                const reservationDate = new Date(reservation.date || reservation.start_time);
+                const displayDate = reservationDate.toLocaleDateString('ja-JP', { 
+                    month: 'short', 
+                    day: 'numeric',
+                    weekday: 'short'
+                });
+                const displayTime = reservation.time || reservation.start_time?.split('T')[1]?.substring(0, 5) || '時間未定';
+                const statusIcon = reservation.status === 'confirmed' ? '✓' : reservation.status === 'tentative' ? '⏳' : '❓';
+                const statusText = reservation.status === 'confirmed' ? '確定' : reservation.status === 'tentative' ? '仮予約' : reservation.status;
+                
+                return `
+                    <div class="future-reservation-item">
+                        <div class="future-reservation-date">${displayDate} ${displayTime}</div>
+                        <div class="future-reservation-details">
+                            <div class="future-reservation-customer">${reservation.customer}</div>
+                            <div class="future-reservation-course">${reservation.course} ${statusIcon} ${statusText}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            futureReservationsContent.innerHTML = reservationsHtml;
         }
 
         // ユーザーIDでチケット情報を読み込み
@@ -6386,7 +6444,7 @@ function showMessage(message, type = 'info') {
             if (!historyContent) return;
 
             if (!usages || usages.length === 0) {
-                historyContent.innerHTML = '<div class="no-data'>利用履歴がありません</div>';
+                historyContent.innerHTML = '<div class="no-data">利用履歴がありません</div>';
                 return;
             }
 
@@ -6408,72 +6466,6 @@ function showMessage(message, type = 'info') {
             }).join('');
 
             historyContent.innerHTML = historyHtml;
-        }
-        
-        // その日以降の予約を表示
-        function displayFutureReservations(reservationDate) {
-            const futureReservationsContent = document.getElementById('future-reservations-content');
-            if (!futureReservationsContent) {
-                console.error('❌ Future reservations content element not found');
-                return;
-            }
-
-            // その日以降の予約を取得
-            const futureReservations = [];
-            const targetDate = new Date(reservationDate);
-            
-            // 全予約データからその日以降の予約を抽出
-            for (const [dateKey, dayReservations] of Object.entries(reservations)) {
-                const reservationDate = new Date(dateKey);
-                if (reservationDate >= targetDate) {
-                    // 同じ日付の予約は除外（現在編集中の予約）
-                    if (dateKey !== targetDate.toISOString().split('T')[0]) {
-                        dayReservations.forEach(reservation => {
-                            if (reservation.id !== currentReservation?.id) { // 現在編集中の予約を除外
-                                futureReservations.push({
-                                    ...reservation,
-                                    dateKey: dateKey
-                                });
-                            }
-                        });
-                    }
-                }
-            }
-            
-            // 日付順でソート
-            futureReservations.sort((a, b) => {
-                const dateA = new Date(a.dateKey + ' ' + a.time);
-                const dateB = new Date(b.dateKey + ' ' + b.time);
-                return dateA - dateB;
-            });
-
-            if (futureReservations.length === 0) {
-                futureReservationsContent.innerHTML = '<div class="no-data">その日以降の予約はありません</div>';
-                return;
-            }
-
-            const futureReservationsHtml = futureReservations.map(reservation => {
-                const displayDate = new Date(reservation.dateKey).toLocaleDateString('ja-JP');
-                const statusColor = reservation.status === 'confirmed' ? 'success' : 
-                                  reservation.status === 'tentative' ? 'warning' : 'secondary';
-                const statusText = reservation.status === 'confirmed' ? '確定' : 
-                                 reservation.status === 'tentative' ? '仮予約' : reservation.status;
-                
-                return `
-                    <div class="future-reservation-item">
-                        <div class="future-reservation-header">
-                            <span class="future-reservation-date">${displayDate} ${reservation.time}</span>
-                            <span class="badge bg-${statusColor}">${statusText}</span>
-                        </div>
-                        <div class="future-reservation-details">
-                            <strong>${reservation.customer}</strong> - ${reservation.duration}分
-                            ${reservation.note ? `<br><small class="text-muted">${reservation.note}</small>` : ''}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            futureReservationsContent.innerHTML = futureReservationsHtml;
         }
 
 
@@ -6595,8 +6587,7 @@ function showMessage(message, type = 'info') {
             
             console.log('✅ 予約ID確認:', currentReservation.id);
             
-            const confirmMessage = `この予約を完全に削除しますか？\n\nお客様: ${(currentReservation.customer || '').replace(/[`\\]/g, '')}\n日時: ${currentReservation.time}\nコース: ${currentReservation.duration}分\n\nこの操作は取り消せません。`;
-            const confirmed = confirm(confirmMessage);
+            const confirmed = confirm(`この予約を完全に削除しますか？\n\nお客様: ${currentReservation.customer}\n日時: ${currentReservation.time}\nコース: ${currentReservation.duration}分\n\nこの操作は取り消せません。`);
             
             if (!confirmed) {
                 return;
@@ -6737,8 +6728,7 @@ function showMessage(message, type = 'info') {
                 return;
             }
             
-            const confirmMessage = `この予約を完全に削除しますか？\n\nお客様: ${(currentReservation.customer || '').replace(/[`\\]/g, '')}\n日時: ${currentReservation.time}\nコース: ${currentReservation.duration}分\n\nこの操作は取り消せません。`;
-            const confirmed = confirm(confirmMessage);
+            const confirmed = confirm(`この予約を完全に削除しますか？\n\nお客様: ${currentReservation.customer}\n日時: ${currentReservation.time}\nコース: ${currentReservation.duration}分\n\nこの操作は取り消せません。`);
             
             if (!confirmed) {
                 return;
@@ -7652,7 +7642,7 @@ function showMessage(message, type = 'info') {
             }
             
             const resultsHtml = users.map(user => `
-                <div class="user-search-item" onclick="selectUser(${user.id}, ${JSON.stringify(user.name)}, ${JSON.stringify(user.phone_number)}, ${JSON.stringify(user.email)}, '${nameFieldId}', '${phoneFieldId}', '${emailFieldId}')">
+                <div class="user-search-item" onclick="selectUser(${user.id}, '${user.name}', '${user.phone_number}', '${user.email}', '${nameFieldId}', '${phoneFieldId}', '${emailFieldId}')">
                     <div class="user-name">${user.name}</div>
                     <div class="user-details">
                         📞 ${user.phone_number || '未設定'} | 📧 ${user.email || '未設定'}
