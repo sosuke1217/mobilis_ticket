@@ -1156,12 +1156,24 @@
             display: none;
             position: fixed;
             z-index: 1000;
-  left: 0;
+            left: 0;
             top: 0;
-    width: 100%;
+            width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.5);
             animation: fadeIn 0.3s ease;
+        }
+
+        /* モーダル背景部分（クリックで閉じる） */
+        .modal-background {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0); /* 完全に透明 */
+            backdrop-filter: none; /* ぼやかし効果なし */
+            cursor: pointer; /* 背景部分にカーソルを表示 */
         }
 
         .modal-content {
@@ -1176,9 +1188,9 @@
             animation: slideIn 0.3s ease;
             box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25);
             border: 1px solid rgba(0, 0, 0, 0.08);
+            position: relative; /* 背景部分の上に表示するため */
+            z-index: 1; /* 背景部分より前面に表示 */
         }
-
-
 
         .close {
             color: #666;
