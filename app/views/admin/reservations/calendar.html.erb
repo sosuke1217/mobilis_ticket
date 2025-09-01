@@ -6314,18 +6314,17 @@ function showMessage(message, type = 'info') {
             }
 
             const historyHtml = usages.map(usage => {
-                // Backend returns date and time as separate fields
-                const displayDate = usage.date || 'Unknown Date';
-                const displayTime = usage.time || 'Unknown Time';
-                const displayName = usage.course || usage.ticket_name || 'Unknown';
-                const typeIcon = usage.type === 'reservation' ? '📅' : '🎫';
-                const typeText = usage.type === 'reservation' ? '予約' : 'チケット使用';
+                const usageDate = new Date(usage.usage_date).toLocaleDateString('ja-JP');
+                const usageTime = new Date(usage.usage_date).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+                const icon = usage.type === 'reservation' ? '📅' : '🎫';
+                const statusText = usage.status === 'confirmed' ? '確定' : usage.status === 'tentative' ? '仮予約' : usage.status;
                 
                 return `
                     <div class="history-item-compact">
-                        <span class="history-icon-small">${typeIcon}</span>
+                        <span class="history-icon-small">${icon}</span>
                         <span class="history-content-compact">
-                            <strong>${displayName}</strong> - ${displayDate} ${displayTime} (${typeText})
+                            <strong>${usage.ticket_name}</strong> - ${usageDate} ${usageTime} (${statusText})
+                            ${usage.note ? `<br><small class="text-muted">${usage.note}</small>` : ''}
                         </span>
                     </div>
                 `;

@@ -1219,20 +1219,40 @@ class Admin::ReservationsController < ApplicationController
     @reservation = Reservation.find(params[:id])
     
     if @reservation.user_id.present?
+      # 予約履歴
       reservations = @reservation.user.reservations
         .where.not(id: @reservation.id) # 現在の予約を除外
         .order(start_time: :desc)
         .limit(10) # 最新10件
         .map do |reservation|
           {
-            id: reservation.id,
-            start_time: reservation.start_time,
-            course: reservation.course,
-            status: reservation.status
+            type: 'reservation',
+            usage_date: reservation.start_time,
+            ticket_name: reservation.course,
+            status: reservation.status,
+            note: reservation.note
           }
         end
       
-      render json: { success: true, reservations: reservations }
+      # 回数券使用履歴
+      ticket_usages = TicketUsage.where(user: @reservation.user)
+        .includes(:ticket, :reservation)
+        .order(created_at: :desc)
+        .limit(10)
+        .map do |usage|
+          {
+            type: 'ticket_usage',
+            usage_date: usage.created_at,
+            ticket_name: usage.ticket.ticket_template.name,
+            status: 'completed',
+            note: usage.note
+          }
+        end
+      
+      # 両方を結合して日時でソート
+      all_usages = (reservations + ticket_usages).sort_by { |h| h[:usage_date] }.reverse!
+      
+      render json: { success: true, usages: all_usages }
     else
       render json: { success: false, message: 'ユーザー情報がありません' }
     end

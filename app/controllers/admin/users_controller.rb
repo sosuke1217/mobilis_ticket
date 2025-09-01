@@ -164,11 +164,9 @@ class Admin::UsersController < ApplicationController
         reservations.each do |reservation|
           history_data << {
             type: 'reservation',
-            date: reservation.start_time.strftime('%Y-%m-%d'),
-            time: reservation.start_time.strftime('%H:%M'),
+            usage_date: reservation.start_time,
+            ticket_name: reservation.course,
             status: reservation.status,
-            course: reservation.course,
-            staff: reservation.user&.name || '未設定',
             note: reservation.note
           }
         end
@@ -177,19 +175,17 @@ class Admin::UsersController < ApplicationController
         ticket_usages.each do |usage|
           history_data << {
             type: 'ticket_usage',
-            date: usage.created_at.strftime('%Y-%m-%d'),
-            time: usage.created_at.strftime('%H:%M'),
+            usage_date: usage.created_at,
+            ticket_name: usage.ticket.ticket_template.name,
             status: 'completed',
-            course: usage.ticket.ticket_template.name,
-            staff: usage.reservation&.user&.name || '未設定',
             note: usage.note
           }
         end
         
         # 日時でソート
-        history_data.sort_by! { |h| [h[:date], h[:time]] }.reverse!
+        history_data.sort_by! { |h| h[:usage_date] }.reverse!
         
-        render json: history_data
+        render json: { success: true, usages: history_data }
       end
     end
   end
