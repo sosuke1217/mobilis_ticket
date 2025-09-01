@@ -1447,34 +1447,15 @@
                         const newStartInMinutes = newStartHour * 60 + newStartMin;
                         const newEndInMinutes = newEndHour * 60 + newEndMin;
                         
-                        // 予約が新しい営業時間外になるかチェック（より柔軟な判定）
+                        // 時間計算の詳細ログ
+                        const calculatedEndHour = Math.floor(endTimeInMinutes / 60);
+                        const calculatedEndMin = endTimeInMinutes % 60;
+                        const calculatedEndTimeStr = `${calculatedEndHour.toString().padStart(2, '0')}:${calculatedEndMin.toString().padStart(2, '0')}`;
+                        
+                        // 予約が新しい営業時間外になるかチェック
                         const isStartTimeBefore = startTimeInMinutes < newStartInMinutes;
                         const isEndTimeAfter = endTimeInMinutes > newEndInMinutes;
-                        
-                        // 現在の営業時間を基準として変更の方向性をチェック
-                        const currentStartTime = defaultSchedule[dayOfWeek]?.times?.[0]?.start || '09:00';
-                        const currentEndTime = defaultSchedule[dayOfWeek]?.times?.[0]?.end || '18:00';
-                        const [currentStartHour, currentStartMin] = currentStartTime.split(':').map(Number);
-                        const [currentEndHour, currentEndMin] = currentEndTime.split(':').map(Number);
-                        const currentStartInMinutes = currentStartHour * 60 + currentStartMin;
-                        const currentEndInMinutes = currentEndHour * 60 + currentEndMin;
-                        
-                        // 営業時間変更の方向性をチェック
-                        const isExpandingHours = newStartInMinutes < currentStartInMinutes || newEndInMinutes > currentEndInMinutes;
-                        const isReducingHours = newStartInMinutes > currentStartInMinutes || newEndInMinutes < currentEndInMinutes;
-                        
-                        // 営業時間を拡張する場合は、既存予約の影響を無視
-                        let isAffected = false;
-                        if (isExpandingHours) {
-                            isAffected = false; // 営業時間拡張時は影響なし
-                            console.log('✅ Business hours expanding - no reservations affected');
-                        } else if (isReducingHours) {
-                            // 営業時間短縮時のみ影響をチェック
-                            isAffected = isStartTimeBefore || isEndTimeAfter;
-                        } else {
-                            // 営業時間変更なしの場合は影響なし
-                            isAffected = false;
-                        }
+                        const isAffected = isStartTimeBefore || isEndTimeAfter;
                         
                         // 詳細なログ出力
                         console.log('🔍 Reservation impact check:', {
@@ -1486,26 +1467,31 @@
                             interval,
                             startTimeInMinutes,
                             endTimeInMinutes,
-                            currentStartTime,
-                            currentEndTime,
-                            currentStartInMinutes,
-                            currentEndInMinutes,
+                            calculatedEndTimeStr,
                             newStartTime,
                             newEndTime,
                             newStartInMinutes,
                             newEndInMinutes,
                             isStartTimeBefore,
                             isEndTimeAfter,
-                            isExpandingHours,
-                            isReducingHours,
                             isAffected,
-                            calculatedEndTime: `${Math.floor(endTimeInMinutes / 60).toString().padStart(2, '0')}:${(endTimeInMinutes % 60).toString().padStart(2, '0')}`
+                            timeCalculation: {
+                                startTime: `${startHour}:${startMin.toString().padStart(2, '0')}`,
+                                durationMinutes: duration,
+                                intervalMinutes: interval,
+                                totalMinutes: duration + interval,
+                                endTimeMinutes: endTimeInMinutes,
+                                endTimeFormatted: calculatedEndTimeStr
+                            }
                         });
                         
                         if (isAffected) {
+                            const reason = isStartTimeBefore ? 'starts before business hours' : 'ends after business hours';
+                            
                             affectedReservations.push({
                                 ...reservation,
-                                endTime: `${Math.floor(endTimeInMinutes / 60).toString().padStart(2, '0')}:${(endTimeInMinutes % 60).toString().padStart(2, '0')}`
+                                endTime: calculatedEndTimeStr,
+                                reason: reason
                             });
                             
                             console.log('⚠️ Found affected reservation:', {
@@ -1515,9 +1501,25 @@
                                 time: reservationTime,
                                 duration,
                                 interval,
-                                calculatedEndTime: `${Math.floor(endTimeInMinutes / 60).toString().padStart(2, '0')}:${(endTimeInMinutes % 60).toString().padStart(2, '0')}`,
+                                calculatedEndTime: calculatedEndTimeStr,
                                 newBusinessHours: `${newStartTime} - ${newEndTime}`,
-                                reason: isStartTimeBefore ? 'starts before business hours' : 'ends after business hours'
+                                reason: reason,
+                                impactDetails: {
+                                    startTimeConflict: isStartTimeBefore,
+                                    endTimeConflict: isEndTimeAfter,
+                                    startTimeMinutes: startTimeInMinutes,
+                                    endTimeMinutes: endTimeInMinutes,
+                                    newStartMinutes: newStartInMinutes,
+                                    newEndMinutes: newEndInMinutes
+                                }
+                            });
+                        } else {
+                            console.log('✅ Reservation is within new business hours:', {
+                                id: reservation.id,
+                                customer: reservation.customer,
+                                time: reservationTime,
+                                calculatedEndTime: calculatedEndTimeStr,
+                                newBusinessHours: `${newStartTime} - ${newEndTime}`
                             });
                         }
                     }
