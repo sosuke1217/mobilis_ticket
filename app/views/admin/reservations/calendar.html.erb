@@ -571,8 +571,19 @@
         // 月の名前
         const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
         
+        // カレンダー初期化フラグ
+        let calendarInitialized = false;
+        
         // 初期化
         function init() {
+            // 既に初期化済みの場合はスキップ
+            if (calendarInitialized) {
+                console.log('ℹ️ Calendar already initialized, skipping...');
+                return;
+            }
+            
+            console.log('🚀 Initializing calendar for the first time...');
+            
             // モーダル外クリックで閉じる機能を設定
             setupModalClickOutside();
             
@@ -5955,6 +5966,14 @@ function showMessage(message, type = 'info') {
                         </div>
                     </div>
                     
+                    <!-- その日以降の予約 -->
+                    <div class="future-reservations-section">
+                        <div class="section-title">その日以降の予約</div>
+                        <div class="future-reservations-content" id="future-reservations-content">
+                            <div class="loading">読み込み中...</div>
+                        </div>
+                    </div>
+                    
                     <!-- システム情報 -->
                     <div class="system-info-section">
                         <div class="detail-item">
@@ -6051,6 +6070,10 @@ function showMessage(message, type = 'info') {
             loadTickets(reservation);
             // 利用履歴を読み込み
             loadReservationHistory(reservation);
+            // その日以降の予約を表示
+            if (reservation && reservation.date) {
+                displayFutureReservations(reservation.date);
+            }
         }
 
         // ユーザーIDでチケットと利用履歴を読み込み
@@ -6059,6 +6082,10 @@ function showMessage(message, type = 'info') {
             loadTicketsForUser(userId);
             // 利用履歴を読み込み
             loadReservationHistoryForUser(userId);
+            // その日以降の予約を表示
+            if (currentReservation && currentReservation.date) {
+                displayFutureReservations(currentReservation.date);
+            }
         }
 
         // チケット情報を読み込み
@@ -6350,7 +6377,7 @@ function showMessage(message, type = 'info') {
             if (!historyContent) return;
 
             if (!usages || usages.length === 0) {
-                historyContent.innerHTML = '<div class="no-data">利用履歴がありません</div>';
+                historyContent.innerHTML = '<div class="no-data'>利用履歴がありません</div>';
                 return;
             }
 
@@ -6372,6 +6399,72 @@ function showMessage(message, type = 'info') {
             }).join('');
 
             historyContent.innerHTML = historyHtml;
+        }
+        
+        // その日以降の予約を表示
+        function displayFutureReservations(reservationDate) {
+            const futureReservationsContent = document.getElementById('future-reservations-content');
+            if (!futureReservationsContent) {
+                console.error('❌ Future reservations content element not found');
+                return;
+            }
+
+            // その日以降の予約を取得
+            const futureReservations = [];
+            const targetDate = new Date(reservationDate);
+            
+            // 全予約データからその日以降の予約を抽出
+            for (const [dateKey, dayReservations] of Object.entries(reservations)) {
+                const reservationDate = new Date(dateKey);
+                if (reservationDate >= targetDate) {
+                    // 同じ日付の予約は除外（現在編集中の予約）
+                    if (dateKey !== targetDate.toISOString().split('T')[0]) {
+                        dayReservations.forEach(reservation => {
+                            if (reservation.id !== currentReservation?.id) { // 現在編集中の予約を除外
+                                futureReservations.push({
+                                    ...reservation,
+                                    dateKey: dateKey
+                                });
+                            }
+                        });
+                    }
+                }
+            }
+            
+            // 日付順でソート
+            futureReservations.sort((a, b) => {
+                const dateA = new Date(a.dateKey + ' ' + a.time);
+                const dateB = new Date(b.dateKey + ' ' + b.time);
+                return dateA - dateB;
+            });
+
+            if (futureReservations.length === 0) {
+                futureReservationsContent.innerHTML = '<div class="no-data">その日以降の予約はありません</div>';
+                return;
+            }
+
+            const futureReservationsHtml = futureReservations.map(reservation => {
+                const displayDate = new Date(reservation.dateKey).toLocaleDateString('ja-JP');
+                const statusColor = reservation.status === 'confirmed' ? 'success' : 
+                                  reservation.status === 'tentative' ? 'warning' : 'secondary';
+                const statusText = reservation.status === 'confirmed' ? '確定' : 
+                                 reservation.status === 'tentative' ? '仮予約' : reservation.status;
+                
+                return `
+                    <div class="future-reservation-item">
+                        <div class="future-reservation-header">
+                            <span class="future-reservation-date">${displayDate} ${reservation.time}</span>
+                            <span class="badge bg-${statusColor}">${statusText}</span>
+                        </div>
+                        <div class="future-reservation-details">
+                            <strong>${reservation.customer}</strong> - ${reservation.duration}分
+                            ${reservation.note ? `<br><small class="text-muted">${reservation.note}</small>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            futureReservationsContent.innerHTML = futureReservationsHtml;
         }
 
 

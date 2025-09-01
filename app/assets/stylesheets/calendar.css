@@ -2988,3 +2988,75 @@
         background: #5a6268;
         transform: translateY(-2px);
     }
+
+    /* その日以降の予約セクション */
+    .future-reservations-section {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 20px;
+        margin-left: 20px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .future-reservations-content {
+        max-height: 300px;
+        overflow-y: auto;
+        margin-top: 15px;
+    }
+
+    .future-reservation-item {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 10px;
+        border-left: 4px solid #007bff;
+        transition: all 0.2s ease;
+    }
+
+    .future-reservation-item:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: translateX(2px);
+    }
+
+    .future-reservation-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .future-reservation-date {
+        font-weight: 600;
+        color: #fff;
+        font-size: 0.9rem;
+    }
+
+    .future-reservation-details {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.85rem;
+    }
+
+    .future-reservation-details strong {
+        color: #fff;
+    }
+
+    .badge {
+        font-size: 0.7rem;
+        padding: 4px 8px;
+        border-radius: 12px;
+    }
+
+    .bg-success {
+        background-color: #28a745 !important;
+    }
+
+    .bg-warning {
+        background-color: #ffc107 !important;
+        color: #212529 !important;
+    }
+
+    .bg-secondary {
+        background-color: #6c757d !important;
+    }
