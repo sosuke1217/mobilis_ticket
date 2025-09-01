@@ -6171,13 +6171,43 @@ function showMessage(message, type = 'info') {
             // 本日の日付を取得（時間は00:00:00に設定）
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            console.log('📅 Today\'s date for filtering:', today.toISOString().split('T')[0]);
+            
+            // デバッグ用：日付の詳細情報をログ出力
+            console.log('📅 Today\'s date for filtering:', {
+                fullDate: today,
+                isoString: today.toISOString(),
+                dateString: today.toISOString().split('T')[0],
+                year: today.getFullYear(),
+                month: today.getMonth() + 1,
+                day: today.getDate(),
+                timezone: today.getTimezoneOffset()
+            });
+            
+            // 本日の日付を文字列形式でも取得（比較用）
+            const todayString = today.toISOString().split('T')[0];
 
             // 本日以降の予約をフィルタリング（特定ユーザーのみ）
             const futureReservations = [];
+            console.log('🔍 Filtering reservations for dates >=', todayString);
+            
             for (const [dateKey, dayReservations] of Object.entries(reservations)) {
                 const dayDate = new Date(dateKey);
-                if (dayDate >= today) {
+                const dayDateString = dayDate.toISOString().split('T')[0];
+                const isTodayOrLater = dayDate >= today;
+                const isTodayOrLaterString = dayDateString >= todayString;
+                
+                console.log('🔍 Checking date:', {
+                    dateKey,
+                    dayDate,
+                    dayDateString,
+                    isTodayOrLater,
+                    isTodayOrLaterString,
+                    todayString,
+                    hasReservations: dayReservations ? dayReservations.length : 0
+                });
+                
+                // 日付オブジェクトと文字列の両方で比較（より確実に）
+                if (isTodayOrLater && isTodayOrLaterString) {
                     // 現在の予約は除外し、特定ユーザーの予約のみをフィルタリング
                     const filteredReservations = dayReservations.filter(r => {
                         // 現在の予約は除外
@@ -6193,8 +6223,13 @@ function showMessage(message, type = 'info') {
                         return true;
                     });
                     futureReservations.push(...filteredReservations);
+                    console.log('✅ Added', filteredReservations.length, 'reservations for date', dayDateString);
+                } else {
+                    console.log('⏭️ Skipping date', dayDateString, '- before today');
                 }
             }
+            
+            console.log('📊 Total future reservations found:', futureReservations.length);
 
             // 日付順でソート
             futureReservations.sort((a, b) => {
@@ -6205,9 +6240,11 @@ function showMessage(message, type = 'info') {
 
             // 最大10件まで表示
             const limitedReservations = futureReservations.slice(0, 10);
+            console.log('📋 Limited to', limitedReservations.length, 'reservations for display');
 
             if (limitedReservations.length === 0) {
                 const message = userId ? 'このお客様の本日以降の予約はありません' : '本日以降の予約はありません';
+                console.log('📝 No reservations to display, showing message:', message);
                 futureReservationsContent.innerHTML = `<div class="no-data" style="color: #6c757d !important; font-size: 14px !important; text-align: center !important; padding: 20px !important; font-style: italic !important; background: #f8f9fa !important; border-radius: 6px !important; border: 1px dashed #dee2e6 !important;">${message}</div>`;
                 return;
             }
