@@ -2339,7 +2339,7 @@
         // デフォルトスケジュールを初期化
         function initializeDefaultSchedule() {
             defaultSchedule = {
-                0: { enabled: false, times: [] }, // 日曜日は休業
+                0: { enabled: true, times: [{ start: '10:00', end: '18:00' }] }, // 日曜日
                 1: { enabled: true, times: [{ start: '09:00', end: '20:00' }] }, // 月曜日
                 2: { enabled: true, times: [{ start: '10:00', end: '20:00' }] }, // 火曜日
                 3: { enabled: true, times: [{ start: '10:00', end: '20:00' }] }, // 水曜日
@@ -2347,6 +2347,8 @@
                 5: { enabled: true, times: [{ start: '10:00', end: '20:00' }] }, // 金曜日
                 6: { enabled: true, times: [{ start: '09:00', end: '18:00' }] }, // 土曜日
             };
+            
+            console.log('🔍 Default schedule initialized:', defaultSchedule);
         }
 
         // 週表示を描画
@@ -3313,7 +3315,14 @@
             console.log('🔄 Saving shift settings:', {
                 isRecurring,
                 weekStartStr,
-                scheduleData
+                scheduleData,
+                activeTabText: activeTab ? activeTab.textContent : 'none',
+                defaultScheduleKeys: Object.keys(defaultSchedule),
+                defaultScheduleValues: Object.values(defaultSchedule).map(s => ({
+                    enabled: s.enabled,
+                    timesCount: s.times ? s.times.length : 0,
+                    times: s.times
+                }))
             });
             
             // バックエンドに保存
@@ -3330,9 +3339,22 @@
                 })
             })
             .then(response => response.json())
-  .then(data => {
-    if (data.success) {
+              .then(data => {
+                console.log('📡 Save response received:', data);
+                
+                if (data.success) {
                     console.log('✅ Shift settings saved successfully');
+                    console.log('🔍 Save response details:', {
+                        success: data.success,
+                        message: data.message,
+                        isRecurring,
+                        scheduleDataKeys: Object.keys(scheduleData),
+                        scheduleDataValues: Object.values(scheduleData).map(s => ({
+                            enabled: s.enabled,
+                            timesCount: s.times ? s.times.length : 0,
+                            times: s.times
+                        }))
+                    });
                     
                     // 表示を更新
                     renderWeekView();
@@ -3343,11 +3365,11 @@
                         ? '定期的なスケジュールが保存されました。この設定は全ての週に適用されます。'
                         : '設定が保存されました。この設定は現在の週のみに適用されます。';
                     showMessage(message, 'success');
-    } else {
+                } else {
                     console.error('❌ Failed to save shift settings:', data.message);
                     showMessage(`シフト設定の保存に失敗しました: ${data.message}`, 'error');
-    }
-  })
+                }
+            })
   .catch(error => {
                 console.error('❌ Error saving shift settings:', error);
                 showMessage('シフト設定の保存中にエラーが発生しました', 'error');
