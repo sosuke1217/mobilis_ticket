@@ -147,45 +147,67 @@ class Admin::UsersController < ApplicationController
   def history
     respond_to do |format|
       format.json do
-        # 予約履歴
-        reservations = Reservation.where(user: @user)
-          .order(start_time: :desc)
-          .limit(20)
-        
-        # 回数券使用履歴
-        ticket_usages = TicketUsage.where(user: @user)
-          .includes(:ticket, :reservation)
-          .order(created_at: :desc)
-          .limit(20)
-        
-        history_data = []
-        
-        # 予約履歴を追加
-        reservations.each do |reservation|
-          history_data << {
-            type: 'reservation',
-            usage_date: reservation.start_time,
-            ticket_name: reservation.course,
-            status: reservation.status,
-            note: reservation.note
-          }
+        begin
+          Rails.logger.info "🔍 Loading history for user ID: #{@user.id}"
+          
+          # 予約履歴
+          reservations = Reservation.where(user: @user)
+            .order(start_time: :desc)
+            .limit(20)
+          
+          Rails.logger.info "📅 Found #{reservations.count} reservations"
+          
+          # 回数券使用履歴
+          ticket_usages = TicketUsage.where(user: @user)
+            .includes(:ticket, :reservation)
+            .order(created_at: :desc)
+            .limit(20)
+          
+          Rails.logger.info "🎫 Found #{ticket_usages.count} ticket usages"
+          
+          history_data = []
+          
+          # 予約履歴を追加
+          reservations.each do |reservation|
+            history_data << {
+              type: 'reservation',
+              usage_date: reservation.start_time,
+              ticket_name: reservation.course,
+              status: reservation.status,
+              note: reservation.note
+            }
+          end
+          
+          # 回数券使用履歴を追加
+          ticket_usages.each do |usage|
+            begin
+              ticket_name = usage.ticket&.ticket_template&.name || 'Unknown Ticket'
+              history_data << {
+                type: 'ticket_usage',
+                usage_date: usage.created_at,
+                ticket_name: ticket_name,
+                status: 'completed',
+                note: usage.note
+              }
+            rescue => e
+              Rails.logger.error "❌ Error processing ticket usage #{usage.id}: #{e.message}"
+              # エラーが発生した場合はスキップして続行
+              next
+            end
+          end
+          
+          # 日時でソート
+          history_data.sort_by! { |h| h[:usage_date] }.reverse!
+          
+          Rails.logger.info "✅ Successfully processed #{history_data.count} history items"
+          
+          render json: { success: true, usages: history_data }
+        rescue => e
+          Rails.logger.error "❌ Error in history action: #{e.class}: #{e.message}"
+          Rails.logger.error "Backtrace: #{e.backtrace.first(5).join("\n")}"
+          
+          render json: { success: false, error: e.message }, status: :internal_server_error
         end
-        
-        # 回数券使用履歴を追加
-        ticket_usages.each do |usage|
-          history_data << {
-            type: 'ticket_usage',
-            usage_date: usage.created_at,
-            ticket_name: usage.ticket.ticket_template.name,
-            status: 'completed',
-            note: usage.note
-          }
-        end
-        
-        # 日時でソート
-        history_data.sort_by! { |h| h[:usage_date] }.reverse!
-        
-        render json: { success: true, usages: history_data }
       end
     end
   end
