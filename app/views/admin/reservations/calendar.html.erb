@@ -3184,7 +3184,21 @@
             
             // 新しい値を設定
             if (isRecurring) {
+                console.log('🔍 Updating defaultSchedule for recurring schedule:', {
+                    day,
+                    field,
+                    oldValue,
+                    newValue: value,
+                    beforeUpdate: JSON.parse(JSON.stringify(defaultSchedule[day]))
+                });
+                
                 defaultSchedule[day].times[index][field] = value;
+                
+                console.log('🔍 defaultSchedule updated:', {
+                    day,
+                    field,
+                    afterUpdate: JSON.parse(JSON.stringify(defaultSchedule[day]))
+                });
             } else {
                 const weekKey = formatDateKey(currentWeekStart);
                 if (!weeklySchedules[weekKey]) {
@@ -3305,6 +3319,7 @@
             
             console.log('🔍 Active tab:', activeTab ? activeTab.textContent : 'none');
             console.log('🔍 isRecurring:', isRecurring);
+            console.log('🔍 defaultSchedule before save:', JSON.parse(JSON.stringify(defaultSchedule)));
             
             const scheduleData = isRecurring ? defaultSchedule : getCurrentWeekSchedule();
             const weekStartStr = formatDateKey(currentWeekStart);
@@ -3319,7 +3334,9 @@
                     enabled: s.enabled,
                     timesCount: s.times ? s.times.length : 0,
                     times: s.times
-                }))
+                })),
+                defaultScheduleRaw: JSON.parse(JSON.stringify(defaultSchedule)),
+                scheduleDataRaw: JSON.parse(JSON.stringify(scheduleData))
             });
             
             // バックエンドに保存
