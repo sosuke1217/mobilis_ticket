@@ -634,7 +634,7 @@
             }
             
             const resultsHTML = users.map(user => `
-                <div class="user-result-item" onclick="selectUserForModal({userId: ${user.id}, name: '${user.name}', phone: '${user.phone_number}', email: '${user.email}'})">
+                <div class="user-result-item" onclick="selectUserForModal({userId: ${user.id}, name: ${JSON.stringify(user.name)}, phone: ${JSON.stringify(user.phone_number)}, email: ${JSON.stringify(user.email)}})">
                     <div class="user-name">${user.name}</div>
                     <div class="user-details">${user.phone_number} | ${user.email}</div>
                 </div>
@@ -1971,7 +1971,7 @@
             }
             
             const resultsHtml = users.map(user => `
-                <div class="user-search-item" onclick="selectUserForModal(${user.id}, '${user.name}', '${user.phone_number}', '${user.email}')">
+                <div class="user-search-item" onclick="selectUserForModal(${user.id}, ${JSON.stringify(user.name)}, ${JSON.stringify(user.phone_number)}, ${JSON.stringify(user.email)})">
                     <div class="user-name">${user.name}</div>
                     <div class="user-details">
                         📞 ${user.phone_number || '未設定'} | 📧 ${user.email || '未設定'}
@@ -7650,7 +7650,7 @@ function showMessage(message, type = 'info') {
             }
             
             const resultsHtml = users.map(user => `
-                <div class="user-search-item" onclick="selectUser(${user.id}, '${user.name}', '${user.phone_number}', '${user.email}', '${nameFieldId}', '${phoneFieldId}', '${emailFieldId}')">
+                <div class="user-search-item" onclick="selectUser(${user.id}, ${JSON.stringify(user.name)}, ${JSON.stringify(user.phone_number)}, ${JSON.stringify(user.email)}, '${nameFieldId}', '${phoneFieldId}', '${emailFieldId}')">
                     <div class="user-name">${user.name}</div>
                     <div class="user-details">
                         📞 ${user.phone_number || '未設定'} | 📧 ${user.email || '未設定'}
