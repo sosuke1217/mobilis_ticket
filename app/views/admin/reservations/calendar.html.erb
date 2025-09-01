@@ -3969,11 +3969,9 @@ function showMessage(message, type = 'info') {
                 timeSelect.removeChild(timeSelect.lastChild);
             }
             
-            // 10:00から19:50まで10分刻みで生成
-            for (let hour = 10; hour < 20; hour++) {
+            // 00:00から23:50まで10分刻みで生成（24時間対応）
+            for (let hour = 0; hour < 24; hour++) {
                 for (let minute = 0; minute < 60; minute += 10) {
-                    if (hour === 19 && minute > 50) break; // 19:50まで
-                    
                     const timeValue = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
                     const option = document.createElement('option');
                     option.value = timeValue;
@@ -4013,15 +4011,8 @@ function showMessage(message, type = 'info') {
             // 生成された時間オプションから最も近い時間を選択
             const timeSelect = document.getElementById('bulkStartTime');
             if (timeSelect) {
-                // 現在時刻が営業時間外の場合は10:00をデフォルトに
-                if (currentHour < 10) {
-                    timeSelect.value = '10:00';
-                } else if (currentHour >= 20) {
-                    timeSelect.value = '19:50';
-                } else {
-                    // 営業時間内の場合は最も近い時間を選択
-                    timeSelect.value = currentTime;
-                }
+                // 現在時刻に最も近い10分刻みの時間を選択
+                timeSelect.value = currentTime;
             }
             
             // 曜日チェックボックスを全てチェック
