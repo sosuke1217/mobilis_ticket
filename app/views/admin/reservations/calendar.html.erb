@@ -6198,6 +6198,12 @@ function showMessage(message, type = 'info') {
             // 本日以降の予約をフィルタリング（特定ユーザーのみ）
             const futureReservations = [];
             console.log('🔍 Filtering reservations for dates >=', todayString);
+            console.log('🔍 Current reservation info:', {
+                id: currentReservation?.id,
+                date: currentReservation?.date,
+                start_time: currentReservation?.start_time,
+                userId: currentReservation?.userId
+            });
             
             for (const [dateKey, dayReservations] of Object.entries(reservations)) {
                 const dayDate = new Date(dateKey);
@@ -6237,13 +6243,8 @@ function showMessage(message, type = 'info') {
                 });
                 
                 if (isTodayOrLater) {
-                    // 現在の予約は除外し、特定ユーザーの予約のみをフィルタリング
+                    // 特定ユーザーの予約のみをフィルタリング（現在の予約は除外しない）
                     const filteredReservations = dayReservations.filter(r => {
-                        // 現在の予約は除外
-                        if (r.id === currentReservation?.id) {
-                            return false;
-                        }
-                        
                         // ユーザーIDが指定されている場合は、そのユーザーの予約のみ
                         if (userId && r.userId !== userId) {
                             return false;
@@ -6251,8 +6252,22 @@ function showMessage(message, type = 'info') {
                         
                         return true;
                     });
+                    
+                    // フィルタリング結果の詳細をログ出力
+                    console.log('🔍 Filtering details for date', dayDateString, ':', {
+                        totalReservations: dayReservations.length,
+                        filteredReservations: filteredReservations.length,
+                        userId: userId,
+                        reservations: filteredReservations.map(r => ({
+                            id: r.id,
+                            customer: r.customer,
+                            userId: r.userId,
+                            isCurrentReservation: r.id === currentReservation?.id
+                        }))
+                    });
+                    
                     futureReservations.push(...filteredReservations);
-                    console.log('✅ Added', filteredReservations.length, 'reservations for date', dayDateString);
+                    console.log('✅ Added', filteredReservations.length, 'reservations for date', dayDateString, '(including current reservation date)');
                 } else {
                     console.log('⏭️ Skipping date', dayDateString, '- before today');
                 }
