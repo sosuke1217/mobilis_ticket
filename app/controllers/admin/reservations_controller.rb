@@ -256,6 +256,9 @@ class Admin::ReservationsController < ApplicationController
       .where(start_time: start_date.beginning_of_day..end_date.end_of_day)
       .where.not(status: :cancelled)
       .order(:start_time)
+      
+    # applicationレイアウトを使用
+    render layout: 'application'
   end
 
 
