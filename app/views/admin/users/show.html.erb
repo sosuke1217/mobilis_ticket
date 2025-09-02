@@ -2,43 +2,140 @@
   <meta name="turbo-visit-control" content="disable">
 <% end %>
 
-<div class="container-lg my-5">
-  <div class="d-flex align-items-center mb-4">
-    <div>
-      <h1 class="mb-1">
-        <%= @user.display_name_or_name || @user.line_user_id %> さんの詳細
-      </h1>
-      <% if @user.display_name.present? && @user.name.present? && @user.display_name != @user.name %>
-        <p class="text-muted mb-0">登録名: <%= @user.name %></p>
-      <% end %>
+<div class="container-lg my-4">
+  <!-- ヘッダーセクション -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <h1 class="h2 mb-1">
+            <i class="fas fa-user me-2 text-primary"></i>
+            <%= @user.display_name_or_name || @user.line_user_id %> さんの詳細
+          </h1>
+          <% if @user.display_name.present? && @user.name.present? && @user.display_name != @user.name %>
+            <p class="text-muted mb-0 small">
+              <i class="fas fa-id-card me-1"></i>登録名: <%= @user.name %>
+            </p>
+          <% end %>
+        </div>
+        <div class="d-flex gap-2">
+          <%= link_to admin_users_path, class: "btn btn-outline-secondary btn-sm" do %>
+            <i class="fas fa-arrow-left me-1"></i>一覧に戻る
+          <% end %>
+        </div>
+      </div>
     </div>
   </div>
 
-  <p>
-    <strong>LINE連携状況:</strong>
-    <% if @user.line_user_id.present? && @user.line_user_id != '' %>
-      <span class="badge bg-success"><i class="fas fa-link me-1"></i>連携済み</span>
-      <div class="btn-group ms-2" role="group">
-        <button type="button" class="btn btn-sm btn-outline-primary" onclick="updateLineProfile()">
-          <i class="fas fa-sync-alt me-1"></i>LINE情報を更新
-        </button>
-        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeLineLink()">
-          <i class="fas fa-unlink me-1"></i>連携解除
-        </button>
+  <!-- LINE連携状況カード -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-gradient-primary text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-link me-2"></i>LINE連携状況
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+              <% if @user.line_user_id.present? && @user.line_user_id != '' %>
+                <span class="badge bg-success fs-6 me-3">
+                  <i class="fas fa-check-circle me-1"></i>連携済み
+                </span>
+                <small class="text-muted">
+                  <i class="fas fa-info-circle me-1"></i>LINE ID: <%= @user.line_user_id %>
+                </small>
+              <% else %>
+                <span class="badge bg-danger fs-6 me-3">
+                  <i class="fas fa-times-circle me-1"></i>未連携
+                </span>
+                <small class="text-muted">
+                  <i class="fas fa-info-circle me-1"></i>LINE連携が必要です
+                </small>
+              <% end %>
+            </div>
+            <div class="d-flex gap-2">
+              <% if @user.line_user_id.present? && @user.line_user_id != '' %>
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="updateLineProfile()">
+                  <i class="fas fa-sync-alt me-1"></i>更新
+                </button>
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeLineLink()">
+                  <i class="fas fa-unlink me-1"></i>解除
+                </button>
+              <% else %>
+                <button type="button" class="btn btn-success btn-sm" onclick="showLineLinkForm()">
+                  <i class="fas fa-link me-1"></i>連携作成
+                </button>
+              <% end %>
+            </div>
+          </div>
+        </div>
       </div>
-    <% else %>
-      <span class="badge bg-danger"><i class="fas fa-unlink me-1"></i>未連携</span>
-      <button type="button" class="btn btn-sm btn-outline-success ms-2" onclick="showLineLinkForm()">
-        <i class="fas fa-link me-1"></i>LINE連携作成
-      </button>
-    <% end %>
-  </p>
+    </div>
+  </div>
 
   <style>
-    /* LINE連携モーダルのカスタムスタイル */
-    #lineLinkModal .modal-dialog {
-      max-width: 600px;
-      width: 90%;
+    /* グラデーション効果 */
+    .bg-gradient-primary {
+      background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    }
+    .bg-gradient-secondary {
+      background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    }
+    .bg-gradient-success {
+      background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+    }
+    .bg-gradient-info {
+      background: linear-gradient(135deg, #17a2b8 0%, #117a8b 100%);
+    }
+    .bg-gradient-warning {
+      background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+    }
+    .bg-gradient-danger {
+      background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    }
+    .bg-gradient-dark {
+      background: linear-gradient(135deg, #343a40 0%, #212529 100%);
+    }
+    
+    /* カードのホバー効果 */
+    .card {
+      transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    }
+    
+    /* テーブルの改善 */
+    .table-sm th, .table-sm td {
+      padding: 0.5rem;
+      font-size: 0.875rem;
+    }
+    
+    /* ボタンの改善 */
+    .btn-sm {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.875rem;
+    }
+    
+    /* バッジの改善 */
+    .badge {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+    }
+    
+    /* レスポンシブ改善 */
+    @media (max-width: 768px) {
+      .d-flex.justify-content-between {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .card-header .d-flex {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
     }
     
     #lineLinkModal .modal-content {
@@ -578,73 +675,91 @@
   </script>
 
   <!-- 🧑‍💼 顧客情報セクション -->
-  <div class="card mb-5 shadow-sm">
-    <div class="card-header bg-secondary text-white fw-bold d-flex justify-content-between align-items-center">
-      <div>顧客情報</div>
-      <div class="btn-group">
-        <%= link_to "編集", edit_admin_user_path(@user), class: "btn btn-sm btn-light" %>
-        <button type="button" class="btn btn-sm btn-danger ms-2" id="deleteUserBtn" 
-                data-user-id="<%= @user.id %>"
-                data-user-name="<%= @user.display_name_or_name.presence || @user.line_user_id || "ID:#{@user.id}" %>"
-                data-active-tickets="<%= @active_tickets.count %>"
-                data-total-usages="<%= @total_usages %>"
-                data-remaining-value="<%= number_to_currency(@user.remaining_ticket_value, unit: "¥", precision: 0) %>">
-          削除
-        </button>
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-gradient-secondary text-white d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="fas fa-user-circle me-2"></i>顧客情報
+          </h5>
+          <div class="d-flex gap-2">
+            <%= link_to edit_admin_user_path(@user), class: "btn btn-light btn-sm" do %>
+              <i class="fas fa-edit me-1"></i>編集
+            <% end %>
+            <button type="button" class="btn btn-danger btn-sm" id="deleteUserBtn" 
+                    data-user-id="<%= @user.id %>"
+                    data-user-name="<%= @user.display_name_or_name.presence || @user.line_user_id || "ID:#{@user.id}" %>"
+                    data-active-tickets="<%= @active_tickets.count %>"
+                    data-total-usages="<%= @total_usages %>"
+                    data-remaining-value="<%= number_to_currency(@user.remaining_ticket_value, unit: "¥", precision: 0) %>">
+              <i class="fas fa-trash me-1"></i>削除
+            </button>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="row g-0">
+            <div class="col-md-6">
+              <table class="table table-borderless mb-0">
+                <tbody>
+                  <tr>
+                    <th class="w-40 bg-light">会員番号</th>
+                    <td><strong>#<%= @user.id %></strong></td>
+                  </tr>
+                  <tr>
+                    <th class="bg-light">氏名</th>
+                    <td>
+                      <% if @user.display_name_or_name.present? %>
+                        <strong><%= @user.display_name_or_name %></strong>
+                        <% if @user.display_name.present? && @user.name.present? && @user.display_name != @user.name %>
+                          <br><small class="text-muted">登録名: <%= @user.name %></small>
+                        <% end %>
+                      <% else %>
+                        <span class="text-muted">未登録</span>
+                      <% end %>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th class="bg-light">LINE表示名</th>
+                    <td>
+                      <% if @user.display_name.present? %>
+                        <%= @user.display_name %>
+                      <% else %>
+                        <span class="text-muted">未取得</span>
+                      <% end %>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th class="bg-light">生年月日</th>
+                    <td><%= @user.birth_date.present? ? l(@user.birth_date) : content_tag(:span, "未登録", class: "text-muted") %></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="col-md-6">
+              <table class="table table-borderless mb-0">
+                <tbody>
+                  <tr>
+                    <th class="w-40 bg-light">郵便番号</th>
+                    <td><%= @user.postal_code.presence || content_tag(:span, "未登録", class: "text-muted") %></td>
+                  </tr>
+                  <tr>
+                    <th class="bg-light">住所</th>
+                    <td><%= @user.address.presence || content_tag(:span, "未登録", class: "text-muted") %></td>
+                  </tr>
+                  <tr>
+                    <th class="bg-light">電話番号</th>
+                    <td><%= @user.phone_number.presence || content_tag(:span, "未登録", class: "text-muted") %></td>
+                  </tr>
+                  <tr>
+                    <th class="bg-light">メールアドレス</th>
+                    <td><%= @user.email.presence || content_tag(:span, "未登録", class: "text-muted") %></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="card-body p-0">
-      <table class="table table-bordered table-striped mb-0">
-        <tbody>
-          <tr>
-            <th class="w-25 bg-light">会員番号</th>
-            <td><%= @user.id %></td>
-          </tr>
-          <tr>
-            <th class="bg-light">氏名</th>
-            <td>
-              <% if @user.display_name_or_name.present? %>
-                <%= @user.display_name_or_name %>
-                <% if @user.display_name.present? && @user.name.present? && @user.display_name != @user.name %>
-                  <br><small class="text-muted">登録名: <%= @user.name %></small>
-                <% end %>
-              <% else %>
-                <%= content_tag(:span, "未登録", class: "text-muted") %>
-              <% end %>
-            </td>
-          </tr>
-          <tr>
-            <th class="bg-light">LINE表示名</th>
-            <td>
-              <% if @user.display_name.present? %>
-                <%= @user.display_name %>
-              <% else %>
-                <%= content_tag(:span, "未取得", class: "text-muted") %>
-              <% end %>
-            </td>
-          </tr>
-          <tr>
-            <th class="bg-light">生年月日</th>
-            <td><%= @user.birth_date.present? ? l(@user.birth_date) : content_tag(:span, "未登録", class: "text-muted") %></td>
-          </tr>
-          <tr>
-            <th class="bg-light">郵便番号</th>
-            <td><%= @user.postal_code.presence || content_tag(:span, "未登録", class: "text-muted") %></td>
-          </tr>
-          <tr>
-            <th class="bg-light">住所</th>
-            <td><%= @user.address.presence || content_tag(:span, "未登録", class: "text-muted") %></td>
-          </tr>
-          <tr>
-            <th class="bg-light">電話番号</th>
-            <td><%= @user.phone_number.presence || content_tag(:span, "未登録", class: "text-muted") %></td>
-          </tr>
-          <tr>
-            <th class="bg-light">メールアドレス</th>
-            <td><%= @user.email.presence || content_tag(:span, "未登録", class: "text-muted") %></td>
-          </tr>
-        </tbody>
-      </table>
     </div>
   </div>
 
@@ -936,200 +1051,266 @@
   });
   </script>
   
-  <div class="card mb-4 shadow-sm">
-    <div class="card-header bg-warning text-dark fw-bold">管理者メモ</div>
-    <div class="card-body">
-      <% if @user.admin_memo.present? %>
-        <pre class="mb-0"><%= @user.admin_memo %></pre>
-      <% else %>
-        <p class="text-muted mb-0">メモは登録されていません。</p>
-      <% end %>
-    </div>
-  </div>
-
-  <!-- 📊 利用状況サマリー -->
-  <div class="card mb-4 shadow-sm">
-    <div class="card-header bg-info text-white fw-bold">
-      利用状況サマリー
-    </div>
-    <div class="card-body">
-      <ul class="list-group list-group-flush">
-        <li class="list-group-item">累計使用回数：<strong><%= @total_usages %></strong></li>
-        <li class="list-group-item">最終使用日：
-          <strong>
-            <%= @last_used_at.present? ? @last_used_at.strftime('%Y-%m-%d') : "未使用" %>
-          </strong>
-        </li>
-        <li class="list-group-item">アクティブチケット数：<strong><%= @active_tickets.count %></strong></li>
-        <li class="list-group-item">
-          アクティブチケット種類：
-          <% if @active_ticket_types.present? %>
-            <ul class="mb-0 ps-3">
-              <% @active_ticket_types.each do |title, count| %>
-                <li><%= title %>（<%= count %> 枚）</li>
-              <% end %>
-            </ul>
+  <!-- 管理者メモと利用状況サマリー -->
+  <div class="row mb-4">
+    <!-- 管理者メモ -->
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-gradient-warning text-dark">
+          <h5 class="mb-0">
+            <i class="fas fa-sticky-note me-2"></i>管理者メモ
+          </h5>
+        </div>
+        <div class="card-body">
+          <% if @user.admin_memo.present? %>
+            <pre class="mb-0 text-muted"><%= @user.admin_memo %></pre>
           <% else %>
-            <span class="text-muted">なし</span>
+            <p class="text-muted mb-0">
+              <i class="fas fa-info-circle me-1"></i>メモは登録されていません。
+            </p>
           <% end %>
-        </li>
-      </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 利用状況サマリー -->
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-gradient-info text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-chart-bar me-2"></i>利用状況サマリー
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="text-center">
+                <div class="h4 text-primary mb-1"><%= @total_usages %></div>
+                <small class="text-muted">累計使用回数</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="text-center">
+                <div class="h4 text-success mb-1"><%= @active_tickets.count %></div>
+                <small class="text-muted">アクティブチケット</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="text-center">
+                <div class="h4 text-info mb-1">
+                  <%= @last_used_at.present? ? @last_used_at.strftime('%m/%d') : "—" %>
+                </div>
+                <small class="text-muted">最終使用日</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="text-center">
+                <div class="h4 text-warning mb-1">
+                  <%= @active_ticket_types.present? ? @active_ticket_types.keys.count : 0 %>
+                </div>
+                <small class="text-muted">チケット種類</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- 🎫 チケット管理へのリンク -->
-  <div class="card mb-5 shadow-sm">
-    <div class="card-header bg-dark text-white fw-bold">
-      チケット管理
-    </div>
-    <div class="card-body text-center">
-      <p class="mb-3">チケットの発行・消化・削除を行うには、専用のチケット管理ページをご利用ください。</p>
-      <%= link_to "チケット管理ページへ", ticket_management_admin_user_path(@user), 
-          class: "btn btn-primary btn-lg" %>
-    </div>
-  </div>
-
-  <!-- 🎫 所持チケット一覧（表示のみ） -->
-  <div class="card mb-5 shadow-sm">
-    <div class="card-header bg-success text-white fw-bold">
-      所持チケット一覧（表示のみ）
-    </div>
-    <div class="card-body p-0">
-      <% if @active_tickets.any? %>
-        <div class="table-responsive">
-          <table class="table table-hover table-striped align-middle mb-0">
-            <thead class="table-light text-center">
-              <tr>
-                <th>チケット名</th>
-                <th>購入日</th>
-                <th>有効期限</th>
-                <th>消化済</th>
-                <th>残数</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% @active_tickets.each do |ticket| %>
-                <tr>
-                  <td class="text-center">
-                    <% if ticket.ticket_template.present? %>
-                      <%= ticket.ticket_template.name %>
-                    <% else %>
-                      <span class="text-muted">削除されたチケット</span>
-                    <% end %>
-                  </td>
-                  <td class="text-nowrap text-center"><%= ticket.purchase_date.strftime("%Y-%m-%d") %></td>
-                  <td class="text-nowrap text-center">
-                    <% if ticket.expiry_date < Time.zone.today %>
-                      <span class="badge bg-danger me-1">期限切れ</span>
-                      <span class="text-muted"><%= ticket.expiry_date.strftime("%Y-%m-%d") %></span>
-                    <% elsif ticket.expiry_date < 1.month.from_now %>
-                      <span class="badge bg-warning text-dark me-1">期限間近</span>
-                      <%= ticket.expiry_date.strftime("%Y-%m-%d") %>
-                    <% else %>
-                      <%= ticket.expiry_date.strftime("%Y-%m-%d") %>
-                    <% end %>
-                  </td>
-                  <td class="text-center"><%= ticket.total_count - ticket.remaining_count %> 回</td>
-                  <td class="text-center fw-bold"><%= ticket.remaining_count %> 回</td>
-                </tr>
+  <!-- 🎫 チケット管理セクション -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-gradient-dark text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-ticket-alt me-2"></i>チケット管理
+          </h5>
+        </div>
+        <div class="card-body text-center">
+          <div class="row align-items-center">
+            <div class="col-md-8">
+              <p class="mb-0 text-muted">
+                <i class="fas fa-info-circle me-1"></i>
+                チケットの発行・消化・削除を行うには、専用のチケット管理ページをご利用ください。
+              </p>
+            </div>
+            <div class="col-md-4">
+              <%= link_to ticket_management_admin_user_path(@user), 
+                  class: "btn btn-primary" do %>
+                <i class="fas fa-cog me-1"></i>チケット管理ページへ
               <% end %>
-            </tbody>
-          </table>
+            </div>
+          </div>
         </div>
-      <% else %>
-        <div class="p-3">
-          <p class="text-muted">使用可能なチケットはありません。</p>
-        </div>
-      <% end %>
+      </div>
     </div>
   </div>
 
-  <!-- 🕒 最近の使用履歴 -->
-  <div class="card mb-5 shadow-sm">
-    <div class="card-header bg-primary text-white fw-bold">
-      最近のチケット使用履歴（最新10件）
-    </div>
-    <div class="card-body p-0">
-      <% if @recent_ticket_usages.any? %>
-        <table class="table table-striped table-hover align-middle mb-0">
-          <thead class="table-light">
-            <tr>
-              <th>チケット名</th>
-              <th>使用日時</th>
-              <th>残回数</th>
-              <th>メモ</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @recent_ticket_usages.each do |usage| %>
-              <tr>
-                <td>
-                  <% if usage.ticket&.ticket_template.present? %>
-                    <%= usage.ticket.ticket_template.name %>
-                  <% else %>
-                    <span class="text-muted">削除されたチケット</span>
-                  <% end %>
-                </td>
-                <td><%= usage.used_at.strftime('%Y-%m-%d %H:%M') %></td>
-                <td><%= usage.ticket.remaining_count %> 回</td>
-                <td><%= usage.note.present? ? truncate(usage.note, length: 30) : "—" %></td>
-                <td>
-                  <%= link_to "詳細・編集", edit_admin_ticket_usage_path(usage), class: "btn btn-sm btn-outline-primary" %>
-                </td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      <% else %>
-        <div class="p-3">
-          <p class="text-muted">まだ使用履歴がありません。</p>
+  <!-- 🎫 チケット一覧と使用履歴 -->
+  <div class="row mb-4">
+    <!-- 所持チケット一覧 -->
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-gradient-success text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-ticket-alt me-2"></i>所持チケット一覧
+          </h5>
         </div>
-      <% end %>
-      <p class="mt-3 px-3">
-        <%= link_to "全ての使用履歴を見る", ticket_usages_admin_user_path(@user), class: "btn btn-outline-secondary btn-sm" %>
-      </p>
+        <div class="card-body p-0">
+          <% if @active_tickets.any? %>
+            <div class="table-responsive">
+              <table class="table table-hover table-sm mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th class="small">チケット名</th>
+                    <th class="small text-center">残数</th>
+                    <th class="small text-center">期限</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% @active_tickets.each do |ticket| %>
+                    <tr>
+                      <td class="small">
+                        <% if ticket.ticket_template.present? %>
+                          <%= ticket.ticket_template.name %>
+                        <% else %>
+                          <span class="text-muted">削除されたチケット</span>
+                        <% end %>
+                      </td>
+                      <td class="text-center">
+                        <span class="badge bg-primary"><%= ticket.remaining_count %></span>
+                      </td>
+                      <td class="text-center small">
+                        <% if ticket.expiry_date < Time.zone.today %>
+                          <span class="badge bg-danger">期限切れ</span>
+                        <% elsif ticket.expiry_date < 1.month.from_now %>
+                          <span class="badge bg-warning text-dark">期限間近</span>
+                        <% else %>
+                          <span class="text-muted"><%= ticket.expiry_date.strftime("%m/%d") %></span>
+                        <% end %>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          <% else %>
+            <div class="p-3 text-center">
+              <i class="fas fa-ticket-alt fa-2x text-muted mb-2"></i>
+              <p class="text-muted mb-0">使用可能なチケットはありません。</p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 最近の使用履歴 -->
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="fas fa-history me-2"></i>最近の使用履歴
+          </h5>
+          <%= link_to ticket_usages_admin_user_path(@user), class: "btn btn-light btn-sm" do %>
+            <i class="fas fa-external-link-alt me-1"></i>全て見る
+          <% end %>
+        </div>
+        <div class="card-body p-0">
+          <% if @recent_ticket_usages.any? %>
+            <div class="table-responsive">
+              <table class="table table-hover table-sm mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th class="small">チケット名</th>
+                    <th class="small text-center">使用日</th>
+                    <th class="small text-center">残数</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% @recent_ticket_usages.each do |usage| %>
+                    <tr>
+                      <td class="small">
+                        <% if usage.ticket&.ticket_template.present? %>
+                          <%= usage.ticket.ticket_template.name %>
+                        <% else %>
+                          <span class="text-muted">削除されたチケット</span>
+                        <% end %>
+                      </td>
+                      <td class="text-center small">
+                        <%= usage.used_at.strftime('%m/%d') %>
+                      </td>
+                      <td class="text-center">
+                        <span class="badge bg-secondary"><%= usage.ticket.remaining_count %></span>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          <% else %>
+            <div class="p-3 text-center">
+              <i class="fas fa-history fa-2x text-muted mb-2"></i>
+              <p class="text-muted mb-0">まだ使用履歴がありません。</p>
+            </div>
+          <% end %>
+        </div>
+      </div>
     </div>
   </div>
   
-  <!-- 🗂 使用済みチケット一覧 -->
-  <div class="card shadow-sm">
-    <div class="card-header bg-secondary text-white fw-bold">
-      使用済みチケット
-    </div>
-    <div class="card-body p-0">
-      <% if @used_up_tickets.any? %>
-        <table class="table table-hover table-striped align-middle mb-0">
-          <thead class="table-light">
-            <tr>
-              <th>チケット名</th>
-              <th>残回数</th>
-              <th>購入日</th>
-              <th>有効期限</th>
-            </tr>
-          </thead>
-          <tbody>
-                          <% @used_up_tickets.each do |ticket| %>
-                <tr>
-                  <td>
-                    <% if ticket.ticket_template.present? %>
-                      <%= ticket.ticket_template.name %>
-                    <% else %>
-                      <span class="text-muted">削除されたチケット</span>
-                    <% end %>
-                  </td>
-                  <td>0 / <%= ticket.total_count %></td>
-                  <td><%= ticket.purchase_date.strftime("%Y-%m-%d") %></td>
-                  <td><%= ticket.expiry_date.strftime("%Y-%m-%d") %></td>
-                </tr>
-              <% end %>
-          </tbody>
-        </table>
-      <% else %>
-        <div class="p-3">
-          <p class="text-muted">使用済みチケットはまだありません。</p>
+  <!-- 🗂 使用済みチケット -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-gradient-secondary text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-archive me-2"></i>使用済みチケット
+          </h5>
         </div>
-      <% end %>
+        <div class="card-body p-0">
+          <% if @used_up_tickets.any? %>
+            <div class="table-responsive">
+              <table class="table table-hover table-sm mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th class="small">チケット名</th>
+                    <th class="small text-center">使用済</th>
+                    <th class="small text-center">購入日</th>
+                    <th class="small text-center">期限</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% @used_up_tickets.each do |ticket| %>
+                    <tr>
+                      <td class="small">
+                        <% if ticket.ticket_template.present? %>
+                          <%= ticket.ticket_template.name %>
+                        <% else %>
+                          <span class="text-muted">削除されたチケット</span>
+                        <% end %>
+                      </td>
+                      <td class="text-center">
+                        <span class="badge bg-secondary"><%= ticket.total_count %></span>
+                      </td>
+                      <td class="text-center small">
+                        <%= ticket.purchase_date.strftime("%m/%d") %>
+                      </td>
+                      <td class="text-center small">
+                        <%= ticket.expiry_date.strftime("%m/%d") %>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          <% else %>
+            <div class="p-3 text-center">
+              <i class="fas fa-archive fa-2x text-muted mb-2"></i>
+              <p class="text-muted mb-0">使用済みチケットはまだありません。</p>
+            </div>
+          <% end %>
+        </div>
+      </div>
     </div>
   </div>
 </div>
