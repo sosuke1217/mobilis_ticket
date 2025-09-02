@@ -35,7 +35,7 @@
           <div class="text-success mb-2">
             <i class="fas fa-ticket-alt fa-2x"></i>
           </div>
-          <h3 class="h4 mb-1"><%= User.joins(:tickets).where("tickets.remaining_count > 0").distinct.count %></h3>
+          <h3 class="h4 mb-1"><%= User.joins(:tickets).where("tickets.remaining_count > 0").distinct.count rescue 0 %></h3>
           <p class="text-muted mb-0 small">チケット保有者</p>
         </div>
       </div>
@@ -46,7 +46,7 @@
           <div class="text-info mb-2">
             <i class="fab fa-line fa-2x"></i>
           </div>
-          <h3 class="h4 mb-1"><%= User.where.not(line_user_id: [nil, '']).count %></h3>
+          <h3 class="h4 mb-1"><%= User.where.not(line_user_id: [nil, '']).count rescue 0 %></h3>
           <p class="text-muted mb-0 small">LINE連携済み</p>
         </div>
       </div>
@@ -57,7 +57,7 @@
           <div class="text-warning mb-2">
             <i class="fas fa-calendar-check fa-2x"></i>
           </div>
-          <h3 class="h4 mb-1"><%= User.joins(:ticket_usages).where("ticket_usages.used_at >= ?", 30.days.ago).distinct.count %></h3>
+          <h3 class="h4 mb-1"><%= User.joins(:ticket_usages).where("ticket_usages.used_at >= ?", 30.days.ago).distinct.count rescue 0 %></h3>
           <p class="text-muted mb-0 small">30日以内利用者</p>
         </div>
       </div>
@@ -193,10 +193,10 @@
                 </td>
                 <td>
                   <div class="d-flex align-items-center">
-                    <span class="badge bg-primary me-2">
-                      <i class="fas fa-ticket-alt me-1"></i><%= user.active_ticket_count %> 回
-                    </span>
-                    <% if user.active_ticket_count > 0 %>
+                                         <span class="badge bg-primary me-2">
+                       <i class="fas fa-ticket-alt me-1"></i><%= user.active_ticket_count rescue 0 %> 回
+                     </span>
+                     <% if (user.active_ticket_count rescue 0) > 0 %>
                       <small class="text-success">
                         <i class="fas fa-check me-1"></i>保有中
                       </small>
@@ -218,11 +218,11 @@
                     </span>
                   <% end %>
                 </td>
-                <td>
-                  <div class="fw-bold text-success">
-                    <i class="fas fa-yen-sign me-1"></i><%= number_to_currency(user.remaining_ticket_value, unit: "", precision: 0) %>
-                  </div>
-                </td>
+                                 <td>
+                   <div class="fw-bold text-success">
+                     <i class="fas fa-yen-sign me-1"></i><%= number_to_currency(user.remaining_ticket_value rescue 0, unit: "", precision: 0) %>
+                   </div>
+                 </td>
                 <td class="text-center">
                   <div class="btn-group" role="group">
                     <%= link_to admin_user_path(user), class: "btn btn-sm btn-outline-primary", title: "詳細表示" do %>
@@ -248,7 +248,7 @@
       <!-- ページネーション -->
       <div class="d-flex justify-content-between align-items-center mt-4">
         <div class="text-muted small">
-          全 <%= @users.count %> 件中 <%= (@users.current_page - 1) * @users.limit_value + 1 %> - <%= [@users.current_page * @users.limit_value, @users.total_count].min %> 件を表示
+          全 <%= @users.count %> 件中 <%= (@users.current_page - 1) * @users.limit_value + 1 rescue 1 %> - <%= [@users.current_page * @users.limit_value, @users.total_count].min rescue @users.count %> 件を表示
         </div>
         <div>
           <%= paginate @users, theme: 'bootstrap-5' %>
