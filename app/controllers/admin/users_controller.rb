@@ -17,16 +17,22 @@ class Admin::UsersController < ApplicationController
   end
 
   def show
-    @active_tickets = @user.tickets.where("remaining_count > 0").includes(:ticket_template)
-    @total_usages = @user.ticket_usages.count
-    @recent_reservations = @user.reservations.order(start_time: :desc).limit(5)
-    @recent_usages = @user.ticket_usages.includes(:ticket, :reservation).order(created_at: :desc).limit(5)
-    
-    # 追加のインスタンス変数
-    @last_used_at = @user.ticket_usages.order(used_at: :desc).limit(1).pluck(:used_at).first
-    @active_ticket_types = @active_tickets.group(:title).count
-    @recent_ticket_usages = @user.ticket_usages.includes(:ticket => :ticket_template).order(used_at: :desc).limit(10)
-    @used_up_tickets = @user.tickets.where(remaining_count: 0).includes(:ticket_template)
+    begin
+      @active_tickets = @user.tickets.where("remaining_count > 0").includes(:ticket_template)
+      @total_usages = @user.ticket_usages.count
+      @recent_reservations = @user.reservations.order(start_time: :desc).limit(5)
+      @recent_usages = @user.ticket_usages.includes(:ticket, :reservation).order(created_at: :desc).limit(5)
+      
+      # 追加のインスタンス変数
+      @last_used_at = @user.ticket_usages.order(used_at: :desc).limit(1).pluck(:used_at).first
+      @active_ticket_types = @active_tickets.joins(:ticket_template).group('ticket_templates.name').count
+      @recent_ticket_usages = @user.ticket_usages.includes(:ticket => :ticket_template).order(used_at: :desc).limit(10)
+      @used_up_tickets = @user.tickets.where(remaining_count: 0).includes(:ticket_template)
+    rescue => e
+      Rails.logger.error "Error in show action: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      redirect_to admin_users_path, alert: "ユーザー詳細の表示中にエラーが発生しました: #{e.message}"
+    end
   end
 
   def new
