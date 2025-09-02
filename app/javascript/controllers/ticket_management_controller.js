@@ -770,8 +770,22 @@ export default class extends Controller {
       
       console.log('🎫 削除対象:', { ticketId, ticketName })
       
-      // チケット行から残り回数を取得
-      const ticketRow = button.closest('tr')
+      // チケット行を検索（複数の方法で）
+      let ticketRow = button.closest('tr')
+      
+      if (!ticketRow) {
+        // 代替方法1: ボタングループから親要素を辿る
+        const btnGroup = button.closest('.btn-group')
+        if (btnGroup) {
+          ticketRow = btnGroup.closest('tr')
+        }
+      }
+      
+      if (!ticketRow) {
+        // 代替方法2: data-ticket-id属性で行を検索
+        ticketRow = document.querySelector(`tr[data-ticket-id="${ticketId}"]`)
+      }
+      
       if (!ticketRow) {
         console.error('❌ チケット行が見つかりません')
         this.isProcessing = false
@@ -880,17 +894,38 @@ export default class extends Controller {
       deleteTicketName.textContent = ticketName || '不明'
       deleteTicketRemaining.textContent = remainingCount || '不明'
       
-      // モーダルを表示
-      const deleteModal = new bootstrap.Modal(deleteTicketModal)
-      deleteModal.show()
+      // モーダルを手動で表示
+      deleteTicketModal.style.display = 'block'
+      deleteTicketModal.style.position = 'fixed'
+      deleteTicketModal.style.top = '0'
+      deleteTicketModal.style.left = '0'
+      deleteTicketModal.style.width = '100%'
+      deleteTicketModal.style.height = '100%'
+      deleteTicketModal.style.zIndex = '1050'
+      deleteTicketModal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'
+      
+      // bodyのスタイルを設定
+      document.body.classList.add('modal-open')
+      document.body.style.overflow = 'hidden'
+      
+      // 背景の暗さを追加
+      const backdrop = document.createElement('div')
+      backdrop.className = 'modal-backdrop fade show'
+      backdrop.style.position = 'fixed'
+      backdrop.style.top = '0'
+      backdrop.style.left = '0'
+      backdrop.style.width = '100%'
+      backdrop.style.height = '100%'
+      backdrop.style.zIndex = '1040'
+      backdrop.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'
+      document.body.appendChild(backdrop)
       
       // 削除実行ボタンのイベントリスナー
       const confirmBtn = document.querySelector('#confirmDeleteTicketBtn')
       if (confirmBtn) {
         confirmBtn.onclick = () => {
           this.deleteTicket(ticketId)
-          deleteModal.hide()
-          this.cleanupModalBackground()
+          hideDeleteTicketModal()
         }
       }
       

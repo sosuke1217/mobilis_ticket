@@ -516,7 +516,7 @@
 
 <!-- チケット削除確認モーダル -->
 <div class="modal fade" id="deleteTicketModal" tabindex="-1" aria-labelledby="deleteTicketModalLabel" aria-hidden="true"
-     data-ticket-management-target="modal">
+     data-ticket-management-target="modal" onclick="if(event.target === this) hideDeleteTicketModal();">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header bg-danger text-white">
@@ -541,7 +541,7 @@
         </div>
       </div>
       <div class="modal-footer justify-content-center">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+        <button type="button" class="btn btn-secondary" onclick="hideDeleteTicketModal()">
           <i class="fas fa-times me-1"></i>キャンセル
         </button>
         <button type="button" class="btn btn-danger" id="confirmDeleteTicketBtn" data-ticket-management-target="confirmButton">
@@ -551,3 +551,63 @@
     </div>
   </div>
 </div>
+
+<script>
+// グローバル関数として定義
+function hideDeleteTicketModal() {
+  console.log('🔍 Hiding delete ticket modal manually');
+  
+  const modal = document.getElementById('deleteTicketModal');
+  if (!modal) {
+    console.error('❌ Delete ticket modal not found');
+    return;
+  }
+  
+  // モーダルを非表示
+  modal.style.display = 'none';
+  
+  // 背景の暗さを削除
+  const backdrop = document.querySelector('.modal-backdrop');
+  if (backdrop) {
+    backdrop.remove();
+  }
+  
+  // bodyのスタイルを元に戻す
+  document.body.classList.remove('modal-open');
+  document.body.style.overflow = '';
+  document.body.style.paddingRight = '';
+  
+  console.log('✅ Delete ticket modal hidden');
+}
+
+// DOMContentLoadedでイベントリスナーを設定
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🔍 DOM Content Loaded - Initializing delete ticket modal');
+  
+  const modal = document.getElementById('deleteTicketModal');
+  if (!modal) {
+    console.error('❌ Delete ticket modal not found');
+    return;
+  }
+  
+  // ESCキーでモーダルを閉じる
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && modal.style.display === 'block') {
+      hideDeleteTicketModal();
+    }
+  });
+  
+  // モーダルダイアログの外側クリックでも閉じる
+  const modalDialog = modal.querySelector('.modal-dialog');
+  if (modalDialog) {
+    modalDialog.addEventListener('click', function(e) {
+      if (e.target === modalDialog) {
+        console.log('🔍 Modal dialog background clicked, hiding modal');
+        hideDeleteTicketModal();
+      }
+    });
+  }
+  
+  console.log('✅ Delete ticket modal initialization completed');
+});
+</script>
