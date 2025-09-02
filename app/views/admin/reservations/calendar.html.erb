@@ -2529,11 +2529,18 @@
                         cell.addEventListener('dragenter', handleDragEnter);
                         cell.addEventListener('dragleave', handleDragLeave);
                         
-                        const scheduleDate = new Date(currentWeekStart);
+                                                const scheduleDate = new Date(currentWeekStart);
                         scheduleDate.setDate(scheduleDate.getDate() + day);
                         const dateKey = formatDateKey(scheduleDate);
                         
-                                                // 営業時間チェック
+                        // 今日の日付かどうかをチェック
+                        const today = new Date();
+                        const todayDateKey = formatDateKey(today);
+                        if (dateKey === todayDateKey) {
+                            cell.classList.add('today');
+                        }
+                        
+                        // 営業時間チェック
                         if (isBusinessHour(day, timeStr)) {
                             // 予約チェック
                             const reservation = findReservation(dateKey, timeStr);
@@ -8837,19 +8844,6 @@ function showMessage(message, type = 'info') {
   position: relative;
 }
 
-.day-header.today::after {
-  content: '今日';
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  background: #dc3545;
-  color: white;
-  font-size: 0.7rem;
-  padding: 2px 6px;
-  border-radius: 10px;
-  font-weight: 600;
-}
-
 .schedule-body {
   max-height: 600px;
   overflow-y: auto;
@@ -8931,6 +8925,26 @@ function showMessage(message, type = 'info') {
   border-radius: 6px;
   box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
   position: relative;
+}
+
+/* 予約セルの今日ハイライト */
+.schedule-cell.today {
+  background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(32, 201, 151, 0.1));
+  border: 2px solid #28a745;
+  border-radius: 4px;
+  position: relative;
+}
+
+.schedule-cell.today::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(40, 167, 69, 0.05), rgba(32, 201, 151, 0.05));
+  pointer-events: none;
+  border-radius: 4px;
 }
 
 /* レスポンシブ対応 */
