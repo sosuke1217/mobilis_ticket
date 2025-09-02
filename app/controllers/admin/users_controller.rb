@@ -7,11 +7,11 @@ class Admin::UsersController < ApplicationController
       @q = User.ransack(params[:q])
       @users = @q.result(distinct: true).order(:name).page(params[:page]).per(20)
       
-      # 統計データを事前に計算
-      @total_users = User.count rescue 0
-      @users_with_tickets = User.joins(:tickets).where("tickets.remaining_count > 0").distinct.count rescue 0
-      @users_with_line = User.where.not(line_user_id: [nil, '']).count rescue 0
-      @recent_users = User.joins(:ticket_usages).where("ticket_usages.used_at >= ?", 30.days.ago).distinct.count rescue 0
+      # 統計データを一時的に無効化（デバッグ用）
+      # @total_users = User.count rescue 0
+      # @users_with_tickets = User.joins(:tickets).where("tickets.remaining_count > 0").distinct.count rescue 0
+      # @users_with_line = User.where.not(line_user_id: [nil, '']).count rescue 0
+      # @recent_users = User.joins(:ticket_usages).where("ticket_usages.used_at >= ?", 30.days.ago).distinct.count rescue 0
       
       respond_to do |format|
         format.html
