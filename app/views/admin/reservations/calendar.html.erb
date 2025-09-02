@@ -45,12 +45,7 @@
                 </button>
                 <div class="mini-calendar" id="miniCalendar" style="display: none; position: absolute; top: 100%; left: 0; z-index: 1000; background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 1rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); min-width: 280px;">
                   <div class="d-flex justify-content-center align-items-center mb-3">
-                    <div class="fw-semibold text-center" id="miniCalendarTitle" style="cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: background-color 0.2s;" onclick="toggleYearMonthSelector()">読み込み中...</div>
-                  </div>
-                  
-                  <!-- 年と月の選択ドロップダウン -->
-                  <div id="yearMonthSelector" style="display: none; margin-bottom: 1rem;">
-                    <div class="row g-2">
+                    <div class="row g-2 w-100">
                       <div class="col-6">
                         <select id="yearSelector" class="form-select form-select-sm" onchange="updateMiniCalendarFromSelector()">
                           <!-- 年が動的に生成される -->
@@ -3729,8 +3724,6 @@ function showMessage(message, type = 'info') {
             if (isVisible) {
                 // 非表示にする
                 miniCalendar.style.display = 'none';
-                // 年と月の選択ドロップダウンも非表示にする
-                document.getElementById('yearMonthSelector').style.display = 'none';
             } else {
                 // 表示する
                 miniCalendar.style.display = 'block';
@@ -3741,20 +3734,6 @@ function showMessage(message, type = 'info') {
             }
             
             console.log('🔍 Mini calendar toggled:', isVisible ? 'hidden' : 'visible');
-        }
-
-        // 年と月の選択ドロップダウンの表示/非表示を切り替え
-        function toggleYearMonthSelector() {
-            const selector = document.getElementById('yearMonthSelector');
-            const title = document.getElementById('miniCalendarTitle');
-            
-            if (selector.style.display === 'none') {
-                selector.style.display = 'block';
-                title.style.backgroundColor = '#e9ecef';
-            } else {
-                selector.style.display = 'none';
-                title.style.backgroundColor = 'transparent';
-            }
         }
 
         // 年と月の選択ドロップダウンを初期化
@@ -8248,7 +8227,6 @@ function showMessage(message, type = 'info') {
         window.updateCalendarOnCourseChange = updateCalendarOnCourseChange;
         window.updateTimeSlot = updateTimeSlot;
         window.saveReservationChanges = saveReservationChanges;
-        window.toggleYearMonthSelector = toggleYearMonthSelector;
         window.updateMiniCalendarFromSelector = updateMiniCalendarFromSelector;
         
         console.log('✅ All global functions exposed for onclick attributes');
