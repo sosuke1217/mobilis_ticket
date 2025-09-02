@@ -90,7 +90,7 @@
 </div>
 
 <!-- 新規ユーザー追加モーダル -->
-<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header bg-success text-white">
@@ -172,6 +172,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const form = document.getElementById('addUserForm');
   const saveBtn = document.getElementById('saveUserBtn');
   
+  // モーダルインスタンスをグローバル変数として保持
+  let modalInstance = null;
+  
   console.log('🔍 Elements found:', {
     addUserBtn: !!addUserBtn,
     modal: !!modal,
@@ -184,6 +187,15 @@ document.addEventListener('DOMContentLoaded', function() {
     console.error('❌ Required elements not found');
     return;
   }
+  
+  // モーダルインスタンスを初期化
+  modalInstance = new bootstrap.Modal(modal, {
+    backdrop: true,
+    keyboard: true,
+    focus: true
+  });
+  
+  console.log('🔍 Modal instance created:', modalInstance);
   
   // 新規ユーザー追加ボタンクリック
   addUserBtn.addEventListener('click', function() {
@@ -202,10 +214,13 @@ document.addEventListener('DOMContentLoaded', function() {
     saveBtn.innerHTML = '<i class="fas fa-save me-1"></i>ユーザーを追加';
     
     // モーダルを表示
-    console.log('🔍 Showing modal');
-    const modalInstance = new bootstrap.Modal(modal);
-    modalInstance.show();
-    console.log('🔍 Modal should be visible now');
+    console.log('🔍 Showing modal with instance:', modalInstance);
+    if (modalInstance) {
+      modalInstance.show();
+      console.log('🔍 Modal should be visible now');
+    } else {
+      console.error('❌ Modal instance not found');
+    }
   });
   
   // バリデーション
@@ -311,7 +326,9 @@ document.addEventListener('DOMContentLoaded', function() {
       document.querySelector('.container-lg').insertBefore(alertDiv, document.querySelector('.card'));
       
       // モーダルを閉じる
-      bootstrap.Modal.getInstance(modal).hide();
+      if (modalInstance) {
+        modalInstance.hide();
+      }
       
       // ページをリロード（新しいユーザーを表示するため）
       setTimeout(() => {
@@ -344,6 +361,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // モーダルが閉じられたときのクリーンアップ
   modal.addEventListener('hidden.bs.modal', function() {
+    console.log('🔍 Modal hidden event triggered');
     form.reset();
     form.querySelectorAll('.form-control').forEach(input => {
       input.classList.remove('is-valid', 'is-invalid');
