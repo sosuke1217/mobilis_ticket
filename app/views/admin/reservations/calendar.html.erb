@@ -556,18 +556,35 @@
         </div>
     </div>
 
-     <!-- 予約詳細モーダル -->
-    <div id="reservationDetailModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-body" id="reservationDetailContent">
-                <span class="close" onclick="closeReservationDetailModal()">&times;</span>
-                <!-- 動的に生成される -->
-            </div>
-            <div class="modal-footer">
-                                 <button type="submit" class="btn btn-primary" form="reservationEditForm" onclick="console.log('💾 Save button clicked')">保存</button>
-                 <button type="button" class="btn btn-warning" onclick="cancelReservationFromCalendar()">キャンセル</button>
-                 <button type="button" class="btn btn-danger" onclick="deleteReservationFromCalendar()">削除</button>
-                 <button type="button" class="btn btn-secondary" onclick="closeReservationDetailModal()">閉じる</button>
+    <!-- 予約詳細モーダル -->
+    <div id="reservationDetailModal" class="modal" tabindex="-1" aria-labelledby="reservationDetailModalLabel" aria-hidden="true" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050; background-color: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-header bg-gradient-primary text-white border-0">
+                    <h5 class="modal-title fw-bold" id="reservationDetailModalLabel">
+                        <i class="fas fa-calendar-check me-2"></i>予約詳細
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" onclick="closeReservationDetailModal()" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4" id="reservationDetailContent">
+                    <!-- 動的に生成される -->
+                </div>
+                <div class="modal-footer bg-white border-0 px-4 py-3">
+                    <div class="d-flex justify-content-end w-100 gap-3 pe-4">
+                        <button type="submit" class="btn btn-primary px-4 fw-bold" form="reservationEditForm" onclick="console.log('💾 Save button clicked')">
+                            <i class="fas fa-save me-2"></i>保存
+                        </button>
+                        <button type="button" class="btn btn-warning px-4" onclick="cancelReservationFromCalendar()">
+                            <i class="fas fa-ban me-2"></i>キャンセル
+                        </button>
+                        <button type="button" class="btn btn-danger px-4" onclick="deleteReservationFromCalendar()">
+                            <i class="fas fa-trash me-2"></i>削除
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary px-4" onclick="closeReservationDetailModal()">
+                            <i class="fas fa-times me-2"></i>閉じる
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -6444,257 +6461,365 @@ function showMessage(message, type = 'info') {
 
         // 予約詳細モーダルを開く
         function openReservationDetailModal(reservation) {
-
-            // 最新の予約データを取得
-            let latestReservation = null;
-            for (const dateKey of Object.keys(reservations)) {
-                const dayReservations = reservations[dateKey];
-                const foundReservation = dayReservations.find(r => r.id === reservation.id);
-                if (foundReservation) {
-                    latestReservation = foundReservation;
-                    break;
-                }
-            }
+            console.log('🔧 Opening reservation detail modal...');
+            console.log('🔧 Reservation detail modal - reservation:', reservation);
             
-            // 最新のデータが見つからない場合は元のデータを使用
-            if (!latestReservation) {
-                latestReservation = reservation;
-            }
-            
-            console.log('🔍 Opening modal with reservation data:', {
-                original: {
-                    time: reservation.time,
-                    date: reservation.date,
-                    dateKey: reservation.dateKey,
-                    start_time: reservation.start_time,
-                    createdAt: reservation.createdAt,
-                    updatedAt: reservation.updatedAt
-                },
-                latest: {
-                    time: latestReservation.time,
-                    createdAt: latestReservation.createdAt,
-                    updatedAt: latestReservation.updatedAt,
-                    date: latestReservation.date,
-                    dateKey: latestReservation.dateKey,
-                    start_time: latestReservation.start_time,
-                    fullReservationObject: latestReservation
-                }
-            });
-            
-            // 予約データの妥当性チェック
-            if (!validateReservationData(latestReservation)) {
-                showMessage('予約データが無効です', 'error');
+            const modal = document.getElementById('reservationDetailModal');
+            if (!modal) {
+                console.error('❌ Reservation detail modal element not found');
                 return;
             }
             
-            // 現在の予約を保存（最新のデータを使用）
-            currentReservation = latestReservation;
-            console.log('🔍 Setting currentReservation:', currentReservation);
-            console.log('🔍 currentReservation.id:', currentReservation.id);
+            console.log('🔧 Reservation detail modal element found:', modal);
+            console.log('🔧 Reservation detail modal current display:', modal.style.display);
             
-            // 予約の実際の日付を特定
-            let actualDate = '';
-            for (const dateKey of Object.keys(reservations)) {
-                const dayReservations = reservations[dateKey];
-                const foundReservation = dayReservations.find(r => r.id === latestReservation.id);
-                if (foundReservation) {
-                    const [year, month, day] = dateKey.split('-').map(Number);
-                    const date = new Date(year, month - 1, day);
-                    actualDate = date.toLocaleDateString('ja-JP', { 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric',
-                        weekday: 'long'
-                    });
-                    break;
+            try {
+                // 最新の予約データを取得
+                let latestReservation = null;
+                for (const dateKey of Object.keys(reservations)) {
+                    const dayReservations = reservations[dateKey];
+                    const foundReservation = dayReservations.find(r => r.id === reservation.id);
+                    if (foundReservation) {
+                        latestReservation = foundReservation;
+                        break;
+                    }
                 }
-            }
-            
-            // ステータスに応じた色とアイコンを設定
-            const statusConfig = {
-                'tentative': { color: 'warning', icon: '⏳', text: '仮予約' },
-                'confirmed': { color: 'success', icon: '✓', text: '確認済み' },
-                'completed': { color: 'info', icon: '✅', text: '完了' }
-            };
-            
-            const status = statusConfig[latestReservation.status] || { color: 'secondary', icon: '❓', text: latestReservation.status };
-            
-            // Create customer name HTML
-            const customerNameHTML = latestReservation.userId ? 
-                `<a href="/admin/users/${latestReservation.userId}" target="_blank" class="customer-link">${latestReservation.customer}</a>` : 
-                latestReservation.customer;
-            
-            const modalContent = document.getElementById('reservationDetailContent');
-            modalContent.innerHTML = `
-                <div class="reservation-detail-container">
-                    <!-- 編集フォーム -->
-                    <form id="reservationEditForm" onsubmit="saveReservationChanges(event)">
-                    <!-- ヘッダー情報 -->
-                    <div class="reservation-header">
-                        <div class="header-top">
-                            <div class="customer-name-header">
-                                <span class="customer-name-large">${latestReservation.customer}</span>
-                                    <button type="button" class="btn btn-sm btn-outline-light change-user-btn" onclick="openUserSelectionModal()">
-                                        <i class="fas fa-user-edit"></i> 変更
-                                    </button>
+                
+                // 最新のデータが見つからない場合は元のデータを使用
+                if (!latestReservation) {
+                    latestReservation = reservation;
+                }
+                
+                console.log('🔍 Opening modal with reservation data:', {
+                    original: {
+                        time: reservation.time,
+                        date: reservation.date,
+                        dateKey: reservation.dateKey,
+                        start_time: reservation.start_time,
+                        createdAt: reservation.createdAt,
+                        updatedAt: reservation.updatedAt
+                    },
+                    latest: {
+                        time: latestReservation.time,
+                        createdAt: latestReservation.createdAt,
+                        updatedAt: latestReservation.updatedAt,
+                        date: latestReservation.date,
+                        dateKey: latestReservation.dateKey,
+                        start_time: latestReservation.start_time,
+                        fullReservationObject: latestReservation
+                    }
+                });
+                
+                // 予約データの妥当性チェック
+                if (!validateReservationData(latestReservation)) {
+                    showMessage('予約データが無効です', 'error');
+                    return;
+                }
+                
+                // 現在の予約を保存（最新のデータを使用）
+                currentReservation = latestReservation;
+                console.log('🔍 Setting currentReservation:', currentReservation);
+                console.log('🔍 currentReservation.id:', currentReservation.id);
+                
+                // 予約の実際の日付を特定
+                let actualDate = '';
+                for (const dateKey of Object.keys(reservations)) {
+                    const dayReservations = reservations[dateKey];
+                    const foundReservation = dayReservations.find(r => r.id === latestReservation.id);
+                    if (foundReservation) {
+                        const [year, month, day] = dateKey.split('-').map(Number);
+                        const date = new Date(year, month - 1, day);
+                        actualDate = date.toLocaleDateString('ja-JP', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric',
+                            weekday: 'long'
+                        });
+                        break;
+                    }
+                }
+                
+                // ステータスに応じた色とアイコンを設定
+                const statusConfig = {
+                    'tentative': { color: 'warning', icon: '⏳', text: '仮予約' },
+                    'confirmed': { color: 'success', icon: '✓', text: '確認済み' },
+                    'completed': { color: 'info', icon: '✅', text: '完了' }
+                };
+                
+                const status = statusConfig[latestReservation.status] || { color: 'secondary', icon: '❓', text: latestReservation.status };
+                
+                // Create customer name HTML
+                const customerNameHTML = latestReservation.userId ? 
+                    `<a href="/admin/users/${latestReservation.userId}" target="_blank" class="customer-link">${latestReservation.customer}</a>` : 
+                    latestReservation.customer;
+                
+                const modalContent = document.getElementById('reservationDetailContent');
+                modalContent.innerHTML = `
+                    <div class="reservation-detail-container">
+                        <!-- 編集フォーム -->
+                        <form id="reservationEditForm" onsubmit="saveReservationChanges(event)">
+                        <!-- ヘッダー情報 -->
+                        <div class="reservation-header">
+                            <div class="header-top">
+                                <div class="customer-name-header">
+                                    <span class="customer-name-large">${latestReservation.customer}</span>
+                                        <button type="button" class="btn btn-sm btn-outline-light change-user-btn" onclick="openUserSelectionModal()">
+                                            <i class="fas fa-user-edit"></i> 変更
+                                        </button>
+                                </div>
+                                <div class="reservation-status status-${status.color}">
+                                        <select id="edit-status" class="form-select status-select" onchange="updateCalendarOnStatusChange()">
+                                            <option value="tentative" ${latestReservation.status === 'tentative' ? 'selected' : ''}>仮予約</option>
+                                            <option value="confirmed" ${latestReservation.status === 'confirmed' ? 'selected' : ''}>確認済み</option>
+                                            <option value="completed" ${latestReservation.status === 'completed' ? 'selected' : ''}>完了</option>
+                                        </select>
+                                </div>
                             </div>
-                            <div class="reservation-status status-${status.color}">
-                                    <select id="edit-status" class="form-select status-select" onchange="updateCalendarOnStatusChange()">
-                                        <option value="tentative" ${latestReservation.status === 'tentative' ? 'selected' : ''}>仮予約</option>
-                                        <option value="confirmed" ${latestReservation.status === 'confirmed' ? 'selected' : ''}>確認済み</option>
-                                        <option value="completed" ${latestReservation.status === 'completed' ? 'selected' : ''}>完了</option>
-                                    </select>
-                            </div>
-                        </div>
-                        <div class="header-bottom">
-                            <div class="header-detail-item">
-                                <span class="header-label">予約日時</span>
-                                <span class="header-value">${actualDate || '日付不明'} ${latestReservation.time}</span>
-                            </div>
-                            <div class="header-detail-item">
-                                <span class="header-label">コース</span>
-                                    <select id="edit-course" class="form-select course-select" onchange="updateCalendarOnCourseChange()">
-                                        <option value="40分" ${latestReservation.duration === 40 ? 'selected' : ''}>40分</option>
-                                        <option value="60分" ${latestReservation.duration === 60 ? 'selected' : ''}>60分</option>
-                                        <option value="80分" ${latestReservation.duration === 80 ? 'selected' : ''}>80分</option>
-                                    </select>
+                            <div class="header-bottom">
+                                <div class="header-detail-item">
+                                    <span class="header-label">予約日時</span>
+                                    <span class="header-value">${actualDate || '日付不明'} ${latestReservation.time}</span>
                                 </div>
                                 <div class="header-detail-item">
-                                    <span class="header-label">準備時間</span>
-                                    <span class="header-value">
-                                        <select id="edit-interval" class="interval-select" onchange="updateIntervalOnChange()">
-                                                            <option value="0" ${(latestReservation.effective_interval_minutes ?? 15) === 0 ? 'selected' : ''}>0分</option>
+                                    <span class="header-label">コース</span>
+                                        <select id="edit-course" class="form-select course-select" onchange="updateCalendarOnCourseChange()">
+                                            <option value="40分" ${latestReservation.duration === 40 ? 'selected' : ''}>40分</option>
+                                            <option value="60分" ${latestReservation.duration === 60 ? 'selected' : ''}>60分</option>
+                                            <option value="80分" ${latestReservation.duration === 80 ? 'selected' : ''}>80分</option>
+                                        </select>
+                                    </div>
+                                    <div class="header-detail-item">
+                                        <span class="header-label">準備時間</span>
+                                        <span class="header-value">
+                                            <select id="edit-interval" class="interval-select" onchange="updateIntervalOnChange()">
+                                                                <option value="0" ${(latestReservation.effective_interval_minutes ?? 15) === 0 ? 'selected' : ''}>0分</option>
                 <option value="5" ${(latestReservation.effective_interval_minutes ?? 15) === 5 ? 'selected' : ''}>5分</option>
                 <option value="10" ${(latestReservation.effective_interval_minutes ?? 15) === 10 ? 'selected' : ''}>10分</option>
                 <option value="15" ${(latestReservation.effective_interval_minutes ?? 15) === 15 ? 'selected' : ''}>15分</option>
                 <option value="20" ${(latestReservation.effective_interval_minutes ?? 15) === 20 ? 'selected' : ''}>20分</option>
                 <option value="30" ${(latestReservation.effective_interval_minutes ?? 15) === 30 ? 'selected' : ''}>30分</option>
-                                        </select>
-                                    </span>
+                                            </select>
+                                        </span>
+                                </div>
                             </div>
                         </div>
+                        
+                        <!-- お客様基本情報 -->
+                        <div class="customer-basic-info">
+                            <div class="customer-phone">
+                                ${latestReservation.phone || '電話番号未記入'}
+                            </div>
+                            <div class="customer-email">
+                                ${latestReservation.email || 'メールアドレス未記入'}
+                            </div>
+                        </div>
+                        
+                            <!-- メモ -->
+                            <div class="notes-section">
+                                <div class="section-title">メモ</div>
+                                <textarea id="edit-note" class="form-control" rows="3" placeholder="メモを入力してください">${latestReservation.note || ''}</textarea>
+                            </div>
+                        </form>
+                        
+                        <!-- 本日以降の予約 -->
+                        <div class="future-reservations-section">
+                            <div class="section-title" id="future-reservations-title">📅 本日以降の予約</div>
+                            <div class="future-reservations-content" id="future-reservations-content">
+                                <div class="loading" style="color: #6c757d !important; font-size: 14px !important; text-align: center !important; padding: 20px !important; font-style: italic !important;">読み込み中...</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 回数券と利用履歴を横並びで表示 -->
+                        <div class="tickets-history-container">
+                        <!-- 回数券 -->
+                        <div class="tickets-section">
+                            <div class="section-title">回数券</div>
+                            <div class="tickets-content" id="tickets-content">
+                                <div class="loading">読み込み中...</div>
+                            </div>
+                        </div>
+                        
+                            <!-- 利用履歴 -->
+                        <div class="reservation-history-section">
+                                <div class="section-title">利用履歴</div>
+                            <div class="history-content" id="history-content">
+                                <div class="loading">読み込み中...</div>
+                            </div>
+                            </div>
+                        </div>
+                        
+                        <!-- システム情報 -->
+                        <div class="system-info-section">
+                            <div class="detail-item">
+                                <span class="detail-label">作成日時</span>
+                                <span class="detail-value">${new Date(latestReservation.createdAt).toLocaleString('ja-JP')}</span>
+                            </div>
+                            ${(function() {
+                                console.log('🔍 Checking timestamps for 変更日時:', {
+                                    createdAt: latestReservation.createdAt,
+                                    updatedAt: latestReservation.updatedAt,
+                                    created_at: latestReservation.created_at,
+                                    updated_at: latestReservation.updated_at,
+                                    createdTime: new Date(latestReservation.createdAt).getTime(),
+                                    updatedTime: latestReservation.updatedAt ? new Date(latestReservation.updatedAt).getTime() : 'null',
+                                    isDifferent: latestReservation.updatedAt && new Date(latestReservation.updatedAt).getTime() !== new Date(latestReservation.createdAt).getTime(),
+                                    allFields: Object.keys(latestReservation)
+                                });
+                                
+                                // Check multiple possible timestamp field combinations
+                                const createdTimestamp = latestReservation.createdAt || latestReservation.created_at;
+                                const updatedTimestamp = latestReservation.updatedAt || latestReservation.updated_at;
+                                
+                                console.log('🔍 Final timestamp check:', {
+                                    createdTimestamp,
+                                    updatedTimestamp,
+                                    hasDifferentTimestamps: updatedTimestamp && createdTimestamp && new Date(updatedTimestamp).getTime() !== new Date(createdTimestamp).getTime()
+                                });
+                                
+                                if (updatedTimestamp && createdTimestamp && new Date(updatedTimestamp).getTime() !== new Date(createdTimestamp).getTime()) {
+                                    return `
+                            <div class="detail-item">
+                                <span class="detail-label">変更日時</span>
+                                <span class="detail-value">${new Date(updatedTimestamp).toLocaleString('ja-JP')}</span>
+                            </div>`;
+                                } else {
+                                    return '';
+                                }
+                            })()}
+                        </div>
                     </div>
-                    
-                    <!-- お客様基本情報 -->
-                    <div class="customer-basic-info">
-                        <div class="customer-phone">
-                            ${latestReservation.phone || '電話番号未記入'}
-                        </div>
-                        <div class="customer-email">
-                            ${latestReservation.email || 'メールアドレス未記入'}
-                        </div>
-                    </div>
-                    
-                        <!-- メモ -->
-                        <div class="notes-section">
-                            <div class="section-title">メモ</div>
-                            <textarea id="edit-note" class="form-control" rows="3" placeholder="メモを入力してください">${latestReservation.note || ''}</textarea>
-                        </div>
-                    </form>
-                    
-                    <!-- 本日以降の予約 -->
-                    <div class="future-reservations-section">
-                        <div class="section-title" id="future-reservations-title">📅 本日以降の予約</div>
-                        <div class="future-reservations-content" id="future-reservations-content">
-                            <div class="loading" style="color: #6c757d !important; font-size: 14px !important; text-align: center !important; padding: 20px !important; font-style: italic !important;">読み込み中...</div>
-                        </div>
-                    </div>
-                    
-                    <!-- 回数券と利用履歴を横並びで表示 -->
-                    <div class="tickets-history-container">
-                    <!-- 回数券 -->
-                    <div class="tickets-section">
-                        <div class="section-title">回数券</div>
-                        <div class="tickets-content" id="tickets-content">
-                            <div class="loading">読み込み中...</div>
-                        </div>
-                    </div>
-                    
-                        <!-- 利用履歴 -->
-                    <div class="reservation-history-section">
-                            <div class="section-title">利用履歴</div>
-                        <div class="history-content" id="history-content">
-                            <div class="loading">読み込み中...</div>
-                        </div>
-                        </div>
-                    </div>
-                    
-                    <!-- システム情報 -->
-                    <div class="system-info-section">
-                        <div class="detail-item">
-                            <span class="detail-label">作成日時</span>
-                            <span class="detail-value">${new Date(latestReservation.createdAt).toLocaleString('ja-JP')}</span>
-                        </div>
-                        ${(function() {
-                            console.log('🔍 Checking timestamps for 変更日時:', {
-                                createdAt: latestReservation.createdAt,
-                                updatedAt: latestReservation.updatedAt,
-                                created_at: latestReservation.created_at,
-                                updated_at: latestReservation.updated_at,
-                                createdTime: new Date(latestReservation.createdAt).getTime(),
-                                updatedTime: latestReservation.updatedAt ? new Date(latestReservation.updatedAt).getTime() : 'null',
-                                isDifferent: latestReservation.updatedAt && new Date(latestReservation.updatedAt).getTime() !== new Date(latestReservation.createdAt).getTime(),
-                                allFields: Object.keys(latestReservation)
-                            });
-                            
-                            // Check multiple possible timestamp field combinations
-                            const createdTimestamp = latestReservation.createdAt || latestReservation.created_at;
-                            const updatedTimestamp = latestReservation.updatedAt || latestReservation.updated_at;
-                            
-                            console.log('🔍 Final timestamp check:', {
-                                createdTimestamp,
-                                updatedTimestamp,
-                                hasDifferentTimestamps: updatedTimestamp && createdTimestamp && new Date(updatedTimestamp).getTime() !== new Date(createdTimestamp).getTime()
-                            });
-                            
-                            if (updatedTimestamp && createdTimestamp && new Date(updatedTimestamp).getTime() !== new Date(createdTimestamp).getTime()) {
-                                return `
-                        <div class="detail-item">
-                            <span class="detail-label">変更日時</span>
-                            <span class="detail-value">${new Date(updatedTimestamp).toLocaleString('ja-JP')}</span>
-                        </div>`;
-                            } else {
-                                return '';
+                `;
+                
+                // モーダルを表示 - より確実な方法
+                modal.style.display = 'block';
+                modal.style.visibility = 'visible';
+                modal.style.opacity = '1';
+                modal.style.transition = 'none'; // トランジションを無効化
+                document.body.classList.add('modal-open');
+                document.body.style.overflow = 'hidden';
+                
+                console.log('🔧 Reservation detail modal displayed - display:', modal.style.display);
+                console.log('🔧 Reservation detail modal visibility:', modal.style.visibility);
+                console.log('🔧 Reservation detail modal opacity:', modal.style.opacity);
+                console.log('🔧 Body classes:', document.body.className);
+                console.log('🔧 Body overflow:', document.body.style.overflow);
+                
+                // 外側クリックで閉じる機能を設定（少し遅延）
+                setTimeout(() => {
+                    console.log('🔧 Setting up reservation detail modal outside click handler...');
+                    const freshModal = document.getElementById('reservationDetailModal');
+                    if (freshModal) {
+                        console.log('🔧 Fresh reservation detail modal found, setting up click handler');
+                        
+                        // 既存のイベントリスナーを削除（より安全な方法）
+                        const existingHandler = freshModal._outsideClickHandler;
+                        if (existingHandler) {
+                            freshModal.removeEventListener('click', existingHandler);
+                        }
+                        
+                        // 新しいイベントリスナーを作成
+                        const newHandler = function(event) {
+                            console.log('🔧 Reservation detail modal clicked:', event.target);
+                            if (event.target === freshModal) {
+                                console.log('✅ Closing reservation detail modal via click outside');
+                                closeReservationDetailModal();
                             }
-                        })()}
-                    </div>
-                </div>
-            `;
-            document.getElementById('reservationDetailModal').style.display = 'block';
-            
-            // Add click event listener to customer link
-            setTimeout(() => {
-                const customerLink = document.querySelector('.customer-link');
-                if (customerLink) {
-        
-                    customerLink.addEventListener('click', function(e) {
-            
-                        e.preventDefault();
-                        window.open(this.href, '_blank');
-                    });
-                } else {
-                    console.log('❌ Customer link not found');
-                }
-            }, 100);
-            
-            // 本日以降の予約を読み込み
-            // ユーザーIDがある場合は、そのユーザーの予約のみを表示
-            const userId = latestReservation.userId;
-            loadFutureReservations(userId);
+                        };
+                        
+                        // イベントリスナーを追加
+                        freshModal.addEventListener('click', newHandler);
+                        freshModal._outsideClickHandler = newHandler; // 参照を保存
+                        
+                        console.log('🔧 Reservation detail modal outside click handler set up');
+                    } else {
+                        console.error('❌ Fresh reservation detail modal not found in setTimeout');
+                    }
+                }, 200);
+                
+                console.log('✅ Reservation detail modal opened successfully');
+                
+                // モーダルが表示されているか確認
+                setTimeout(() => {
+                    const checkModal = document.getElementById('reservationDetailModal');
+                    console.log('🔧 Reservation detail modal check after 500ms - display:', checkModal ? checkModal.style.display : 'not found');
+                    console.log('🔧 Reservation detail modal check after 500ms - visible:', checkModal ? checkModal.offsetParent !== null : 'not found');
+                    console.log('🔧 Reservation detail modal check after 500ms - visibility:', checkModal ? checkModal.style.visibility : 'not found');
+                    console.log('🔧 Reservation detail modal check after 500ms - opacity:', checkModal ? checkModal.style.opacity : 'not found');
+                }, 500);
+                
+                // Add click event listener to customer link
+                setTimeout(() => {
+                    const customerLink = document.querySelector('.customer-link');
+                    if (customerLink) {
+                        customerLink.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            window.open(this.href, '_blank');
+                        });
+                    } else {
+                        console.log('❌ Customer link not found');
+                    }
+                }, 100);
+                
+                // 本日以降の予約を読み込み
+                // ユーザーIDがある場合は、そのユーザーの予約のみを表示
+                const userId = latestReservation.userId;
+                loadFutureReservations(userId);
 
-            // チケットと予約履歴を読み込み（ユーザーIDベース）
-            if (latestReservation.userId) {
-                loadTicketsAndHistoryForUser(latestReservation.userId);
-            } else {
-                loadTicketsAndHistory(latestReservation);
+                // チケットと予約履歴を読み込み（ユーザーIDベース）
+                if (latestReservation.userId) {
+                    loadTicketsAndHistoryForUser(latestReservation.userId);
+                } else {
+                    loadTicketsAndHistory(latestReservation);
+                }
+                
+                // ユーザーリストは検索時に動的に読み込み
+                
+            } catch (error) {
+                console.error('❌ Error opening reservation detail modal:', error);
+                console.error('❌ Error stack:', error.stack);
+                // エラーが発生してもモーダルは表示する
+                modal.style.display = 'block';
+                modal.style.visibility = 'visible';
+                modal.style.opacity = '1';
             }
-            
-            // ユーザーリストは検索時に動的に読み込み
         }
 
         // 予約詳細モーダルを閉じる
         function closeReservationDetailModal() {
-            document.getElementById('reservationDetailModal').style.display = 'none';
+            console.log('🔧 Closing reservation detail modal...');
+            console.log('🔧 closeReservationDetailModal called at:', new Date().toISOString());
+            
+            const modal = document.getElementById('reservationDetailModal');
+            if (modal) {
+                console.log('🔧 Reservation detail modal found for closing');
+                console.log('🔧 Reservation detail modal current display before closing:', modal.style.display);
+                
+                // イベントリスナーを削除
+                const existingHandler = modal._outsideClickHandler;
+                if (existingHandler) {
+                    modal.removeEventListener('click', existingHandler);
+                    delete modal._outsideClickHandler;
+                    console.log('🔧 Reservation detail modal outside click handler removed');
+                }
+                
+                // モーダルを非表示にする
+                modal.style.display = 'none';
+                modal.style.visibility = 'hidden';
+                modal.style.opacity = '0';
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                
+                console.log('🔧 Reservation detail modal display after closing:', modal.style.display);
+                console.log('🔧 Reservation detail modal visibility after closing:', modal.style.visibility);
+                console.log('🔧 Reservation detail modal opacity after closing:', modal.style.opacity);
+                console.log('🔧 Body classes after closing:', document.body.className);
+                console.log('🔧 Body overflow after closing:', document.body.style.overflow);
+                
+                console.log('✅ Reservation detail modal closed successfully');
+            } else {
+                console.error('❌ Reservation detail modal not found when trying to close');
+            }
+            
             currentReservation = null; // 現在の予約をリセット
         }
         
