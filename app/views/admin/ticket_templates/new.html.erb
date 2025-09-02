@@ -1,15 +1,145 @@
-<div class="container my-5">
-  <div class="card shadow">
-    <div class="card-header bg-dark text-white">
-      <h2 class="mb-0">新規テンプレート作成</h2>
+<div class="container-lg my-5">
+  <!-- ヘッダーセクション -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h1 class="h3 mb-1">
+            <i class="fas fa-plus me-2 text-success"></i>新規テンプレート作成
+          </h1>
+          <p class="text-muted mb-0">新しいチケットテンプレートを設定します</p>
+        </div>
+        <%= link_to admin_ticket_templates_path, class: "btn btn-outline-secondary" do %>
+          <i class="fas fa-arrow-left me-1"></i>一覧に戻る
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- メインコンテンツ -->
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">
+            <i class="fas fa-edit me-2"></i>テンプレート情報
+          </h5>
+        </div>
+        <div class="card-body">
+          <%= form_with model: [:admin, template], local: true do |f| %>
+            <div class="row g-3">
+              <div class="col-12">
+                <label for="ticket_template_name" class="form-label fw-bold">
+                  <i class="fas fa-tag me-1"></i>テンプレート名 <span class="text-danger">*</span>
+                </label>
+                <%= f.text_field :name, class: "form-control", placeholder: "例: 5回コース", required: true %>
+                <div class="form-text">チケットの種類を識別する名前を入力してください</div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="ticket_template_total_count" class="form-label fw-bold">
+                  <i class="fas fa-hashtag me-1"></i>利用回数 <span class="text-danger">*</span>
+                </label>
+                <%= f.number_field :total_count, class: "form-control", placeholder: "例: 5", min: 1, required: true %>
+                <div class="form-text">このチケットで利用できる回数を設定</div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="ticket_template_price" class="form-label fw-bold">
+                  <i class="fas fa-yen-sign me-1"></i>価格（円） <span class="text-danger">*</span>
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text">¥</span>
+                  <%= f.number_field :price, class: "form-control", placeholder: "例: 5000", min: 1, required: true %>
+                </div>
+                <div class="form-text">チケット全体の価格を設定</div>
+              </div>
+
+              <div class="col-12">
+                <label for="ticket_template_expiry_days" class="form-label fw-bold">
+                  <i class="fas fa-calendar me-1"></i>有効期間（日数） <span class="text-danger">*</span>
+                </label>
+                <%= f.number_field :expiry_days, class: "form-control", placeholder: "例: 30", min: 1, required: true %>
+                <div class="form-text">発行日から何日間有効かを設定</div>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-4">
+              <%= link_to admin_ticket_templates_path, class: "btn btn-outline-secondary" do %>
+                <i class="fas fa-times me-1"></i>キャンセル
+              <% end %>
+              <%= f.submit "テンプレートを作成", class: "btn btn-success" do %>
+                <i class="fas fa-save me-1"></i>作成
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
     </div>
 
-    <div class="card-body">
-      <%= render partial: "form", locals: { template: @template } %>
-
-      <div class="mt-4">
-        <%= link_to "← テンプレート一覧に戻る", admin_ticket_templates_path, class: "btn btn-outline-secondary" %>
+    <!-- サイドバー -->
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">
+            <i class="fas fa-info-circle me-2"></i>設定例
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <h6 class="fw-bold text-primary">5回コース</h6>
+            <ul class="list-unstyled small text-muted">
+              <li><i class="fas fa-hashtag me-1"></i>利用回数: 5回</li>
+              <li><i class="fas fa-yen-sign me-1"></i>価格: ¥5,000</li>
+              <li><i class="fas fa-calculator me-1"></i>1回あたり: ¥1,000</li>
+              <li><i class="fas fa-calendar me-1"></i>有効期間: 30日</li>
+            </ul>
+          </div>
+          <div class="mb-3">
+            <h6 class="fw-bold text-success">10回コース</h6>
+            <ul class="list-unstyled small text-muted">
+              <li><i class="fas fa-hashtag me-1"></i>利用回数: 10回</li>
+              <li><i class="fas fa-yen-sign me-1"></i>価格: ¥8,000</li>
+              <li><i class="fas fa-calculator me-1"></i>1回あたり: ¥800</li>
+              <li><i class="fas fa-calendar me-1"></i>有効期間: 90日</li>
+            </ul>
+          </div>
+          <div class="alert alert-info small">
+            <i class="fas fa-lightbulb me-1"></i>
+            <strong>ヒント:</strong> 回数を多くすると1回あたりの価格が安くなり、お得感を演出できます。
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
+
+<style>
+.form-label {
+  color: #495057;
+}
+
+.form-control:focus {
+  border-color: #28a745;
+  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.input-group-text {
+  background-color: #f8f9fa;
+  border-color: #ced4da;
+}
+
+.card {
+  transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .col-lg-4 {
+    margin-top: 1rem;
+  }
+}
+</style>
