@@ -57,9 +57,11 @@ class User < ApplicationRecord
 
   # ユーザーの未使用分のチケット金額（残額合計）
   def remaining_ticket_value
-    tickets.includes(:ticket_template).sum do |ticket|
-      next 0 unless ticket.unit_price && ticket.remaining_count
-      ticket.unit_price * ticket.remaining_count
+    tickets.includes(:ticket_template)
+          .where("remaining_count > 0")
+          .sum do |ticket|
+      next 0 unless ticket.ticket_template&.price && ticket.remaining_count
+      ticket.ticket_template.price * ticket.remaining_count
     end
   end
 
