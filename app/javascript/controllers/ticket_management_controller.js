@@ -890,6 +890,10 @@ export default class extends Controller {
         return
       }
       
+      // 既存の背景をクリア
+      const existingBackdrops = document.querySelectorAll('.modal-backdrop')
+      existingBackdrops.forEach(backdrop => backdrop.remove())
+      
       // モーダルにデータを設定
       deleteTicketName.textContent = ticketName || '不明'
       deleteTicketRemaining.textContent = remainingCount || '不明'
@@ -920,10 +924,17 @@ export default class extends Controller {
       backdrop.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'
       document.body.appendChild(backdrop)
       
-      // 削除実行ボタンのイベントリスナー
+      // 削除実行ボタンのイベントリスナーを設定
       const confirmBtn = document.querySelector('#confirmDeleteTicketBtn')
       if (confirmBtn) {
-        confirmBtn.onclick = () => {
+        // 既存のイベントリスナーを削除
+        confirmBtn.onclick = null
+        
+        // 新しいイベントリスナーを追加
+        confirmBtn.onclick = (e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          console.log('🔍 削除実行ボタンがクリックされました')
           this.deleteTicket(ticketId)
           hideDeleteTicketModal()
         }
