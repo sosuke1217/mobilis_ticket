@@ -140,8 +140,14 @@ class Admin::UsersController < ApplicationController
 
   # チケット管理ページ
   def ticket_management
-    @tickets = @user.tickets.where("remaining_count > 0").includes(:ticket_template)
-    @ticket_templates = TicketTemplate.all
+    begin
+      @tickets = @user.tickets.where("remaining_count > 0").includes(:ticket_template).where.not(ticket_template: nil)
+      @ticket_templates = TicketTemplate.all
+    rescue => e
+      Rails.logger.error "Error in ticket_management action: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      redirect_to admin_user_path(@user), alert: "チケット管理ページの表示中にエラーが発生しました: #{e.message}"
+    end
   end
 
   # ユーザー固有のチケット使用履歴

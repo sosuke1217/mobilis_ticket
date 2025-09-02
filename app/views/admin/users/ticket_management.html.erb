@@ -186,8 +186,20 @@
               <% @tickets.each do |ticket| %>
                 <tr data-ticket-id="<%= ticket.id %>">
                 <td>
-                  <strong><%= ticket.ticket_template.name %></strong>
-                    <br><small class="text-muted">¥<%= number_with_delimiter(ticket.ticket_template.price) %></small>
+                  <strong>
+                    <% if ticket.ticket_template.present? %>
+                      <%= ticket.ticket_template.name %>
+                    <% else %>
+                      <span class="text-muted">削除されたチケット</span>
+                    <% end %>
+                  </strong>
+                    <br><small class="text-muted">
+                      <% if ticket.ticket_template.present? %>
+                        ¥<%= number_with_delimiter(ticket.ticket_template.price) %>
+                      <% else %>
+                        ¥0
+                      <% end %>
+                    </small>
                 </td>
                 <td>
                     <span class="badge bg-primary">
