@@ -57,7 +57,7 @@ class Admin::TicketUsagesController < ApplicationController
   def update
     @usage = TicketUsage.find(params[:id])
     if @usage.update(ticket_usage_params)
-      redirect_to admin_user_path(@usage.user), notice: "メモを更新しました。"
+      redirect_to admin_ticket_usage_path(@usage), notice: "メモを更新しました。"
     else
       render :edit
     end
