@@ -165,15 +165,30 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  console.log('🔍 DOM Content Loaded - Initializing user management page');
+  
   const addUserBtn = document.getElementById('addUserBtn');
   const modal = document.getElementById('addUserModal');
   const form = document.getElementById('addUserForm');
   const saveBtn = document.getElementById('saveUserBtn');
   
-  if (!addUserBtn || !modal || !form || !saveBtn) return;
+  console.log('🔍 Elements found:', {
+    addUserBtn: !!addUserBtn,
+    modal: !!modal,
+    form: !!form,
+    saveBtn: !!saveBtn,
+    bootstrap: typeof bootstrap !== 'undefined'
+  });
+  
+  if (!addUserBtn || !modal || !form || !saveBtn) {
+    console.error('❌ Required elements not found');
+    return;
+  }
   
   // 新規ユーザー追加ボタンクリック
   addUserBtn.addEventListener('click', function() {
+    console.log('🔍 Add user button clicked');
+    
     // フォームをリセット
     form.reset();
     
@@ -187,7 +202,10 @@ document.addEventListener('DOMContentLoaded', function() {
     saveBtn.innerHTML = '<i class="fas fa-save me-1"></i>ユーザーを追加';
     
     // モーダルを表示
-    new bootstrap.Modal(modal).show();
+    console.log('🔍 Showing modal');
+    const modalInstance = new bootstrap.Modal(modal);
+    modalInstance.show();
+    console.log('🔍 Modal should be visible now');
   });
   
   // バリデーション
