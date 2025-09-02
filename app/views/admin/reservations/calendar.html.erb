@@ -3797,15 +3797,8 @@ function showMessage(message, type = 'info') {
         // モーダルの外側クリックで閉じる
         window.onclick = function(event) {
             const modal = document.getElementById('settingsModal');
-            if (event.target === modal) {
+            if (modal && event.target === modal) {
                 closeSettingsModal();
-            }
-            
-            // ミニカレンダーの外側クリックで閉じる
-            const miniCalendar = document.getElementById('miniCalendar');
-            const miniCalendarContainer = document.querySelector('.mini-calendar-container');
-            if (miniCalendar && !miniCalendarContainer.contains(event.target)) {
-                miniCalendar.classList.remove('show');
             }
         }
 
@@ -3851,6 +3844,11 @@ function showMessage(message, type = 'info') {
 
         // ミニカレンダーの外側クリックを処理
         function handleMiniCalendarOutsideClick(event) {
+            // イベントターゲットが存在しない場合は何もしない
+            if (!event || !event.target) {
+                return;
+            }
+            
             const miniCalendar = document.getElementById('miniCalendar');
             const toggleButton = document.querySelector('button[onclick="toggleMiniCalendar()"]');
             
@@ -3859,16 +3857,21 @@ function showMessage(message, type = 'info') {
                 return;
             }
             
-            // イベントターゲットが存在しない場合は何もしない
-            if (!event || !event.target) {
-                return;
-            }
-            
             // ミニカレンダー内またはトグルボタン内のクリックでない場合
-            if (!miniCalendar.contains(event.target) && !toggleButton.contains(event.target)) {
-                console.log('✅ Closing mini calendar via outside click');
-                miniCalendar.style.display = 'none';
-                document.removeEventListener('click', handleMiniCalendarOutsideClick);
+            try {
+                if (!miniCalendar.contains(event.target) && !toggleButton.contains(event.target)) {
+                    console.log('✅ Closing mini calendar via outside click');
+                    miniCalendar.style.display = 'none';
+                    document.removeEventListener('click', handleMiniCalendarOutsideClick);
+                }
+            } catch (error) {
+                console.error('❌ Error in mini calendar outside click handler:', error);
+                // エラーが発生した場合は安全のためイベントリスナーを削除
+                try {
+                    document.removeEventListener('click', handleMiniCalendarOutsideClick);
+                } catch (removeError) {
+                    console.error('❌ Error removing event listener:', removeError);
+                }
             }
         }
 
