@@ -8960,6 +8960,8 @@ function showMessage(message, type = 'info') {
 /* 予約ブロックがある場合は今日のハイライト背景を無効化 */
 .schedule-cell.today:has(.reservation-block) {
   background: transparent;
+  border-left: none;
+  border-right: none;
 }
 
 .schedule-cell.today:has(.reservation-block)::before {
