@@ -2506,6 +2506,17 @@
                         timeSlot.classList.add('today');
                     }
                     
+                    // 現在の時間かどうかをチェック
+                    const now = new Date();
+                    const currentHour = now.getHours();
+                    const currentMinute = now.getMinutes();
+                    const currentTimeStr = `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`;
+                    
+                    // 現在の時間の行にcurrent-timeクラスを追加
+                    if (timeStr === currentTimeStr) {
+                        row.classList.add('current-time');
+                    }
+                    
                     // 時間マーカーのスタイルを追加（10分刻みに対応）
                     if (minute === 0) {
                         timeSlot.classList.add('hour-marker');
@@ -8944,6 +8955,35 @@ function showMessage(message, type = 'info') {
   bottom: 0;
   background: linear-gradient(135deg, rgba(40, 167, 69, 0.08), rgba(32, 201, 151, 0.08));
   pointer-events: none;
+}
+
+/* 現在の時間の赤い線 */
+.schedule-row.current-time {
+  border-top: 3px solid #dc3545;
+  border-bottom: 3px solid #dc3545;
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(220, 53, 69, 0.1));
+  position: relative;
+  z-index: 10;
+}
+
+.schedule-row.current-time::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.05), rgba(220, 53, 69, 0.05));
+  pointer-events: none;
+  z-index: -1;
+}
+
+.schedule-row.current-time .time-slot {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  color: white;
+  font-weight: 600;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
 }
 
 /* レスポンシブ対応 */
