@@ -70,14 +70,14 @@
                     </div>
                   </div>
                   
-                  <div class="d-flex mb-2">
-                    <div class="flex-fill text-center small text-muted fw-semibold">日</div>
-                    <div class="flex-fill text-center small text-muted fw-semibold">月</div>
-                    <div class="flex-fill text-center small text-muted fw-semibold">火</div>
-                    <div class="flex-fill text-center small text-muted fw-semibold">水</div>
-                    <div class="flex-fill text-center small text-muted fw-semibold">木</div>
-                    <div class="flex-fill text-center small text-muted fw-semibold">金</div>
-                    <div class="flex-fill text-center small text-muted fw-semibold">土</div>
+                  <div class="mini-calendar-weekdays mb-2">
+                    <div class="mini-calendar-weekday">日</div>
+                    <div class="mini-calendar-weekday">月</div>
+                    <div class="mini-calendar-weekday">火</div>
+                    <div class="mini-calendar-weekday">水</div>
+                    <div class="mini-calendar-weekday">木</div>
+                    <div class="mini-calendar-weekday">金</div>
+                    <div class="mini-calendar-weekday">土</div>
                   </div>
                   <div class="mini-calendar-days" id="miniCalendarDays">
                     <!-- 動的に生成される -->
@@ -8312,6 +8312,20 @@ function showMessage(message, type = 'info') {
 }
 
 /* ミニカレンダー */
+.mini-calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.mini-calendar-weekday {
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6c757d;
+  padding: 4px 0;
+}
+
 .mini-calendar-days {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -8325,11 +8339,12 @@ function showMessage(message, type = 'info') {
   justify-content: center;
   cursor: pointer;
   border-radius: 6px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
   transition: all 0.2s ease;
   border: 1px solid transparent;
-  min-height: 36px;
+  min-height: 32px;
+  background-color: #ffffff;
 }
 
 .mini-calendar-day:hover {
