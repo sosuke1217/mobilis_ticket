@@ -709,6 +709,12 @@
                 loadReservationsFromBackend()
             ]).then(() => {
                 renderWeekView();
+                
+                // 今日の予約があるセルの今日のハイライトを無効化
+                setTimeout(() => {
+                    disableTodayHighlightForReservations();
+                }, 100);
+                
                 renderDaySettings();
                 renderMiniCalendar();
                 showDragHint();
@@ -3723,6 +3729,12 @@
                     
                     // 表示を更新
                     renderWeekView();
+                    
+                    // 今日の予約があるセルの今日のハイライトを無効化
+                    setTimeout(() => {
+                        disableTodayHighlightForReservations();
+                    }, 100);
+                    
                     closeSettingsModal();
                     
                     // 保存完了メッセージ
@@ -3756,6 +3768,12 @@
             ]).then(() => {
                 console.log('🔄 Previous week - data loaded, rendering week view');
                 renderWeekView();
+                
+                // 今日の予約があるセルの今日のハイライトを無効化
+                setTimeout(() => {
+                    disableTodayHighlightForReservations();
+                }, 100);
+                
                 updateCancellationDisplay(); // キャンセル履歴を更新
             }).catch(error => {
                 console.error('❌ Error loading data for previous week:', error);
@@ -3777,6 +3795,12 @@
             ]).then(() => {
                 console.log('🔄 Next week - data loaded, rendering week view');
                 renderWeekView();
+                
+                // 今日の予約があるセルの今日のハイライトを無効化
+                setTimeout(() => {
+                    disableTodayHighlightForReservations();
+                }, 100);
+                
                 updateCancellationDisplay(); // キャンセル履歴を更新
             }).catch(error => {
                 console.error('❌ Error loading data for next week:', error);
@@ -9103,7 +9127,24 @@ function showMessage(message, type = 'info') {
 </style>
 
 <script>
-// 既存の関数はそのまま維持（previousWeek, nextWeek, toggleMiniCalendar等）
+        // 今日の予約があるセルの今日のハイライトを無効化する関数
+        function disableTodayHighlightForReservations() {
+            const today = new Date();
+            const todayDateKey = formatDateKey(today);
+            
+            // 今日の列の全てのセルを取得
+            const todayCells = document.querySelectorAll('.schedule-cell.today');
+            todayCells.forEach(cell => {
+                // 予約ブロックがあるかチェック
+                const hasReservation = cell.querySelector('.reservation-block');
+                if (hasReservation) {
+                    cell.classList.remove('today');
+                    cell.classList.add('today-with-reservation');
+                }
+            });
+        }
+        
+        // 既存の関数はそのまま維持（previousWeek, nextWeek, toggleMiniCalendar等）
 </script>
 
 <!-- カレンダー専用のスタイル -->
