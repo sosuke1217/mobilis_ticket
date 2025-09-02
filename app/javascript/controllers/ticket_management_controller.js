@@ -1118,7 +1118,7 @@ export default class extends Controller {
       const ticketCountElement = this.element.querySelector('#remainingTicketCount')
       if (ticketCountElement) {
         ticketCountElement.textContent = totalRemainingCount
-        console.log('✅ 残りチケット数表示を更新しました')
+        console.log('✅ 残り回数合計表示を更新しました')
       }
       
       // チケット価格合計を計算
@@ -1138,7 +1138,26 @@ export default class extends Controller {
         })
         
         if (badgeElement && priceElement) {
-          // 新しいレイアウトに対応した価格抽出
+          // 残り回数を取得
+          const badgeText = badgeElement.textContent.trim()
+          console.log(`🔍 バッジテキスト: "${badgeText}"`)
+          
+          // 残り回数を抽出（例: "3 / 5" から 3 を取得）
+          let remainingCount = 0
+          const countMatch = badgeText.match(/(\d+)\s*\/\s*(\d+)/)
+          if (countMatch) {
+            remainingCount = parseInt(countMatch[1])
+            console.log(`📊 残り回数: ${remainingCount}`)
+          } else {
+            // 代替方法: より柔軟な正規表現
+            const altMatch = badgeText.match(/(\d+).*?(\d+)/)
+            if (altMatch) {
+              remainingCount = parseInt(altMatch[1])
+              console.log(`📊 残り回数（代替）: ${remainingCount}`)
+            }
+          }
+          
+          // 価格を取得
           const priceText = priceElement.textContent.trim()
           console.log(`🔍 価格テキスト: "${priceText}"`)
           
@@ -1153,16 +1172,19 @@ export default class extends Controller {
             priceMatch = priceText.match(/(\d+)/)
           }
           
-          if (priceMatch) {
-            const price = parseInt(priceMatch[1].replace(/,/g, ''))
-            if (!isNaN(price)) {
-              totalPrice += price
-              console.log(`💰 チケット${index + 1}: 価格=${price}, 累計価格=${totalPrice}`)
+          if (priceMatch && remainingCount > 0) {
+            const unitPrice = parseInt(priceMatch[1].replace(/,/g, ''))
+            if (!isNaN(unitPrice)) {
+              const ticketValue = unitPrice * remainingCount
+              totalPrice += ticketValue
+              console.log(`💰 チケット${index + 1}: 単価=${unitPrice}, 残り回数=${remainingCount}, 価値=${ticketValue}, 累計価格=${totalPrice}`)
             } else {
               console.log(`⚠️ チケット${index + 1}: 価格が数値ではありません: ${priceMatch[1]}`)
             }
-          } else {
+          } else if (!priceMatch) {
             console.log(`⚠️ チケット${index + 1}: 価格が見つかりません: "${priceText}"`)
+          } else if (remainingCount <= 0) {
+            console.log(`⚠️ チケット${index + 1}: 残り回数が0以下: ${remainingCount}`)
           }
         } else {
           console.log(`⚠️ チケット${index + 1}: 要素が見つかりません`)
@@ -1175,7 +1197,7 @@ export default class extends Controller {
       const totalPriceElement = this.element.querySelector('#remainingTicketValue')
       if (totalPriceElement) {
         totalPriceElement.textContent = `¥${totalPrice.toLocaleString()}`
-        console.log('✅ チケット価格合計表示を更新しました:', totalPrice)
+        console.log('✅ 残り回数価値合計表示を更新しました:', totalPrice)
       }
       
       // デバッグ情報コンテナの確認
