@@ -2912,13 +2912,57 @@
 
         // 設定モーダルを開く
         function openSettingsModal() {
-            document.getElementById('settingsModal').style.display = 'block';
-            renderDaySettings();
+            console.log('🔧 Opening settings modal...');
+            
+            const modal = document.getElementById('settingsModal');
+            if (!modal) {
+                console.error('❌ Settings modal element not found');
+                return;
+            }
+            
+            try {
+                // モーダルを表示
+                modal.style.display = 'block';
+                document.body.classList.add('modal-open');
+                document.body.style.overflow = 'hidden';
+                
+                // 設定を描画
+                renderDaySettings();
+                
+                // 外側クリックで閉じる機能を設定
+                setTimeout(() => {
+                    modal.addEventListener('click', function(event) {
+                        if (event.target === modal) {
+                            console.log('✅ Closing settings modal via click outside');
+                            closeSettingsModal();
+                        }
+                    });
+                }, 100);
+                
+                console.log('✅ Settings modal opened successfully');
+            } catch (error) {
+                console.error('❌ Error opening settings modal:', error);
+                // エラーが発生してもモーダルは表示する
+                modal.style.display = 'block';
+            }
         }
 
         // 設定モーダルを閉じる
         function closeSettingsModal() {
-            document.getElementById('settingsModal').style.display = 'none';
+            console.log('🔧 Closing settings modal...');
+            
+            const modal = document.getElementById('settingsModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                
+                // イベントリスナーを削除（新しい要素で置き換え）
+                const newModal = modal.cloneNode(true);
+                modal.parentNode.replaceChild(newModal, modal);
+                
+                console.log('✅ Settings modal closed successfully');
+            }
         }
 
         // タブ切り替え
@@ -2938,15 +2982,44 @@
 
         // 曜日別設定を描画
         function renderDaySettings() {
-            // 週情報を更新
-            updateWeekInfo();
+            console.log('🔧 Rendering day settings...');
             
-            const container = document.getElementById('daySettings');
-            container.innerHTML = '';
-            
-            for (let day = 0; day < 7; day++) {
-                const dayDiv = createDaySettingDiv(day, false);
-                container.appendChild(dayDiv);
+            try {
+                // 週情報を更新
+                updateWeekInfo();
+                
+                const container = document.getElementById('daySettings');
+                if (!container) {
+                    console.error('❌ Day settings container not found');
+                    return;
+                }
+                
+                container.innerHTML = '';
+                
+                for (let day = 0; day < 7; day++) {
+                    try {
+                        const dayDiv = createDaySettingDiv(day, false);
+                        if (dayDiv) {
+                            container.appendChild(dayDiv);
+                        }
+                    } catch (dayError) {
+                        console.error(`❌ Error creating day setting for day ${day}:`, dayError);
+                        // エラーが発生しても他の曜日は表示する
+                        const fallbackDiv = createFallbackDaySettingDiv(day, false);
+                        if (fallbackDiv) {
+                            container.appendChild(fallbackDiv);
+                        }
+                    }
+                }
+                
+                console.log('✅ Day settings rendered successfully');
+            } catch (error) {
+                console.error('❌ Error rendering day settings:', error);
+                // エラーが発生しても基本的な設定を表示
+                const container = document.getElementById('daySettings');
+                if (container) {
+                    container.innerHTML = '<div class="alert alert-warning">設定の読み込み中にエラーが発生しました。ページを再読み込みしてください。</div>';
+                }
             }
         }
 
