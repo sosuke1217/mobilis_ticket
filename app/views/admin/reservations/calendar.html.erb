@@ -2548,6 +2548,13 @@
                 initializeDefaultSchedule();
             }
             
+            // 安全チェック: currentWeekStartが設定されているか確認
+            if (!currentWeekStart) {
+                console.warn('⚠️ currentWeekStart not set, initializing fallback');
+                currentWeekStart = new Date();
+                currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay());
+            }
+            
             let weekKey;
             if (specificDate) {
                 // 指定された日付の週の開始日（日曜日）を計算
@@ -2949,8 +2956,13 @@
                 setTimeout(() => {
                     const freshModal = document.getElementById('settingsModal');
                     if (freshModal) {
-                        freshModal.addEventListener('click', function(event) {
-                            if (event.target === freshModal) {
+                        // 既存のイベントリスナーを削除
+                        const newModal = freshModal.cloneNode(true);
+                        freshModal.parentNode.replaceChild(newModal, freshModal);
+                        
+                        // 新しいイベントリスナーを追加
+                        newModal.addEventListener('click', function(event) {
+                            if (event.target === newModal) {
                                 console.log('✅ Closing settings modal via click outside');
                                 closeSettingsModal();
                             }
@@ -2984,13 +2996,10 @@
             
             const modal = document.getElementById('settingsModal');
             if (modal) {
+                // モーダルを非表示にするだけ（クローンは使用しない）
                 modal.style.display = 'none';
                 document.body.classList.remove('modal-open');
                 document.body.style.overflow = '';
-                
-                // イベントリスナーを削除（新しい要素で置き換え）
-                const newModal = modal.cloneNode(true);
-                modal.parentNode.replaceChild(newModal, modal);
                 
                 console.log('✅ Settings modal closed successfully');
             }
@@ -3137,28 +3146,33 @@
                 return createFallbackDaySettingDiv(day, isRecurring);
             }
             
-            const schedule = isRecurring ? defaultSchedule[day] : getCurrentWeekSchedule()[day];
-            const dayDiv = document.createElement('div');
-            dayDiv.className = 'day-setting';
-            
-            const headerClass = day === 0 ? 'sunday' : day === 6 ? 'saturday' : '';
-            
-            dayDiv.innerHTML = `
-                <div class="day-setting-header ${headerClass}">
-                    <span>${dayNamesLong[day]}</span>
-                    <div class="day-toggle ${schedule.enabled ? 'active' : ''}" onclick="toggleDay(${day}, ${isRecurring})"></div>
-        </div>
-                <div class="time-slots-container" style="display: ${schedule.enabled ? 'block' : 'none'};">
-                    <div id="timeSlots-${day}-${isRecurring}" class="time-slots">
-                        ${renderTimeSlots(day, schedule.times, isRecurring)}
-        </div>
-                    <button class="add-time-btn" onclick="addTimeSlot(${day}, ${isRecurring})">
-                        + 時間帯を追加
-          </button>
-        </div>
-  `;
-            
-            return dayDiv;
+            try {
+                const schedule = isRecurring ? defaultSchedule[day] : getCurrentWeekSchedule()[day];
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'day-setting';
+                
+                const headerClass = day === 0 ? 'sunday' : day === 6 ? 'saturday' : '';
+                
+                dayDiv.innerHTML = `
+                    <div class="day-setting-header ${headerClass}">
+                        <span>${dayNamesLong[day]}</span>
+                        <div class="day-toggle ${schedule.enabled ? 'active' : ''}" onclick="toggleDay(${day}, ${isRecurring})"></div>
+                    </div>
+                    <div class="time-slots-container" style="display: ${schedule.enabled ? 'block' : 'none'};">
+                        <div id="timeSlots-${day}-${isRecurring}" class="time-slots">
+                            ${renderTimeSlots(day, schedule.times, isRecurring)}
+                        </div>
+                        <button class="add-time-btn" onclick="addTimeSlot(${day}, ${isRecurring})">
+                            + 時間帯を追加
+                        </button>
+                    </div>
+                `;
+                
+                return dayDiv;
+            } catch (error) {
+                console.error(`❌ Error creating day setting div for day ${day}:`, error);
+                return createFallbackDaySettingDiv(day, isRecurring);
+            }
         }
 
         // フォールバック用の曜日設定DIVを作成
