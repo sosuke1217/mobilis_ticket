@@ -918,7 +918,13 @@
             <tbody>
               <% @active_tickets.each do |ticket| %>
                 <tr>
-                  <td class="text-center"><%= ticket.ticket_template.name %></td>
+                  <td class="text-center">
+                    <% if ticket.ticket_template.present? %>
+                      <%= ticket.ticket_template.name %>
+                    <% else %>
+                      <span class="text-muted">削除されたチケット</span>
+                    <% end %>
+                  </td>
                   <td class="text-nowrap text-center"><%= ticket.purchase_date.strftime("%Y-%m-%d") %></td>
                   <td class="text-nowrap text-center">
                     <% if ticket.expiry_date < Time.zone.today %>
@@ -966,7 +972,13 @@
           <tbody>
             <% @recent_ticket_usages.each do |usage| %>
               <tr>
-                <td><%= usage.ticket.ticket_template.name %></td>
+                <td>
+                  <% if usage.ticket&.ticket_template.present? %>
+                    <%= usage.ticket.ticket_template.name %>
+                  <% else %>
+                    <span class="text-muted">削除されたチケット</span>
+                  <% end %>
+                </td>
                 <td><%= usage.used_at.strftime('%Y-%m-%d %H:%M') %></td>
                 <td><%= usage.ticket.remaining_count %> 回</td>
                 <td><%= usage.note.present? ? truncate(usage.note, length: 30) : "—" %></td>
@@ -1007,7 +1019,13 @@
           <tbody>
                           <% @used_up_tickets.each do |ticket| %>
                 <tr>
-                  <td><%= ticket.ticket_template.name %></td>
+                  <td>
+                    <% if ticket.ticket_template.present? %>
+                      <%= ticket.ticket_template.name %>
+                    <% else %>
+                      <span class="text-muted">削除されたチケット</span>
+                    <% end %>
+                  </td>
                   <td>0 / <%= ticket.total_count %></td>
                   <td><%= ticket.purchase_date.strftime("%Y-%m-%d") %></td>
                   <td><%= ticket.expiry_date.strftime("%Y-%m-%d") %></td>

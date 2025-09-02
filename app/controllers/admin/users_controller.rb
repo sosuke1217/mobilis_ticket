@@ -18,7 +18,7 @@ class Admin::UsersController < ApplicationController
 
   def show
     begin
-      @active_tickets = @user.tickets.where("remaining_count > 0").includes(:ticket_template)
+      @active_tickets = @user.tickets.where("remaining_count > 0").includes(:ticket_template).where.not(ticket_template: nil)
       @total_usages = @user.ticket_usages.count
       @recent_reservations = @user.reservations.order(start_time: :desc).limit(5)
       @recent_usages = @user.ticket_usages.includes(:ticket, :reservation).order(created_at: :desc).limit(5)
@@ -27,7 +27,7 @@ class Admin::UsersController < ApplicationController
       @last_used_at = @user.ticket_usages.order(used_at: :desc).limit(1).pluck(:used_at).first
       @active_ticket_types = @active_tickets.joins(:ticket_template).group('ticket_templates.name').count
       @recent_ticket_usages = @user.ticket_usages.includes(:ticket => :ticket_template).order(used_at: :desc).limit(10)
-      @used_up_tickets = @user.tickets.where(remaining_count: 0).includes(:ticket_template)
+      @used_up_tickets = @user.tickets.where(remaining_count: 0).includes(:ticket_template).where.not(ticket_template: nil)
     rescue => e
       Rails.logger.error "Error in show action: #{e.message}"
       Rails.logger.error e.backtrace.join("\n")
