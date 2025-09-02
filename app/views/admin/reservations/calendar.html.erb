@@ -1398,17 +1398,9 @@
         async function checkRecurringScheduleImpact(dayOfWeek, newStartTime, newEndTime) {
             const affectedReservations = [];
             
-            console.log('🔍 Checking recurring schedule impact:', {
-                dayOfWeek,
-                newStartTime,
-                newEndTime,
-                dayName: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek]
-            });
-            
             try {
                 // バックエンドから該当曜日の全予約を取得
                 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-                console.log('🔐 CSRF Token:', csrfToken ? 'Found' : 'Missing');
                 
                 const response = await fetch(`/admin/reservations/by_day_of_week?day_of_week=${dayOfWeek}&from_date=${new Date().toISOString().split('T')[0]}`, {
                     method: 'GET',
@@ -1420,12 +1412,8 @@
                     }
                 });
                 
-                console.log('📡 Response status:', response.status, response.statusText);
-                console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
-                
                 if (response.ok) {
                     const allReservations = await response.json();
-                    console.log(`🔍 Retrieved ${allReservations.length} future reservations for ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek]}`);
                     
                     // 取得した予約をチェック
                     for (const reservation of allReservations) {
@@ -1454,34 +1442,6 @@
                         const isEndTimeAfter = endTimeInMinutes > newEndInMinutes;
                         const isAffected = isStartTimeBefore || isEndTimeAfter;
                         
-                        // 詳細なログ出力
-                        console.log('🔍 Reservation impact check:', {
-                            reservationId: reservation.id,
-                            customer: reservation.customer,
-                            date: reservation.date,
-                            time: reservationTime,
-                            duration,
-                            interval,
-                            startTimeInMinutes,
-                            endTimeInMinutes,
-                            calculatedEndTimeStr,
-                            newStartTime,
-                            newEndTime,
-                            newStartInMinutes,
-                            newEndInMinutes,
-                            isStartTimeBefore,
-                            isEndTimeAfter,
-                            isAffected,
-                            timeCalculation: {
-                                startTime: `${startHour}:${startMin.toString().padStart(2, '0')}`,
-                                durationMinutes: duration,
-                                intervalMinutes: interval,
-                                totalMinutes: duration + interval,
-                                endTimeMinutes: endTimeInMinutes,
-                                endTimeFormatted: calculatedEndTimeStr
-                            }
-                        });
-                        
                         if (isAffected) {
                             const reason = isStartTimeBefore ? 'starts before business hours' : 'ends after business hours';
                             
@@ -1496,27 +1456,9 @@
                                 customer: reservation.customer,
                                 date: reservation.date,
                                 time: reservationTime,
-                                duration,
-                                interval,
                                 calculatedEndTime: calculatedEndTimeStr,
                                 newBusinessHours: `${newStartTime} - ${newEndTime}`,
-                                reason: reason,
-                                impactDetails: {
-                                    startTimeConflict: isStartTimeBefore,
-                                    endTimeConflict: isEndTimeAfter,
-                                    startTimeMinutes: startTimeInMinutes,
-                                    endTimeMinutes: endTimeInMinutes,
-                                    newStartMinutes: newStartInMinutes,
-                                    newEndMinutes: newEndInMinutes
-                                }
-                            });
-                        } else {
-                            console.log('✅ Reservation is within new business hours:', {
-                                id: reservation.id,
-                                customer: reservation.customer,
-                                time: reservationTime,
-                                calculatedEndTime: calculatedEndTimeStr,
-                                newBusinessHours: `${newStartTime} - ${newEndTime}`
+                                reason: reason
                             });
                         }
                     }
@@ -1531,7 +1473,6 @@
                 return checkRecurringScheduleImpactLocal(dayOfWeek, newStartTime, newEndTime);
             }
             
-            console.log(`🔍 Found ${affectedReservations.length} affected reservations for ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek]}`);
             return affectedReservations;
         }
 
@@ -2344,8 +2285,6 @@
                 5: { enabled: true, times: [{ start: '10:00', end: '20:00' }] }, // 金曜日
                 6: { enabled: true, times: [{ start: '09:00', end: '18:00' }] }, // 土曜日
             };
-            
-            console.log('🔍 Default schedule initialized:', defaultSchedule);
         }
 
         // 週表示を描画
@@ -2390,9 +2329,6 @@
 
         // タイムスロットを生成
         function generateTimeSlots() {
-            console.log('🔍 generateTimeSlots called - defaultSchedule:', defaultSchedule);
-            console.log('🔍 generateTimeSlots - current reservations data:', reservations);
-            console.log('🔍 generateTimeSlots - reservation 97 data:', reservations['2025-08-13']?.find(r => r.id === 97));
             const scheduleBody = document.getElementById('scheduleBody');
             scheduleBody.innerHTML = '';
             
@@ -3184,26 +3120,11 @@
             
             // 新しい値を設定
             if (isRecurring) {
-                console.log('🔍 Updating defaultSchedule for recurring schedule:', {
-                    day,
-                    field,
-                    oldValue,
-                    newValue: value,
-                    beforeUpdate: JSON.parse(JSON.stringify(defaultSchedule[day]))
-                });
-                
                 defaultSchedule[day].times[index][field] = value;
-                
-                console.log('🔍 defaultSchedule updated:', {
-                    day,
-                    field,
-                    afterUpdate: JSON.parse(JSON.stringify(defaultSchedule[day]))
-                });
             } else {
                 const weekKey = formatDateKey(currentWeekStart);
                 if (!weeklySchedules[weekKey]) {
                     weeklySchedules[weekKey] = JSON.parse(JSON.stringify(defaultSchedule));
-                    console.log(`🔍 Created custom schedule for week ${weekKey}`);
                 }
                 weeklySchedules[weekKey][day].times[index][field] = value;
             }
@@ -3243,24 +3164,7 @@
                     
                     // 既存の予約への影響をチェック（非同期）
                     try {
-                        console.log('🔍 Calling checkRecurringScheduleImpact with:', {
-                            day,
-                            startTime,
-                            endTime,
-                            field,
-                            oldValue,
-                            newValue: value,
-                            dayName: ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'][day]
-                        });
-                        
                         const affectedReservations = await checkRecurringScheduleImpact(day, startTime, endTime);
-                        console.log('🔍 checkRecurringScheduleImpact result:', {
-                            day,
-                            startTime,
-                            endTime,
-                            affectedCount: affectedReservations.length,
-                            affectedReservations
-                        });
                         
                         if (affectedReservations.length > 0) {
                             const dayName = ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'][day];
@@ -3311,15 +3215,11 @@
             }
         }
 
-        // 設定を保存
+                // 設定を保存
         function saveSettings() {
             // 現在アクティブなタブを確認
             const activeTab = document.querySelector('.tab-button.active');
             const isRecurring = activeTab && activeTab.textContent.includes('定期的なスケジュール');
-            
-            console.log('🔍 Active tab:', activeTab ? activeTab.textContent : 'none');
-            console.log('🔍 isRecurring:', isRecurring);
-            console.log('🔍 defaultSchedule before save:', JSON.parse(JSON.stringify(defaultSchedule)));
             
             const scheduleData = isRecurring ? defaultSchedule : getCurrentWeekSchedule();
             const weekStartStr = formatDateKey(currentWeekStart);
@@ -3327,23 +3227,14 @@
             console.log('🔄 Saving shift settings:', {
                 isRecurring,
                 weekStartStr,
-                scheduleData,
-                activeTabText: activeTab ? activeTab.textContent : 'none',
-                defaultScheduleKeys: Object.keys(defaultSchedule),
-                defaultScheduleValues: Object.values(defaultSchedule).map(s => ({
-                    enabled: s.enabled,
-                    timesCount: s.times ? s.times.length : 0,
-                    times: s.times
-                })),
-                defaultScheduleRaw: JSON.parse(JSON.stringify(defaultSchedule)),
-                scheduleDataRaw: JSON.parse(JSON.stringify(scheduleData))
+                scheduleData
             });
             
             // バックエンドに保存
             fetch('/admin/reservations/save_shift_settings', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
                     'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
                 },
                 body: JSON.stringify({
@@ -3353,22 +3244,9 @@
                 })
             })
             .then(response => response.json())
-              .then(data => {
-                console.log('📡 Save response received:', data);
-                
+            .then(data => {
                 if (data.success) {
                     console.log('✅ Shift settings saved successfully');
-                    console.log('🔍 Save response details:', {
-                        success: data.success,
-                        message: data.message,
-                        isRecurring,
-                        scheduleDataKeys: Object.keys(scheduleData),
-                        scheduleDataValues: Object.values(scheduleData).map(s => ({
-                            enabled: s.enabled,
-                            timesCount: s.times ? s.times.length : 0,
-                            times: s.times
-                        }))
-                    });
                     
                     // 表示を更新
                     renderWeekView();
@@ -3384,7 +3262,7 @@
                     showMessage(`シフト設定の保存に失敗しました: ${data.message}`, 'error');
                 }
             })
-  .catch(error => {
+            .catch(error => {
                 console.error('❌ Error saving shift settings:', error);
                 showMessage('シフト設定の保存中にエラーが発生しました', 'error');
             });
