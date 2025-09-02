@@ -151,10 +151,10 @@
       </div>
       <div class="modal-body">
         <div class="nav nav-tabs mb-3" id="settingsTabs" role="tablist">
-          <button class="nav-link active" id="general-tab-btn" data-bs-toggle="tab" data-bs-target="#general-tab" type="button" role="tab" onclick="switchTab('general')">
+          <button class="nav-link active tab-button" id="general-tab-btn" type="button" role="tab" onclick="switchTab('general')">
             一回限りの変更
           </button>
-          <button class="nav-link" id="recurring-tab-btn" data-bs-toggle="tab" data-bs-target="#recurring-tab" type="button" role="tab" onclick="switchTab('recurring')">
+          <button class="nav-link tab-button" id="recurring-tab-btn" type="button" role="tab" onclick="switchTab('recurring')">
             定期的なスケジュール
           </button>
         </div>
@@ -2921,6 +2921,10 @@
             }
             
             try {
+                // Bootstrapの自動動作を無効化
+                modal.setAttribute('data-bs-backdrop', 'static');
+                modal.setAttribute('data-bs-keyboard', 'false');
+                
                 // モーダルを表示
                 modal.style.display = 'block';
                 document.body.classList.add('modal-open');
@@ -2929,15 +2933,18 @@
                 // 設定を描画
                 renderDaySettings();
                 
-                // 外側クリックで閉じる機能を設定
+                // 外側クリックで閉じる機能を設定（少し遅延）
                 setTimeout(() => {
-                    modal.addEventListener('click', function(event) {
-                        if (event.target === modal) {
-                            console.log('✅ Closing settings modal via click outside');
-                            closeSettingsModal();
-                        }
-                    });
-                }, 100);
+                    const freshModal = document.getElementById('settingsModal');
+                    if (freshModal) {
+                        freshModal.addEventListener('click', function(event) {
+                            if (event.target === freshModal) {
+                                console.log('✅ Closing settings modal via click outside');
+                                closeSettingsModal();
+                            }
+                        });
+                    }
+                }, 200);
                 
                 console.log('✅ Settings modal opened successfully');
             } catch (error) {
@@ -2967,16 +2974,34 @@
 
         // タブ切り替え
         function switchTab(tabName) {
-            // タブボタンの状態更新
-            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            console.log('🔧 Switching to tab:', tabName);
             
-            // タブコンテンツの表示切り替え
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            document.getElementById(`${tabName}-tab`).classList.add('active');
-            
-            if (tabName === 'recurring') {
-                renderRecurringDaySettings();
+            try {
+                // タブボタンの状態更新
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+                
+                // タブコンテンツの表示切り替え
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.style.display = 'none';
+                    content.classList.remove('active');
+                });
+                
+                const targetTab = document.getElementById(`${tabName}-tab`);
+                if (targetTab) {
+                    targetTab.style.display = 'block';
+                    targetTab.classList.add('active');
+                }
+                
+                if (tabName === 'recurring') {
+                    renderRecurringDaySettings();
+                }
+                
+                console.log('✅ Tab switched successfully to:', tabName);
+            } catch (error) {
+                console.error('❌ Error switching tab:', error);
             }
         }
 
