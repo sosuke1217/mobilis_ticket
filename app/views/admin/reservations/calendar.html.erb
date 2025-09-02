@@ -140,7 +140,7 @@
 </div>
 
 <!-- 設定モーダル -->
-<div id="settingsModal" class="modal fade" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050; background-color: rgba(0, 0, 0, 0.5);">
+<div id="settingsModal" class="modal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050; background-color: rgba(0, 0, 0, 0.5);">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header bg-light">
@@ -2930,6 +2930,7 @@
             
             console.log('🔧 Modal element found:', modal);
             console.log('🔧 Modal current display:', modal.style.display);
+            console.log('🔧 Modal classes:', modal.className);
             
             try {
                 // 必要な変数の初期化を確認
@@ -2953,12 +2954,16 @@
                 
                 console.log('🔧 Bootstrap attributes set');
                 
-                // モーダルを表示
+                // モーダルを表示 - より確実な方法
                 modal.style.display = 'block';
+                modal.style.visibility = 'visible';
+                modal.style.opacity = '1';
                 document.body.classList.add('modal-open');
                 document.body.style.overflow = 'hidden';
                 
                 console.log('🔧 Modal displayed - display:', modal.style.display);
+                console.log('🔧 Modal visibility:', modal.style.visibility);
+                console.log('🔧 Modal opacity:', modal.style.opacity);
                 console.log('🔧 Body classes:', document.body.className);
                 console.log('🔧 Body overflow:', document.body.style.overflow);
                 
@@ -2998,6 +3003,8 @@
                     const checkModal = document.getElementById('settingsModal');
                     console.log('🔧 Modal check after 500ms - display:', checkModal ? checkModal.style.display : 'not found');
                     console.log('🔧 Modal check after 500ms - visible:', checkModal ? checkModal.offsetParent !== null : 'not found');
+                    console.log('🔧 Modal check after 500ms - visibility:', checkModal ? checkModal.style.visibility : 'not found');
+                    console.log('🔧 Modal check after 500ms - opacity:', checkModal ? checkModal.style.opacity : 'not found');
                 }, 500);
                 
             } catch (error) {
@@ -3005,6 +3012,8 @@
                 console.error('❌ Error stack:', error.stack);
                 // エラーが発生してもモーダルは表示する
                 modal.style.display = 'block';
+                modal.style.visibility = 'visible';
+                modal.style.opacity = '1';
                 
                 // エラー時に基本的なメッセージを表示
                 const daySettingsContainer = document.getElementById('daySettings');
@@ -8620,55 +8629,6 @@ function showMessage(message, type = 'info') {
 </style>
 
 <script>
-// モーダル制御関数を追加
-function closeSettingsModal() {
-  document.getElementById('settingsModal').style.display = 'none';
-  document.body.classList.remove('modal-open');
-  document.body.style.overflow = '';
-}
-
-function closeBookingModal() {
-  document.getElementById('bookingModal').style.display = 'none';
-  document.body.classList.remove('modal-open');
-  document.body.style.overflow = '';
-}
-
-function closeBreakModal() {
-  document.getElementById('breakModal').style.display = 'none';
-  document.body.classList.remove('modal-open');
-  document.body.style.overflow = '';
-}
-
-function closeBreakDetailModal() {
-  document.getElementById('breakDetailModal').style.display = 'none';
-  document.body.classList.remove('modal-open');
-  document.body.style.overflow = '';
-}
-
-function openSettingsModal() {
-  document.getElementById('settingsModal').style.display = 'block';
-  document.body.classList.add('modal-open');
-  document.body.style.overflow = 'hidden';
-}
-
-function openBookingModal() {
-  document.getElementById('bookingModal').style.display = 'block';
-  document.body.classList.add('modal-open');
-  document.body.style.overflow = 'hidden';
-}
-
-function openBreakModal() {
-  document.getElementById('breakModal').style.display = 'block';
-  document.body.classList.add('modal-open');
-  document.body.style.overflow = 'hidden';
-}
-
-function openBreakDetailModal() {
-  document.getElementById('breakDetailModal').style.display = 'block';
-  document.body.classList.add('modal-open');
-  document.body.style.overflow = 'hidden';
-}
-
 // 既存の関数はそのまま維持（previousWeek, nextWeek, toggleMiniCalendar等）
 </script>
 
