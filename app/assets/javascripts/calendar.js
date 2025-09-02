@@ -290,13 +290,13 @@
         // デフォルトスケジュールを初期化
         function initializeDefaultSchedule() {
             defaultSchedule = {
-                0: { enabled: false, times: [] }, // 日曜日は休業
-                1: { enabled: true, times: [{ start: '09:00', end: '20:00' }] }, // 月曜日
-                2: { enabled: true, times: [{ start: '10:00', end: '20:00' }] }, // 火曜日
-                3: { enabled: true, times: [{ start: '10:00', end: '20:00' }] }, // 水曜日
-                4: { enabled: true, times: [{ start: '10:00', end: '20:00' }] }, // 木曜日
-                5: { enabled: true, times: [{ start: '10:00', end: '20:00' }] }, // 金曜日
-                6: { enabled: true, times: [{ start: '09:00', end: '18:00' }] }, // 土曜日
+                0: { enabled: true, times: [{ start: '10:00', end: '21:00' }] }, // 日曜日
+                1: { enabled: true, times: [{ start: '10:00', end: '21:00' }] }, // 月曜日
+                2: { enabled: true, times: [{ start: '10:00', end: '21:00' }] }, // 火曜日
+                3: { enabled: true, times: [{ start: '10:00', end: '21:00' }] }, // 水曜日
+                4: { enabled: true, times: [{ start: '10:00', end: '21:00' }] }, // 木曜日
+                5: { enabled: true, times: [{ start: '10:00', end: '21:00' }] }, // 金曜日
+                6: { enabled: true, times: [{ start: '10:00', end: '21:00' }] }, // 土曜日
             };
         }
 
