@@ -1117,7 +1117,7 @@ export default class extends Controller {
       // 残りチケット数を表示
       const ticketCountElement = this.element.querySelector('#remainingTicketCount')
       if (ticketCountElement) {
-        ticketCountElement.innerHTML = `<strong>残チケット:</strong> ${totalRemainingCount} 回`
+        ticketCountElement.textContent = totalRemainingCount
         console.log('✅ 残りチケット数表示を更新しました')
       }
       
@@ -1138,13 +1138,31 @@ export default class extends Controller {
         })
         
         if (badgeElement && priceElement) {
-          const priceMatch = priceElement.textContent.match(/¥([\d,]+)/)
+          // 新しいレイアウトに対応した価格抽出
+          const priceText = priceElement.textContent.trim()
+          console.log(`🔍 価格テキスト: "${priceText}"`)
+          
+          // 複数の価格形式に対応
+          let priceMatch = priceText.match(/¥([\d,]+)/)
+          if (!priceMatch) {
+            // アイコンなしの価格形式
+            priceMatch = priceText.match(/([\d,]+)/)
+          }
+          if (!priceMatch) {
+            // 数字のみの形式
+            priceMatch = priceText.match(/(\d+)/)
+          }
+          
           if (priceMatch) {
             const price = parseInt(priceMatch[1].replace(/,/g, ''))
             if (!isNaN(price)) {
               totalPrice += price
               console.log(`💰 チケット${index + 1}: 価格=${price}, 累計価格=${totalPrice}`)
+            } else {
+              console.log(`⚠️ チケット${index + 1}: 価格が数値ではありません: ${priceMatch[1]}`)
             }
+          } else {
+            console.log(`⚠️ チケット${index + 1}: 価格が見つかりません: "${priceText}"`)
           }
         } else {
           console.log(`⚠️ チケット${index + 1}: 要素が見つかりません`)
@@ -1156,7 +1174,7 @@ export default class extends Controller {
       // チケット価格合計を表示
       const totalPriceElement = this.element.querySelector('#remainingTicketValue')
       if (totalPriceElement) {
-        totalPriceElement.innerHTML = `<strong>チケット価格合計:</strong> ¥${totalPrice.toLocaleString()}`
+        totalPriceElement.textContent = `¥${totalPrice.toLocaleString()}`
         console.log('✅ チケット価格合計表示を更新しました:', totalPrice)
       }
       
