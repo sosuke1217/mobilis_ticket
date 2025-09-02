@@ -274,7 +274,7 @@
 </div>
 
 <!-- 休憩作成モーダル -->
-<div id="breakModal" class="modal fade" tabindex="-1" aria-labelledby="breakModalLabel" aria-hidden="true" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050; background-color: rgba(0, 0, 0, 0.5);">
+<div id="breakModal" class="modal" tabindex="-1" aria-labelledby="breakModalLabel" aria-hidden="true" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050; background-color: rgba(0, 0, 0, 0.5);">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header bg-warning text-dark">
@@ -4246,61 +4246,142 @@ function showMessage(message, type = 'info') {
 
         // 休憩作成モーダルを開く
         function openBreakModal(date, time) {
-            console.log('🔧 Opening break modal for date:', date, 'time:', time);
-            
-            // 日付と時間の表示用フォーマット
-            const displayDate = `${date.getFullYear()}年${String(date.getMonth() + 1)}月${String(date.getDate())}日`;
-            const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
-            const dayName = dayNames[date.getDay()];
-            
-            document.getElementById('breakDisplayDate').textContent = `${displayDate}(${dayName})`;
-            document.getElementById('breakDisplayTime').textContent = time;
-            
-            // 内部的に日付と時間を保存
-            window.selectedBreakDate = date;
-            window.selectedBreakTime = time;
-            
-            // フィールドをリセット
-            document.getElementById('breakDuration').value = '';
-            document.getElementById('breakTitle').value = '';
-            document.getElementById('customBreakTitleInput').value = '';
-            document.getElementById('customBreakTitle').style.display = 'none';
-            document.getElementById('breakNote').value = '';
+            console.log('🔧 Opening break modal...');
+            console.log('🔧 Break modal - date:', date, 'time:', time);
             
             const modal = document.getElementById('breakModal');
-            modal.style.display = 'block';
+            if (!modal) {
+                console.error('❌ Break modal element not found');
+                return;
+            }
             
-            // 既存のイベントリスナーを削除してから新しく追加
-            console.log('🔧 Re-setting up click outside for break modal...');
+            console.log('🔧 Break modal element found:', modal);
+            console.log('🔧 Break modal current display:', modal.style.display);
             
-            // 既存のイベントリスナーを削除（cloneNodeで新しい要素を作成）
-            const newModal = modal.cloneNode(true);
-            modal.parentNode.replaceChild(newModal, modal);
-            
-            // 新しいモーダル要素を取得
-            const freshModal = document.getElementById('breakModal');
-            
-            // 外側クリックで閉じる機能を設定
-            freshModal.addEventListener('click', function(event) {
-                console.log('🎯 breakModal clicked after opening, target:', event.target);
-                console.log('🎯 modal element:', freshModal);
-                console.log('🎯 target === modal:', event.target === freshModal);
-                console.log('🎯 target classList:', event.target.classList);
+            try {
+                // 日付と時間の表示用フォーマット
+                const displayDate = `${date.getFullYear()}年${String(date.getMonth() + 1)}月${String(date.getDate())}日`;
+                const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+                const dayName = dayNames[date.getDay()];
                 
-                if (event.target === freshModal) {
-                    console.log('✅ Closing breakModal via click outside after opening');
-                    closeBreakModal();
-                }
-            });
-            
-            console.log('✅ Break modal opened and click outside functionality set up');
+                document.getElementById('breakDisplayDate').textContent = `${displayDate}(${dayName})`;
+                document.getElementById('breakDisplayTime').textContent = time;
+                
+                // 内部的に日付と時間を保存
+                window.selectedBreakDate = date;
+                window.selectedBreakTime = time;
+                
+                // フィールドをリセット
+                document.getElementById('breakDuration').value = '';
+                document.getElementById('breakTitle').value = '';
+                document.getElementById('customBreakTitleInput').value = '';
+                document.getElementById('customBreakTitle').style.display = 'none';
+                document.getElementById('breakNote').value = '';
+                
+                // モーダルを表示 - より確実な方法
+                modal.style.display = 'block';
+                modal.style.visibility = 'visible';
+                modal.style.opacity = '1';
+                modal.style.transition = 'none'; // トランジションを無効化
+                document.body.classList.add('modal-open');
+                document.body.style.overflow = 'hidden';
+                
+                console.log('🔧 Break modal displayed - display:', modal.style.display);
+                console.log('🔧 Break modal visibility:', modal.style.visibility);
+                console.log('🔧 Break modal opacity:', modal.style.opacity);
+                console.log('🔧 Body classes:', document.body.className);
+                console.log('🔧 Body overflow:', document.body.style.overflow);
+                
+                // 外側クリックで閉じる機能を設定（少し遅延）
+                setTimeout(() => {
+                    console.log('🔧 Setting up break modal outside click handler...');
+                    const freshModal = document.getElementById('breakModal');
+                    if (freshModal) {
+                        console.log('🔧 Fresh break modal found, setting up click handler');
+                        
+                        // 既存のイベントリスナーを削除（より安全な方法）
+                        const existingHandler = freshModal._outsideClickHandler;
+                        if (existingHandler) {
+                            freshModal.removeEventListener('click', existingHandler);
+                        }
+                        
+                        // 新しいイベントリスナーを作成
+                        const newHandler = function(event) {
+                            console.log('🔧 Break modal clicked:', event.target);
+                            if (event.target === freshModal) {
+                                console.log('✅ Closing break modal via click outside');
+                                closeBreakModal();
+                            }
+                        };
+                        
+                        // イベントリスナーを追加
+                        freshModal.addEventListener('click', newHandler);
+                        freshModal._outsideClickHandler = newHandler; // 参照を保存
+                        
+                        console.log('🔧 Break modal outside click handler set up');
+                    } else {
+                        console.error('❌ Fresh break modal not found in setTimeout');
+                    }
+                }, 200);
+                
+                console.log('✅ Break modal opened successfully');
+                
+                // モーダルが表示されているか確認
+                setTimeout(() => {
+                    const checkModal = document.getElementById('breakModal');
+                    console.log('🔧 Break modal check after 500ms - display:', checkModal ? checkModal.style.display : 'not found');
+                    console.log('🔧 Break modal check after 500ms - visible:', checkModal ? checkModal.offsetParent !== null : 'not found');
+                    console.log('🔧 Break modal check after 500ms - visibility:', checkModal ? checkModal.style.visibility : 'not found');
+                    console.log('🔧 Break modal check after 500ms - opacity:', checkModal ? checkModal.style.opacity : 'not found');
+                }, 500);
+                
+            } catch (error) {
+                console.error('❌ Error opening break modal:', error);
+                console.error('❌ Error stack:', error.stack);
+                // エラーが発生してもモーダルは表示する
+                modal.style.display = 'block';
+                modal.style.visibility = 'visible';
+                modal.style.opacity = '1';
+            }
         }
 
 
 
         // 休憩作成モーダルを閉じる
         function closeBreakModal() {
-            document.getElementById('breakModal').style.display = 'none';
+            console.log('🔧 Closing break modal...');
+            console.log('🔧 closeBreakModal called at:', new Date().toISOString());
+            
+            const modal = document.getElementById('breakModal');
+            if (modal) {
+                console.log('🔧 Break modal found for closing');
+                console.log('🔧 Break modal current display before closing:', modal.style.display);
+                
+                // イベントリスナーを削除
+                const existingHandler = modal._outsideClickHandler;
+                if (existingHandler) {
+                    modal.removeEventListener('click', existingHandler);
+                    delete modal._outsideClickHandler;
+                    console.log('🔧 Break modal outside click handler removed');
+                }
+                
+                // モーダルを非表示にする
+                modal.style.display = 'none';
+                modal.style.visibility = 'hidden';
+                modal.style.opacity = '0';
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                
+                console.log('🔧 Break modal display after closing:', modal.style.display);
+                console.log('🔧 Break modal visibility after closing:', modal.style.visibility);
+                console.log('🔧 Break modal opacity after closing:', modal.style.opacity);
+                console.log('🔧 Body classes after closing:', document.body.className);
+                console.log('🔧 Body overflow after closing:', document.body.style.overflow);
+                
+                console.log('✅ Break modal closed successfully');
+            } else {
+                console.error('❌ Break modal not found when trying to close');
+            }
         }
 
         // 休憩詳細モーダルを開く
