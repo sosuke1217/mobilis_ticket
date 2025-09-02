@@ -1,51 +1,234 @@
-<div class="container my-4">
-  <h1 class="mb-4">ユーザー編集</h1>
-
-  <div class="card">
-    <div class="card-body">
-      <%= form_with model: [:admin, @user], local: true do |f| %>
-
-        <div class="mb-3">
-          <%= f.label :name, "名前", class: "form-label" %>
-          <%= f.text_field :name, class: "form-control" %>
-        </div>
-
-        <div class="mb-3">
-          <%= f.label :birth_date, "生年月日", class: "form-label" %>
-          <%= f.date_field :birth_date, class: "form-control" %>
-        </div>
-
-        <div class="mb-3">
-          <%= f.label :postal_code, "郵便番号", class: "form-label" %>
-          <%= f.text_field :postal_code, class: "form-control" %>
-        </div>
-
-        <div class="mb-3">
-          <%= f.label :address, "住所", class: "form-label" %>
-          <%= f.text_field :address, class: "form-control" %>
-        </div>
-
-        <div class="mb-3">
-          <%= f.label :phone_number, "電話番号", class: "form-label" %>
-          <%= f.telephone_field :phone_number, class: "form-control" %>
-        </div>
-
-        <div class="mb-3">
-          <%= f.label :email, "メールアドレス", class: "form-label" %>
-          <%= f.email_field :email, class: "form-control" %>
-        </div>
-        <!-- 🔼 追加ここまで -->
-
-        <div class="mb-3">
-          <%= f.label :admin_memo, "管理者メモ", class: "form-label" %>
-          <%= f.text_area :admin_memo, rows: 5, class: "form-control", placeholder: "施術メモ、目標、注意点など" %>
-        </div>
-
+<div class="container-lg my-4">
+  <!-- ヘッダーセクション -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-start">
         <div>
-          <%= f.submit "更新", class: "btn btn-primary" %>
-          <%= link_to "詳細に戻る", admin_user_path(@user), class: "btn btn-secondary ms-2" %>
+          <h1 class="h2 mb-1">
+            <i class="fas fa-user-edit me-2 text-primary"></i>
+            ユーザー編集
+          </h1>
+          <p class="text-muted mb-0">
+            <i class="fas fa-info-circle me-1"></i>
+            <%= @user.display_name_or_name || @user.line_user_id %> さんの情報を編集
+          </p>
         </div>
-      <% end %>
+        <div class="d-flex gap-2">
+          <%= link_to admin_user_path(@user), class: "btn btn-outline-secondary btn-sm" do %>
+            <i class="fas fa-arrow-left me-1"></i>詳細に戻る
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-gradient-primary text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-user-circle me-2"></i>基本情報
+          </h5>
+        </div>
+        <div class="card-body">
+          <%= form_with model: [:admin, @user], local: true do |f| %>
+            <div class="row g-3">
+              <!-- 名前 -->
+              <div class="col-md-6">
+                <div class="form-group">
+                  <%= f.label :name, "名前", class: "form-label fw-bold" %>
+                  <%= f.text_field :name, class: "form-control", placeholder: "例: 田中太郎" %>
+                  <small class="form-text text-muted">
+                    <i class="fas fa-info-circle me-1"></i>登録名を入力してください
+                  </small>
+                </div>
+              </div>
+
+              <!-- 生年月日 -->
+              <div class="col-md-6">
+                <div class="form-group">
+                  <%= f.label :birth_date, "生年月日", class: "form-label fw-bold" %>
+                  <%= f.date_field :birth_date, class: "form-control" %>
+                  <small class="form-text text-muted">
+                    <i class="fas fa-calendar me-1"></i>生年月日を選択してください
+                  </small>
+                </div>
+              </div>
+
+              <!-- 郵便番号 -->
+              <div class="col-md-6">
+                <div class="form-group">
+                  <%= f.label :postal_code, "郵便番号", class: "form-label fw-bold" %>
+                  <%= f.text_field :postal_code, class: "form-control", placeholder: "例: 123-4567" %>
+                  <small class="form-text text-muted">
+                    <i class="fas fa-map-marker-alt me-1"></i>ハイフン付きで入力してください
+                  </small>
+                </div>
+              </div>
+
+              <!-- 電話番号 -->
+              <div class="col-md-6">
+                <div class="form-group">
+                  <%= f.label :phone_number, "電話番号", class: "form-label fw-bold" %>
+                  <%= f.telephone_field :phone_number, class: "form-control", placeholder: "例: 090-1234-5678" %>
+                  <small class="form-text text-muted">
+                    <i class="fas fa-phone me-1"></i>ハイフン付きで入力してください
+                  </small>
+                </div>
+              </div>
+
+              <!-- 住所 -->
+              <div class="col-12">
+                <div class="form-group">
+                  <%= f.label :address, "住所", class: "form-label fw-bold" %>
+                  <%= f.text_field :address, class: "form-control", placeholder: "例: 東京都渋谷区..." %>
+                  <small class="form-text text-muted">
+                    <i class="fas fa-home me-1"></i>都道府県から入力してください
+                  </small>
+                </div>
+              </div>
+
+              <!-- メールアドレス -->
+              <div class="col-12">
+                <div class="form-group">
+                  <%= f.label :email, "メールアドレス", class: "form-label fw-bold" %>
+                  <%= f.email_field :email, class: "form-control", placeholder: "例: example@email.com" %>
+                  <small class="form-text text-muted">
+                    <i class="fas fa-envelope me-1"></i>メールアドレスを入力してください
+                  </small>
+                </div>
+              </div>
+            </div>
+
+            <!-- 管理者メモ -->
+            <div class="mt-4">
+              <div class="form-group">
+                <%= f.label :admin_memo, "管理者メモ", class: "form-label fw-bold" %>
+                <%= f.text_area :admin_memo, rows: 4, class: "form-control", 
+                    placeholder: "施術メモ、目標、注意点、その他の特記事項を入力してください..." %>
+                <small class="form-text text-muted">
+                  <i class="fas fa-sticky-note me-1"></i>顧客に関する重要な情報を記録できます
+                </small>
+              </div>
+            </div>
+
+            <!-- ボタン -->
+            <div class="mt-4 pt-3 border-top">
+              <div class="d-flex gap-2">
+                <%= f.submit "更新", class: "btn btn-primary" do %>
+                  <i class="fas fa-save me-1"></i>更新
+                <% end %>
+                <%= link_to admin_user_path(@user), class: "btn btn-outline-secondary" do %>
+                  <i class="fas fa-times me-1"></i>キャンセル
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- サイドバー -->
+    <div class="col-lg-4">
+      <!-- 現在の情報 -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-gradient-info text-white">
+          <h6 class="mb-0">
+            <i class="fas fa-info-circle me-2"></i>現在の情報
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-6">
+              <small class="text-muted">名前</small>
+              <div class="fw-bold"><%= @user.name.presence || "未設定" %></div>
+            </div>
+            <div class="col-6">
+              <small class="text-muted">生年月日</small>
+              <div class="fw-bold"><%= @user.birth_date.present? ? l(@user.birth_date) : "未設定" %></div>
+            </div>
+            <div class="col-6">
+              <small class="text-muted">電話番号</small>
+              <div class="fw-bold"><%= @user.phone_number.presence || "未設定" %></div>
+            </div>
+            <div class="col-6">
+              <small class="text-muted">メール</small>
+              <div class="fw-bold"><%= @user.email.presence || "未設定" %></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 注意事項 -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-gradient-warning text-dark">
+          <h6 class="mb-0">
+            <i class="fas fa-exclamation-triangle me-2"></i>注意事項
+          </h6>
+        </div>
+        <div class="card-body">
+          <ul class="list-unstyled mb-0 small">
+            <li class="mb-2">
+              <i class="fas fa-check-circle text-success me-1"></i>
+              入力した情報は即座に反映されます
+            </li>
+            <li class="mb-2">
+              <i class="fas fa-check-circle text-success me-1"></i>
+              LINE連携情報は別途管理されます
+            </li>
+            <li class="mb-2">
+              <i class="fas fa-check-circle text-success me-1"></i>
+              管理者メモは内部でのみ表示されます
+            </li>
+            <li>
+              <i class="fas fa-check-circle text-success me-1"></i>
+              変更履歴は自動的に記録されます
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
   </div>
 </div>
+
+<style>
+  /* フォームの改善 */
+  .form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  }
+  
+  .form-label {
+    color: #495057;
+    margin-bottom: 0.5rem;
+  }
+  
+  .form-text {
+    font-size: 0.875rem;
+  }
+  
+  /* カードのホバー効果 */
+  .card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+  }
+  
+  /* ボタンの改善 */
+  .btn {
+    font-weight: 500;
+  }
+  
+  /* レスポンシブ改善 */
+  @media (max-width: 768px) {
+    .d-flex.justify-content-between {
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .col-lg-4 {
+      margin-top: 2rem;
+    }
+  }
+</style>
