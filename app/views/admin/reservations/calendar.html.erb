@@ -189,7 +189,7 @@
 </div>
 
 <!-- 予約作成モーダル -->
-<div id="bookingModal" class="modal fade" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050; background-color: rgba(0, 0, 0, 0.5);">
+<div id="bookingModal" class="modal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050; background-color: rgba(0, 0, 0, 0.5);">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header bg-primary text-white">
@@ -5832,32 +5832,142 @@ function showMessage(message, type = 'info') {
         }
 
         function openBookingModal(date, time) {
-            // 日付と時間の表示用フォーマット
-            const displayDate = `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, '0')}月${String(date.getDate()).padStart(2, '0')}日`;
-            const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
-            const dayName = dayNames[date.getDay()];
+            console.log('🔧 Opening booking modal...');
+            console.log('🔧 Booking modal - date:', date, 'time:', time);
             
-            document.getElementById('bookingDisplayDate').textContent = `${displayDate}(${dayName})`;
-            document.getElementById('bookingDisplayTime').textContent = time;
+            const modal = document.getElementById('bookingModal');
+            if (!modal) {
+                console.error('❌ Booking modal element not found');
+                return;
+            }
             
-            // 内部的に日付と時間を保存
-            window.selectedBookingDate = date;
-            window.selectedBookingTime = time;
+            console.log('🔧 Booking modal element found:', modal);
+            console.log('🔧 Booking modal current display:', modal.style.display);
             
-            // フィールドをリセット
-            document.getElementById('bookingDuration').value = '';
-            document.getElementById('customerName').value = '';
-            document.getElementById('customerPhone').value = '';
-            document.getElementById('customerEmail').value = '';
-            document.getElementById('bookingNote').value = '';
-            document.getElementById('bookingStatus').value = 'tentative';
-            
-            document.getElementById('bookingModal').style.display = 'block';
+            try {
+                // 日付と時間の表示用フォーマット
+                const displayDate = `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, '0')}月${String(date.getDate()).padStart(2, '0')}日`;
+                const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+                const dayName = dayNames[date.getDay()];
+                
+                document.getElementById('bookingDisplayDate').textContent = `${displayDate}(${dayName})`;
+                document.getElementById('bookingDisplayTime').textContent = time;
+                
+                // 内部的に日付と時間を保存
+                window.selectedBookingDate = date;
+                window.selectedBookingTime = time;
+                
+                // フィールドをリセット
+                document.getElementById('bookingDuration').value = '';
+                document.getElementById('customerName').value = '';
+                document.getElementById('customerPhone').value = '';
+                document.getElementById('customerEmail').value = '';
+                document.getElementById('bookingNote').value = '';
+                document.getElementById('bookingStatus').value = 'tentative';
+                
+                // モーダルを表示 - より確実な方法
+                modal.style.display = 'block';
+                modal.style.visibility = 'visible';
+                modal.style.opacity = '1';
+                modal.style.transition = 'none'; // トランジションを無効化
+                document.body.classList.add('modal-open');
+                document.body.style.overflow = 'hidden';
+                
+                console.log('🔧 Booking modal displayed - display:', modal.style.display);
+                console.log('🔧 Booking modal visibility:', modal.style.visibility);
+                console.log('🔧 Booking modal opacity:', modal.style.opacity);
+                console.log('🔧 Body classes:', document.body.className);
+                console.log('🔧 Body overflow:', document.body.style.overflow);
+                
+                // 外側クリックで閉じる機能を設定（少し遅延）
+                setTimeout(() => {
+                    console.log('🔧 Setting up booking modal outside click handler...');
+                    const freshModal = document.getElementById('bookingModal');
+                    if (freshModal) {
+                        console.log('🔧 Fresh booking modal found, setting up click handler');
+                        
+                        // 既存のイベントリスナーを削除（より安全な方法）
+                        const existingHandler = freshModal._outsideClickHandler;
+                        if (existingHandler) {
+                            freshModal.removeEventListener('click', existingHandler);
+                        }
+                        
+                        // 新しいイベントリスナーを作成
+                        const newHandler = function(event) {
+                            console.log('🔧 Booking modal clicked:', event.target);
+                            if (event.target === freshModal) {
+                                console.log('✅ Closing booking modal via click outside');
+                                closeBookingModal();
+                            }
+                        };
+                        
+                        // イベントリスナーを追加
+                        freshModal.addEventListener('click', newHandler);
+                        freshModal._outsideClickHandler = newHandler; // 参照を保存
+                        
+                        console.log('🔧 Booking modal outside click handler set up');
+                    } else {
+                        console.error('❌ Fresh booking modal not found in setTimeout');
+                    }
+                }, 200);
+                
+                console.log('✅ Booking modal opened successfully');
+                
+                // モーダルが表示されているか確認
+                setTimeout(() => {
+                    const checkModal = document.getElementById('bookingModal');
+                    console.log('🔧 Booking modal check after 500ms - display:', checkModal ? checkModal.style.display : 'not found');
+                    console.log('🔧 Booking modal check after 500ms - visible:', checkModal ? checkModal.offsetParent !== null : 'not found');
+                    console.log('🔧 Booking modal check after 500ms - visibility:', checkModal ? checkModal.style.visibility : 'not found');
+                    console.log('🔧 Booking modal check after 500ms - opacity:', checkModal ? checkModal.style.opacity : 'not found');
+                }, 500);
+                
+            } catch (error) {
+                console.error('❌ Error opening booking modal:', error);
+                console.error('❌ Error stack:', error.stack);
+                // エラーが発生してもモーダルは表示する
+                modal.style.display = 'block';
+                modal.style.visibility = 'visible';
+                modal.style.opacity = '1';
+            }
         }
 
         // 予約作成モーダルを閉じる
         function closeBookingModal() {
-            document.getElementById('bookingModal').style.display = 'none';
+            console.log('🔧 Closing booking modal...');
+            console.log('🔧 closeBookingModal called at:', new Date().toISOString());
+            
+            const modal = document.getElementById('bookingModal');
+            if (modal) {
+                console.log('🔧 Booking modal found for closing');
+                console.log('🔧 Booking modal current display before closing:', modal.style.display);
+                
+                // イベントリスナーを削除
+                const existingHandler = modal._outsideClickHandler;
+                if (existingHandler) {
+                    modal.removeEventListener('click', existingHandler);
+                    delete modal._outsideClickHandler;
+                    console.log('🔧 Booking modal outside click handler removed');
+                }
+                
+                // モーダルを非表示にする
+                modal.style.display = 'none';
+                modal.style.visibility = 'hidden';
+                modal.style.opacity = '0';
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                
+                console.log('🔧 Booking modal display after closing:', modal.style.display);
+                console.log('🔧 Booking modal visibility after closing:', modal.style.visibility);
+                console.log('🔧 Booking modal opacity after closing:', modal.style.opacity);
+                console.log('🔧 Body classes after closing:', document.body.className);
+                console.log('🔧 Body overflow after closing:', document.body.style.overflow);
+                
+                console.log('✅ Booking modal closed successfully');
+            } else {
+                console.error('❌ Booking modal not found when trying to close');
+            }
+            
             // 編集モードフラグをリセット
             isEditingReservation = false;
             currentReservation = null;
