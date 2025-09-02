@@ -2920,12 +2920,16 @@
         // 設定モーダルを開く
         function openSettingsModal() {
             console.log('🔧 Opening settings modal...');
+            console.log('🔧 Current time:', new Date().toISOString());
             
             const modal = document.getElementById('settingsModal');
             if (!modal) {
                 console.error('❌ Settings modal element not found');
                 return;
             }
+            
+            console.log('🔧 Modal element found:', modal);
+            console.log('🔧 Modal current display:', modal.style.display);
             
             try {
                 // 必要な変数の初期化を確認
@@ -2940,39 +2944,65 @@
                     currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay());
                 }
                 
+                console.log('🔧 Variables initialized - defaultSchedule:', defaultSchedule);
+                console.log('🔧 Variables initialized - currentWeekStart:', currentWeekStart);
+                
                 // Bootstrapの自動動作を無効化
                 modal.setAttribute('data-bs-backdrop', 'static');
                 modal.setAttribute('data-bs-keyboard', 'false');
+                
+                console.log('🔧 Bootstrap attributes set');
                 
                 // モーダルを表示
                 modal.style.display = 'block';
                 document.body.classList.add('modal-open');
                 document.body.style.overflow = 'hidden';
                 
+                console.log('🔧 Modal displayed - display:', modal.style.display);
+                console.log('🔧 Body classes:', document.body.className);
+                console.log('🔧 Body overflow:', document.body.style.overflow);
+                
                 // 設定を描画
+                console.log('🔧 About to render day settings...');
                 renderDaySettings();
+                console.log('🔧 Day settings rendered');
                 
                 // 外側クリックで閉じる機能を設定（少し遅延）
                 setTimeout(() => {
+                    console.log('🔧 Setting up outside click handler...');
                     const freshModal = document.getElementById('settingsModal');
                     if (freshModal) {
+                        console.log('🔧 Fresh modal found, setting up click handler');
                         // 既存のイベントリスナーを削除
                         const newModal = freshModal.cloneNode(true);
                         freshModal.parentNode.replaceChild(newModal, freshModal);
                         
                         // 新しいイベントリスナーを追加
                         newModal.addEventListener('click', function(event) {
+                            console.log('🔧 Modal clicked:', event.target);
                             if (event.target === newModal) {
                                 console.log('✅ Closing settings modal via click outside');
                                 closeSettingsModal();
                             }
                         });
+                        console.log('🔧 Outside click handler set up');
+                    } else {
+                        console.error('❌ Fresh modal not found in setTimeout');
                     }
                 }, 200);
                 
                 console.log('✅ Settings modal opened successfully');
+                
+                // モーダルが表示されているか確認
+                setTimeout(() => {
+                    const checkModal = document.getElementById('settingsModal');
+                    console.log('🔧 Modal check after 500ms - display:', checkModal ? checkModal.style.display : 'not found');
+                    console.log('🔧 Modal check after 500ms - visible:', checkModal ? checkModal.offsetParent !== null : 'not found');
+                }, 500);
+                
             } catch (error) {
                 console.error('❌ Error opening settings modal:', error);
+                console.error('❌ Error stack:', error.stack);
                 // エラーが発生してもモーダルは表示する
                 modal.style.display = 'block';
                 
@@ -2993,15 +3023,25 @@
         // 設定モーダルを閉じる
         function closeSettingsModal() {
             console.log('🔧 Closing settings modal...');
+            console.log('🔧 closeSettingsModal called at:', new Date().toISOString());
             
             const modal = document.getElementById('settingsModal');
             if (modal) {
+                console.log('🔧 Modal found for closing');
+                console.log('🔧 Modal current display before closing:', modal.style.display);
+                
                 // モーダルを非表示にするだけ（クローンは使用しない）
                 modal.style.display = 'none';
                 document.body.classList.remove('modal-open');
                 document.body.style.overflow = '';
                 
+                console.log('🔧 Modal display after closing:', modal.style.display);
+                console.log('🔧 Body classes after closing:', document.body.className);
+                console.log('🔧 Body overflow after closing:', document.body.style.overflow);
+                
                 console.log('✅ Settings modal closed successfully');
+            } else {
+                console.error('❌ Modal not found when trying to close');
             }
         }
 
@@ -3041,6 +3081,7 @@
         // 曜日別設定を描画
         function renderDaySettings() {
             console.log('🔧 Rendering day settings...');
+            console.log('🔧 renderDaySettings called at:', new Date().toISOString());
             
             try {
                 // 必要な変数の確認と初期化
@@ -3055,8 +3096,13 @@
                     currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay());
                 }
                 
+                console.log('🔧 renderDaySettings - defaultSchedule:', defaultSchedule);
+                console.log('🔧 renderDaySettings - currentWeekStart:', currentWeekStart);
+                
                 // 週情報を更新
+                console.log('🔧 About to update week info...');
                 updateWeekInfo();
+                console.log('🔧 Week info updated');
                 
                 const container = document.getElementById('daySettings');
                 if (!container) {
@@ -3064,27 +3110,40 @@
                     return;
                 }
                 
+                console.log('🔧 Day settings container found:', container);
+                console.log('🔧 About to clear container...');
                 container.innerHTML = '';
+                console.log('🔧 Container cleared');
                 
                 for (let day = 0; day < 7; day++) {
+                    console.log(`🔧 Creating day setting for day ${day}...`);
                     try {
                         const dayDiv = createDaySettingDiv(day, false);
                         if (dayDiv) {
+                            console.log(`🔧 Day ${day} div created successfully`);
                             container.appendChild(dayDiv);
+                            console.log(`🔧 Day ${day} div appended to container`);
+                        } else {
+                            console.warn(`⚠️ Day ${day} div creation returned null`);
                         }
                     } catch (dayError) {
                         console.error(`❌ Error creating day setting for day ${day}:`, dayError);
+                        console.error(`❌ Day ${day} error stack:`, dayError.stack);
                         // エラーが発生しても他の曜日は表示する
                         const fallbackDiv = createFallbackDaySettingDiv(day, false);
                         if (fallbackDiv) {
                             container.appendChild(fallbackDiv);
+                            console.log(`🔧 Day ${day} fallback div appended`);
                         }
                     }
                 }
                 
                 console.log('✅ Day settings rendered successfully');
+                console.log('🔧 Final container children count:', container.children.length);
+                
             } catch (error) {
                 console.error('❌ Error rendering day settings:', error);
+                console.error('❌ renderDaySettings error stack:', error.stack);
                 // エラーが発生しても基本的な設定を表示
                 const container = document.getElementById('daySettings');
                 if (container) {
@@ -3849,14 +3908,6 @@ function showMessage(message, type = 'info') {
                 setTimeout(() => document.body.removeChild(messageDiv), 300);
   }, 3000);
 }
-
-        // モーダルの外側クリックで閉じる
-        window.onclick = function(event) {
-            const modal = document.getElementById('settingsModal');
-            if (modal && event.target === modal) {
-                closeSettingsModal();
-            }
-        }
 
         // ミニカレンダー関連の関数
         function toggleMiniCalendar() {

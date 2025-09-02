@@ -1232,14 +1232,15 @@ function showMessage(message, type = 'info') {
         // モーダルの外側クリックで閉じる
         window.onclick = function(event) {
             const modal = document.getElementById('settingsModal');
-            if (event.target === modal) {
+            if (modal && event.target === modal) {
+                console.log('🔧 Calendar.js window.onclick - closing settings modal');
                 closeSettingsModal();
             }
             
             // ミニカレンダーの外側クリックで閉じる
             const miniCalendar = document.getElementById('miniCalendar');
             const miniCalendarContainer = document.querySelector('.mini-calendar-container');
-            if (miniCalendar && !miniCalendarContainer.contains(event.target)) {
+            if (miniCalendar && miniCalendarContainer && !miniCalendarContainer.contains(event.target)) {
                 miniCalendar.classList.remove('show');
             }
         }
