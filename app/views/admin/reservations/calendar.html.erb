@@ -2585,6 +2585,30 @@
                                     if (dateKey === todayDateKey) {
                                         cell.classList.remove('today');
                                         cell.classList.add('today-with-reservation');
+                                        
+                                        // 予約ブロックが占有する全てのセルで今日のハイライトを無効化
+                                        const totalTime = reservation.duration + (reservation.effective_interval_minutes ?? 15);
+                                        const cellsToOccupy = Math.ceil(totalTime / 10);
+                                        
+                                        let currentCell = cell;
+                                        for (let i = 0; i < cellsToOccupy && currentCell; i++) {
+                                            currentCell.classList.remove('today');
+                                            currentCell.classList.add('today-with-reservation');
+                                            
+                                            // 次の行の同じ曜日のセルに移動
+                                            const currentRow = currentCell.parentElement;
+                                            const nextRow = currentRow.nextElementSibling;
+                                            if (nextRow) {
+                                                const nextCell = nextRow.querySelector(`[data-day="${currentCell.dataset.day}"]`);
+                                                if (nextCell && nextCell.classList.contains('schedule-cell')) {
+                                                    currentCell = nextCell;
+                                                } else {
+                                                    break;
+                                                }
+                                            } else {
+                                                break;
+                                            }
+                                        }
                                     }
                                     
                                     // 予約詳細を表示するためのクリックイベント（休憩ブロック以外）
