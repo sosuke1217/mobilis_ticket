@@ -2921,6 +2921,18 @@
             }
             
             try {
+                // 必要な変数の初期化を確認
+                if (!defaultSchedule || Object.keys(defaultSchedule).length === 0) {
+                    console.log('🔧 Initializing default schedule...');
+                    initializeDefaultSchedule();
+                }
+                
+                if (!currentWeekStart) {
+                    console.log('🔧 Setting current week start...');
+                    currentWeekStart = new Date();
+                    currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay());
+                }
+                
                 // Bootstrapの自動動作を無効化
                 modal.setAttribute('data-bs-backdrop', 'static');
                 modal.setAttribute('data-bs-keyboard', 'false');
@@ -2951,6 +2963,18 @@
                 console.error('❌ Error opening settings modal:', error);
                 // エラーが発生してもモーダルは表示する
                 modal.style.display = 'block';
+                
+                // エラー時に基本的なメッセージを表示
+                const daySettingsContainer = document.getElementById('daySettings');
+                if (daySettingsContainer) {
+                    daySettingsContainer.innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            設定の読み込み中にエラーが発生しました。ページを再読み込みしてください。
+                            <br><small class="text-muted">エラー詳細: ${error.message}</small>
+                        </div>
+                    `;
+                }
             }
         }
 
@@ -3010,6 +3034,18 @@
             console.log('🔧 Rendering day settings...');
             
             try {
+                // 必要な変数の確認と初期化
+                if (!defaultSchedule || Object.keys(defaultSchedule).length === 0) {
+                    console.log('🔧 Initializing default schedule in renderDaySettings...');
+                    initializeDefaultSchedule();
+                }
+                
+                if (!currentWeekStart) {
+                    console.log('🔧 Setting current week start in renderDaySettings...');
+                    currentWeekStart = new Date();
+                    currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay());
+                }
+                
                 // 週情報を更新
                 updateWeekInfo();
                 
@@ -3043,7 +3079,13 @@
                 // エラーが発生しても基本的な設定を表示
                 const container = document.getElementById('daySettings');
                 if (container) {
-                    container.innerHTML = '<div class="alert alert-warning">設定の読み込み中にエラーが発生しました。ページを再読み込みしてください。</div>';
+                    container.innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            設定の読み込み中にエラーが発生しました。ページを再読み込みしてください。
+                            <br><small class="text-muted">エラー詳細: ${error.message}</small>
+                        </div>
+                    `;
                 }
             }
         }
