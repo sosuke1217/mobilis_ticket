@@ -23,7 +23,7 @@
   </div>
 
   <div class="row">
-    <div class="col-lg-8">
+    <div class="col-12">
       <div class="card border-0 shadow-sm">
         <div class="card-header bg-gradient-primary text-dark">
           <h5 class="mb-0">
@@ -124,38 +124,6 @@
               </div>
             </div>
           <% end %>
-        </div>
-      </div>
-    </div>
-
-    <!-- サイドバー -->
-    <div class="col-lg-4">
-      <!-- 現在の情報 -->
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-gradient-info text-dark">
-          <h6 class="mb-0">
-            <i class="fas fa-info-circle me-2"></i>現在の情報
-          </h6>
-        </div>
-        <div class="card-body">
-          <div class="row g-2">
-            <div class="col-6">
-              <small class="text-muted">名前</small>
-              <div class="fw-bold"><%= @user.name.presence || "未設定" %></div>
-            </div>
-            <div class="col-6">
-              <small class="text-muted">生年月日</small>
-              <div class="fw-bold"><%= @user.birth_date.present? ? l(@user.birth_date) : "未設定" %></div>
-            </div>
-            <div class="col-6">
-              <small class="text-muted">電話番号</small>
-              <div class="fw-bold"><%= @user.phone_number.presence || "未設定" %></div>
-            </div>
-            <div class="col-6">
-              <small class="text-muted">メール</small>
-              <div class="fw-bold"><%= @user.email.presence || "未設定" %></div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
