@@ -378,35 +378,58 @@ export default class extends Controller {
       const newRow = document.createElement('tr')
       newRow.setAttribute('data-ticket-id', ticket.id)
       
-      // チケット情報を設定
+      // 購入日と有効期限のフォーマット
+      const purchaseDate = ticket.purchase_date ? new Date(ticket.purchase_date).toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' }) : '不明'
+      const expiryDate = ticket.expiry_date ? new Date(ticket.expiry_date).toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' }) : '無期限'
+      
+      // チケット情報を設定（新しいレイアウトに合わせて）
       newRow.innerHTML = `
-        <td>
-          <strong>${ticket.ticket_template.name}</strong>
-          <br><small class="text-muted">¥${ticket.ticket_template.price.toLocaleString()}</small>
+        <td class="px-3">
+          <div>
+            <strong>${ticket.ticket_template.name}</strong>
+            <br>
+            <small class="text-muted">
+              <i class="fas fa-yen-sign me-1"></i>${ticket.ticket_template.price.toLocaleString()}
+            </small>
+          </div>
         </td>
         <td>
           <span class="badge bg-primary">
             ${ticket.remaining_count} / ${ticket.total_count}
           </span>
         </td>
-        <td>${ticket.purchase_date ? new Date(ticket.purchase_date).toLocaleDateString('ja-JP') : '不明'}</td>
-        <td>${ticket.expiry_date ? new Date(ticket.expiry_date).toLocaleDateString('ja-JP') : '無期限'}</td>
         <td>
-          <span class="badge bg-success">利用可能</span>
+          <i class="fas fa-calendar-day me-1 text-muted"></i>
+          ${purchaseDate}
         </td>
         <td>
-          <button type="button" 
-                  class="btn btn-sm btn-outline-primary use-ticket-btn"
-                  data-ticket-id="${ticket.id}"
-                  data-ticket-name="${ticket.ticket_template.name || '不明'}">
-            使用
-          </button>
-          <button type="button" 
-                  class="btn btn-sm btn-outline-danger delete-ticket-btn ms-1"
-                  data-ticket-id="${ticket.id}"
-                  data-ticket-name="${ticket.ticket_template.name || '不明'}">
-            <i class="fas fa-trash"></i>
-          </button>
+          ${ticket.expiry_date ? 
+            `<i class="fas fa-clock me-1 text-muted"></i>${expiryDate}` : 
+            '<span class="text-muted">無期限</span>'
+          }
+        </td>
+        <td>
+          <span class="badge bg-success">
+            <i class="fas fa-check me-1"></i>利用可能
+          </span>
+        </td>
+        <td class="text-center">
+          <div class="btn-group" role="group">
+            <button type="button" 
+                    class="btn btn-sm btn-outline-primary use-ticket-btn"
+                    data-ticket-id="${ticket.id}"
+                    data-ticket-name="${ticket.ticket_template.name || '不明'}"
+                    title="チケットを使用">
+              <i class="fas fa-play"></i>
+            </button>
+            <button type="button" 
+                    class="btn btn-sm btn-outline-danger delete-ticket-btn"
+                    data-ticket-id="${ticket.id}"
+                    data-ticket-name="${ticket.ticket_template.name || '不明'}"
+                    title="チケットを削除">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
         </td>
       `
       
@@ -602,23 +625,8 @@ export default class extends Controller {
       
       console.log('✅ チケット行を発見:', ticketRow)
       
-      // 残り回数セルを検索（複数の方法で）
-      let remainingCountCell = ticketRow.querySelector('.badge')
-      
-      if (!remainingCountCell) {
-        // 代替方法1: 残り回数を含むセルを検索
-        remainingCountCell = Array.from(ticketRow.children).find(cell => 
-          cell.textContent.includes('/') || cell.textContent.includes('回')
-        )
-      }
-      
-      if (!remainingCountCell) {
-        // 代替方法2: 4番目のセル（残り回数が表示される位置）
-        const cells = ticketRow.children
-        if (cells.length >= 4) {
-          remainingCountCell = cells[3]
-        }
-      }
+      // 残り回数セルを検索（2番目のセル）
+      const remainingCountCell = ticketRow.children[1]
       
       if (!remainingCountCell) {
         console.error('❌ 残り回数セルが見つかりません')
@@ -632,19 +640,6 @@ export default class extends Controller {
       // 残り回数を更新
       if (remainingCountCell) {
         console.log('🔍 残り回数セルの現在の内容:', remainingCountCell.innerHTML)
-        
-        // 残回数セルが正しいセルかどうか確認（2番目のセルであることを確認）
-        const cellIndex = Array.from(ticketRow.children).indexOf(remainingCountCell)
-        console.log('🔍 セルのインデックス:', cellIndex)
-        
-        // 2番目のセル（残回数が表示される位置）でない場合は、正しいセルを探す
-        if (cellIndex !== 1) {
-          const correctCell = ticketRow.children[1]
-          if (correctCell) {
-            remainingCountCell = correctCell
-            console.log('✅ 正しい残回数セルを特定:', remainingCountCell)
-          }
-        }
         
         // 既存のbadge要素を探す
         let badgeElement = remainingCountCell.querySelector('.badge')
@@ -661,7 +656,7 @@ export default class extends Controller {
         console.log('✅ 残り回数を更新:', `${remainingCount}/${totalCount}`)
         console.log('🔍 更新後の残り回数セルの内容:', remainingCountCell.innerHTML)
         
-        // 残り回数に応じてバッジの色を変更（重複を防ぐ）
+        // 残り回数に応じてバッジの色を変更
         if (parseInt(remainingCount) === 0) {
           badgeElement.className = 'badge bg-secondary'
           console.log('✅ 使用済みチケットとして表示を更新')
@@ -686,28 +681,35 @@ export default class extends Controller {
           console.log('✅ 利用可能チケットとして表示を更新')
         }
         
-        // 残り回数が2以下の場合のステータス更新
-        if (parseInt(remainingCount) <= 2) {
-          // 残り回数が2以下の場合のステータス更新
-          const statusCell = ticketRow.querySelector('td:nth-child(5)')
-          if (statusCell) {
-            const statusBadge = statusCell.querySelector('.badge')
-            if (statusBadge) {
+        // ステータスセルを更新（5番目のセル）
+        const statusCell = ticketRow.children[4]
+        if (statusCell) {
+          const statusBadge = statusCell.querySelector('.badge')
+          if (statusBadge) {
+            if (parseInt(remainingCount) === 0) {
+              statusBadge.className = 'badge bg-secondary'
+              statusBadge.innerHTML = '<i class="fas fa-check me-1"></i>使用済み'
+            } else if (parseInt(remainingCount) <= 2) {
               statusBadge.className = 'badge bg-warning'
-              statusBadge.textContent = '残り少ない'
-              console.log('✅ 残り少ないチケットとしてステータスを更新')
-            }
-          }
-        } else {
-          // 残り回数が3以上の場合のステータス更新
-          const statusCell = ticketRow.querySelector('td:nth-child(5)')
-          if (statusCell) {
-            const statusBadge = statusCell.querySelector('.badge')
-            if (statusBadge) {
+              statusBadge.innerHTML = '<i class="fas fa-exclamation me-1"></i>残り少ない'
+            } else {
               statusBadge.className = 'badge bg-success'
-              statusBadge.textContent = '利用可能'
-              console.log('✅ 利用可能チケットとしてステータスを更新')
+              statusBadge.innerHTML = '<i class="fas fa-check me-1"></i>利用可能'
             }
+            console.log('✅ ステータスバッジを更新')
+          }
+        }
+        
+        // 操作ボタンを更新（6番目のセル）
+        const actionCell = ticketRow.children[5]
+        if (actionCell && parseInt(remainingCount) === 0) {
+          // 残り回数が0の場合は使用ボタンを無効化
+          const useButton = actionCell.querySelector('.use-ticket-btn')
+          if (useButton) {
+            useButton.disabled = true
+            useButton.className = 'btn btn-sm btn-outline-secondary'
+            useButton.innerHTML = '<i class="fas fa-ban"></i>'
+            useButton.title = '使用不可'
           }
         }
         
@@ -950,9 +952,12 @@ export default class extends Controller {
           if (tbody) {
             tbody.innerHTML = `
               <tr>
-                <td colspan="6" class="text-center py-4">
-                  <i class="fas fa-ticket-alt fa-3x text-muted mb-3"></i>
-                  <p class="text-muted">保有チケットがありません</p>
+                <td colspan="6" class="text-center py-5">
+                  <div class="text-muted">
+                    <i class="fas fa-ticket-alt fa-3x mb-3"></i>
+                    <p class="mb-0">保有チケットがありません</p>
+                    <small>新規チケットを発行してください</small>
+                  </div>
                 </td>
               </tr>
             `
