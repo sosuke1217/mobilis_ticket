@@ -2958,6 +2958,7 @@
                 modal.style.display = 'block';
                 modal.style.visibility = 'visible';
                 modal.style.opacity = '1';
+                modal.style.transition = 'none'; // トランジションを無効化
                 document.body.classList.add('modal-open');
                 document.body.style.overflow = 'hidden';
                 
@@ -2978,18 +2979,26 @@
                     const freshModal = document.getElementById('settingsModal');
                     if (freshModal) {
                         console.log('🔧 Fresh modal found, setting up click handler');
-                        // 既存のイベントリスナーを削除
-                        const newModal = freshModal.cloneNode(true);
-                        freshModal.parentNode.replaceChild(newModal, freshModal);
                         
-                        // 新しいイベントリスナーを追加
-                        newModal.addEventListener('click', function(event) {
+                        // 既存のイベントリスナーを削除（より安全な方法）
+                        const existingHandler = freshModal._outsideClickHandler;
+                        if (existingHandler) {
+                            freshModal.removeEventListener('click', existingHandler);
+                        }
+                        
+                        // 新しいイベントリスナーを作成
+                        const newHandler = function(event) {
                             console.log('🔧 Modal clicked:', event.target);
-                            if (event.target === newModal) {
+                            if (event.target === freshModal) {
                                 console.log('✅ Closing settings modal via click outside');
                                 closeSettingsModal();
                             }
-                        });
+                        };
+                        
+                        // イベントリスナーを追加
+                        freshModal.addEventListener('click', newHandler);
+                        freshModal._outsideClickHandler = newHandler; // 参照を保存
+                        
                         console.log('🔧 Outside click handler set up');
                     } else {
                         console.error('❌ Fresh modal not found in setTimeout');
@@ -3039,12 +3048,24 @@
                 console.log('🔧 Modal found for closing');
                 console.log('🔧 Modal current display before closing:', modal.style.display);
                 
-                // モーダルを非表示にするだけ（クローンは使用しない）
+                // イベントリスナーを削除
+                const existingHandler = modal._outsideClickHandler;
+                if (existingHandler) {
+                    modal.removeEventListener('click', existingHandler);
+                    delete modal._outsideClickHandler;
+                    console.log('🔧 Outside click handler removed');
+                }
+                
+                // モーダルを非表示にする
                 modal.style.display = 'none';
+                modal.style.visibility = 'hidden';
+                modal.style.opacity = '0';
                 document.body.classList.remove('modal-open');
                 document.body.style.overflow = '';
                 
                 console.log('🔧 Modal display after closing:', modal.style.display);
+                console.log('🔧 Modal visibility after closing:', modal.style.visibility);
+                console.log('🔧 Modal opacity after closing:', modal.style.opacity);
                 console.log('🔧 Body classes after closing:', document.body.className);
                 console.log('🔧 Body overflow after closing:', document.body.style.overflow);
                 
