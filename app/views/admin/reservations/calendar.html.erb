@@ -2369,6 +2369,12 @@
 
         // 週表示を描画
         function renderWeekView() {
+            // デフォルトスケジュールが最新であることを確認
+            if (!defaultSchedule || Object.keys(defaultSchedule).length === 0) {
+                console.log('🔄 Default schedule not found, initializing...');
+                initializeDefaultSchedule();
+            }
+            
             updateWeekHeader();
             generateTimeSlots();
         }
@@ -2409,6 +2415,12 @@
 
         // タイムスロットを生成
         function generateTimeSlots() {
+            // デフォルトスケジュールが最新であることを確認
+            if (!defaultSchedule || Object.keys(defaultSchedule).length === 0) {
+                console.log('🔄 Default schedule not found in generateTimeSlots, initializing...');
+                initializeDefaultSchedule();
+            }
+            
             const scheduleBody = document.getElementById('scheduleBody');
             scheduleBody.innerHTML = '';
             
@@ -3597,6 +3609,9 @@
             currentWeekStart.setDate(currentWeekStart.getDate() - 7);
             console.log('🔄 Previous week clicked - current week start after:', currentWeekStart);
             
+            // 新しい週のデフォルトスケジュールを先に設定
+            initializeDefaultSchedule();
+            
             Promise.all([
                 loadShiftSettingsFromBackend(),
                 loadReservationsFromBackend()
@@ -3614,6 +3629,9 @@
             console.log('🔄 Next week clicked - current week start before:', currentWeekStart);
             currentWeekStart.setDate(currentWeekStart.getDate() + 7);
             console.log('🔄 Next week clicked - current week start after:', currentWeekStart);
+            
+            // 新しい週のデフォルトスケジュールを先に設定
+            initializeDefaultSchedule();
             
             Promise.all([
                 loadShiftSettingsFromBackend(),
