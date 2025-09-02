@@ -4,156 +4,77 @@
     <div class="col-12">
       <div class="d-flex justify-content-between align-items-center">
         <div>
-          <h1 class="h3 mb-1 text-dark">
+          <h1 class="h3 mb-1">
             <i class="fas fa-users me-2 text-primary"></i>ユーザー管理
           </h1>
           <p class="text-muted mb-0">登録ユーザーの一覧と管理</p>
         </div>
         <button type="button" class="btn btn-success" id="addUserBtn">
-          <i class="fas fa-user-plus me-2"></i>新規ユーザー追加
+          <i class="fas fa-user-plus me-1"></i>新規追加
         </button>
       </div>
     </div>
   </div>
 
-  <!-- 統計カード -->
+  <!-- 検索・統計セクション -->
   <div class="row mb-4">
-    <div class="col-md-3">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body text-center">
-          <div class="text-primary mb-2">
-            <i class="fas fa-users fa-2x"></i>
-          </div>
-          <h3 class="h4 mb-1">-</h3>
-          <p class="text-muted mb-0 small">登録ユーザー数</p>
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <%= search_form_for @q, url: admin_users_path, method: :get, html: { class: "row g-3 align-items-end" } do |f| %>
+            <div class="col-md-8">
+              <div class="input-group">
+                <span class="input-group-text">
+                  <i class="fas fa-search"></i>
+                </span>
+                <%= f.search_field :name_cont, class: "form-control", placeholder: "名前で検索..." %>
+                <button class="btn btn-primary" type="submit">
+                  <i class="fas fa-search me-1"></i>検索
+                </button>
+                <% if params[:q].present? %>
+                  <%= link_to admin_users_path, class: "btn btn-outline-secondary" do %>
+                    <i class="fas fa-times me-1"></i>リセット
+                  <% end %>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
         </div>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="card border-0 shadow-sm h-100">
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm bg-gradient-primary text-white">
         <div class="card-body text-center">
-          <div class="text-success mb-2">
-            <i class="fas fa-ticket-alt fa-2x"></i>
-          </div>
-          <h3 class="h4 mb-1">-</h3>
-          <p class="text-muted mb-0 small">チケット保有者</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body text-center">
-          <div class="text-info mb-2">
-            <i class="fab fa-line fa-2x"></i>
-          </div>
-          <h3 class="h4 mb-1">-</h3>
-          <p class="text-muted mb-0 small">LINE連携済み</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body text-center">
-          <div class="text-warning mb-2">
-            <i class="fas fa-calendar-check fa-2x"></i>
-          </div>
-          <h3 class="h4 mb-1">-</h3>
-          <p class="text-muted mb-0 small">30日以内利用者</p>
+          <div class="h4 mb-1"><%= @users.count %></div>
+          <div class="small">登録ユーザー数</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- メインコンテンツ -->
+  <!-- ユーザー一覧 -->
   <div class="card border-0 shadow-sm">
-    <div class="card-header bg-gradient-primary text-white">
-      <div class="d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">
-          <i class="fas fa-list me-2"></i>ユーザー一覧
-        </h5>
-        <div class="text-white-50 small">
-          全 <%= @users.count %> 件
-        </div>
-      </div>
+    <div class="card-header bg-light">
+      <h5 class="mb-0">
+        <i class="fas fa-list me-2"></i>ユーザー一覧
+      </h5>
     </div>
-
-    <div class="card-body">
-      <!-- 検索フォーム -->
-      <%= search_form_for @q, url: admin_users_path, method: :get, html: { class: "mb-4" } do |f| %>
-        <div class="row g-3 align-items-end">
-          <div class="col-md-6">
-            <label class="form-label fw-bold">
-              <i class="fas fa-search me-1"></i>ユーザー検索
-            </label>
-            <div class="input-group">
-              <%= f.search_field :name_cont, class: "form-control", placeholder: "名前で検索..." %>
-              <button class="btn btn-primary" type="submit">
-                <i class="fas fa-search me-1"></i>検索
-              </button>
-              <% if params[:q].present? %>
-                <%= link_to admin_users_path, class: "btn btn-outline-secondary" do %>
-                  <i class="fas fa-times me-1"></i>リセット
-                <% end %>
-              <% end %>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="d-flex gap-2">
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="hasTickets" name="has_tickets" <%= 'checked' if params[:has_tickets] == '1' %>>
-                <label class="form-check-label small" for="hasTickets">
-                  チケット保有者のみ
-                </label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="lineLinked" name="line_linked" <%= 'checked' if params[:line_linked] == '1' %>>
-                <label class="form-check-label small" for="lineLinked">
-                  LINE連携済みのみ
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>
-      <% end %>
-
-      <!-- ユーザー一覧テーブル -->
+    <div class="card-body p-0">
       <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
+        <table class="table table-hover mb-0">
           <thead class="table-light">
             <tr>
-              <th class="border-0">
-                <i class="fas fa-hashtag me-1 text-muted"></i>ID
-              </th>
-              <th class="border-0">
-                <i class="fas fa-user me-1 text-muted"></i>ユーザー情報
-              </th>
-              <th class="border-0">
-                <i class="fab fa-line me-1 text-muted"></i>LINE連携
-              </th>
-              <th class="border-0">
-                <i class="fas fa-calendar me-1 text-muted"></i>登録日
-              </th>
-              <th class="border-0">
-                <i class="fas fa-ticket-alt me-1 text-muted"></i>チケット状況
-              </th>
-              <th class="border-0">
-                <i class="fas fa-clock me-1 text-muted"></i>最終利用
-              </th>
-              <th class="border-0">
-                <i class="fas fa-yen-sign me-1 text-muted"></i>残額
-              </th>
-              <th class="border-0 text-center">
-                <i class="fas fa-cogs me-1 text-muted"></i>操作
-              </th>
+              <th class="px-3">ユーザー</th>
+              <th>LINE連携</th>
+              <th>チケット状況</th>
+              <th>最終来店</th>
+              <th class="text-center">操作</th>
             </tr>
           </thead>
           <tbody>
             <% @users.each do |user| %>
-              <tr class="border-bottom">
-                <td>
-                  <span class="badge bg-secondary">#<%= user.id %></span>
-                </td>
-                <td>
+              <tr>
+                <td class="px-3">
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 me-3">
                       <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
@@ -161,81 +82,68 @@
                       </div>
                     </div>
                     <div class="flex-grow-1">
-                      <% if user.display_name_or_name.present? %>
-                        <%= link_to user.display_name_or_name, admin_user_path(user), class: "fw-bold text-decoration-none" %>
-                        <% if user.display_name.present? && user.name.present? && user.display_name != user.name %>
-                          <br><small class="text-muted">登録名: <%= user.name %></small>
+                      <div class="fw-semibold">
+                        <% if user.display_name_or_name.present? %>
+                          <%= link_to user.display_name_or_name, admin_user_path(user), class: "text-decoration-none" %>
+                        <% else %>
+                          <span class="text-muted fst-italic">未登録</span>
                         <% end %>
-                      <% else %>
-                        <span class="text-muted fst-italic">未登録</span>
-                      <% end %>
-                      <% if user.phone_number.present? %>
-                        <br><small class="text-muted"><i class="fas fa-phone me-1"></i><%= user.phone_number %></small>
-                      <% end %>
+                      </div>
+                      <div class="small text-muted">
+                        ID: <%= user.id %> | <%= l(user.created_at.to_date) %>
+                        <% if user.display_name.present? && user.name.present? && user.display_name != user.name %>
+                          <br>登録名: <%= user.name %>
+                        <% end %>
+                      </div>
                     </div>
                   </div>
                 </td>
                 <td>
                   <% if user.line_user_id.present? && user.line_user_id != '' %>
                     <span class="badge bg-success">
-                      <i class="fab fa-line me-1"></i>連携済み
+                      <i class="fas fa-check me-1"></i>連携済み
                     </span>
                   <% else %>
-                    <span class="badge bg-danger">
+                    <span class="badge bg-secondary">
                       <i class="fas fa-times me-1"></i>未連携
                     </span>
                   <% end %>
                 </td>
                 <td>
-                  <div class="text-muted small">
-                    <i class="fas fa-calendar-day me-1"></i><%= l(user.created_at.to_date) %>
-                  </div>
-                </td>
-                <td>
                   <div class="d-flex align-items-center">
-                                         <span class="badge bg-primary me-2">
-                       <i class="fas fa-ticket-alt me-1"></i><%= user.active_ticket_count rescue 0 %> 回
-                     </span>
-                     <% if (user.active_ticket_count rescue 0) > 0 %>
-                      <small class="text-success">
-                        <i class="fas fa-check me-1"></i>保有中
-                      </small>
-                    <% else %>
-                      <small class="text-muted">
-                        <i class="fas fa-times me-1"></i>なし
-                      </small>
-                    <% end %>
+                    <div class="me-2">
+                      <span class="badge bg-info">
+                        <i class="fas fa-ticket-alt me-1"></i><%= user.active_ticket_count %>回
+                      </span>
+                    </div>
+                    <div class="small text-muted">
+                      <%= number_to_currency(user.remaining_ticket_value, unit: "¥", precision: 0) %>
+                    </div>
                   </div>
                 </td>
                 <td>
                   <% if user.last_usage_date %>
-                    <div class="text-muted small">
-                      <i class="fas fa-clock me-1"></i><%= user.last_usage_date.strftime("%Y/%m/%d") %>
+                    <div class="text-muted">
+                      <i class="fas fa-calendar me-1"></i>
+                      <%= user.last_usage_date.strftime("%m/%d") %>
                     </div>
                   <% else %>
-                    <span class="badge bg-secondary">
-                      <i class="fas fa-times me-1"></i>未使用
+                    <span class="text-muted small">
+                      <i class="fas fa-minus me-1"></i>未使用
                     </span>
                   <% end %>
                 </td>
-                                 <td>
-                   <div class="fw-bold text-success">
-                     <i class="fas fa-yen-sign me-1"></i><%= number_to_currency(user.remaining_ticket_value rescue 0, unit: "", precision: 0) rescue "¥0" %>
-                   </div>
-                 </td>
                 <td class="text-center">
                   <div class="btn-group" role="group">
-                    <%= link_to admin_user_path(user), class: "btn btn-sm btn-outline-primary", title: "詳細表示" do %>
-                      <i class="fas fa-eye"></i>
-                    <% end %>
                     <% if user.name.present? %>
-                      <%= link_to ticket_management_admin_user_path(user), class: "btn btn-sm btn-outline-success", title: "チケット管理" do %>
+                      <%= link_to ticket_management_admin_user_path(user), class: "btn btn-sm btn-outline-primary", title: "チケット管理" do %>
                         <i class="fas fa-ticket-alt"></i>
                       <% end %>
+                      <%= link_to admin_user_path(user), class: "btn btn-sm btn-outline-info", title: "詳細" do %>
+                        <i class="fas fa-eye"></i>
+                      <% end %>
                     <% else %>
-                      <button class="btn btn-sm btn-outline-secondary" disabled title="未登録">
-                        <i class="fas fa-ban"></i>
-                      </button>
+                      <span class="text-muted fst-italic small">未登録</span>
                     <% end %>
                   </div>
                 </td>
@@ -244,16 +152,9 @@
           </tbody>
         </table>
       </div>
-
-      <!-- ページネーション -->
-      <div class="d-flex justify-content-between align-items-center mt-4">
-        <div class="text-muted small">
-          全 <%= @users.count %> 件中 <%= (@users.current_page - 1) * @users.limit_value + 1 rescue 1 %> - <%= [@users.current_page * @users.limit_value, @users.total_count].min rescue @users.count %> 件を表示
-        </div>
-        <div>
-          <%= paginate @users, theme: 'bootstrap-5' %>
-        </div>
-      </div>
+    </div>
+    <div class="card-footer bg-light">
+      <%= paginate @users %>
     </div>
   </div>
 </div>
@@ -262,7 +163,7 @@
 <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050; background-color: rgba(0, 0, 0, 0.5);">
   <div class="modal-dialog modal-lg" style="position: relative; width: auto; margin: 0.5rem; pointer-events: none; max-width: 800px; margin: 1.75rem auto;">
     <div class="modal-content" style="position: relative; display: flex; flex-direction: column; width: 100%; pointer-events: auto; background-color: #fff; background-clip: padding-box; border: 1px solid rgba(0, 0, 0, 0.2); border-radius: 0.3rem; outline: 0;">
-      <div class="modal-header bg-gradient-success text-white">
+      <div class="modal-header bg-success text-white">
         <h5 class="modal-title" id="addUserModalLabel">
           <i class="fas fa-user-plus me-2"></i>新規ユーザー追加
         </h5>
@@ -270,56 +171,60 @@
       </div>
       <div class="modal-body">
         <form id="addUserForm">
-          <div class="row g-3">
+          <div class="row">
             <div class="col-md-6">
-              <label for="userName" class="form-label fw-bold">
-                <i class="fas fa-user me-1"></i>氏名 <span class="text-danger">*</span>
-              </label>
-              <input type="text" class="form-control" id="userName" required placeholder="例: 山田太郎">
-            </div>
-            <div class="col-md-6">
-              <label for="userPhone" class="form-label fw-bold">
-                <i class="fas fa-phone me-1"></i>電話番号
-              </label>
-              <input type="tel" class="form-control" id="userPhone" placeholder="例: 090-1234-5678">
+              <div class="mb-3">
+                <label for="userName" class="form-label">氏名 <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="userName" required placeholder="例: 山田太郎">
+              </div>
             </div>
             <div class="col-md-6">
-              <label for="userEmail" class="form-label fw-bold">
-                <i class="fas fa-envelope me-1"></i>メールアドレス
-              </label>
-              <input type="email" class="form-control" id="userEmail" placeholder="例: example@email.com">
-            </div>
-            <div class="col-md-6">
-              <label for="userBirthDate" class="form-label fw-bold">
-                <i class="fas fa-birthday-cake me-1"></i>生年月日
-              </label>
-              <input type="date" class="form-control" id="userBirthDate">
-            </div>
-            <div class="col-md-4">
-              <label for="userPostalCode" class="form-label fw-bold">
-                <i class="fas fa-map-marker-alt me-1"></i>郵便番号
-              </label>
-              <input type="text" class="form-control" id="userPostalCode" placeholder="例: 123-4567">
-            </div>
-            <div class="col-md-8">
-              <label for="userAddress" class="form-label fw-bold">
-                <i class="fas fa-home me-1"></i>住所
-              </label>
-              <input type="text" class="form-control" id="userAddress" placeholder="例: 東京都渋谷区...">
-            </div>
-            <div class="col-12">
-              <label for="userMemo" class="form-label fw-bold">
-                <i class="fas fa-sticky-note me-1"></i>管理者メモ
-              </label>
-              <textarea class="form-control" id="userMemo" rows="3" placeholder="初回来店の経緯、アレルギー情報、特記事項など"></textarea>
+              <div class="mb-3">
+                <label for="userPhone" class="form-label">電話番号</label>
+                <input type="tel" class="form-control" id="userPhone" placeholder="例: 090-1234-5678">
+              </div>
             </div>
           </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="userEmail" class="form-label">メールアドレス</label>
+                <input type="email" class="form-control" id="userEmail" placeholder="例: example@email.com">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="userBirthDate" class="form-label">生年月日</label>
+                <input type="date" class="form-control" id="userBirthDate">
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label for="userPostalCode" class="form-label">郵便番号</label>
+                <input type="text" class="form-control" id="userPostalCode" placeholder="例: 123-4567">
+              </div>
+            </div>
+            <div class="col-md-8">
+              <div class="mb-3">
+                <label for="userAddress" class="form-label">住所</label>
+                <input type="text" class="form-control" id="userAddress" placeholder="例: 東京都渋谷区...">
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="userMemo" class="form-label">管理者メモ</label>
+            <textarea class="form-control" id="userMemo" rows="3" placeholder="初回来店の経緯、アレルギー情報、特記事項など"></textarea>
+          </div>
+
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" onclick="hideModal()">
-          <i class="fas fa-times me-1"></i>キャンセル
-        </button>
+        <button type="button" class="btn btn-secondary" onclick="hideModal()">キャンセル</button>
         <button type="button" class="btn btn-success" id="saveUserBtn">
           <i class="fas fa-save me-1"></i>ユーザーを追加
         </button>
@@ -329,52 +234,46 @@
 </div>
 
 <style>
-/* カスタムスタイル */
-.card {
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
 }
 
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+.table th {
+  border-top: none;
+  font-weight: 600;
+  color: #495057;
 }
 
-.table tbody tr {
-  transition: background-color 0.2s ease-in-out;
-}
-
-.table tbody tr:hover {
-  background-color: rgba(0, 123, 255, 0.05) !important;
+.table td {
+  vertical-align: middle;
 }
 
 .btn-group .btn {
-  transition: all 0.2s ease-in-out;
+  border-radius: 0.375rem !important;
 }
 
-.btn-group .btn:hover {
-  transform: translateY(-1px);
+.btn-group .btn:first-child {
+  border-top-left-radius: 0.375rem !important;
+  border-bottom-left-radius: 0.375rem !important;
 }
 
-.badge {
-  font-size: 0.75rem;
+.btn-group .btn:last-child {
+  border-top-right-radius: 0.375rem !important;
+  border-bottom-right-radius: 0.375rem !important;
 }
 
 @media (max-width: 768px) {
-  .container-lg {
-    padding: 0 10px;
+  .btn-group {
+    flex-direction: column;
   }
   
-  .card-body {
-    padding: 1rem;
+  .btn-group .btn {
+    border-radius: 0.375rem !important;
+    margin-bottom: 0.25rem;
   }
   
   .table-responsive {
     font-size: 0.875rem;
-  }
-  
-  .btn-group .btn {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
   }
 }
 </style>
@@ -414,14 +313,12 @@ function showModal() {
   console.log('🔍 Showing modal manually');
   
   const modal = document.getElementById('addUserModal');
-  const form = document.getElementById('addUserForm');
-  
   if (!modal) {
     console.error('❌ Modal element not found');
     return;
   }
   
-  // モーダルを表示（直接スタイルを設定）
+  // モーダルを表示
   modal.style.display = 'block';
   modal.style.position = 'fixed';
   modal.style.top = '0';
@@ -437,118 +334,71 @@ function showModal() {
   document.body.classList.add('modal-open');
   document.body.style.overflow = 'hidden';
   
-  // フォーカスを最初の入力フィールドに
-  setTimeout(() => {
-    const firstInput = form.querySelector('input[type="text"]');
-    if (firstInput) {
-      firstInput.focus();
-    }
-  }, 100);
-  
   console.log('🔍 Modal shown manually');
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('🔍 DOM Content Loaded - Initializing user management page');
+  console.log('🔍 DOM Content Loaded');
   
   const addUserBtn = document.getElementById('addUserBtn');
   const modal = document.getElementById('addUserModal');
   const form = document.getElementById('addUserForm');
   const saveBtn = document.getElementById('saveUserBtn');
   
-  console.log('🔍 Elements found:', {
-    addUserBtn: !!addUserBtn,
-    modal: !!modal,
-    form: !!form,
-    saveBtn: !!saveBtn,
-    bootstrap: typeof bootstrap !== 'undefined'
-  });
-  
   if (!addUserBtn || !modal || !form || !saveBtn) {
     console.error('❌ Required elements not found');
     return;
   }
   
-  // 新規ユーザー追加ボタンクリック
+  console.log('✅ All required elements found');
+  
+  // 新規ユーザー追加ボタンのクリックイベント
   addUserBtn.addEventListener('click', function() {
     console.log('🔍 Add user button clicked');
-    
-    // フォームをリセット
-    form.reset();
-    
-    // バリデーションクラスをクリア
-    form.querySelectorAll('.form-control').forEach(input => {
-      input.classList.remove('is-valid', 'is-invalid');
-    });
-    
-    // ボタンを有効化
-    saveBtn.disabled = false;
-    saveBtn.innerHTML = '<i class="fas fa-save me-1"></i>ユーザーを追加';
-    
-    // 手動でモーダルを表示
     showModal();
   });
   
-  // バリデーション
-  const nameInput = document.getElementById('userName');
-  if (nameInput) {
-    nameInput.addEventListener('input', function() {
-      if (this.value.trim()) {
-        this.classList.remove('is-invalid');
-        this.classList.add('is-valid');
-      } else {
-        this.classList.remove('is-valid');
-        this.classList.add('is-invalid');
-      }
-    });
-  }
-  
-  // 保存ボタンクリック
+  // ユーザー保存ボタンのクリックイベント
   saveBtn.addEventListener('click', function() {
-    const userName = document.getElementById('userName').value.trim();
-    const userPhone = document.getElementById('userPhone').value.trim();
-    const userEmail = document.getElementById('userEmail').value.trim();
-    const userBirthDate = document.getElementById('userBirthDate').value;
-    const userPostalCode = document.getElementById('userPostalCode').value.trim();
-    const userAddress = document.getElementById('userAddress').value.trim();
-    const userMemo = document.getElementById('userMemo').value.trim();
+    console.log('🔍 Save user button clicked');
     
-    // バリデーション
+    // フォームのバリデーション
+    const userName = form.querySelector('#userName').value.trim();
     if (!userName) {
-      alert('氏名を入力してください');
-      document.getElementById('userName').focus();
+      alert('氏名は必須です');
       return;
     }
     
     // ボタンを無効化
     this.disabled = true;
-    this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>追加中...';
+    this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>保存中...';
     
-    // CSRF トークンを取得
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    console.log('CSRF Token:', csrfToken);
-    
-    if (!csrfToken) {
-      alert('CSRFトークンが見つかりません。ページを再読み込みしてください。');
-      return;
-    }
-    
-    // リクエストデータを準備
+    // リクエストデータの準備
     const requestData = {
       user: {
         name: userName,
-        phone_number: userPhone,
-        email: userEmail,
-        birth_date: userBirthDate || null,
-        postal_code: userPostalCode,
-        address: userAddress,
-        admin_memo: userMemo
+        phone_number: form.querySelector('#userPhone').value.trim(),
+        email: form.querySelector('#userEmail').value.trim(),
+        birth_date: form.querySelector('#userBirthDate').value,
+        postal_code: form.querySelector('#userPostalCode').value.trim(),
+        address: form.querySelector('#userAddress').value.trim(),
+        admin_memo: form.querySelector('#userMemo').value.trim()
       }
     };
     
-    console.log('Request data:', requestData);
+    console.log('📤 Sending request:', requestData);
     
-    // ユーザー作成リクエストを送信
+    // CSRFトークンの取得
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (!csrfToken) {
+      console.error('❌ CSRF token not found');
+      alert('セキュリティエラーが発生しました。ページを再読み込みしてください。');
+      this.disabled = false;
+      this.innerHTML = '<i class="fas fa-save me-1"></i>ユーザーを追加';
+      return;
+    }
+    
+    // APIリクエスト
     fetch('/admin/users', {
       method: 'POST',
       headers: {
