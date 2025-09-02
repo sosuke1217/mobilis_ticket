@@ -3657,7 +3657,15 @@ function showMessage(message, type = 'info') {
         // ミニカレンダー関連の関数
         function toggleMiniCalendar() {
             const miniCalendar = document.getElementById('miniCalendar');
-            miniCalendar.classList.toggle('show');
+            const miniCalendarContainer = document.querySelector('.mini-calendar-container');
+            
+            if (miniCalendarContainer.style.display === 'none' || miniCalendarContainer.style.display === '') {
+                miniCalendarContainer.style.display = 'block';
+                miniCalendar.classList.add('show');
+            } else {
+                miniCalendarContainer.style.display = 'none';
+                miniCalendar.classList.remove('show');
+            }
         }
 
         function renderMiniCalendar() {
@@ -3778,7 +3786,10 @@ function showMessage(message, type = 'info') {
             });
             
             // ミニカレンダーを閉じる
-            document.getElementById('miniCalendar').classList.remove('show');
+            const miniCalendar = document.getElementById('miniCalendar');
+            const miniCalendarContainer = document.querySelector('.mini-calendar-container');
+            miniCalendarContainer.style.display = 'none';
+            miniCalendar.classList.remove('show');
             
             // ミニカレンダーを再描画（選択状態を更新）
             renderMiniCalendar();
