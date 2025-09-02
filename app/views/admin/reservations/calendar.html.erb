@@ -2496,6 +2496,16 @@
                     const timeSlot = document.createElement('div');
                     timeSlot.className = 'time-slot';
                     
+                    // 今日の日付かどうかをチェック
+                    const today = new Date();
+                    const todayDateKey = formatDateKey(today);
+                    const currentDateKey = formatDateKey(currentWeekStart);
+                    
+                    // 今日の日付の時間スロットにtodayクラスを追加
+                    if (todayDateKey === currentDateKey) {
+                        timeSlot.classList.add('today');
+                    }
+                    
                     // 時間マーカーのスタイルを追加（10分刻みに対応）
                     if (minute === 0) {
                         timeSlot.classList.add('hour-marker');
@@ -8910,6 +8920,29 @@ function showMessage(message, type = 'info') {
   background-color: #ffc107;
   color: #212529;
   border-color: #ffc107;
+  font-weight: 600;
+}
+
+/* 時間スロットの今日ハイライト */
+.time-slot.today {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  font-weight: 600;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+  position: relative;
+}
+
+.time-slot.today::after {
+  content: '今日';
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #dc3545;
+  color: white;
+  font-size: 0.6rem;
+  padding: 1px 4px;
+  border-radius: 8px;
   font-weight: 600;
 }
 
