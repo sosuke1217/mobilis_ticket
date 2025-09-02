@@ -152,7 +152,13 @@ class Admin::UsersController < ApplicationController
 
   # ユーザー固有のチケット使用履歴
   def ticket_usages
-    @ticket_usages = @user.ticket_usages.includes(:ticket, :reservation).order(created_at: :desc).page(params[:page]).per(20)
+    begin
+      @ticket_usages = @user.ticket_usages.includes(:ticket => :ticket_template, :reservation).where.not(ticket: nil).order(created_at: :desc).page(params[:page]).per(20)
+    rescue => e
+      Rails.logger.error "Error in ticket_usages action: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      redirect_to admin_user_path(@user), alert: "チケット使用履歴の表示中にエラーが発生しました: #{e.message}"
+    end
   end
 
   # 顧客履歴API

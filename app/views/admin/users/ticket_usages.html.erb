@@ -65,16 +65,34 @@
                   <small class="text-muted"><%= usage.created_at.strftime('%H:%M') %></small>
                 </td>
                 <td>
-                  <strong><%= usage.ticket.title %></strong>
+                  <strong>
+                    <% if usage.ticket&.ticket_template&.name.present? %>
+                      <%= usage.ticket.ticket_template.name %>
+                    <% elsif usage.ticket.present? %>
+                      <span class="text-muted">削除されたチケット</span>
+                    <% else %>
+                      <span class="text-muted">不明なチケット</span>
+                    <% end %>
+                  </strong>
                   <br>
-                  <small class="text-muted">¥<%= number_with_delimiter(usage.ticket.ticket_template.price) %></small>
+                  <small class="text-muted">
+                    <% if usage.ticket&.ticket_template&.price.present? %>
+                      ¥<%= number_with_delimiter(usage.ticket.ticket_template.price) %>
+                    <% else %>
+                      ¥0
+                    <% end %>
+                  </small>
                 </td>
                 <td>
                   <span class="badge bg-primary">1 回</span>
                 </td>
                 <td>
-                  <span class="badge bg-<%= usage.ticket.remaining_count > 0 ? 'success' : 'secondary' %>">
-                    <%= usage.ticket.remaining_count %> / <%= usage.ticket.total_count %>
+                  <span class="badge bg-<%= usage.ticket&.remaining_count&.positive? ? 'success' : 'secondary' %>">
+                    <% if usage.ticket.present? %>
+                      <%= usage.ticket.remaining_count %> / <%= usage.ticket.total_count %>
+                    <% else %>
+                      0 / 0
+                    <% end %>
                   </span>
                 </td>
                 <td>
