@@ -153,7 +153,7 @@ class Admin::UsersController < ApplicationController
   # ユーザー固有のチケット使用履歴
   def ticket_usages
     begin
-      @ticket_usages = @user.ticket_usages.includes(:ticket, :reservation).where.not(ticket: nil).order(created_at: :desc).page(params[:page]).per(20)
+      @ticket_usages = @user.ticket_usages.includes(:ticket).where.not(ticket: nil).order(created_at: :desc).page(params[:page]).per(20)
     rescue => e
       Rails.logger.error "Error in ticket_usages action: #{e.message}"
       Rails.logger.error e.backtrace.join("\n")

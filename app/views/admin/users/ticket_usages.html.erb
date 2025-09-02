@@ -96,13 +96,7 @@
                   </span>
                 </td>
                 <td>
-                  <% if usage.reservation %>
-                    <%= link_to usage.reservation.start_time.strftime('%m/%d %H:%M'), 
-                        admin_reservation_path(usage.reservation), 
-                        class: "btn btn-sm btn-outline-info" %>
-                  <% else %>
-                    <span class="text-muted">なし</span>
-                  <% end %>
+                  <span class="text-muted">なし</span>
                 </td>
                 <td>
                   <% if usage.note.present? %>
