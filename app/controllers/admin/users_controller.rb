@@ -3,15 +3,34 @@ class Admin::UsersController < ApplicationController
   before_action :set_user, only: [:show, :edit, :update, :destroy, :tickets, :history, :ticket_management, :ticket_usages, :update_line_profile, :create_line_link, :remove_line_link]
 
   def index
-    @q = User.ransack(params[:q])
-    @users = @q.result(distinct: true).order(:name).page(params[:page]).per(20)
-    
-    respond_to do |format|
-      format.html
-      format.json do
-        # スタッフ一覧を返す（管理者以外）
-        staff_users = User.where(admin: false).order(:name)
-        render json: staff_users.map { |user| { id: user.id, name: user.name } }
+    begin
+      @q = User.ransack(params[:q])
+      @users = @q.result(distinct: true).order(:name).page(params[:page]).per(20)
+      
+      # 統計データを事前に計算
+      @total_users = User.count rescue 0
+      @users_with_tickets = User.joins(:tickets).where("tickets.remaining_count > 0").distinct.count rescue 0
+      @users_with_line = User.where.not(line_user_id: [nil, '']).count rescue 0
+      @recent_users = User.joins(:ticket_usages).where("ticket_usages.used_at >= ?", 30.days.ago).distinct.count rescue 0
+      
+      respond_to do |format|
+        format.html
+        format.json do
+          # スタッフ一覧を返す（管理者以外）
+          staff_users = User.where(admin: false).order(:name)
+          render json: staff_users.map { |user| { id: user.id, name: user.name } }
+        end
+      end
+    rescue => e
+      Rails.logger.error "Error in index action: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      
+      respond_to do |format|
+        format.html do
+          flash[:error] = "ユーザー一覧の表示中にエラーが発生しました: #{e.message}"
+          render 'error', status: :internal_server_error
+        end
+        format.json { render json: { error: e.message }, status: :internal_server_error }
       end
     end
   end
