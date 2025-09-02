@@ -3724,6 +3724,8 @@ function showMessage(message, type = 'info') {
             if (isVisible) {
                 // 非表示にする
                 miniCalendar.style.display = 'none';
+                // 外側クリックのイベントリスナーを削除
+                document.removeEventListener('click', handleMiniCalendarOutsideClick);
             } else {
                 // 表示する
                 miniCalendar.style.display = 'block';
@@ -3731,9 +3733,31 @@ function showMessage(message, type = 'info') {
                 initializeYearMonthSelector();
                 // ミニカレンダーをレンダリング
                 renderMiniCalendar();
+                
+                // 少し遅延させてから外側クリックのイベントリスナーを追加
+                setTimeout(() => {
+                    document.addEventListener('click', handleMiniCalendarOutsideClick);
+                }, 100);
             }
             
             console.log('🔍 Mini calendar toggled:', isVisible ? 'hidden' : 'visible');
+        }
+
+        // ミニカレンダーの外側クリックを処理
+        function handleMiniCalendarOutsideClick(event) {
+            const miniCalendar = document.getElementById('miniCalendar');
+            const toggleButton = document.querySelector('button[onclick="toggleMiniCalendar()"]');
+            
+            if (!miniCalendar || !toggleButton) {
+                return;
+            }
+            
+            // ミニカレンダー内またはトグルボタン内のクリックでない場合
+            if (!miniCalendar.contains(event.target) && !toggleButton.contains(event.target)) {
+                console.log('✅ Closing mini calendar via outside click');
+                miniCalendar.style.display = 'none';
+                document.removeEventListener('click', handleMiniCalendarOutsideClick);
+            }
         }
 
         // 年と月の選択ドロップダウンを初期化
