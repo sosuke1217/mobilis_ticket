@@ -515,8 +515,8 @@
 </div>
 
 <!-- チケット削除確認モーダル -->
-<div class="modal fade" id="deleteTicketModal" tabindex="-1" aria-labelledby="deleteTicketModalLabel" aria-hidden="true"
-     data-ticket-management-target="modal">
+<div class="modal" id="deleteTicketModal" tabindex="-1" aria-labelledby="deleteTicketModalLabel" aria-hidden="true"
+     data-ticket-management-target="modal" style="display: none;">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header bg-danger text-white">
@@ -563,6 +563,13 @@ function hideDeleteTicketModal() {
     return;
   }
   
+  console.log('🔍 モーダル非表示前の状態:', {
+    modalDisplay: modal.style.display,
+    modalPosition: modal.style.position,
+    bodyOverflow: document.body.style.overflow,
+    bodyClassList: document.body.classList.toString()
+  })
+  
   // モーダルを非表示
   modal.style.display = 'none';
   
@@ -570,12 +577,21 @@ function hideDeleteTicketModal() {
   const backdrop = document.querySelector('.modal-backdrop');
   if (backdrop) {
     backdrop.remove();
+    console.log('✅ 背景要素を削除しました')
   }
   
   // bodyのスタイルを元に戻す
   document.body.classList.remove('modal-open');
   document.body.style.overflow = '';
   document.body.style.paddingRight = '';
+  
+  console.log('🔍 モーダル非表示後の状態:', {
+    modalDisplay: modal.style.display,
+    modalPosition: modal.style.position,
+    bodyOverflow: document.body.style.overflow,
+    bodyClassList: document.body.classList.toString(),
+    backdropCount: document.querySelectorAll('.modal-backdrop').length
+  })
   
   console.log('✅ Delete ticket modal hidden');
 }
@@ -593,6 +609,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // ESCキーでモーダルを閉じる
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape' && modal.style.display === 'block') {
+      console.log('🔍 ESCキーが押されました')
       hideDeleteTicketModal();
     }
   });

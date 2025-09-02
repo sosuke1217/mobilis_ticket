@@ -890,9 +890,20 @@ export default class extends Controller {
         return
       }
       
+      console.log('🔍 モーダル表示前の状態:', {
+        modalDisplay: deleteTicketModal.style.display,
+        modalPosition: deleteTicketModal.style.position,
+        bodyOverflow: document.body.style.overflow,
+        bodyClassList: document.body.classList.toString()
+      })
+      
       // 既存の背景をクリア
       const existingBackdrops = document.querySelectorAll('.modal-backdrop')
-      existingBackdrops.forEach(backdrop => backdrop.remove())
+      console.log('🔍 既存の背景要素数:', existingBackdrops.length)
+      existingBackdrops.forEach((backdrop, index) => {
+        console.log(`🗑️ 背景要素${index + 1}を削除中...`)
+        backdrop.remove()
+      })
       
       // モーダルにデータを設定
       deleteTicketName.textContent = ticketName || '不明'
@@ -924,6 +935,14 @@ export default class extends Controller {
       backdrop.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'
       document.body.appendChild(backdrop)
       
+      console.log('🔍 モーダル表示後の状態:', {
+        modalDisplay: deleteTicketModal.style.display,
+        modalPosition: deleteTicketModal.style.position,
+        bodyOverflow: document.body.style.overflow,
+        bodyClassList: document.body.classList.toString(),
+        backdropCount: document.querySelectorAll('.modal-backdrop').length
+      })
+      
       // 削除実行ボタンのイベントリスナーを設定
       const confirmBtn = document.querySelector('#confirmDeleteTicketBtn')
       if (confirmBtn) {
@@ -939,6 +958,15 @@ export default class extends Controller {
           hideDeleteTicketModal()
         }
       }
+      
+      // モーダルが表示されているか確認
+      setTimeout(() => {
+        console.log('🔍 モーダル表示確認（1秒後）:', {
+          modalDisplay: deleteTicketModal.style.display,
+          modalVisible: deleteTicketModal.offsetParent !== null,
+          backdropCount: document.querySelectorAll('.modal-backdrop').length
+        })
+      }, 1000)
       
       console.log('✅ 削除確認モーダル表示完了')
       
