@@ -3,7 +3,6 @@ import "@hotwired/turbo-rails"
 import "@hotwired/stimulus"
 import "@hotwired/stimulus-loading"
 import "controllers"
-import "fullcalendar"
 
 console.log("🚀 Application.js loaded successfully");
 
@@ -11,15 +10,14 @@ console.log("🚀 Application.js loaded successfully");
 function loadCalendarIfNeeded() {
   // カレンダー要素が存在するページでのみ読み込み
   if (document.querySelector('#calendar') || document.querySelector('.calendar-container')) {
-    console.log("📅 Calendar element found, but vendor calendar module disabled to prevent conflicts");
-    // import("/calendar/index.js").then(() => {
-    //   console.log("✅ Calendar module loaded successfully");
-    // }).catch(error => {
-    //   console.error("❌ Failed to load calendar module:", error);
-    // });
-  } else {
-    console.log("📅 No calendar element found, skipping calendar module");
+    console.log("📅 Calendar element found, loading calendar module");
+    import("fullcalendar").then(() => {
+      console.log("✅ Calendar module loaded successfully");
+    }).catch(error => {
+      console.error("❌ Failed to load calendar module:", error);
+    });
   }
+  // カレンダー要素がない場合は静かにスキップ（ログを削除）
 }
 
 // ページ読み込み完了時に実行
