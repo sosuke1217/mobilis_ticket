@@ -3746,10 +3746,10 @@ function showMessage(message, type = 'info') {
                 return;
             }
             
-            // 年の選択肢を生成（2025年から現在の年+5年）
+            // 年の選択肢を生成（2025年から現在の年+2年）
             const currentYear = new Date().getFullYear();
             const startYear = 2025;
-            const endYear = currentYear + 5;
+            const endYear = Math.max(currentYear + 2, startYear); // 最低でも2025年まで
             
             yearSelector.innerHTML = '';
             for (let year = startYear; year <= endYear; year++) {
