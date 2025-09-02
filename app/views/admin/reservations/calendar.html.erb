@@ -54,8 +54,8 @@
     
     <div class="card-body p-0">
       <!-- ミニカレンダー -->
-      <div class="mini-calendar-container" style="display: none;">
-        <div class="mini-calendar" id="miniCalendar">
+      <div class="mini-calendar-container" style="display: none; position: relative; z-index: 1000;">
+        <div class="mini-calendar" id="miniCalendar" style="position: absolute; top: 0; right: 0; background: white; border-radius: 8px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); padding: 16px; min-width: 280px; display: none;">
           <div class="mini-calendar-header">
             <button class="mini-calendar-year-btn" onclick="previousMiniCalendarYear()" title="前年">‹‹</button>
             <button class="mini-calendar-nav-btn" onclick="previousMiniCalendarMonth()" title="前月">‹</button>
@@ -3656,13 +3656,33 @@ function showMessage(message, type = 'info') {
 
         // ミニカレンダー関連の関数
         function toggleMiniCalendar() {
+            console.log('🔍 toggleMiniCalendar called');
+            
             const miniCalendar = document.getElementById('miniCalendar');
             const miniCalendarContainer = document.querySelector('.mini-calendar-container');
             
+            console.log('🔍 miniCalendar element:', miniCalendar);
+            console.log('🔍 miniCalendarContainer element:', miniCalendarContainer);
+            console.log('🔍 Current display style:', miniCalendarContainer.style.display);
+            
+            if (!miniCalendar || !miniCalendarContainer) {
+                console.error('❌ Mini calendar elements not found');
+                return;
+            }
+            
+            // ミニカレンダーが初期化されていない場合は初期化
+            if (!miniCalendarContainer.hasAttribute('data-initialized')) {
+                console.log('🔍 Initializing mini calendar');
+                renderMiniCalendar();
+                miniCalendarContainer.setAttribute('data-initialized', 'true');
+            }
+            
             if (miniCalendarContainer.style.display === 'none' || miniCalendarContainer.style.display === '') {
+                console.log('🔍 Showing mini calendar');
                 miniCalendarContainer.style.display = 'block';
                 miniCalendar.classList.add('show');
             } else {
+                console.log('🔍 Hiding mini calendar');
                 miniCalendarContainer.style.display = 'none';
                 miniCalendar.classList.remove('show');
             }
