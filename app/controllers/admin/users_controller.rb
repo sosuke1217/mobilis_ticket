@@ -74,7 +74,7 @@ class Admin::UsersController < ApplicationController
 
   def update
     if @user.update(user_params)
-      redirect_to admin_users_path, notice: 'ユーザーを更新しました'
+      redirect_to admin_user_path(@user), notice: 'ユーザーを更新しました'
     else
       render :edit, status: :unprocessable_entity
     end
