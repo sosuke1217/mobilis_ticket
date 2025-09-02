@@ -1,77 +1,168 @@
-<div class="container my-4" data-controller="ticket-list">
-  <h1 class="mb-4">チケット一覧</h1>
-  <%= search_form_for @q, url: admin_tickets_path, method: :get, html: { class: "row g-3 align-items-end mb-4" } do |f| %>
-    <div class="col-md-4">
-      <%= f.label :user_name_cont, "ユーザー名", class: "form-label" %>
-      <%= f.text_field :user_name_cont, class: "form-control", placeholder: "例: 山田太郎" %>
+<div class="container-lg my-5" data-controller="ticket-list">
+  <!-- ヘッダーセクション -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h1 class="h3 mb-1">
+            <i class="fas fa-ticket-alt me-2 text-primary"></i>チケット一覧
+          </h1>
+          <p class="text-muted mb-0">発行済みチケットの管理と検索</p>
+        </div>
+        <%= link_to admin_tickets_path(format: :csv), class: "btn btn-success" do %>
+          <i class="fas fa-download me-1"></i>CSVダウンロード
+        <% end %>
+      </div>
     </div>
-
-    <div class="col-md-3">
-      <label for="q_remaining_status" class="form-label">ステータス</label>
-      <%= select_tag "q[remaining_status]",
-            options_for_select([
-              ["すべて", ""],
-              ["未使用あり", "unused"],
-              ["すべて使用済み", "used"]
-            ], params.dig(:q, :remaining_status)),
-            class: "form-select" %>
-    </div>
-
-    <div class="col-md-auto d-flex align-items-end">
-      <%= f.submit "検索", class: "btn btn-primary me-2" %>
-      <%= link_to "リセット", admin_tickets_path, class: "btn btn-outline-secondary" %>
-    </div>
-  <% end %>
-  <div class="mb-3">
-    <%= link_to "CSVダウンロード", admin_tickets_path(format: :csv), class: "btn btn-sm btn-outline-success" %>
   </div>
-  <table class="table table-striped table-hover align-middle">
-    <thead class="table-dark">
-      <tr>
-        <th><%= sort_link(@q, :id, "ID") %></th>
-        <th><%= sort_link(@q, 'user.name', "ユーザー") %></th>
-        <th><%= sort_link(@q, :title, "タイトル") %></th>
-        <th><%= sort_link(@q, :remaining_count, "残回数") %></th>
-        <th><%= sort_link(@q, :expiry_date, "期限") %></th>
-        <th>操作</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @tickets.each do |ticket| %>
-        <tr>
-          <td><%= ticket.id %></td>
-          <td><%= ticket.user&.name.presence || ticket.user&.line_user_id %></td>
-          <td><%= ticket.title.presence || ticket.ticket_template&.name || "チケット#{ticket.id}" %></td>
-          <td>残り: <%= ticket.remaining_count %> 回</td>
-          <td><%= ticket.expiry_date.strftime("%Y-%m-%d") %></td>
-          <td>
-            <button type="button" 
-                    class="btn btn-sm btn-outline-danger delete-ticket-btn"
-                    data-ticket-id="<%= ticket.id %>"
-                    data-ticket-name="<%= ticket.title.presence || ticket.ticket_template&.name || "チケット#{ticket.id}" %>"
-                    data-user-name="<%= ticket.user&.name.presence || ticket.user&.line_user_id %>">
-              <i class="fas fa-trash"></i> 削除
-            </button>
-          </td>
-        </tr>
+
+  <!-- 検索セクション -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-light">
+      <h5 class="mb-0">
+        <i class="fas fa-search me-2"></i>検索・フィルター
+      </h5>
+    </div>
+    <div class="card-body">
+      <%= search_form_for @q, url: admin_tickets_path, method: :get, html: { class: "row g-3 align-items-end" } do |f| %>
+        <div class="col-md-4">
+          <%= f.label :user_name_cont, "ユーザー名", class: "form-label" %>
+          <%= f.text_field :user_name_cont, class: "form-control", placeholder: "例: 山田太郎" %>
+        </div>
+
+        <div class="col-md-3">
+          <label for="q_remaining_status" class="form-label">ステータス</label>
+          <%= select_tag "q[remaining_status]",
+                options_for_select([
+                  ["すべて", ""],
+                  ["未使用あり", "unused"],
+                  ["すべて使用済み", "used"]
+                ], params.dig(:q, :remaining_status)),
+                class: "form-select" %>
+        </div>
+
+        <div class="col-md-auto d-flex align-items-end">
+          <%= f.submit "検索", class: "btn btn-primary me-2" %>
+          <%= link_to "リセット", admin_tickets_path, class: "btn btn-outline-secondary" %>
+        </div>
       <% end %>
-    </tbody>
-  </table>
-  <div class="mt-3">
-    <%= paginate @tickets %>
+    </div>
+  </div>
+
+  <!-- チケット一覧 -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-light">
+      <h5 class="mb-0">
+        <i class="fas fa-list me-2"></i>チケット一覧
+      </h5>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="px-3">ID</th>
+              <th>ユーザー</th>
+              <th>チケット名</th>
+              <th>残り回数</th>
+              <th>期限</th>
+              <th class="text-center">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @tickets.each do |ticket| %>
+              <tr>
+                <td class="px-3">
+                  <span class="badge bg-secondary"><%= ticket.id %></span>
+                </td>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 me-2">
+                      <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                        <i class="fas fa-user text-white small"></i>
+                      </div>
+                    </div>
+                    <div class="flex-grow-1">
+                      <div class="fw-semibold">
+                        <%= ticket.user&.name.presence || "未設定" %>
+                      </div>
+                      <% if ticket.user&.line_user_id.present? %>
+                        <div class="small text-muted">
+                          <i class="fas fa-comment me-1"></i><%= ticket.user.line_user_id %>
+                        </div>
+                      <% end %>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="fw-semibold">
+                    <%= ticket.title.presence || ticket.ticket_template&.name || "チケット#{ticket.id}" %>
+                  </div>
+                  <% if ticket.ticket_template&.price %>
+                    <div class="small text-muted">
+                      <i class="fas fa-yen-sign me-1"></i><%= number_with_delimiter(ticket.ticket_template.price) %>
+                    </div>
+                  <% end %>
+                </td>
+                <td>
+                  <% if ticket.remaining_count > 0 %>
+                    <span class="badge bg-success">
+                      <i class="fas fa-check me-1"></i><%= ticket.remaining_count %>回
+                    </span>
+                  <% else %>
+                    <span class="badge bg-secondary">
+                      <i class="fas fa-times me-1"></i>使用済み
+                    </span>
+                  <% end %>
+                </td>
+                <td>
+                  <% if ticket.expiry_date %>
+                    <div class="text-muted">
+                      <i class="fas fa-calendar me-1"></i>
+                      <%= ticket.expiry_date.strftime("%m/%d") %>
+                      <% if ticket.expiry_date < Date.current %>
+                        <span class="badge bg-danger ms-1">期限切れ</span>
+                      <% end %>
+                    </div>
+                  <% else %>
+                    <span class="text-muted small">
+                      <i class="fas fa-infinity me-1"></i>無期限
+                    </span>
+                  <% end %>
+                </td>
+                <td class="text-center">
+                  <button type="button" 
+                          class="btn btn-sm btn-outline-danger"
+                          data-ticket-id="<%= ticket.id %>"
+                          data-ticket-name="<%= ticket.title.presence || ticket.ticket_template&.name || "チケット#{ticket.id}" %>"
+                          data-user-name="<%= ticket.user&.name.presence || ticket.user&.line_user_id %>"
+                          data-remaining-count="<%= ticket.remaining_count %>"
+                          onclick="showDeleteModal(this)">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card-footer bg-light">
+      <%= paginate @tickets %>
+    </div>
   </div>
 </div>
 
 <!-- 削除確認モーダル -->
-<div class="modal fade" id="deleteTicketModal" tabindex="-1" aria-labelledby="deleteTicketModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
+<div class="modal fade" id="deleteTicketModal" tabindex="-1" aria-labelledby="deleteTicketModalLabel" aria-hidden="true" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050; background-color: rgba(0, 0, 0, 0.5);">
+  <div class="modal-dialog modal-dialog-centered" style="position: relative; width: auto; margin: 0.5rem; pointer-events: none; max-width: 500px; margin: 1.75rem auto;">
+    <div class="modal-content" style="position: relative; display: flex; flex-direction: column; width: 100%; pointer-events: auto; background-color: #fff; background-clip: padding-box; border: 1px solid rgba(0, 0, 0, 0.2); border-radius: 0.3rem; outline: 0;">
       <div class="modal-header bg-danger text-white">
         <h5 class="modal-title" id="deleteTicketModalLabel">
           <i class="fas fa-exclamation-triangle me-2"></i>
           チケット削除の確認
         </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white" onclick="hideDeleteModal()" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <div class="text-center">
@@ -83,14 +174,10 @@
             <strong>残り回数:</strong> <span id="deleteTicketRemaining"></span> 回<br>
             <strong>注意:</strong> この操作は取り消すことができません
           </div>
-          <p class="text-muted small mb-0">
-            <i class="fas fa-info-circle me-1"></i>
-            この操作は取り消すことができません
-          </p>
         </div>
       </div>
       <div class="modal-footer justify-content-center">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+        <button type="button" class="btn btn-secondary" onclick="hideDeleteModal()">
           <i class="fas fa-times me-1"></i>キャンセル
         </button>
         <button type="button" class="btn btn-danger" id="confirmDeleteTicketBtn">
@@ -102,49 +189,156 @@
 </div>
 
 <style>
-/* モーダルのレイアウトを調整 */
-#deleteTicketModal .modal-dialog {
-  max-height: 98vh !important;
-  margin: 0.5rem auto !important;
-  display: flex !important;
-  flex-direction: column !important;
-  min-width: 600px !important;
+.table th {
+  border-top: none;
+  font-weight: 600;
+  color: #495057;
 }
 
-#deleteTicketModal .modal-content {
-  max-height: 98vh !important;
-  overflow: hidden !important;
-  display: flex !important;
-  flex-direction: column !important;
-  min-height: 500px !important;
+.table td {
+  vertical-align: middle;
 }
 
-#deleteTicketModal .modal-body {
-  overflow: visible !important;
-  max-height: none !important;
-  padding: 2.5rem 2rem !important;
-  flex: 1 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: center !important;
-  min-height: 300px !important;
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
 }
 
-#deleteTicketModal .modal-footer {
-  padding: 0 0 2rem 0 !important;
-  margin-top: 0 !important;
-  flex-shrink: 0 !important;
-  border-top: 1px solid #dee2e6 !important;
-  min-height: 100px !important;
-}
-
-/* モーダルの背景を明るく */
-.modal-backdrop {
-  opacity: 0.1 !important;
-}
-
-body.modal-open {
-  background-color: rgba(0, 0, 0, 0.02) !important;
+@media (max-width: 768px) {
+  .table-responsive {
+    font-size: 0.875rem;
+  }
+  
+  .badge {
+    font-size: 0.75rem !important;
+  }
 }
 </style>
+
+<script>
+// グローバル関数として定義
+function hideDeleteModal() {
+  console.log('🔍 Hiding delete modal manually');
+  
+  const modal = document.getElementById('deleteTicketModal');
+  if (!modal) {
+    console.error('❌ Modal element not found');
+    return;
+  }
+  
+  // モーダルを非表示（スタイルをリセット）
+  modal.style.display = 'none';
+  modal.style.position = '';
+  modal.style.top = '';
+  modal.style.left = '';
+  modal.style.width = '';
+  modal.style.height = '';
+  modal.style.zIndex = '';
+  modal.style.backgroundColor = '';
+  modal.classList.remove('show');
+  modal.setAttribute('aria-hidden', 'true');
+  
+  // bodyからmodal-openクラスを削除
+  document.body.classList.remove('modal-open');
+  document.body.style.overflow = '';
+  
+  console.log('🔍 Delete modal hidden manually');
+}
+
+// グローバル関数として定義
+function showDeleteModal(button) {
+  console.log('🔍 Showing delete modal manually');
+  
+  const modal = document.getElementById('deleteTicketModal');
+  if (!modal) {
+    console.error('❌ Modal element not found');
+    return;
+  }
+  
+  // チケット情報を取得
+  const ticketId = button.getAttribute('data-ticket-id');
+  const ticketName = button.getAttribute('data-ticket-name');
+  const userName = button.getAttribute('data-user-name');
+  const remainingCount = button.getAttribute('data-remaining-count');
+  
+  // モーダル内の要素を更新
+  document.getElementById('deleteTicketName').textContent = ticketName;
+  document.getElementById('deleteTicketUser').textContent = userName;
+  document.getElementById('deleteTicketRemaining').textContent = remainingCount;
+  
+  // モーダルを表示
+  modal.style.display = 'block';
+  modal.style.position = 'fixed';
+  modal.style.top = '0';
+  modal.style.left = '0';
+  modal.style.width = '100%';
+  modal.style.height = '100%';
+  modal.style.zIndex = '1050';
+  modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+  modal.classList.add('show');
+  modal.setAttribute('aria-hidden', 'false');
+  
+  // bodyにmodal-openクラスを追加
+  document.body.classList.add('modal-open');
+  document.body.style.overflow = 'hidden';
+  
+  // 削除ボタンのイベントリスナーを設定
+  const confirmBtn = document.getElementById('confirmDeleteTicketBtn');
+  if (confirmBtn) {
+    confirmBtn.onclick = function() {
+      console.log('🔍 Delete confirmed for ticket:', ticketId);
+      
+      // 削除リクエストを送信
+      fetch(`/admin/tickets/${ticketId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+        }
+      })
+      .then(response => {
+        if (response.ok) {
+          // 成功時はページをリロード
+          window.location.reload();
+        } else {
+          throw new Error('削除に失敗しました');
+        }
+      })
+      .catch(error => {
+        console.error('❌ Error deleting ticket:', error);
+        alert('チケットの削除に失敗しました: ' + error.message);
+      });
+    };
+  }
+  
+  console.log('🔍 Delete modal shown manually');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🔍 DOM Content Loaded - Ticket list page');
+  
+  const modal = document.getElementById('deleteTicketModal');
+  if (!modal) {
+    console.error('❌ Modal element not found');
+    return;
+  }
+  
+  // 背景クリックでモーダルを閉じる
+  modal.addEventListener('click', function(e) {
+    console.log('🔍 Modal clicked:', e.target, e.currentTarget);
+    if (e.target === modal) {
+      console.log('🔍 Background clicked, hiding modal');
+      hideDeleteModal();
+    }
+  });
+  
+  // ESCキーでモーダルを閉じる
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && modal.classList.contains('show')) {
+      hideDeleteModal();
+    }
+  });
+});
+</script>
 
