@@ -30,30 +30,28 @@
       </h5>
     </div>
     <div class="card-body">
-      <% if @usage.note.present? %>
+      <%= form_with model: [:admin, @usage], local: true do |f| %>
         <div class="form-group">
-          <label class="form-label fw-bold">メモ内容</label>
-          <div class="form-control-plaintext">
-            <%= simple_format(@usage.note) %>
+          <%= f.label :note, "メモ内容", class: "form-label fw-bold" %>
+          <%= f.text_area :note, class: "form-control", rows: 6, 
+              placeholder: "例：肩の可動域を広げるよう重点的に。左右差に注意。顧客の体調や要望、施術内容、注意点などを記録してください。" %>
+          <small class="form-text text-muted">
+            <i class="fas fa-info-circle me-1"></i>
+            顧客の体調、要望、施術内容、注意点などを詳細に記録できます
+          </small>
+        </div>
+        
+        <div class="mt-4 pt-3 border-top">
+          <div class="d-flex gap-2">
+            <%= f.submit "保存", class: "btn btn-primary" do %>
+              <i class="fas fa-save me-1"></i>保存
+            <% end %>
+            <%= link_to ticket_usages_admin_user_path(@usage.user), class: "btn btn-outline-secondary" do %>
+              <i class="fas fa-times me-1"></i>キャンセル
+            <% end %>
           </div>
         </div>
-      <% else %>
-        <p class="text-muted mb-0">
-          <i class="fas fa-info-circle me-1"></i>
-          メモは登録されていません
-        </p>
       <% end %>
-      
-      <div class="mt-4 pt-3 border-top">
-        <div class="d-flex gap-2">
-          <%= link_to edit_admin_ticket_usage_path(@usage), class: "btn btn-primary" do %>
-            <i class="fas fa-edit me-1"></i>メモを編集
-          <% end %>
-          <%= link_to ticket_usages_admin_user_path(@usage.user), class: "btn btn-outline-secondary" do %>
-            <i class="fas fa-arrow-left me-1"></i>使用履歴一覧に戻る
-          <% end %>
-        </div>
-      </div>
     </div>
   </div>
 </div>
@@ -69,10 +67,15 @@
   }
   
   /* フォームの改善 */
-  .form-control-plaintext {
-    padding: 0.375rem 0;
-    background-color: transparent;
-    border: none;
+  .form-control {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+  
+  .form-control:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
   }
   
   /* レスポンシブ改善 */

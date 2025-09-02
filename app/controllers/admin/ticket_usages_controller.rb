@@ -50,16 +50,12 @@ class Admin::TicketUsagesController < ApplicationController
     end
   end
 
-  def edit
-    @usage = TicketUsage.find(params[:id])
-  end
-  
   def update
     @usage = TicketUsage.find(params[:id])
     if @usage.update(ticket_usage_params)
-      redirect_to admin_ticket_usage_path(@usage), notice: "メモを更新しました。"
+      redirect_to ticket_usages_admin_user_path(@usage.user), notice: "メモを更新しました。"
     else
-      render :edit
+      render :show
     end
   end
 
