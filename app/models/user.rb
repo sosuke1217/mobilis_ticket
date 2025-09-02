@@ -60,8 +60,9 @@ class User < ApplicationRecord
     tickets.includes(:ticket_template)
           .where("remaining_count > 0")
           .sum do |ticket|
-      next 0 unless ticket.ticket_template&.price && ticket.remaining_count
-      ticket.ticket_template.price * ticket.remaining_count
+      next 0 unless ticket.ticket_template&.price && ticket.ticket_template&.total_count && ticket.remaining_count
+      unit_price = ticket.ticket_template.price.to_f / ticket.ticket_template.total_count
+      unit_price * ticket.remaining_count
     end
   end
 
