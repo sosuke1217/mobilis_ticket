@@ -3703,7 +3703,24 @@ function showMessage(message, type = 'info') {
         // ミニカレンダー関連の関数
         function toggleMiniCalendar() {
             const miniCalendar = document.getElementById('miniCalendar');
-            miniCalendar.classList.toggle('show');
+            if (!miniCalendar) {
+                console.error('❌ Mini calendar element not found');
+                return;
+            }
+            
+            const isVisible = miniCalendar.style.display !== 'none';
+            
+            if (isVisible) {
+                // 非表示にする
+                miniCalendar.style.display = 'none';
+            } else {
+                // 表示する
+                miniCalendar.style.display = 'block';
+                // ミニカレンダーをレンダリング
+                renderMiniCalendar();
+            }
+            
+            console.log('🔍 Mini calendar toggled:', isVisible ? 'hidden' : 'visible');
         }
 
         function renderMiniCalendar() {
