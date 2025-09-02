@@ -1,101 +1,122 @@
 <% content_for :title, "予約カレンダー - Mobilis" %>
 
-<div class="container-fluid">
-  <div class="row">
+<div class="container-lg my-5">
+  <!-- ヘッダーセクション -->
+  <div class="row mb-4">
     <div class="col-12">
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0">
-          <i class="fas fa-calendar me-2"></i>予約カレンダー
-        </h1>
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h1 class="h3 mb-1">
+            <i class="fas fa-calendar-alt me-2 text-primary"></i>予約カレンダー
+          </h1>
+          <p class="text-muted mb-0">週間スケジュール管理と予約作成</p>
+        </div>
         <div class="d-flex gap-2">
           <a href="<%= admin_reservations_path %>" class="btn btn-outline-secondary">
             <i class="fas fa-list me-1"></i>予約一覧
           </a>
         </div>
       </div>
+    </div>
+  </div>
 
-            <!-- カレンダーコンテナ -->
-      <div class="calendar-container">
-        <div class="header">
-          <div class="header-controls">
-                <div class="week-nav">
-                    <button class="nav-btn" onclick="previousWeek()">← 前週</button>
-                    <div class="current-week" id="currentWeek">読み込み中...</div>
-                    <button class="nav-btn" onclick="nextWeek()">次週 →</button>
-                </div>
-                <div class="action-buttons">
-                    <button class="btn btn-primary" onclick="openBulkReservationModal()">📅 一括予約作成</button>
-                </div>
-                <div class="mini-calendar-container">
-                    <button class="mini-calendar-btn" onclick="toggleMiniCalendar()">
-                        📅 週を選択
-                    </button>
-                    <div class="mini-calendar" id="miniCalendar">
-                        <div class="mini-calendar-header">
-                            <button class="mini-calendar-year-btn" onclick="previousMiniCalendarYear()" title="前年">‹‹</button>
-                            <button class="mini-calendar-nav-btn" onclick="previousMiniCalendarMonth()" title="前月">‹</button>
-                            <div class="mini-calendar-title" id="miniCalendarTitle">読み込み中...</div>
-                            <button class="mini-calendar-nav-btn" onclick="nextMiniCalendarMonth()" title="翌月">›</button>
-                            <button class="mini-calendar-year-btn" onclick="nextMiniCalendarYear()" title="翌年">››</button>
-                        </div>
-                        <div class="mini-calendar-weekdays">
-                            <div class="mini-calendar-weekday">日</div>
-                            <div class="mini-calendar-weekday">月</div>
-                            <div class="mini-calendar-weekday">火</div>
-                            <div class="mini-calendar-weekday">水</div>
-                            <div class="mini-calendar-weekday">木</div>
-                            <div class="mini-calendar-weekday">金</div>
-                            <div class="mini-calendar-weekday">土</div>
-                        </div>
-                        <div class="mini-calendar-days" id="miniCalendarDays">
-                            <!-- 動的に生成される -->
-                        </div>
-                    </div>
-                </div>
-                <button id="showCancellationsBtn" onclick="toggleCancellationDisplay()" class="cancellation-btn">
-                    ❌ キャンセル履歴 (<span id="cancellation-count">0</span>)
-                </button>
-                <button class="settings-btn" onclick="openSettingsModal()">
-                    ⚙️ 予約可能日時を編集
-                </button>
-            </div>
+  <!-- カレンダーコンテナ -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-light">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-3">
+          <div class="week-nav">
+            <button class="btn btn-outline-primary btn-sm" onclick="previousWeek()">
+              <i class="fas fa-chevron-left me-1"></i>前週
+            </button>
+            <span class="mx-3 fw-semibold" id="currentWeek">読み込み中...</span>
+            <button class="btn btn-outline-primary btn-sm" onclick="nextWeek()">
+              次週<i class="fas fa-chevron-right ms-1"></i>
+            </button>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openBulkReservationModal()">
+            <i class="fas fa-calendar-plus me-1"></i>一括予約作成
+          </button>
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-info btn-sm" onclick="toggleMiniCalendar()">
+            <i class="fas fa-calendar me-1"></i>週を選択
+          </button>
+          <button id="showCancellationsBtn" onclick="toggleCancellationDisplay()" class="btn btn-outline-warning btn-sm">
+            <i class="fas fa-times me-1"></i>キャンセル履歴 (<span id="cancellation-count">0</span>)
+          </button>
+          <button class="btn btn-outline-secondary btn-sm" onclick="openSettingsModal()">
+            <i class="fas fa-cog me-1"></i>予約可能日時を編集
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card-body p-0">
+      <!-- ミニカレンダー -->
+      <div class="mini-calendar-container" style="display: none;">
+        <div class="mini-calendar" id="miniCalendar">
+          <div class="mini-calendar-header">
+            <button class="mini-calendar-year-btn" onclick="previousMiniCalendarYear()" title="前年">‹‹</button>
+            <button class="mini-calendar-nav-btn" onclick="previousMiniCalendarMonth()" title="前月">‹</button>
+            <div class="mini-calendar-title" id="miniCalendarTitle">読み込み中...</div>
+            <button class="mini-calendar-nav-btn" onclick="nextMiniCalendarMonth()" title="翌月">›</button>
+            <button class="mini-calendar-year-btn" onclick="nextMiniCalendarYear()" title="翌年">››</button>
+          </div>
+          <div class="mini-calendar-weekdays">
+            <div class="mini-calendar-weekday">日</div>
+            <div class="mini-calendar-weekday">月</div>
+            <div class="mini-calendar-weekday">火</div>
+            <div class="mini-calendar-weekday">水</div>
+            <div class="mini-calendar-weekday">木</div>
+            <div class="mini-calendar-weekday">金</div>
+            <div class="mini-calendar-weekday">土</div>
+          </div>
+          <div class="mini-calendar-days" id="miniCalendarDays">
+            <!-- 動的に生成される -->
+          </div>
+        </div>
+      </div>
+
+      <!-- キャンセル履歴表示 -->
+      <div id="cancellation-display" class="cancellation-display" style="display: none;">
+        <div class="cancellation-header">
+          <h3><i class="fas fa-times me-2"></i>キャンセルされた予約</h3>
+          <button onclick="clearCancellationDisplay()" class="btn btn-outline-secondary btn-sm">クリア</button>
+        </div>
+        <div id="cancellation-list" class="cancellation-list">
+          <!-- キャンセルされた予約がここに表示されます -->
+        </div>
+      </div>
+
+      <!-- スケジュール表示 -->
+      <div class="schedule-container">
+        <div class="schedule-header">
+          <div class="time-column-header">時刻</div>
+          <div class="day-header sunday">日<br><span style="font-size: 12px;">8/10</span></div>
+          <div class="day-header">月<br><span style="font-size: 12px;">8/11</span></div>
+          <div class="day-header">火<br><span style="font-size: 12px;">8/12</span></div>
+          <div class="day-header">水<br><span style="font-size: 12px;">8/13</span></div>
+          <div class="day-header">木<br><span style="font-size: 12px;">8/14</span></div>
+          <div class="day-header">金<br><span style="font-size: 12px;">8/15</span></div>
+          <div class="day-header saturday">土<br><span style="font-size: 12px;">8/16</span></div>
         </div>
         
-        <div id="cancellation-display" class="cancellation-display" style="display: none;">
-            <div class="cancellation-header">
-                <h3>❌ キャンセルされた予約</h3>
-                <button onclick="clearCancellationDisplay()" class="clear-btn">クリア</button>
-            </div>
-            <div id="cancellation-list" class="cancellation-list">
-                <!-- キャンセルされた予約がここに表示されます -->
-            </div>
+        <div class="schedule-body" id="scheduleBody">
+          <!-- 時間スロットは動的に生成される -->
         </div>
-
-        <div class="schedule-container">
-            <div class="schedule-header">
-                <div class="time-column-header">時刻</div>
-                <div class="day-header sunday">日<br><span style="font-size: 12px;">8/10</span></div>
-                <div class="day-header">月<br><span style="font-size: 12px;">8/11</span></div>
-                <div class="day-header">火<br><span style="font-size: 12px;">8/12</span></div>
-                <div class="day-header">水<br><span style="font-size: 12px;">8/13</span></div>
-                <div class="day-header">木<br><span style="font-size: 12px;">8/14</span></div>
-                <div class="day-header">金<br><span style="font-size: 12px;">8/15</span></div>
-                <div class="day-header saturday">土<br><span style="font-size: 12px;">8/16</span></div>
-            </div>
-            
-            <div class="schedule-body" id="scheduleBody">
-                <!-- 時間スロットは動的に生成される -->
-            </div>
-        </div>
+      </div>
     </div>
+  </div>
+</div>
 
     <!-- 設定モーダル -->
     <div id="settingsModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h2>⚙️ 予約可能日時を編集</h2>
-                <span class="close" onclick="closeSettingsModal()">&times;</span>
-            </div>
+                <div class="modal-header">
+      <h2><i class="fas fa-cog me-2"></i>予約可能日時を編集</h2>
+      <span class="close" onclick="closeSettingsModal()">&times;</span>
+    </div>
             <div class="modal-body">
                 <div class="settings-tabs">
                     <button class="tab-button active" onclick="switchTab('general')">一回限りの変更</button>
@@ -137,64 +158,66 @@
         
         <!-- 内容部分 -->
         <div class="booking-modal-content">
-            <div class="booking-modal-header">
-                <h2>📅 新規予約作成</h2>
-                <span class="booking-modal-close" onclick="closeBookingModal()">&times;</span>
-            </div>
-            <div class="booking-modal-body">
-                <!-- 予約日時情報セクション -->
-                <div class="booking-info-section">
-                    <div class="booking-datetime">
-                        <span id="bookingDisplayDate"></span> <strong id="bookingDisplayTime"></strong>
-                    </div>
-                </div>
+                <div class="booking-modal-header">
+      <h2><i class="fas fa-calendar-plus me-2"></i>新規予約作成</h2>
+      <span class="booking-modal-close" onclick="closeBookingModal()">&times;</span>
+    </div>
+    <div class="booking-modal-body">
+      <!-- 予約日時情報セクション -->
+      <div class="booking-info-section">
+        <div class="booking-datetime">
+          <span id="bookingDisplayDate"></span> <strong id="bookingDisplayTime"></strong>
+        </div>
+      </div>
 
-                <!-- 予約フォームセクション -->
-                <div class="booking-form-section">
-                    <div class="booking-field">
-                        <label class="booking-label">🎯 コース選択</label>
-                        <select id="bookingDuration" class="booking-select" required>
-                            <option value="">コースを選択してください</option>
-                            <option value="40">40分コース</option>
-                            <option value="60">60分コース</option>
-                            <option value="80">80分コース</option>
-                        </select>
-                    </div>
-                    
-                    <div class="booking-field">
-                        <label class="booking-label">👤 お客様名 <span style="color: #e74c3c; font-weight: 700;">*</span></label>
-                        <input type="text" id="customerName" class="booking-input" required placeholder="山田太郎" autocomplete="off">
-                        <div id="userSearchResults" class="user-search-results" style="display: none;"></div>
-                    </div>
-                    
-                    <div class="booking-field">
-                        <label class="booking-label">📞 電話番号 <span style="color: #e74c3c; font-weight: 700;">*</span></label>
-                        <input type="tel" id="customerPhone" class="booking-input" required placeholder="090-1234-5678">
-                    </div>
-                    
-                    <div class="booking-field">
-                        <label class="booking-label">📧 メールアドレス</label>
-                        <input type="email" id="customerEmail" class="booking-input" placeholder="example@email.com">
-                    </div>
-                    
-                    <div class="booking-field">
-                        <label class="booking-label">📝 備考・ご要望</label>
-                        <textarea id="bookingNote" class="booking-textarea" rows="3" placeholder="ご要望やご質問があればご記入ください"></textarea>
-                    </div>
-                    
-                    <div class="booking-field">
-                        <label class="booking-label">🏷️ 予約ステータス</label>
-                        <select id="bookingStatus" class="booking-select">
-                            <option value="tentative">仮予約</option>
-                            <option value="confirmed">確定</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <div class="booking-modal-footer">
-                <button type="button" class="booking-btn booking-btn-cancel" onclick="closeBookingModal()">キャンセル</button>
-                <button type="button" class="booking-btn booking-btn-create" id="submitBookingBtn" onclick="createBooking()">📅 予約作成</button>
-            </div>
+      <!-- 予約フォームセクション -->
+      <div class="booking-form-section">
+        <div class="booking-field">
+          <label class="booking-label"><i class="fas fa-graduation-cap me-1"></i>コース選択</label>
+          <select id="bookingDuration" class="booking-select" required>
+            <option value="">コースを選択してください</option>
+            <option value="40">40分コース</option>
+            <option value="60">60分コース</option>
+            <option value="80">80分コース</option>
+          </select>
+        </div>
+        
+        <div class="booking-field">
+          <label class="booking-label"><i class="fas fa-user me-1"></i>お客様名 <span style="color: #e74c3c; font-weight: 700;">*</span></label>
+          <input type="text" id="customerName" class="booking-input" required placeholder="山田太郎" autocomplete="off">
+          <div id="userSearchResults" class="user-search-results" style="display: none;"></div>
+        </div>
+        
+        <div class="booking-field">
+          <label class="booking-label"><i class="fas fa-phone me-1"></i>電話番号 <span style="color: #e74c3c; font-weight: 700;">*</span></label>
+          <input type="tel" id="customerPhone" class="booking-input" required placeholder="090-1234-5678">
+        </div>
+        
+        <div class="booking-field">
+          <label class="booking-label"><i class="fas fa-envelope me-1"></i>メールアドレス</label>
+          <input type="email" id="customerEmail" class="booking-input" placeholder="example@email.com">
+        </div>
+        
+        <div class="booking-field">
+          <label class="booking-label"><i class="fas fa-sticky-note me-1"></i>備考・ご要望</label>
+          <textarea id="bookingNote" class="booking-textarea" rows="3" placeholder="ご要望やご質問があればご記入ください"></textarea>
+        </div>
+        
+        <div class="booking-field">
+          <label class="booking-label"><i class="fas fa-tag me-1"></i>予約ステータス</label>
+          <select id="bookingStatus" class="booking-select">
+            <option value="tentative">仮予約</option>
+            <option value="confirmed">確定</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="booking-modal-footer">
+      <button type="button" class="booking-btn booking-btn-cancel" onclick="closeBookingModal()">キャンセル</button>
+      <button type="button" class="booking-btn booking-btn-create" id="submitBookingBtn" onclick="createBooking()">
+        <i class="fas fa-calendar-plus me-1"></i>予約作成
+      </button>
+    </div>
         </div>
     </div>
 
