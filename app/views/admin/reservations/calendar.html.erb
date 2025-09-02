@@ -2580,6 +2580,13 @@
                                     });
                                     const block = createSpanningReservationBlock(reservation, dateKey, timeStr);
                                     cell.appendChild(block);
+                                    
+                                    // 今日の予約ブロックの場合、親セルの今日のハイライトを無効化
+                                    if (dateKey === todayDateKey) {
+                                        cell.classList.remove('today');
+                                        cell.classList.add('today-with-reservation');
+                                    }
+                                    
                                     // 予約詳細を表示するためのクリックイベント（休憩ブロック以外）
                                     if (true) { // 常に実行（is_break属性は無効化）
                                     cell.addEventListener('click', (e) => {
@@ -2861,6 +2868,26 @@
             block.dataset.reservationId = reservation.id;
             block.dataset.reservationData = JSON.stringify(reservation);
             
+            // 今日の日付かどうかをチェック
+            const today = new Date();
+            const todayDateKey = formatDateKey(today);
+            
+            // 予約の日付を取得（reservationsオブジェクトから検索）
+            let reservationDateKey = null;
+            for (const dateKey of Object.keys(reservations)) {
+                const dayReservations = reservations[dateKey];
+                const foundReservation = dayReservations.find(r => r.id === reservation.id);
+                if (foundReservation) {
+                    reservationDateKey = dateKey;
+                    break;
+                }
+            }
+            
+            // 今日の日付の予約ブロックには特別なクラスを追加
+            if (reservationDateKey === todayDateKey) {
+                block.classList.add('today-reservation');
+            }
+            
             // クリックイベントを追加
             block.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -2924,6 +2951,15 @@
                 'completed': '✅',
                 'break': '☕'
             };
+            
+            // 今日の日付かどうかをチェック
+            const today = new Date();
+            const todayDateKey = formatDateKey(today);
+            
+            // 今日の日付の予約ブロックには特別なクラスを追加
+            if (dateKey === todayDateKey) {
+                block.classList.add('today-reservation');
+            }
             
             // 予約の継続時間に基づいて高さを計算
             const durationInMinutes = reservation.duration;
@@ -8966,6 +9002,33 @@ function showMessage(message, type = 'info') {
 
 .schedule-cell.today:has(.reservation-block)::before {
   background: transparent;
+}
+
+/* 今日の予約ブロックがある場合の今日のハイライトを無効化（:has()の代替） */
+.schedule-cell.today .today-reservation {
+  position: relative;
+  z-index: 5;
+}
+
+.schedule-cell.today .today-reservation ~ * {
+  background: transparent !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+.schedule-cell.today .today-reservation ~ *::before {
+  background: transparent !important;
+}
+
+/* 今日の予約があるセルのスタイル */
+.schedule-cell.today-with-reservation {
+  background: transparent !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+.schedule-cell.today-with-reservation::before {
+  background: transparent !important;
 }
 
 /* 現在の時間の赤い線 */
