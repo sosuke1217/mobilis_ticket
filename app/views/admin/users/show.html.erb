@@ -557,14 +557,14 @@
   </div>
 
   <!-- 削除確認モーダル -->
-  <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
-    <div class="modal-dialog" style="max-width: 600px; width: 90%;">
-      <div class="modal-content">
+  <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050; background-color: rgba(0, 0, 0, 0.5);">
+    <div class="modal-dialog" style="position: relative; width: auto; margin: 0.5rem; pointer-events: none; max-width: 600px; width: 90%; margin: 1.75rem auto;">
+      <div class="modal-content" style="position: relative; display: flex; flex-direction: column; width: 100%; pointer-events: auto; background-color: #fff; background-clip: padding-box; border: 1px solid rgba(0, 0, 0, 0.2); border-radius: 0.3rem; outline: 0;">
         <div class="modal-header bg-danger text-white">
           <h5 class="modal-title" id="deleteUserModalLabel">
             <i class="fas fa-exclamation-triangle me-2"></i>ユーザー削除の確認
           </h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
+          <button type="button" class="btn-close btn-close-white" onclick="hideDeleteModal()" aria-label="閉じる"></button>
         </div>
         <div class="modal-body">
           <div class="alert alert-danger">
@@ -615,7 +615,7 @@
               <input type="text" class="form-control" id="confirmationText" placeholder="ユーザー名を入力" style="text-align: left;">
             </div>
             <div class="d-flex justify-content-end gap-2" style="width: 100%; margin-top: 0; margin-bottom: 0; margin-left: auto;">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+              <button type="button" class="btn btn-secondary" onclick="hideDeleteModal()">キャンセル</button>
               <button type="button" class="btn btn-danger" id="confirmDeleteBtn" disabled>
                 <i class="fas fa-trash me-1"></i>削除を実行
               </button>
@@ -627,177 +627,128 @@
   </div>
 
   <script>
-  (function() {
-    console.log('🚀 削除モーダルスクリプト開始');
+  // グローバル関数として定義
+  function hideDeleteModal() {
+    console.log('🔍 Hiding delete modal manually');
     
-    // 複数のイベントで初期化を試行
-    function tryInitialize() {
-      console.log('🔄 初期化試行中...');
-      const deleteBtn = document.getElementById('deleteUserBtn');
-      const modal = document.getElementById('deleteUserModal');
-      
-      if (deleteBtn && modal) {
-        console.log('✅ 要素が見つかりました、初期化を実行');
-        initializeDeleteModal();
-        return true;
-      } else {
-        console.log('⏳ 要素が見つかりません、再試行します');
-        return false;
-      }
+    const modal = document.getElementById('deleteUserModal');
+    if (!modal) {
+      console.error('❌ Delete modal element not found');
+      return;
     }
     
-    // 即座に初期化を試行
-    if (!tryInitialize()) {
-      // 要素が見つからない場合は複数のイベントで待機
-      document.addEventListener('DOMContentLoaded', tryInitialize);
-      document.addEventListener('turbo:load', tryInitialize);
-      document.addEventListener('turbo:render', tryInitialize);
-      
-      // さらに確実にするため、短い間隔で再試行
-      let retryCount = 0;
-      const maxRetries = 10;
-      const retryInterval = setInterval(() => {
-        retryCount++;
-        console.log(`🔄 再試行 ${retryCount}/${maxRetries}`);
-        
-        if (tryInitialize() || retryCount >= maxRetries) {
-          clearInterval(retryInterval);
-          if (retryCount >= maxRetries) {
-            console.error('❌ 最大再試行回数に達しました');
-          }
-        }
-      }, 100);
+    // モーダルを非表示（スタイルをリセット）
+    modal.style.display = 'none';
+    modal.style.position = '';
+    modal.style.top = '';
+    modal.style.left = '';
+    modal.style.width = '';
+    modal.style.height = '';
+    modal.style.zIndex = '';
+    modal.style.backgroundColor = '';
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+    
+    // bodyからmodal-openクラスを削除
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    
+    console.log('🔍 Delete modal hidden manually');
+  }
+
+  // グローバル関数として定義
+  function showDeleteModal() {
+    console.log('🔍 Showing delete modal manually');
+    
+    const modal = document.getElementById('deleteUserModal');
+    const deleteBtn = document.getElementById('deleteUserBtn');
+    
+    if (!modal || !deleteBtn) {
+      console.error('❌ Required elements not found');
+      return;
     }
     
-    function initializeDeleteModal() {
-      console.log('🔧 削除モーダル初期化開始');
-      
-      const deleteBtn = document.getElementById('deleteUserBtn');
-      const modal = document.getElementById('deleteUserModal');
-      const confirmCheck = document.getElementById('confirmDeletionCheck');
-      const confirmationText = document.getElementById('confirmationText');
-      const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-      
-      console.log('🔍 要素の確認:');
-      console.log('  - deleteBtn:', deleteBtn);
-      console.log('  - modal:', modal);
-      console.log('  - confirmCheck:', confirmCheck);
-      console.log('  - confirmationText:', confirmationText);
-      console.log('  - confirmDeleteBtn:', confirmDeleteBtn);
-      
-      // Bootstrapの確認
-      console.log('🔍 Bootstrap確認:');
-      console.log('  - window.bootstrap:', typeof window.bootstrap !== 'undefined');
-      console.log('  - bootstrap.Modal:', typeof bootstrap !== 'undefined' && bootstrap.Modal);
-      console.log('  - window.$:', typeof window.$ !== 'undefined');
+    // ユーザー情報を取得
+    const currentUserId = deleteBtn.getAttribute('data-user-id');
+    const currentUserName = deleteBtn.getAttribute('data-user-name');
+    const activeTickets = deleteBtn.getAttribute('data-active-tickets');
+    const totalUsages = deleteBtn.getAttribute('data-total-usages');
+    const remainingValue = deleteBtn.getAttribute('data-remaining-value');
     
-      if (!deleteBtn || !modal) {
-        console.error('❌ 必要な要素が見つかりません');
-        console.error('  - deleteBtn:', deleteBtn);
-        console.error('  - modal:', modal);
-        return;
-      }
-      
-      console.log('✅ 必要な要素が見つかりました');
+    console.log('ユーザー情報:', { currentUserId, currentUserName, activeTickets, totalUsages, remainingValue });
     
-    let currentUserId = null;
-    let currentUserName = null;
+    // モーダルにデータを設定
+    const userNameElement = document.getElementById('deleteUserName');
+    const userIdElement = document.getElementById('deleteUserId');
+    const activeTicketsElement = document.getElementById('deleteActiveTickets');
+    const totalUsagesElement = document.getElementById('deleteTotalUsages');
+    const remainingValueElement = document.getElementById('deleteRemainingValue');
     
-    // 削除ボタンクリック時
-    const clickHandler = function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      console.log('🎯 削除ボタンがクリックされました');
-      console.log('🔍 イベント詳細:', e);
-      console.log('🔍 this要素:', this);
-      console.log('🔍 クリックされた要素:', e.target);
-      
-      currentUserId = this.getAttribute('data-user-id');
-      currentUserName = this.getAttribute('data-user-name');
-      const activeTickets = this.getAttribute('data-active-tickets');
-      const totalUsages = this.getAttribute('data-total-usages');
-      const remainingValue = this.getAttribute('data-remaining-value');
-      
-      console.log('ユーザー情報:', { currentUserId, currentUserName, activeTickets, totalUsages, remainingValue });
-      
-      // モーダルにデータを設定
-      const userNameElement = document.getElementById('deleteUserName');
-      const userIdElement = document.getElementById('deleteUserId');
-      const activeTicketsElement = document.getElementById('deleteActiveTickets');
-      const totalUsagesElement = document.getElementById('deleteTotalUsages');
-      const remainingValueElement = document.getElementById('deleteRemainingValue');
-      const confirmUserNameElement = document.getElementById('confirmUserName');
-      
-      if (userNameElement) userNameElement.textContent = currentUserName;
-      if (userIdElement) userIdElement.textContent = currentUserId;
-      if (activeTicketsElement) activeTicketsElement.textContent = activeTickets;
-      if (totalUsagesElement) activeTicketsElement.textContent = totalUsages;
-      if (remainingValueElement) remainingValueElement.textContent = remainingValue;
-      if (confirmUserNameElement) confirmUserNameElement.textContent = currentUserName;
-      
-      // フォームをリセット
-      if (confirmCheck) confirmCheck.checked = false;
-      if (confirmationText) confirmationText.value = '';
-      if (confirmDeleteBtn) confirmDeleteBtn.disabled = true;
-      
-      // モーダルを表示
-      try {
-        // Bootstrap 5の適切な初期化
-        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-          const bootstrapModal = new bootstrap.Modal(modal);
-          bootstrapModal.show();
-          console.log('Bootstrap 5モーダルを表示しました');
-        } else {
-          // Bootstrap 4またはフォールバック
-          $(modal).modal('show');
-          console.log('Bootstrap 4モーダルを表示しました');
-        }
-      } catch (error) {
-        console.error('モーダル表示エラー:', error);
-        // フォールバック: 直接スタイルを変更
-        modal.style.display = 'block';
-        modal.classList.add('show');
-        document.body.classList.add('modal-open');
-        modal.setAttribute('aria-hidden', 'false');
-        modal.setAttribute('aria-modal', 'true');
-        
-        // 背景のオーバーレイを追加
-        const backdrop = document.createElement('div');
-        backdrop.className = 'modal-backdrop fade show';
-        backdrop.id = 'modalBackdrop';
-        document.body.appendChild(backdrop);
-        
-        // スクロールを無効化
-        document.body.style.overflow = 'hidden';
-        document.body.style.paddingRight = '0px';
-        
-        console.log('フォールバックモーダルを表示しました');
-      }
-    };
+    if (userNameElement) userNameElement.textContent = currentUserName;
+    if (userIdElement) userIdElement.textContent = currentUserId;
+    if (activeTicketsElement) activeTicketsElement.textContent = activeTickets;
+    if (totalUsagesElement) totalUsagesElement.textContent = totalUsages;
+    if (remainingValueElement) remainingValueElement.textContent = remainingValue;
     
-    // イベントリスナーを追加し、参照を保存
-    console.log('🔗 イベントリスナーを登録中...');
+    // フォームをリセット
+    const confirmCheck = document.getElementById('confirmDeletionCheck');
+    const confirmationText = document.getElementById('confirmationText');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
     
-    // 既存のイベントリスナーを削除（重複防止）
-    if (deleteBtn.clickHandler) {
-      deleteBtn.removeEventListener('click', deleteBtn.clickHandler);
-      console.log('🔄 既存のイベントリスナーを削除');
+    if (confirmCheck) confirmCheck.checked = false;
+    if (confirmationText) confirmationText.value = '';
+    if (confirmDeleteBtn) confirmDeleteBtn.disabled = true;
+    
+    // モーダルを表示（直接スタイルを設定）
+    modal.style.display = 'block';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.zIndex = '1050';
+    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+    
+    // bodyにmodal-openクラスを追加
+    document.body.classList.add('modal-open');
+    document.body.style.overflow = 'hidden';
+    
+    console.log('🔍 Delete modal shown manually');
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔍 DOM Content Loaded - Initializing delete modal');
+    
+    const deleteBtn = document.getElementById('deleteUserBtn');
+    const modal = document.getElementById('deleteUserModal');
+    const confirmCheck = document.getElementById('confirmDeletionCheck');
+    const confirmationText = document.getElementById('confirmationText');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    
+    console.log('🔍 Elements found:', {
+      deleteBtn: !!deleteBtn,
+      modal: !!modal,
+      confirmCheck: !!confirmCheck,
+      confirmationText: !!confirmationText,
+      confirmDeleteBtn: !!confirmDeleteBtn
+    });
+    
+    if (!deleteBtn || !modal || !confirmCheck || !confirmationText || !confirmDeleteBtn) {
+      console.error('❌ Required elements not found');
+      return;
     }
     
-    deleteBtn.addEventListener('click', clickHandler);
-    deleteBtn.clickHandler = clickHandler;
-    
-    console.log('✅ 削除ボタンのイベントリスナーを登録完了');
-    
-    // テスト用：クリックイベントが登録されているか確認
-    console.log('🔍 イベントリスナー確認:');
-    console.log('  - deleteBtn.clickHandler:', deleteBtn.clickHandler);
-    console.log('  - deleteBtn.onclick:', deleteBtn.onclick);
+    // 削除ボタンクリック
+    deleteBtn.addEventListener('click', function() {
+      console.log('🔍 Delete button clicked');
+      showDeleteModal();
+    });
     
     // バリデーション関数
     function validateForm() {
-      if (!confirmCheck || !confirmationText || !confirmDeleteBtn) return;
-      
+      const currentUserName = deleteBtn.getAttribute('data-user-name');
       const isChecked = confirmCheck.checked;
       const textMatches = confirmationText.value.trim() === currentUserName;
       
@@ -814,154 +765,83 @@
     }
     
     // バリデーション実行
-    if (confirmCheck) confirmCheck.addEventListener('change', validateForm);
-    if (confirmationText) confirmationText.addEventListener('input', validateForm);
+    confirmCheck.addEventListener('change', validateForm);
+    confirmationText.addEventListener('input', validateForm);
     
     // 最終削除実行
-    if (confirmDeleteBtn) {
-      confirmDeleteBtn.addEventListener('click', function() {
-        if (this.disabled) return;
-        
-        console.log('削除実行開始');
-        
-        this.disabled = true;
-        this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>削除中...';
-        
-        // CSRF トークンを取得
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        
-        if (!csrfToken) {
-          console.error('CSRFトークンが見つかりません');
-          alert('セキュリティトークンが見つかりません。ページを再読み込みしてください。');
-          this.disabled = false;
-          this.innerHTML = '<i class="fas fa-trash me-1"></i>削除を実行';
-          return;
+    confirmDeleteBtn.addEventListener('click', function() {
+      if (this.disabled) return;
+      
+      console.log('🔍 Delete execution started');
+      
+      this.disabled = true;
+      this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>削除中...';
+      
+      // CSRF トークンを取得
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      const currentUserId = deleteBtn.getAttribute('data-user-id');
+      
+      if (!csrfToken) {
+        console.error('❌ CSRF token not found');
+        alert('セキュリティトークンが見つかりません。ページを再読み込みしてください。');
+        this.disabled = false;
+        this.innerHTML = '<i class="fas fa-trash me-1"></i>削除を実行';
+        return;
+      }
+      
+      console.log('🔍 Sending delete request:', `/admin/users/${currentUserId}`);
+      
+      // 削除リクエストを送信
+      fetch(`/admin/users/${currentUserId}`, {
+        method: 'DELETE',
+        headers: {
+          'X-CSRF-Token': csrfToken,
+          'Content-Type': 'application/json'
         }
+      })
+      .then(response => {
+        console.log('🔍 Delete response:', response);
         
-        console.log('削除リクエスト送信:', `/admin/users/${currentUserId}`);
-        
-        // 削除リクエストを送信
-        fetch(`/admin/users/${currentUserId}`, {
-          method: 'DELETE',
-          headers: {
-            'X-CSRF-Token': csrfToken,
-            'Content-Type': 'application/json'
-          }
-        })
-        .then(response => {
-          console.log('削除レスポンス:', response);
-          
-          if (response.redirected) {
-            // 成功時はリダイレクトされる
-            console.log('削除成功、リダイレクト:', response.url);
-            window.location.href = response.url;
-          } else if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-          } else {
-            // 成功時は手動でリダイレクト
-            console.log('削除成功');
-            window.location.href = '/admin/users';
-          }
-        })
-        .catch(error => {
-          console.error('削除エラー:', error);
-          alert('削除中にエラーが発生しました: ' + error.message);
-          
-          // ボタンを元に戻す
-          this.disabled = false;
-          this.innerHTML = '<i class="fas fa-trash me-1"></i>削除を実行';
-        });
-      });
-    }
-    
-    // モーダルを閉じる処理
-    function closeModal() {
-      try {
-        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-          const bootstrapModal = bootstrap.Modal.getInstance(modal);
-          if (bootstrapModal) {
-            bootstrapModal.hide();
-          }
-        } else if (typeof $ !== 'undefined') {
-          $(modal).modal('hide');
+        if (response.redirected) {
+          // 成功時はリダイレクトされる
+          console.log('🔍 Delete success, redirecting:', response.url);
+          window.location.href = response.url;
+        } else if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
         } else {
-          // フォールバック: 直接スタイルを変更
-          modal.style.display = 'none';
-          modal.classList.remove('show');
-          document.body.classList.remove('modal-open');
-          modal.setAttribute('aria-hidden', 'true');
-          modal.setAttribute('aria-modal', 'false');
-          
-          // 背景のオーバーレイを削除
-          const backdrop = document.getElementById('modalBackdrop');
-          if (backdrop) {
-            backdrop.remove();
-          }
-          
-          // スクロールを有効化
-          document.body.style.overflow = '';
-          document.body.style.paddingRight = '';
+          // 成功時は手動でリダイレクト
+          console.log('🔍 Delete success');
+          window.location.href = '/admin/users';
         }
-      } catch (error) {
-        console.error('モーダルを閉じるエラー:', error);
-        // フォールバック
-        modal.style.display = 'none';
+      })
+      .catch(error => {
+        console.error('❌ Delete error:', error);
+        alert('削除中にエラーが発生しました: ' + error.message);
+        
+        // ボタンを元に戻す
+        this.disabled = false;
+        this.innerHTML = '<i class="fas fa-trash me-1"></i>削除を実行';
+      });
+    });
+    
+    // 背景クリックでモーダルを閉じる
+    modal.addEventListener('click', function(e) {
+      console.log('🔍 Modal clicked:', e.target, e.currentTarget);
+      if (e.target === modal) {
+        console.log('🔍 Background clicked, hiding modal');
+        hideDeleteModal();
       }
-    }
+    });
     
-    // モーダルが閉じられたときのクリーンアップ
-    if (modal) {
-      const hiddenHandler = function() {
-        if (confirmCheck) confirmCheck.checked = false;
-        if (confirmationText) {
-          confirmationText.value = '';
-          confirmationText.className = 'form-control';
-        }
-        if (confirmDeleteBtn) {
-          confirmDeleteBtn.disabled = true;
-          confirmDeleteBtn.innerHTML = '<i class="fas fa-trash me-1"></i>削除を実行';
-        }
-      };
-      
-      modal.addEventListener('hidden.bs.modal', hiddenHandler);
-      modal.hiddenHandler = hiddenHandler;
-      
-      // キャンセルボタンにもイベントを追加
-      const cancelBtn = modal.querySelector('[data-bs-dismiss="modal"]');
-      if (cancelBtn) {
-        cancelBtn.addEventListener('click', closeModal);
+    // ESCキーでモーダルを閉じる
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && modal.classList.contains('show')) {
+        hideDeleteModal();
       }
-    }
+    });
     
-    console.log('削除ボタン初期化完了');
-    }
-    
-    // クリーンアップ関数
-    function cleanupDeleteModal() {
-      console.log('🧹 クリーンアップ開始');
-      const deleteBtn = document.getElementById('deleteUserBtn');
-      const modal = document.getElementById('deleteUserModal');
-      
-      if (deleteBtn && deleteBtn.clickHandler) {
-        deleteBtn.removeEventListener('click', deleteBtn.clickHandler);
-        console.log('✅ 削除ボタンのイベントリスナーを削除');
-      }
-      
-      if (modal && modal.hiddenHandler) {
-        modal.removeEventListener('hidden.bs.modal', modal.hiddenHandler);
-        console.log('✅ モーダルのイベントリスナーを削除');
-      }
-    }
-    
-    // グローバル関数として公開（デバッグ用）
-    window.debugDeleteModal = {
-      tryInitialize: tryInitialize,
-      initializeDeleteModal: initializeDeleteModal,
-      cleanupDeleteModal: cleanupDeleteModal
-    };
-    
-    console.log('🚀 削除モーダルスクリプト完了');
-  })(); // IIFEを閉じる
+    console.log('🔍 Delete modal initialization completed');
+  });
   </script>
   
   <div class="card mb-4 shadow-sm">
