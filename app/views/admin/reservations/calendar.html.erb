@@ -43,22 +43,38 @@
                 <button class="btn btn-outline-secondary btn-sm" onclick="toggleMiniCalendar()">
                   <i class="fas fa-calendar-alt me-1"></i>週を選択
                 </button>
-                <div class="mini-calendar" id="miniCalendar" style="display: none; position: absolute; top: 100%; left: 0; z-index: 1000; background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 1rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); min-width: 350px;">
-                  <div class="d-flex justify-content-between align-items-center mb-3">
-                    <button class="btn btn-sm btn-outline-secondary" onclick="previousMiniCalendarYear()" title="前年">
-                      <i class="fas fa-angle-double-left"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="previousMiniCalendarMonth()" title="前月">
-                      <i class="fas fa-angle-left"></i>
-                    </button>
-                    <div class="fw-semibold text-center flex-grow-1 mx-3" id="miniCalendarTitle" style="min-width: 140px;">読み込み中...</div>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="nextMiniCalendarMonth()" title="翌月">
-                      <i class="fas fa-angle-right"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="nextMiniCalendarYear()" title="翌年">
-                      <i class="fas fa-angle-double-right"></i>
-                    </button>
+                <div class="mini-calendar" id="miniCalendar" style="display: none; position: absolute; top: 100%; left: 0; z-index: 1000; background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 1rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); min-width: 280px;">
+                  <div class="d-flex justify-content-center align-items-center mb-3">
+                    <div class="fw-semibold text-center" id="miniCalendarTitle" style="cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: background-color 0.2s;" onclick="toggleYearMonthSelector()">読み込み中...</div>
                   </div>
+                  
+                  <!-- 年と月の選択ドロップダウン -->
+                  <div id="yearMonthSelector" style="display: none; margin-bottom: 1rem;">
+                    <div class="row g-2">
+                      <div class="col-6">
+                        <select id="yearSelector" class="form-select form-select-sm" onchange="updateMiniCalendarFromSelector()">
+                          <!-- 年が動的に生成される -->
+                        </select>
+                      </div>
+                      <div class="col-6">
+                        <select id="monthSelector" class="form-select form-select-sm" onchange="updateMiniCalendarFromSelector()">
+                          <option value="0">1月</option>
+                          <option value="1">2月</option>
+                          <option value="2">3月</option>
+                          <option value="3">4月</option>
+                          <option value="4">5月</option>
+                          <option value="5">6月</option>
+                          <option value="6">7月</option>
+                          <option value="7">8月</option>
+                          <option value="8">9月</option>
+                          <option value="9">10月</option>
+                          <option value="10">11月</option>
+                          <option value="11">12月</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  
                   <div class="d-flex mb-2">
                     <div class="flex-fill text-center small text-muted fw-semibold">日</div>
                     <div class="flex-fill text-center small text-muted fw-semibold">月</div>
@@ -3713,14 +3729,79 @@ function showMessage(message, type = 'info') {
             if (isVisible) {
                 // 非表示にする
                 miniCalendar.style.display = 'none';
+                // 年と月の選択ドロップダウンも非表示にする
+                document.getElementById('yearMonthSelector').style.display = 'none';
             } else {
                 // 表示する
                 miniCalendar.style.display = 'block';
+                // 年と月の選択ドロップダウンを初期化
+                initializeYearMonthSelector();
                 // ミニカレンダーをレンダリング
                 renderMiniCalendar();
             }
             
             console.log('🔍 Mini calendar toggled:', isVisible ? 'hidden' : 'visible');
+        }
+
+        // 年と月の選択ドロップダウンの表示/非表示を切り替え
+        function toggleYearMonthSelector() {
+            const selector = document.getElementById('yearMonthSelector');
+            const title = document.getElementById('miniCalendarTitle');
+            
+            if (selector.style.display === 'none') {
+                selector.style.display = 'block';
+                title.style.backgroundColor = '#e9ecef';
+            } else {
+                selector.style.display = 'none';
+                title.style.backgroundColor = 'transparent';
+            }
+        }
+
+        // 年と月の選択ドロップダウンを初期化
+        function initializeYearMonthSelector() {
+            const yearSelector = document.getElementById('yearSelector');
+            const monthSelector = document.getElementById('monthSelector');
+            
+            if (!yearSelector || !monthSelector) {
+                console.error('❌ Year or month selector not found');
+                return;
+            }
+            
+            // 年の選択肢を生成（現在の年から前後5年）
+            const currentYear = new Date().getFullYear();
+            yearSelector.innerHTML = '';
+            for (let year = currentYear - 5; year <= currentYear + 5; year++) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year + '年';
+                yearSelector.appendChild(option);
+            }
+            
+            // 現在の年と月を選択
+            yearSelector.value = miniCalendarMonth.getFullYear();
+            monthSelector.value = miniCalendarMonth.getMonth();
+        }
+
+        // 年と月の選択からミニカレンダーを更新
+        function updateMiniCalendarFromSelector() {
+            const yearSelector = document.getElementById('yearSelector');
+            const monthSelector = document.getElementById('monthSelector');
+            
+            if (!yearSelector || !monthSelector) {
+                console.error('❌ Year or month selector not found');
+                return;
+            }
+            
+            const selectedYear = parseInt(yearSelector.value);
+            const selectedMonth = parseInt(monthSelector.value);
+            
+            // ミニカレンダーの月を更新
+            miniCalendarMonth = new Date(selectedYear, selectedMonth, 1);
+            
+            // ミニカレンダーを再レンダリング
+            renderMiniCalendar();
+            
+            console.log('📅 Mini calendar updated to:', selectedYear, '年', selectedMonth + 1, '月');
         }
 
         function renderMiniCalendar() {
@@ -3872,34 +3953,6 @@ function showMessage(message, type = 'info') {
             
             console.log('➡️ Moving to next month:', nextMonth);
             miniCalendarMonth = nextMonth;
-            renderMiniCalendar();
-        }
-
-        function previousMiniCalendarYear() {
-            const prevYearDate = miniCalendarMonth;
-            const prevYear = new Date(
-                prevYearDate.getFullYear() - 1,
-                prevYearDate.getMonth(),
-                15, // 月の中旬に設定
-                12, 0, 0, 0
-            );
-            
-            console.log('⬅️⬅️ Moving to previous year:', prevYear);
-            miniCalendarMonth = prevYear;
-            renderMiniCalendar();
-        }
-
-        function nextMiniCalendarYear() {
-            const nextYearDate = miniCalendarMonth;
-            const nextYear = new Date(
-                nextYearDate.getFullYear() + 1,
-                nextYearDate.getMonth(),
-                15, // 月の中旬に設定
-                12, 0, 0, 0
-            );
-            
-            console.log('➡️➡️ Moving to next year:', nextYear);
-            miniCalendarMonth = nextYear;
             renderMiniCalendar();
         }
 
@@ -8175,10 +8228,6 @@ function showMessage(message, type = 'info') {
         window.previousWeek = previousWeek;
         window.nextWeek = nextWeek;
         window.toggleMiniCalendar = toggleMiniCalendar;
-        window.previousMiniCalendarYear = previousMiniCalendarYear;
-        window.previousMiniCalendarMonth = previousMiniCalendarMonth;
-        window.nextMiniCalendarMonth = nextMiniCalendarMonth;
-        window.nextMiniCalendarYear = nextMiniCalendarYear;
         window.toggleCancellationDisplay = toggleCancellationDisplay;
         window.clearCancellationDisplay = clearCancellationDisplay;
         window.closeBookingModal = closeBookingModal;
@@ -8199,6 +8248,8 @@ function showMessage(message, type = 'info') {
         window.updateCalendarOnCourseChange = updateCalendarOnCourseChange;
         window.updateTimeSlot = updateTimeSlot;
         window.saveReservationChanges = saveReservationChanges;
+        window.toggleYearMonthSelector = toggleYearMonthSelector;
+        window.updateMiniCalendarFromSelector = updateMiniCalendarFromSelector;
         
         console.log('✅ All global functions exposed for onclick attributes');
         })(); // IIFEを閉じる
