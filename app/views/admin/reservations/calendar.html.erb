@@ -8957,6 +8957,15 @@ function showMessage(message, type = 'info') {
   pointer-events: none;
 }
 
+/* 予約ブロックがある場合は今日のハイライト背景を無効化 */
+.schedule-cell.today:has(.reservation-block) {
+  background: transparent;
+}
+
+.schedule-cell.today:has(.reservation-block)::before {
+  background: transparent;
+}
+
 /* 現在の時間の赤い線 */
 .schedule-row.current-time {
   border-top: 3px solid #dc3545;
