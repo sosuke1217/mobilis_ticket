@@ -1,23 +1,61 @@
 <%= form_with model: [:admin, template], local: true do |f| %>
-  <div class="mb-3">
-    <%= f.label :name, "テンプレート名", class: "form-label" %>
-    <%= f.text_field :name, class: "form-control" %>
+  <div class="row">
+    <div class="col-md-6">
+      <div class="mb-4">
+        <%= f.label :name, "テンプレート名", class: "form-label" %>
+        <%= f.text_field :name, class: "form-control", placeholder: "例：月額プラン" %>
+        <div class="form-text">
+          <i class="fas fa-info-circle me-1"></i>チケットの種類を識別する名前を入力
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-6">
+      <div class="mb-4">
+        <%= f.label :total_count, "利用回数", class: "form-label" %>
+        <%= f.number_field :total_count, class: "form-control", placeholder: "例：5", min: 1 %>
+        <div class="form-text">
+          <i class="fas fa-hashtag me-1"></i>このチケットで利用できる回数
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="mb-3">
-    <%= f.label :total_count, "回数", class: "form-label" %>
-    <%= f.number_field :total_count, class: "form-control" %>
+  <div class="row">
+    <div class="col-md-6">
+      <div class="mb-4">
+        <%= f.label :expiry_days, "有効期間（日数）", class: "form-label" %>
+        <%= f.number_field :expiry_days, class: "form-control", placeholder: "例：30", min: 1 %>
+        <div class="form-text">
+          <i class="fas fa-calendar me-1"></i>発行日から何日間有効か
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-6">
+      <div class="mb-4">
+        <%= f.label :price, "価格（円）", class: "form-label" %>
+        <div class="input-group">
+          <span class="input-group-text">¥</span>
+          <%= f.number_field :price, class: "form-control", placeholder: "例：5000", min: 0 %>
+        </div>
+        <div class="form-text">
+          <i class="fas fa-yen-sign me-1"></i>チケット全体の価格
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="mb-3">
-    <%= f.label :expiry_days, "有効日数（例：30）", class: "form-label" %>
-    <%= f.number_field :expiry_days, class: "form-control" %>
-  </div>
+  <hr class="my-4">
 
-  <div class="mb-3">
-    <%= f.label :price, "価格（円）", class: "form-label" %>
-    <%= f.number_field :price, class: "form-control" %>
+  <div class="d-flex justify-content-between align-items-center">
+    <div class="text-muted small">
+      <i class="fas fa-check-circle me-1 text-success"></i>
+      入力内容を確認してから作成してください
+    </div>
+    <div>
+      <%= link_to "キャンセル", admin_ticket_templates_path, class: "btn btn-outline-secondary me-2" %>
+      <%= f.submit "テンプレートを作成", class: "btn btn-success" %>
+    </div>
   </div>
-
-  <%= f.submit "更新", class: "btn btn-primary" %>
 <% end %>
