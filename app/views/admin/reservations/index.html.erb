@@ -1,12 +1,16 @@
 <% content_for :title, "今日の予約一覧 - Mobilis" %>
 
-<div class="container-fluid">
-  <div class="row">
+<div class="container-lg my-5">
+  <!-- ヘッダーセクション -->
+  <div class="row mb-4">
     <div class="col-12">
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0">
-          <i class="fas fa-calendar-day me-2"></i>今日の予約一覧
-        </h1>
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h1 class="h3 mb-1">
+            <i class="fas fa-calendar-day me-2 text-primary"></i>今日の予約一覧
+          </h1>
+          <p class="text-muted mb-0">本日の予約スケジュール管理</p>
+        </div>
         <div class="d-flex gap-2">
           <a href="<%= calendar_admin_reservations_path %>" class="btn btn-outline-primary">
             <i class="fas fa-calendar-alt me-1"></i>カレンダー表示
@@ -16,73 +20,88 @@
           </a>
         </div>
       </div>
+    </div>
+  </div>
 
-      <!-- 今日の日付表示 -->
-      <div class="alert alert-info">
-        <i class="fas fa-calendar me-2"></i>
-        <strong><%= Date.current.strftime('%Y年%m月%d日') %></strong>
-        (<%= Date.current.strftime('%A') %>)
+  <!-- 今日の日付表示 -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="alert alert-info border-0 shadow-sm">
+        <div class="d-flex align-items-center">
+          <i class="fas fa-calendar me-3 text-info fs-4"></i>
+          <div>
+            <strong class="fs-5"><%= Date.current.strftime('%Y年%m月%d日') %></strong>
+            <div class="text-muted"><%= Date.current.strftime('%A') %></div>
+          </div>
+        </div>
       </div>
+    </div>
+  </div>
 
-      <!-- 予約一覧 -->
-      <% if @today_reservations.any? %>
-        <div class="reservations-header mb-4">
-          <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">
-              <i class="fas fa-list me-2"></i>予約一覧 (<%= @today_reservations.count %>件)
-            </h5>
-            <div class="d-flex gap-2">
+  <!-- 予約一覧 -->
+  <% if @today_reservations.any? %>
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-light">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>予約一覧
+              </h5>
               <span class="badge bg-success fs-6">
-                <i class="fas fa-clock me-1"></i>今日の予約
+                <i class="fas fa-clock me-1"></i><%= @today_reservations.count %>件
               </span>
             </div>
           </div>
-        </div>
-
-        <!-- 予約テーブル -->
-        <div class="card">
           <div class="card-body p-0">
             <div class="table-responsive">
-              <table class="table table-hover mb-0 modern-table">
-                <thead class="table-header-custom">
+              <table class="table table-hover mb-0">
+                <thead class="table-light">
                   <tr>
-                    <th class="time-column">
+                    <th class="px-3">
                       <i class="fas fa-clock me-1"></i>時間
                     </th>
-                    <th class="customer-column">
-                      顧客名
-                    </th>
-                    <th class="course-column">
+                    <th>顧客名</th>
+                    <th>
                       <i class="fas fa-graduation-cap me-1"></i>コース
                     </th>
-                    <th class="status-column">
+                    <th>
                       <i class="fas fa-info-circle me-1"></i>ステータス
                     </th>
-                    <th class="interval-column">
+                    <th>
                       <i class="fas fa-tools me-1"></i>整理時間
                     </th>
-                    <th class="note-column">
+                    <th>
                       <i class="fas fa-sticky-note me-1"></i>メモ
                     </th>
-                    <th class="action-column">
+                    <th class="text-center">
                       <i class="fas fa-cogs me-1"></i>操作
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   <% @today_reservations.sort_by(&:start_time).each do |reservation| %>
-                    <tr class="<%= reservation.status %>-row reservation-row">
-                      <td class="time-cell">
-                        <div class="time-display">
-                          <div class="start-time"><%= reservation.start_time.strftime('%H:%M') %></div>
-                          <div class="time-separator">〜</div>
-                          <div class="end-time"><%= reservation.end_time.strftime('%H:%M') %></div>
+                    <tr class="<%= reservation.status %>-row">
+                      <td class="px-3">
+                        <div class="d-flex flex-column align-items-center">
+                          <div class="fw-semibold text-primary">
+                            <%= reservation.start_time.strftime('%H:%M') %>
+                          </div>
+                          <div class="text-muted small">〜</div>
+                          <div class="fw-semibold text-primary">
+                            <%= reservation.end_time.strftime('%H:%M') %>
+                          </div>
                         </div>
                       </td>
-                      <td class="customer-cell">
-                        <div class="customer-info">
-                          <div class="customer-details">
-                            <div class="customer-name">
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <div class="flex-shrink-0 me-2">
+                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                              <i class="fas fa-user text-white small"></i>
+                            </div>
+                          </div>
+                          <div class="flex-grow-1">
+                            <div class="fw-semibold">
                               <% if reservation.user_id.present? %>
                                 <a href="<%= admin_user_path(reservation.user_id) %>" 
                                    class="text-decoration-none text-dark hover-primary">
@@ -93,28 +112,27 @@
                               <% end %>
                             </div>
                             <% if reservation.user&.phone_number.present? %>
-                              <div class="customer-phone">
-                                <small><%= reservation.user.phone_number %></small>
+                              <div class="small text-muted">
+                                <i class="fas fa-phone me-1"></i><%= reservation.user.phone_number %>
                               </div>
                             <% end %>
                           </div>
                         </div>
                       </td>
-                      <td class="course-cell">
-                        <span class="course-badge-table">
+                      <td>
+                        <span class="badge bg-primary">
                           <i class="fas fa-graduation-cap me-1"></i>
                           <%= reservation.course %>
                         </span>
                       </td>
-                      <td class="status-cell">
-                        <span class="badge status-badge-table <%= reservation.status_bootstrap_class %>" 
-                              style="background-color: <%= reservation.status_color %> !important; color: <%= reservation.text_color_for_status(reservation.status) %> !important; border: 1px solid <%= reservation.status_color %>;">
+                      <td>
+                        <span class="badge <%= reservation.status_bootstrap_class %>">
                           <%= reservation.status_text %>
                         </span>
                       </td>
-                      <td class="interval-cell">
+                      <td>
                         <% if reservation.effective_interval_minutes > 0 %>
-                          <span class="interval-badge-table">
+                          <span class="badge bg-success">
                             <i class="fas fa-tools me-1"></i>
                             <%= reservation.effective_interval_minutes %>分
                             <% if reservation.has_individual_interval? %>
@@ -125,9 +143,9 @@
                           <span class="text-muted">-</span>
                         <% end %>
                       </td>
-                      <td class="note-cell">
+                      <td>
                         <% if reservation.note.present? %>
-                          <span class="note-text" title="<%= reservation.note %>">
+                          <span class="text-muted" title="<%= reservation.note %>">
                             <i class="fas fa-sticky-note me-1"></i>
                             <%= truncate(reservation.note, length: 30) %>
                           </span>
@@ -135,17 +153,17 @@
                           <span class="text-muted">-</span>
                         <% end %>
                       </td>
-                      <td class="action-cell">
-                        <div class="action-buttons-table">
+                      <td class="text-center">
+                        <div class="btn-group" role="group">
                           <% if reservation.user_id.present? %>
                             <a href="<%= ticket_management_admin_user_path(reservation.user_id) %>" 
-                               class="btn btn-outline-primary btn-sm" title="チケット管理">
-                              <i class="fas fa-ticket-alt me-1"></i>チケット
+                               class="btn btn-sm btn-outline-primary" title="チケット管理">
+                              <i class="fas fa-ticket-alt"></i>
                             </a>
                           <% end %>
-                          <button type="button" class="btn btn-outline-danger btn-sm" 
+                          <button type="button" class="btn btn-sm btn-outline-danger" 
                                   onclick="deleteReservation(<%= reservation.id %>)" title="予約削除">
-                            <i class="fas fa-trash me-1"></i>削除
+                            <i class="fas fa-trash"></i>
                           </button>
                         </div>
                       </td>
@@ -156,61 +174,27 @@
             </div>
           </div>
         </div>
-      <% else %>
-        <div class="no-reservations">
-          <i class="fas fa-calendar-times fa-4x mb-4"></i>
-          <h4 class="text-muted mb-3">今日の予約はありません</h4>
-          <p class="text-muted mb-4">新しい予約を作成して、スケジュールを管理しましょう</p>
-          <a href="<%= new_admin_reservation_path %>" class="btn btn-success btn-lg">
-            <i class="fas fa-plus me-2"></i>新規予約を作成
-          </a>
-        </div>
-      <% end %>
+      </div>
     </div>
-  </div>
+  <% else %>
+    <div class="row">
+      <div class="col-12">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body text-center py-5">
+            <i class="fas fa-calendar-times fa-4x text-muted mb-4"></i>
+            <h4 class="text-muted mb-3">今日の予約はありません</h4>
+            <p class="text-muted mb-4">新しい予約を作成して、スケジュールを管理しましょう</p>
+            <a href="<%= new_admin_reservation_path %>" class="btn btn-success btn-lg">
+              <i class="fas fa-plus me-2"></i>新規予約を作成
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
 </div>
 
 <style>
-/* モダンなテーブルスタイル */
-.modern-table {
-  border: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-/* テーブルヘッダー */
-.table-header-custom {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-bottom: 2px solid #dee2e6;
-}
-
-.table-header-custom th {
-  border: none;
-  padding: 1rem 0.75rem;
-  font-weight: 600;
-  color: #495057;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.table-header-custom th i {
-  color: #6c757d;
-  margin-right: 0.5rem;
-}
-
-/* テーブル行 */
-.reservation-row {
-  transition: all 0.2s ease;
-  border-bottom: 1px solid #f1f3f4;
-}
-
-.reservation-row:hover {
-  background-color: #f8f9fa;
-  transform: scale(1.01);
-}
-
 /* ステータス別の行スタイル */
 .confirmed-row {
   border-left: 4px solid #28a745;
@@ -237,218 +221,20 @@
   background-color: #f8f9fa;
 }
 
-/* セルスタイル */
-.modern-table td {
-  border: none;
-  padding: 1rem 0.75rem;
+/* テーブルスタイル */
+.table th {
+  border-top: none;
+  font-weight: 600;
+  color: #495057;
+}
+
+.table td {
   vertical-align: middle;
 }
 
-/* 時間セル */
-.time-cell {
-  min-width: 120px;
-}
-
-.time-display {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.start-time, .end-time {
-  font-weight: 600;
-  color: #2c3e50;
-  font-size: 0.9rem;
-}
-
-.time-separator {
-  color: #6c757d;
-  font-size: 0.8rem;
-}
-
-/* 顧客セル */
-.customer-cell {
-  min-width: 200px;
-}
-
-.customer-info {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.customer-avatar-small {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #1976d2;
-  font-size: 1.2rem;
-}
-
-.customer-details {
-  flex: 1;
-}
-
-.customer-name {
-  font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 0.25rem;
-  font-size: 0.95rem;
-}
-
-.customer-phone {
-  color: #6c757d;
-  font-size: 0.8rem;
-}
-
-/* コースセル */
-.course-cell {
-  min-width: 120px;
-}
-
-.course-badge-table {
-  display: inline-flex;
-  align-items: center;
-  background: linear-gradient(135deg, #007bff, #0056b3);
-  color: white;
-  padding: 0.4rem 0.8rem;
-  border-radius: 20px;
-  font-weight: 500;
-  font-size: 0.85rem;
-}
-
-/* ステータスセル */
-.status-cell {
-  min-width: 100px;
-}
-
-.status-badge-table {
-  font-size: 0.8rem;
-  padding: 0.4rem 0.8rem;
-  border-radius: 20px;
-  font-weight: 500;
-}
-
-/* ステータス別の背景色と文字色を左ボーダーと同じ色に統一 */
-.badge.status-badge-table.bg-success {
-  background-color: #28a745 !important;
-  color: #fff !important;
-  border: 1px solid #28a745;
-}
-
-.badge.status-badge-table.bg-warning {
-  background-color: #ffc107 !important;
-  color: #000 !important;
-  border: 1px solid #ffc107;
-}
-
-.badge.status-badge-table.bg-info {
-  background-color: #17a2b8 !important;
-  color: #fff !important;
-  border: 1px solid #17a2b8;
-}
-
-.badge.status-badge-table.bg-danger {
-  background-color: #dc3545 !important;
-  color: #fff !important;
-  border: 1px solid #dc3545;
-}
-
-.badge.status-badge-table.bg-secondary {
-  background-color: #6c757d !important;
-  color: #fff !important;
-  border: 1px solid #6c757d;
-}
-
-/* デフォルトのBootstrapクラスを上書き - より具体的なセレクター */
-.badge.status-badge-table {
-  background-color: #6c757d !important;
-  color: #fff !important;
-  border: 1px solid #6c757d;
-}
-
-/* Bootstrapのbadgeクラスを強制的に上書き */
-.badge.bg-success {
-  background-color: #28a745 !important;
-  color: #fff !important;
-}
-
-.badge.bg-warning {
-  background-color: #ffc107 !important;
-  color: #000 !important;
-}
-
-.badge.bg-info {
-  background-color: #17a2b8 !important;
-  color: #fff !important;
-}
-
-.badge.bg-danger {
-  background-color: #dc3545 !important;
-  color: #fff !important;
-}
-
-.badge.bg-secondary {
-  background-color: #6c757d !important;
-  color: #fff !important;
-}
-
-/* 整理時間セル */
-.interval-cell {
-  min-width: 120px;
-}
-
-.interval-badge-table {
-  display: inline-flex;
-  align-items: center;
-  background: linear-gradient(135deg, #28a745, #1e7e34);
-  color: white;
-  padding: 0.3rem 0.6rem;
-  border-radius: 15px;
-  font-size: 0.8rem;
-  font-weight: 500;
-}
-
-/* メモセル */
-.note-cell {
-  min-width: 150px;
-  max-width: 200px;
-}
-
-.note-text {
-  color: #495057;
-  font-size: 0.85rem;
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* 操作セル */
-.action-cell {
-  min-width: 160px;
-}
-
-.action-buttons-table {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-}
-
-.action-buttons-table .btn {
-  border-radius: 20px;
-  font-size: 0.8rem;
-  padding: 0.3rem 0.6rem;
-  transition: all 0.2s ease;
-}
-
-.action-buttons-table .btn:hover {
-  transform: translateY(-1px);
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
 }
 
 /* ホバーエフェクト */
@@ -457,43 +243,22 @@
   text-decoration: underline !important;
 }
 
-/* 予約がない場合のスタイル */
-.no-reservations {
-  text-align: center;
-  padding: 3rem 1rem;
-  background: #f8f9fa;
-  border-radius: 12px;
-  border: 2px dashed #dee2e6;
-}
-
-.no-reservations i {
-  color: #6c757d;
-  margin-bottom: 1rem;
-}
-
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
-  .modern-table {
-    font-size: 0.85rem;
+  .table-responsive {
+    font-size: 0.875rem;
   }
   
-  .table-header-custom th {
-    padding: 0.75rem 0.5rem;
-    font-size: 0.8rem;
+  .badge {
+    font-size: 0.75rem !important;
   }
   
-  .modern-table td {
-    padding: 0.75rem 0.5rem;
-  }
-  
-  .action-buttons-table {
+  .btn-group {
     flex-direction: column;
-    gap: 0.25rem;
   }
   
-  .action-buttons-table .btn {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
+  .btn-group .btn {
+    margin-bottom: 0.25rem;
   }
 }
 </style>
