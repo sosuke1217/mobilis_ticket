@@ -97,7 +97,7 @@
         <h5 class="modal-title" id="addUserModalLabel">
           <i class="fas fa-user-plus me-2"></i>新規ユーザー追加
         </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
+        <button type="button" class="btn-close btn-close-white" onclick="hideModal()" aria-label="閉じる"></button>
       </div>
       <div class="modal-body">
         <form id="addUserForm">
@@ -154,7 +154,7 @@
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+        <button type="button" class="btn btn-secondary" onclick="hideModal()">キャンセル</button>
         <button type="button" class="btn btn-success" id="saveUserBtn">
           <i class="fas fa-save me-1"></i>ユーザーを追加
         </button>
@@ -164,6 +164,31 @@
 </div>
 
 <script>
+// グローバル関数として定義
+function hideModal() {
+  console.log('🔍 Hiding modal manually');
+  
+  const modal = document.getElementById('addUserModal');
+  if (!modal) return;
+  
+  // モーダルを非表示
+  modal.style.display = 'none';
+  modal.classList.remove('show');
+  modal.setAttribute('aria-hidden', 'true');
+  
+  // 背景オーバーレイを削除
+  const backdrop = document.getElementById('modalBackdrop');
+  if (backdrop) {
+    backdrop.remove();
+  }
+  
+  // bodyからmodal-openクラスを削除
+  document.body.classList.remove('modal-open');
+  document.body.style.overflow = '';
+  
+  console.log('🔍 Modal hidden manually');
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   console.log('🔍 DOM Content Loaded - Initializing user management page');
   
@@ -185,19 +210,34 @@ document.addEventListener('DOMContentLoaded', function() {
     return;
   }
   
-  // モーダルインスタンスを初期化（より安全な方法）
-  let modalInstance = null;
-  
-  try {
-    modalInstance = new bootstrap.Modal(modal, {
-      backdrop: 'static', // 背景クリックで閉じない
-      keyboard: true,     // ESCキーで閉じる
-      focus: true         // フォーカスを有効化
-    });
-    console.log('🔍 Modal instance created successfully:', modalInstance);
-  } catch (error) {
-    console.error('❌ Failed to create modal instance:', error);
-    return;
+  // 手動モーダル制御関数
+  function showModal() {
+    console.log('🔍 Showing modal manually');
+    
+    // モーダルを表示
+    modal.style.display = 'block';
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+    
+    // 背景オーバーレイを追加
+    const backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop fade show';
+    backdrop.id = 'modalBackdrop';
+    document.body.appendChild(backdrop);
+    
+    // bodyにmodal-openクラスを追加
+    document.body.classList.add('modal-open');
+    document.body.style.overflow = 'hidden';
+    
+    // フォーカスを最初の入力フィールドに
+    setTimeout(() => {
+      const firstInput = form.querySelector('input[type="text"]');
+      if (firstInput) {
+        firstInput.focus();
+      }
+    }, 100);
+    
+    console.log('🔍 Modal shown manually');
   }
   
   // 新規ユーザー追加ボタンクリック
@@ -216,26 +256,8 @@ document.addEventListener('DOMContentLoaded', function() {
     saveBtn.disabled = false;
     saveBtn.innerHTML = '<i class="fas fa-save me-1"></i>ユーザーを追加';
     
-    // モーダルを表示（より安全な方法）
-    console.log('🔍 Attempting to show modal');
-    if (modalInstance && typeof modalInstance.show === 'function') {
-      try {
-        modalInstance.show();
-        console.log('🔍 Modal show() called successfully');
-      } catch (error) {
-        console.error('❌ Error showing modal:', error);
-        // フォールバック: 直接Bootstrapのモーダルを表示
-        try {
-          const fallbackModal = new bootstrap.Modal(modal);
-          fallbackModal.show();
-          console.log('🔍 Fallback modal shown');
-        } catch (fallbackError) {
-          console.error('❌ Fallback modal also failed:', fallbackError);
-        }
-      }
-    } else {
-      console.error('❌ Modal instance not available');
-    }
+    // 手動でモーダルを表示
+    showModal();
   });
   
   // バリデーション
@@ -341,17 +363,7 @@ document.addEventListener('DOMContentLoaded', function() {
       document.querySelector('.container-lg').insertBefore(alertDiv, document.querySelector('.card'));
       
       // モーダルを閉じる
-      console.log('🔍 Attempting to hide modal');
-      if (modalInstance && typeof modalInstance.hide === 'function') {
-        try {
-          modalInstance.hide();
-          console.log('🔍 Modal hide() called successfully');
-        } catch (error) {
-          console.error('❌ Error hiding modal:', error);
-        }
-      } else {
-        console.error('❌ Modal instance not available for hiding');
-      }
+      hideModal();
       
       // ページをリロード（新しいユーザーを表示するため）
       setTimeout(() => {
@@ -382,34 +394,28 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
   
-  // モーダルが閉じられたときのクリーンアップ
-  modal.addEventListener('hidden.bs.modal', function() {
-    console.log('🔍 Modal hidden event triggered');
+  // 背景クリックでモーダルを閉じる
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) {
+      hideModal();
+    }
+  });
+  
+  // ESCキーでモーダルを閉じる
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && modal.classList.contains('show')) {
+      hideModal();
+    }
+  });
+  
+  // フォームリセット処理
+  function resetForm() {
     form.reset();
     form.querySelectorAll('.form-control').forEach(input => {
       input.classList.remove('is-valid', 'is-invalid');
     });
     saveBtn.disabled = false;
     saveBtn.innerHTML = '<i class="fas fa-save me-1"></i>ユーザーを追加';
-  });
-  
-  // モーダルが表示されたときのイベント
-  modal.addEventListener('shown.bs.modal', function() {
-    console.log('🔍 Modal shown event triggered');
-    // 最初の入力フィールドにフォーカス
-    const firstInput = form.querySelector('input[type="text"]');
-    if (firstInput) {
-      firstInput.focus();
-    }
-  });
-  
-  // エラーハンドリング
-  modal.addEventListener('show.bs.modal', function() {
-    console.log('🔍 Modal show event triggered');
-  });
-  
-  modal.addEventListener('hide.bs.modal', function() {
-    console.log('🔍 Modal hide event triggered');
-  });
+  }
 });
 </script>
