@@ -44,6 +44,10 @@ class Admin::TicketUsagesController < ApplicationController
   
   def show
     @usage = TicketUsage.find(params[:id])
+    respond_to do |format|
+      format.html
+      format.json { render json: @usage }
+    end
   end
 
   def edit
