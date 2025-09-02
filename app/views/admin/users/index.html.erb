@@ -90,9 +90,9 @@
 </div>
 
 <!-- 新規ユーザー追加モーダル -->
-<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050; background-color: rgba(0, 0, 0, 0.5);">
+  <div class="modal-dialog modal-lg" style="position: relative; width: auto; margin: 0.5rem; pointer-events: none; max-width: 800px; margin: 1.75rem auto;">
+    <div class="modal-content" style="position: relative; display: flex; flex-direction: column; width: 100%; pointer-events: auto; background-color: #fff; background-clip: padding-box; border: 1px solid rgba(0, 0, 0, 0.2); border-radius: 0.3rem; outline: 0;">
       <div class="modal-header bg-success text-white">
         <h5 class="modal-title" id="addUserModalLabel">
           <i class="fas fa-user-plus me-2"></i>新規ユーザー追加
@@ -169,24 +169,67 @@ function hideModal() {
   console.log('🔍 Hiding modal manually');
   
   const modal = document.getElementById('addUserModal');
-  if (!modal) return;
+  if (!modal) {
+    console.error('❌ Modal element not found');
+    return;
+  }
   
-  // モーダルを非表示
+  // モーダルを非表示（スタイルをリセット）
   modal.style.display = 'none';
+  modal.style.position = '';
+  modal.style.top = '';
+  modal.style.left = '';
+  modal.style.width = '';
+  modal.style.height = '';
+  modal.style.zIndex = '';
+  modal.style.backgroundColor = '';
   modal.classList.remove('show');
   modal.setAttribute('aria-hidden', 'true');
-  
-  // 背景オーバーレイを削除
-  const backdrop = document.getElementById('modalBackdrop');
-  if (backdrop) {
-    backdrop.remove();
-  }
   
   // bodyからmodal-openクラスを削除
   document.body.classList.remove('modal-open');
   document.body.style.overflow = '';
   
   console.log('🔍 Modal hidden manually');
+}
+
+// グローバル関数として定義
+function showModal() {
+  console.log('🔍 Showing modal manually');
+  
+  const modal = document.getElementById('addUserModal');
+  const form = document.getElementById('addUserForm');
+  
+  if (!modal) {
+    console.error('❌ Modal element not found');
+    return;
+  }
+  
+  // モーダルを表示（直接スタイルを設定）
+  modal.style.display = 'block';
+  modal.style.position = 'fixed';
+  modal.style.top = '0';
+  modal.style.left = '0';
+  modal.style.width = '100%';
+  modal.style.height = '100%';
+  modal.style.zIndex = '1050';
+  modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+  modal.classList.add('show');
+  modal.setAttribute('aria-hidden', 'false');
+  
+  // bodyにmodal-openクラスを追加
+  document.body.classList.add('modal-open');
+  document.body.style.overflow = 'hidden';
+  
+  // フォーカスを最初の入力フィールドに
+  setTimeout(() => {
+    const firstInput = form.querySelector('input[type="text"]');
+    if (firstInput) {
+      firstInput.focus();
+    }
+  }, 100);
+  
+  console.log('🔍 Modal shown manually');
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -208,36 +251,6 @@ document.addEventListener('DOMContentLoaded', function() {
   if (!addUserBtn || !modal || !form || !saveBtn) {
     console.error('❌ Required elements not found');
     return;
-  }
-  
-  // 手動モーダル制御関数
-  function showModal() {
-    console.log('🔍 Showing modal manually');
-    
-    // モーダルを表示
-    modal.style.display = 'block';
-    modal.classList.add('show');
-    modal.setAttribute('aria-hidden', 'false');
-    
-    // 背景オーバーレイを追加
-    const backdrop = document.createElement('div');
-    backdrop.className = 'modal-backdrop fade show';
-    backdrop.id = 'modalBackdrop';
-    document.body.appendChild(backdrop);
-    
-    // bodyにmodal-openクラスを追加
-    document.body.classList.add('modal-open');
-    document.body.style.overflow = 'hidden';
-    
-    // フォーカスを最初の入力フィールドに
-    setTimeout(() => {
-      const firstInput = form.querySelector('input[type="text"]');
-      if (firstInput) {
-        firstInput.focus();
-      }
-    }, 100);
-    
-    console.log('🔍 Modal shown manually');
   }
   
   // 新規ユーザー追加ボタンクリック
@@ -396,7 +409,9 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // 背景クリックでモーダルを閉じる
   modal.addEventListener('click', function(e) {
+    console.log('🔍 Modal clicked:', e.target, e.currentTarget);
     if (e.target === modal) {
+      console.log('🔍 Background clicked, hiding modal');
       hideModal();
     }
   });
