@@ -16,36 +16,6 @@
     </div>
   </div>
 
-  <!-- 統計セクション -->
-  <div class="row mb-4">
-    <div class="col-lg-4">
-      <div class="card border-0 shadow-sm bg-gradient-info text-white">
-        <div class="card-body text-center">
-          <div class="h4 mb-1"><%= @templates.count %></div>
-          <div class="small">テンプレート数</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-4">
-      <div class="card border-0 shadow-sm bg-gradient-success text-white">
-        <div class="card-body text-center">
-          <div class="h4 mb-1">
-            ¥<%= number_with_delimiter(@templates.sum(&:price)) %>
-          </div>
-          <div class="small">総価格</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-4">
-      <div class="card border-0 shadow-sm bg-gradient-warning text-white">
-        <div class="card-body text-center">
-          <div class="h4 mb-1"><%= @templates.sum(&:total_count) %></div>
-          <div class="small">総回数</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- テンプレート一覧 -->
   <div class="card border-0 shadow-sm">
     <div class="card-header bg-light">
@@ -161,18 +131,6 @@
 </div>
 
 <style>
-.bg-gradient-info {
-  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
-}
-
-.bg-gradient-success {
-  background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
-}
-
-.bg-gradient-warning {
-  background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
-}
-
 .table th {
   border-top: none;
   font-weight: 600;
