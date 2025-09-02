@@ -90,7 +90,7 @@
 </div>
 
 <!-- 新規ユーザー追加モーダル -->
-<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true">
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header bg-success text-white">
@@ -172,9 +172,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const form = document.getElementById('addUserForm');
   const saveBtn = document.getElementById('saveUserBtn');
   
-  // モーダルインスタンスをグローバル変数として保持
-  let modalInstance = null;
-  
   console.log('🔍 Elements found:', {
     addUserBtn: !!addUserBtn,
     modal: !!modal,
@@ -188,14 +185,20 @@ document.addEventListener('DOMContentLoaded', function() {
     return;
   }
   
-  // モーダルインスタンスを初期化
-  modalInstance = new bootstrap.Modal(modal, {
-    backdrop: true,
-    keyboard: true,
-    focus: true
-  });
+  // モーダルインスタンスを初期化（より安全な方法）
+  let modalInstance = null;
   
-  console.log('🔍 Modal instance created:', modalInstance);
+  try {
+    modalInstance = new bootstrap.Modal(modal, {
+      backdrop: 'static', // 背景クリックで閉じない
+      keyboard: true,     // ESCキーで閉じる
+      focus: true         // フォーカスを有効化
+    });
+    console.log('🔍 Modal instance created successfully:', modalInstance);
+  } catch (error) {
+    console.error('❌ Failed to create modal instance:', error);
+    return;
+  }
   
   // 新規ユーザー追加ボタンクリック
   addUserBtn.addEventListener('click', function() {
@@ -213,13 +216,25 @@ document.addEventListener('DOMContentLoaded', function() {
     saveBtn.disabled = false;
     saveBtn.innerHTML = '<i class="fas fa-save me-1"></i>ユーザーを追加';
     
-    // モーダルを表示
-    console.log('🔍 Showing modal with instance:', modalInstance);
-    if (modalInstance) {
-      modalInstance.show();
-      console.log('🔍 Modal should be visible now');
+    // モーダルを表示（より安全な方法）
+    console.log('🔍 Attempting to show modal');
+    if (modalInstance && typeof modalInstance.show === 'function') {
+      try {
+        modalInstance.show();
+        console.log('🔍 Modal show() called successfully');
+      } catch (error) {
+        console.error('❌ Error showing modal:', error);
+        // フォールバック: 直接Bootstrapのモーダルを表示
+        try {
+          const fallbackModal = new bootstrap.Modal(modal);
+          fallbackModal.show();
+          console.log('🔍 Fallback modal shown');
+        } catch (fallbackError) {
+          console.error('❌ Fallback modal also failed:', fallbackError);
+        }
+      }
     } else {
-      console.error('❌ Modal instance not found');
+      console.error('❌ Modal instance not available');
     }
   });
   
@@ -326,8 +341,16 @@ document.addEventListener('DOMContentLoaded', function() {
       document.querySelector('.container-lg').insertBefore(alertDiv, document.querySelector('.card'));
       
       // モーダルを閉じる
-      if (modalInstance) {
-        modalInstance.hide();
+      console.log('🔍 Attempting to hide modal');
+      if (modalInstance && typeof modalInstance.hide === 'function') {
+        try {
+          modalInstance.hide();
+          console.log('🔍 Modal hide() called successfully');
+        } catch (error) {
+          console.error('❌ Error hiding modal:', error);
+        }
+      } else {
+        console.error('❌ Modal instance not available for hiding');
       }
       
       // ページをリロード（新しいユーザーを表示するため）
@@ -368,6 +391,25 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     saveBtn.disabled = false;
     saveBtn.innerHTML = '<i class="fas fa-save me-1"></i>ユーザーを追加';
+  });
+  
+  // モーダルが表示されたときのイベント
+  modal.addEventListener('shown.bs.modal', function() {
+    console.log('🔍 Modal shown event triggered');
+    // 最初の入力フィールドにフォーカス
+    const firstInput = form.querySelector('input[type="text"]');
+    if (firstInput) {
+      firstInput.focus();
+    }
+  });
+  
+  // エラーハンドリング
+  modal.addEventListener('show.bs.modal', function() {
+    console.log('🔍 Modal show event triggered');
+  });
+  
+  modal.addEventListener('hide.bs.modal', function() {
+    console.log('🔍 Modal hide event triggered');
   });
 });
 </script>
