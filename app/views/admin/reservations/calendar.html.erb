@@ -3789,9 +3789,14 @@ function showMessage(message, type = 'info') {
             
             console.log('📅 Rendering mini calendar for:', year, '年', monthNames[month]);
             
-            // タイトルを更新
-            document.getElementById('miniCalendarTitle').textContent = 
-                `${year}年 ${monthNames[month]}`;
+            // 年と月の選択ドロップダウンを更新
+            const yearSelector = document.getElementById('yearSelector');
+            const monthSelector = document.getElementById('monthSelector');
+            
+            if (yearSelector && monthSelector) {
+                yearSelector.value = year;
+                monthSelector.value = month;
+            }
             
             // 月の最初の日と最後の日を取得
             const firstDay = new Date(year, month, 1);
