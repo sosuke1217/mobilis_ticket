@@ -2428,13 +2428,13 @@
             const endStr = formatDateShort(endDate);
             
             document.getElementById('currentWeek').textContent = 
-                `${currentWeekStart.getFullYear()}年 ${startStr} - ${endStr}`;
-            
-            // 今日の日付を取得
-            const today = new Date();
-            const todayDateKey = formatDateKey(today);
-            
-            // 日付ヘッダーを更新
+                              `${currentWeekStart.getFullYear()}年 ${startStr} - ${endStr}`;
+              
+              // 今日の日付を取得
+              const today = new Date();
+              const todayDateKey = formatDateKey(today);
+              
+              // 日付ヘッダーを更新
             const headers = document.querySelectorAll('.day-header');
             for (let i = 0; i < headers.length; i++) {
                 const date = new Date(currentWeekStart);
@@ -2443,23 +2443,23 @@
                 const dayName = dayNames[date.getDay()];
                 const dateStr = `${date.getMonth() + 1}/${date.getDate()}`;
                 
-                // CSSクラスをリセット
-                headers[i].classList.remove('sunday', 'saturday', 'today');
-                
-                // 正しいCSSクラスを追加
+                                  // CSSクラスをリセット
+                  headers[i].classList.remove('sunday', 'saturday', 'today');
+                  
+                  // 正しいCSSクラスを追加
                 if (date.getDay() === 0) {
                     headers[i].classList.add('sunday');
-                } else if (date.getDay() === 6) {
-                    headers[i].classList.add('saturday');
-                }
-                
-                // 今日の日付かどうかをチェック
-                const currentDateKey = formatDateKey(date);
-                if (currentDateKey === todayDateKey) {
-                    headers[i].classList.add('today');
-                }
-                
-                headers[i].innerHTML = `${dayName}<br><span style="font-size: 12px;">${dateStr}</span>`;
+                } else                   if (date.getDay() === 6) {
+                      headers[i].classList.add('saturday');
+                  }
+                  
+                  // 今日の日付かどうかをチェック
+                  const currentDateKey = formatDateKey(date);
+                  if (currentDateKey === todayDateKey) {
+                      headers[i].classList.add('today');
+                  }
+                  
+                  headers[i].innerHTML = `${dayName}<br><span style="font-size: 12px;">${dateStr}</span>`;
             }
         }
 
@@ -8817,6 +8817,29 @@ function showMessage(message, type = 'info') {
   color: #007bff;
 }
 
+/* 今日の日付ハイライト */
+.day-header.today {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  font-weight: 600;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+  position: relative;
+}
+
+.day-header.today::after {
+  content: '今日';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #dc3545;
+  color: white;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
 .schedule-body {
   max-height: 600px;
   overflow-y: auto;
@@ -8887,29 +8910,6 @@ function showMessage(message, type = 'info') {
   background-color: #ffc107;
   color: #212529;
   border-color: #ffc107;
-  font-weight: 600;
-}
-
-/* 今日の日付ハイライト */
-.day-header.today {
-  background: linear-gradient(135deg, #28a745, #20c997);
-  color: white;
-  font-weight: 600;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
-  position: relative;
-}
-
-.day-header.today::after {
-  content: '今日';
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  background: #dc3545;
-  color: white;
-  font-size: 0.7rem;
-  padding: 2px 6px;
-  border-radius: 10px;
   font-weight: 600;
 }
 
