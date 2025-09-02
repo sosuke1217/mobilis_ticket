@@ -205,14 +205,14 @@
   </style>
 
   <!-- LINE連携フォーム（モーダル） -->
-  <div class="modal fade" id="lineLinkModal" tabindex="-1" aria-labelledby="lineLinkModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-      <div class="modal-content border-0 shadow-lg">
+  <div class="modal fade" id="lineLinkModal" tabindex="-1" aria-labelledby="lineLinkModalLabel" aria-hidden="true" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050; background-color: rgba(0, 0, 0, 0.5);">
+    <div class="modal-dialog modal-dialog-centered modal-sm" style="position: relative; width: auto; margin: 0.5rem; pointer-events: none; max-width: 400px; margin: 1.75rem auto;">
+      <div class="modal-content border-0 shadow-lg" style="position: relative; display: flex; flex-direction: column; width: 100%; pointer-events: auto; background-color: #fff; background-clip: padding-box; border: 1px solid rgba(0, 0, 0, 0.2); border-radius: 0.3rem; outline: 0;">
         <div class="modal-header bg-primary text-white border-0 py-2">
           <h5 class="modal-title mb-0" id="lineLinkModalLabel">
             <i class="fas fa-link me-2"></i>LINE連携作成
           </h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          <button type="button" class="btn-close btn-close-white" onclick="hideLineLinkModal()" aria-label="Close"></button>
         </div>
         <div class="modal-body p-1">
           <div class="text-center mb-1">
@@ -259,7 +259,7 @@
           </form>
         </div>
         <div class="modal-footer border-0 bg-light">
-          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="hideLineLinkModal()">
             <i class="fas fa-times me-1"></i>キャンセル
           </button>
           <button type="button" class="btn btn-primary btn-sm" onclick="createLineLink()">
@@ -271,17 +271,79 @@
   </div>
 
   <script>
-    function showLineLinkForm() {
-      const modal = new bootstrap.Modal(document.getElementById('lineLinkModal'));
-      modal.show();
+    // グローバル関数として定義
+    function hideLineLinkModal() {
+      console.log('🔍 Hiding LINE link modal manually');
+      
+      const modal = document.getElementById('lineLinkModal');
+      if (!modal) {
+        console.error('❌ LINE link modal element not found');
+        return;
+      }
+      
+      // モーダルを非表示（スタイルをリセット）
+      modal.style.display = 'none';
+      modal.style.position = '';
+      modal.style.top = '';
+      modal.style.left = '';
+      modal.style.width = '';
+      modal.style.height = '';
+      modal.style.zIndex = '';
+      modal.style.backgroundColor = '';
+      modal.classList.remove('show');
+      modal.setAttribute('aria-hidden', 'true');
+      
+      // bodyからmodal-openクラスを削除
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      
+      console.log('🔍 LINE link modal hidden manually');
+    }
+
+    // グローバル関数として定義
+    function showLineLinkModal() {
+      console.log('🔍 Showing LINE link modal manually');
+      
+      const modal = document.getElementById('lineLinkModal');
+      const form = document.getElementById('lineLinkForm');
+      
+      if (!modal || !form) {
+        console.error('❌ Required elements not found');
+        return;
+      }
       
       // フォームをリセット
-      document.getElementById('lineLinkForm').reset();
+      form.reset();
+      
+      // モーダルを表示（直接スタイルを設定）
+      modal.style.display = 'block';
+      modal.style.position = 'fixed';
+      modal.style.top = '0';
+      modal.style.left = '0';
+      modal.style.width = '100%';
+      modal.style.height = '100%';
+      modal.style.zIndex = '1050';
+      modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+      modal.classList.add('show');
+      modal.setAttribute('aria-hidden', 'false');
+      
+      // bodyにmodal-openクラスを追加
+      document.body.classList.add('modal-open');
+      document.body.style.overflow = 'hidden';
       
       // 入力フィールドにフォーカス
       setTimeout(() => {
-        document.getElementById('lineUserId').focus();
-      }, 500);
+        const lineUserIdInput = document.getElementById('lineUserId');
+        if (lineUserIdInput) {
+          lineUserIdInput.focus();
+        }
+      }, 100);
+      
+      console.log('🔍 LINE link modal shown manually');
+    }
+
+    function showLineLinkForm() {
+      showLineLinkModal();
     }
 
     function createLineLink() {
@@ -483,6 +545,36 @@
         }
       }, 5000);
     }
+
+    // LINE連携モーダルの初期化
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('🔍 DOM Content Loaded - Initializing LINE link modal');
+      
+      const lineLinkModal = document.getElementById('lineLinkModal');
+      
+      if (!lineLinkModal) {
+        console.error('❌ LINE link modal element not found');
+        return;
+      }
+      
+      // 背景クリックでモーダルを閉じる
+      lineLinkModal.addEventListener('click', function(e) {
+        console.log('🔍 LINE link modal clicked:', e.target, e.currentTarget);
+        if (e.target === lineLinkModal) {
+          console.log('🔍 Background clicked, hiding LINE link modal');
+          hideLineLinkModal();
+        }
+      });
+      
+      // ESCキーでモーダルを閉じる
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && lineLinkModal.classList.contains('show')) {
+          hideLineLinkModal();
+        }
+      });
+      
+      console.log('🔍 LINE link modal initialization completed');
+    });
   </script>
 
   <!-- 🧑‍💼 顧客情報セクション -->
