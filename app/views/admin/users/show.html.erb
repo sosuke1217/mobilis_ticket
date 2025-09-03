@@ -1123,13 +1123,17 @@
 
   // グローバル関数として定義
   function showMergeModal() {
-    console.log('🔍 Showing merge modal manually');
+    console.log('🔍 showMergeModal called');
     
     const modal = document.getElementById('mergeUserModal');
     const mergeBtn = document.querySelector('button[onclick="showMergeModal()"]');
     
+    console.log('🔍 Modal element:', modal);
+    console.log('🔍 Merge button:', mergeBtn);
+    
     if (!modal || !mergeBtn) {
       console.error('❌ Required elements not found');
+      alert('モーダルまたはボタンが見つかりません。ページを再読み込みしてください。');
       return;
     }
     
