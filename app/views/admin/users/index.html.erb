@@ -562,12 +562,10 @@ function syncLineUsers() {
     
     // メッセージを表示する場所を安全に取得
     const container = document.querySelector('.container-lg');
-    const firstCard = document.querySelector('.card');
     
-    if (container && firstCard) {
-      container.insertBefore(alertDiv, firstCard);
-    } else if (container) {
-      container.appendChild(alertDiv);
+    if (container) {
+      // コンテナの最初に追加
+      container.insertBefore(alertDiv, container.firstChild);
     } else {
       // フォールバック: bodyの最初に追加
       document.body.insertBefore(alertDiv, document.body.firstChild);
@@ -592,12 +590,10 @@ function syncLineUsers() {
     
     // メッセージを表示する場所を安全に取得
     const container = document.querySelector('.container-lg');
-    const firstCard = document.querySelector('.card');
     
-    if (container && firstCard) {
-      container.insertBefore(alertDiv, firstCard);
-    } else if (container) {
-      container.appendChild(alertDiv);
+    if (container) {
+      // コンテナの最初に追加
+      container.insertBefore(alertDiv, container.firstChild);
     } else {
       // フォールバック: bodyの最初に追加
       document.body.insertBefore(alertDiv, document.body.firstChild);
