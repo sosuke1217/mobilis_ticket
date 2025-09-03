@@ -2258,6 +2258,15 @@ function showMessage(message, type = 'info') {
                 'completed': '✅',
                 'no_show': '⚠️'
             };
+            
+            // デバッグ用：ステータスの詳細をログ出力
+            console.log('🔍 getStatusIcon called with status:', status, 'type:', typeof status);
+            
+            // completedステータスを明示的にチェック
+            if (status === 'completed' || status === 'completed') {
+                return '✅';
+            }
+            
             return statusIcons[status] || '❓';
         }
 
