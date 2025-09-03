@@ -8,7 +8,7 @@
         <div>
           <h1 class="h3 mb-1">
             <i class="fas fa-calendar me-2 text-primary"></i>予約カレンダー
-          </h1>
+        </h1>
           <p class="text-muted mb-0">週間スケジュール管理と予約作成</p>
         </div>
         <div class="d-flex gap-2">
@@ -17,10 +17,10 @@
           </a>
         </div>
       </div>
-    </div>
-  </div>
+        </div>
+      </div>
 
-  <!-- カレンダーコンテナ -->
+            <!-- カレンダーコンテナ -->
   <div class="row">
     <div class="col-12">
       <div class="card border-0 shadow-sm">
@@ -36,13 +36,13 @@
                 <button class="btn btn-outline-primary btn-sm" onclick="nextWeek()">
                   <i class="fas fa-chevron-right"></i>
                 </button>
-              </div>
+                </div>
               
               <!-- ミニカレンダー -->
               <div class="position-relative">
                 <button class="btn btn-outline-secondary btn-sm" onclick="toggleMiniCalendar()">
                   <i class="fas fa-calendar-alt me-1"></i>週を選択
-                </button>
+                    </button>
                 <div class="mini-calendar" id="miniCalendar" style="display: none; position: absolute; top: 100%; left: 0; z-index: 1000; background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 1rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); min-width: 280px;">
                   <div class="d-flex justify-content-center align-items-center mb-3">
                     <div class="row g-2 w-100">
@@ -50,7 +50,7 @@
                         <select id="yearSelector" class="form-select form-select-sm" onchange="updateMiniCalendarFromSelector()">
                           <!-- 年が動的に生成される -->
                         </select>
-                      </div>
+                        </div>
                       <div class="col-6">
                         <select id="monthSelector" class="form-select form-select-sm" onchange="updateMiniCalendarFromSelector()">
                           <option value="0">1月</option>
@@ -71,33 +71,33 @@
                   </div>
                   
                   <div class="mini-calendar-weekdays mb-2">
-                    <div class="mini-calendar-weekday">日</div>
-                    <div class="mini-calendar-weekday">月</div>
-                    <div class="mini-calendar-weekday">火</div>
-                    <div class="mini-calendar-weekday">水</div>
-                    <div class="mini-calendar-weekday">木</div>
-                    <div class="mini-calendar-weekday">金</div>
-                    <div class="mini-calendar-weekday">土</div>
-                  </div>
-                  <div class="mini-calendar-days" id="miniCalendarDays">
-                    <!-- 動的に生成される -->
-                  </div>
+                            <div class="mini-calendar-weekday">日</div>
+                            <div class="mini-calendar-weekday">月</div>
+                            <div class="mini-calendar-weekday">火</div>
+                            <div class="mini-calendar-weekday">水</div>
+                            <div class="mini-calendar-weekday">木</div>
+                            <div class="mini-calendar-weekday">金</div>
+                            <div class="mini-calendar-weekday">土</div>
+                        </div>
+                        <div class="mini-calendar-days" id="miniCalendarDays">
+                            <!-- 動的に生成される -->
+                        </div>
+                    </div>
                 </div>
-              </div>
             </div>
             
             <div class="d-flex gap-2">
               <button class="btn btn-primary btn-sm" onclick="openBulkReservationModal()">
                 <i class="fas fa-calendar-plus me-1"></i>一括予約作成
-              </button>
+                </button>
               <button id="showCancellationsBtn" onclick="toggleCancellationDisplay()" class="btn btn-outline-warning btn-sm">
                 <i class="fas fa-times me-1"></i>キャンセル履歴 (<span id="cancellation-count">0</span>)
               </button>
               <button class="btn btn-outline-secondary btn-sm" onclick="openSettingsModal()">
                 <i class="fas fa-cog me-1"></i>予約可能日時を編集
-              </button>
+                </button>
             </div>
-          </div>
+            </div>
         </div>
         
         <!-- キャンセル表示エリア -->
@@ -109,47 +109,47 @@
             <button onclick="clearCancellationDisplay()" class="btn btn-sm btn-outline-secondary">
               <i class="fas fa-times me-1"></i>クリア
             </button>
-          </div>
-          <div id="cancellation-list" class="cancellation-list">
-            <!-- キャンセルされた予約がここに表示されます -->
-          </div>
+            </div>
+            <div id="cancellation-list" class="cancellation-list">
+                <!-- キャンセルされた予約がここに表示されます -->
+            </div>
         </div>
 
         <!-- スケジュールコンテナ -->
         <div class="card-body p-0">
-          <div class="schedule-container">
+        <div class="schedule-container">
             <div class="schedule-header">
-              <div class="time-column-header">時刻</div>
-              <div class="day-header sunday">日<br><span style="font-size: 12px;">8/10</span></div>
-              <div class="day-header">月<br><span style="font-size: 12px;">8/11</span></div>
-              <div class="day-header">火<br><span style="font-size: 12px;">8/12</span></div>
-              <div class="day-header">水<br><span style="font-size: 12px;">8/13</span></div>
-              <div class="day-header">木<br><span style="font-size: 12px;">8/14</span></div>
-              <div class="day-header">金<br><span style="font-size: 12px;">8/15</span></div>
-              <div class="day-header saturday">土<br><span style="font-size: 12px;">8/16</span></div>
+                <div class="time-column-header">時刻</div>
+                <div class="day-header sunday">日<br><span style="font-size: 12px;">8/10</span></div>
+                <div class="day-header">月<br><span style="font-size: 12px;">8/11</span></div>
+                <div class="day-header">火<br><span style="font-size: 12px;">8/12</span></div>
+                <div class="day-header">水<br><span style="font-size: 12px;">8/13</span></div>
+                <div class="day-header">木<br><span style="font-size: 12px;">8/14</span></div>
+                <div class="day-header">金<br><span style="font-size: 12px;">8/15</span></div>
+                <div class="day-header saturday">土<br><span style="font-size: 12px;">8/16</span></div>
             </div>
             
             <div class="schedule-body" id="scheduleBody">
-              <!-- 時間スロットは動的に生成される -->
+                <!-- 時間スロットは動的に生成される -->
             </div>
           </div>
         </div>
       </div>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 
-<!-- 設定モーダル -->
+    <!-- 設定モーダル -->
 <div id="settingsModal" class="modal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050; background-color: rgba(0, 0, 0, 0.5);">
   <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content">
+        <div class="modal-content">
       <div class="modal-header bg-light">
         <h5 class="modal-title" id="settingsModalLabel">
           <i class="fas fa-cog me-2"></i>予約可能日時を編集
         </h5>
         <button type="button" class="btn-close" onclick="closeSettingsModal()" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
+            </div>
+            <div class="modal-body">
         <div class="nav nav-tabs mb-3" id="settingsTabs" role="tablist">
           <button class="nav-link active tab-button" id="general-tab-btn" type="button" role="tab" onclick="switchTab('general')">
             一回限りの変更
@@ -157,38 +157,38 @@
           <button class="nav-link tab-button" id="recurring-tab-btn" type="button" role="tab" onclick="switchTab('recurring')">
             定期的なスケジュール
           </button>
-        </div>
+                </div>
 
-        <!-- 一回限りの変更タブ -->
-        <div id="general-tab" class="tab-content active">
+                <!-- 一回限りの変更タブ -->
+                <div id="general-tab" class="tab-content active">
           <div id="week-info" class="alert alert-info">
-            <strong>現在の週:</strong> <span id="current-week-display"></span>
+                        <strong>現在の週:</strong> <span id="current-week-display"></span>
             <br><small id="schedule-type-info" class="text-muted"></small>
-          </div>
-          
-          <div id="daySettings">
-            <!-- 曜日別設定が動的に生成される -->
-          </div>
-        </div>
-
-        <!-- 定期的なスケジュールタブ -->
-        <div id="recurring-tab" class="tab-content" style="display: none;">
-          <p class="text-muted mb-3">今後の週に適用するデフォルトスケジュールを設定</p>
-          
-          <div id="recurringDaySettings">
-            <!-- 定期的な設定が動的に生成される -->
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeSettingsModal()">キャンセル</button>
-        <button class="btn btn-success" onclick="saveSettings()">完了</button>
+                    </div>
+                    
+                    <div id="daySettings">
+                        <!-- 曜日別設定が動的に生成される -->
       </div>
     </div>
-  </div>
-</div>
 
-<!-- 予約作成モーダル -->
+                <!-- 定期的なスケジュールタブ -->
+        <div id="recurring-tab" class="tab-content" style="display: none;">
+          <p class="text-muted mb-3">今後の週に適用するデフォルトスケジュールを設定</p>
+                    
+                    <div id="recurringDaySettings">
+                        <!-- 定期的な設定が動的に生成される -->
+        </div>
+        </div>
+        </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeSettingsModal()">キャンセル</button>
+                <button class="btn btn-success" onclick="saveSettings()">完了</button>
+      </div>
+          </div>
+        </div>
+        </div>
+
+    <!-- 予約作成モーダル -->
 <div id="bookingModal" class="modal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050; background-color: rgba(0, 0, 0, 0.5);">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
@@ -197,15 +197,15 @@
           <i class="fas fa-calendar-plus me-2"></i>新規予約作成
         </h5>
         <button type="button" class="btn-close btn-close-white" onclick="closeBookingModal()" aria-label="Close"></button>
-      </div>
+            </div>
       <div class="modal-body">
-        <!-- 予約日時情報セクション -->
+                <!-- 予約日時情報セクション -->
         <div class="alert alert-info mb-3">
           <i class="fas fa-clock me-2"></i>
-          <span id="bookingDisplayDate"></span> <strong id="bookingDisplayTime"></strong>
-        </div>
+                        <span id="bookingDisplayDate"></span> <strong id="bookingDisplayTime"></strong>
+                </div>
 
-        <!-- 予約フォームセクション -->
+                <!-- 予約フォームセクション -->
         <div class="row">
           <div class="col-md-6">
             <div class="mb-3">
@@ -213,54 +213,54 @@
                 <i class="fas fa-graduation-cap me-1"></i>コース選択
               </label>
               <select id="bookingDuration" class="form-select" required>
-                <option value="">コースを選択してください</option>
-                <option value="40">40分コース</option>
-                <option value="60">60分コース</option>
-                <option value="80">80分コース</option>
-              </select>
-            </div>
-            
+                            <option value="">コースを選択してください</option>
+                            <option value="40">40分コース</option>
+                            <option value="60">60分コース</option>
+                            <option value="80">80分コース</option>
+                        </select>
+                    </div>
+                    
             <div class="mb-3">
               <label class="form-label">
                 <i class="fas fa-user me-1"></i>お客様名 <span class="text-danger">*</span>
               </label>
               <input type="text" id="customerName" class="form-control" required placeholder="山田太郎" autocomplete="off">
-              <div id="userSearchResults" class="user-search-results" style="display: none;"></div>
-            </div>
-            
+                        <div id="userSearchResults" class="user-search-results" style="display: none;"></div>
+                    </div>
+                    
             <div class="mb-3">
               <label class="form-label">
                 <i class="fas fa-phone me-1"></i>電話番号 <span class="text-danger">*</span>
               </label>
               <input type="tel" id="customerPhone" class="form-control" required placeholder="090-1234-5678">
-            </div>
-          </div>
-          
+                    </div>
+                    </div>
+                    
           <div class="col-md-6">
             <div class="mb-3">
               <label class="form-label">
                 <i class="fas fa-envelope me-1"></i>メールアドレス
               </label>
               <input type="email" id="customerEmail" class="form-control" placeholder="example@email.com">
-            </div>
-            
+                    </div>
+                    
             <div class="mb-3">
               <label class="form-label">
                 <i class="fas fa-tag me-1"></i>予約ステータス
               </label>
               <select id="bookingStatus" class="form-select">
-                <option value="tentative">仮予約</option>
-                <option value="confirmed">確定</option>
-              </select>
-            </div>
+                            <option value="tentative">仮予約</option>
+                            <option value="confirmed">確定</option>
+                        </select>
+                    </div>
             
             <div class="mb-3">
               <label class="form-label">
                 <i class="fas fa-sticky-note me-1"></i>備考・ご要望
               </label>
               <textarea id="bookingNote" class="form-control" rows="3" placeholder="ご要望やご質問があればご記入ください"></textarea>
+                </div>
             </div>
-          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -269,11 +269,11 @@
           <i class="fas fa-calendar-plus me-1"></i>予約作成
         </button>
       </div>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 
-<!-- 休憩作成モーダル -->
+    <!-- 休憩作成モーダル -->
 <div id="breakModal" class="modal" tabindex="-1" aria-labelledby="breakModalLabel" aria-hidden="true" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050; background-color: rgba(0, 0, 0, 0.5);">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content shadow-lg border-0">
@@ -282,7 +282,7 @@
           <i class="fas fa-coffee me-2"></i>休憩作成
         </h5>
         <button type="button" class="btn-close btn-close-white" onclick="closeBreakModal()" aria-label="Close"></button>
-      </div>
+            </div>
       <div class="modal-body p-4">
         <!-- 日時表示カード -->
         <div class="card bg-light border-0 mb-4">
@@ -297,8 +297,8 @@
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+                    </div>
+                </div>
 
         <div class="row g-4">
           <!-- 左カラム -->
@@ -312,13 +312,13 @@
               </div>
               <div class="card-body">
                 <select id="breakTitle" class="form-select form-select-lg border-0 bg-light" required onchange="handleBreakTitleChange()">
-                  <option value="">選択してください</option>
-                  <option value="休憩">☕ 休憩</option>
-                  <option value="準備時間">⚙️ 準備時間</option>
-                  <option value="業務">💼 業務</option>
-                  <option value="ミーティング">🤝 ミーティング</option>
-                  <option value="その他">📝 その他</option>
-                </select>
+                            <option value="">選択してください</option>
+                            <option value="休憩">☕ 休憩</option>
+                            <option value="準備時間">⚙️ 準備時間</option>
+                            <option value="業務">💼 業務</option>
+                            <option value="ミーティング">🤝 ミーティング</option>
+                            <option value="その他">📝 その他</option>
+                        </select>
                 
                 <div class="mt-3" id="customBreakTitle" style="display: none;">
                   <label class="form-label text-muted small">カスタムタイトル</label>
@@ -326,7 +326,7 @@
                 </div>
               </div>
             </div>
-          </div>
+                    </div>
 
           <!-- 右カラム -->
           <div class="col-md-6">
@@ -339,19 +339,19 @@
               </div>
               <div class="card-body">
                 <select id="breakDuration" class="form-select form-select-lg border-0 bg-light" required>
-                  <option value="">選択してください</option>
-                  <option value="15">15分</option>
-                  <option value="30">30分</option>
-                  <option value="45">45分</option>
-                  <option value="60">1時間</option>
-                  <option value="90">1時間30分</option>
-                  <option value="120">2時間</option>
-                  <option value="180">3時間</option>
-                </select>
+                            <option value="">選択してください</option>
+                            <option value="15">15分</option>
+                            <option value="30">30分</option>
+                            <option value="45">45分</option>
+                            <option value="60">1時間</option>
+                            <option value="90">1時間30分</option>
+                            <option value="120">2時間</option>
+                            <option value="180">3時間</option>
+                        </select>
               </div>
             </div>
           </div>
-        </div>
+                    </div>
 
         <!-- メモ -->
         <div class="mt-4">
@@ -360,11 +360,11 @@
               <h6 class="card-title mb-0 fw-bold text-dark">
                 <i class="fas fa-sticky-note text-info me-2"></i>メモ
               </h6>
-            </div>
+                    </div>
             <div class="card-body">
               <textarea id="breakNote" class="form-control border-0 bg-light" rows="3" placeholder="必要に応じてメモを入力してください"></textarea>
+                </div>
             </div>
-          </div>
         </div>
       </div>
       <div class="modal-footer bg-white border-0 px-4 py-3">
@@ -377,9 +377,9 @@
           </button>
         </div>
       </div>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 
     <!-- 休憩詳細モーダル -->
     <div id="breakDetailModal" class="break-detail-modal">
@@ -2428,13 +2428,13 @@
             const endStr = formatDateShort(endDate);
             
             document.getElementById('currentWeek').textContent = 
-                              `${currentWeekStart.getFullYear()}年 ${startStr} - ${endStr}`;
-              
+                `${currentWeekStart.getFullYear()}年 ${startStr} - ${endStr}`;
+            
               // 今日の日付を取得
               const today = new Date();
               const todayDateKey = formatDateKey(today);
               
-              // 日付ヘッダーを更新
+            // 日付ヘッダーを更新
             const headers = document.querySelectorAll('.day-header');
             for (let i = 0; i < headers.length; i++) {
                 const date = new Date(currentWeekStart);
@@ -2443,23 +2443,23 @@
                 const dayName = dayNames[date.getDay()];
                 const dateStr = `${date.getMonth() + 1}/${date.getDate()}`;
                 
-                                  // CSSクラスをリセット
+                // CSSクラスをリセット
                   headers[i].classList.remove('sunday', 'saturday', 'today');
-                  
-                  // 正しいCSSクラスを追加
+                
+                // 正しいCSSクラスを追加
                 if (date.getDay() === 0) {
                     headers[i].classList.add('sunday');
                 } else                   if (date.getDay() === 6) {
-                      headers[i].classList.add('saturday');
-                  }
+                    headers[i].classList.add('saturday');
+                }
                   
                   // 今日の日付かどうかをチェック
                   const currentDateKey = formatDateKey(date);
                   if (currentDateKey === todayDateKey) {
                       headers[i].classList.add('today');
                   }
-                  
-                  headers[i].innerHTML = `${dayName}<br><span style="font-size: 12px;">${dateStr}</span>`;
+                
+                headers[i].innerHTML = `${dayName}<br><span style="font-size: 12px;">${dateStr}</span>`;
             }
         }
 
@@ -2543,7 +2543,7 @@
                         cell.addEventListener('dragenter', handleDragEnter);
                         cell.addEventListener('dragleave', handleDragLeave);
                         
-                                                const scheduleDate = new Date(currentWeekStart);
+                        const scheduleDate = new Date(currentWeekStart);
                         scheduleDate.setDate(scheduleDate.getDate() + day);
                         const dateKey = formatDateKey(scheduleDate);
                         
@@ -2554,7 +2554,7 @@
                             cell.classList.add('today');
                         }
                         
-                        // 営業時間チェック
+                                                // 営業時間チェック
                         if (isBusinessHour(day, timeStr)) {
                             // 予約チェック
                             const reservation = findReservation(dateKey, timeStr);
@@ -3063,7 +3063,7 @@
                 
                 // 設定を描画
                 console.log('🔧 About to render day settings...');
-                renderDaySettings();
+            renderDaySettings();
                 console.log('🔧 Day settings rendered');
                 
                 // 外側クリックで閉じる機能を設定（少し遅延）
@@ -3173,13 +3173,13 @@
             console.log('🔧 Switching to tab:', tabName);
             
             try {
-                // タブボタンの状態更新
+            // タブボタンの状態更新
                 document.querySelectorAll('.tab-button').forEach(btn => {
                     btn.classList.remove('active');
                 });
-                document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
-                
-                // タブコンテンツの表示切り替え
+            document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            
+            // タブコンテンツの表示切り替え
                 document.querySelectorAll('.tab-content').forEach(content => {
                     content.style.display = 'none';
                     content.classList.remove('active');
@@ -3190,9 +3190,9 @@
                     targetTab.style.display = 'block';
                     targetTab.classList.add('active');
                 }
-                
-                if (tabName === 'recurring') {
-                    renderRecurringDaySettings();
+            
+            if (tabName === 'recurring') {
+                renderRecurringDaySettings();
                 }
                 
                 console.log('✅ Tab switched successfully to:', tabName);
@@ -3222,12 +3222,12 @@
                 console.log('🔧 renderDaySettings - defaultSchedule:', defaultSchedule);
                 console.log('🔧 renderDaySettings - currentWeekStart:', currentWeekStart);
                 
-                // 週情報を更新
+            // 週情報を更新
                 console.log('🔧 About to update week info...');
-                updateWeekInfo();
+            updateWeekInfo();
                 console.log('🔧 Week info updated');
-                
-                const container = document.getElementById('daySettings');
+            
+            const container = document.getElementById('daySettings');
                 if (!container) {
                     console.error('❌ Day settings container not found');
                     return;
@@ -3235,16 +3235,16 @@
                 
                 console.log('🔧 Day settings container found:', container);
                 console.log('🔧 About to clear container...');
-                container.innerHTML = '';
+            container.innerHTML = '';
                 console.log('🔧 Container cleared');
-                
-                for (let day = 0; day < 7; day++) {
+            
+            for (let day = 0; day < 7; day++) {
                     console.log(`🔧 Creating day setting for day ${day}...`);
                     try {
-                        const dayDiv = createDaySettingDiv(day, false);
+                const dayDiv = createDaySettingDiv(day, false);
                         if (dayDiv) {
                             console.log(`🔧 Day ${day} div created successfully`);
-                            container.appendChild(dayDiv);
+                container.appendChild(dayDiv);
                             console.log(`🔧 Day ${day} div appended to container`);
                         } else {
                             console.warn(`⚠️ Day ${day} div creation returned null`);
@@ -3329,28 +3329,28 @@
             }
             
             try {
-                const schedule = isRecurring ? defaultSchedule[day] : getCurrentWeekSchedule()[day];
-                const dayDiv = document.createElement('div');
-                dayDiv.className = 'day-setting';
-                
-                const headerClass = day === 0 ? 'sunday' : day === 6 ? 'saturday' : '';
-                
-                dayDiv.innerHTML = `
-                    <div class="day-setting-header ${headerClass}">
-                        <span>${dayNamesLong[day]}</span>
-                        <div class="day-toggle ${schedule.enabled ? 'active' : ''}" onclick="toggleDay(${day}, ${isRecurring})"></div>
-                    </div>
-                    <div class="time-slots-container" style="display: ${schedule.enabled ? 'block' : 'none'};">
-                        <div id="timeSlots-${day}-${isRecurring}" class="time-slots">
-                            ${renderTimeSlots(day, schedule.times, isRecurring)}
-                        </div>
-                        <button class="add-time-btn" onclick="addTimeSlot(${day}, ${isRecurring})">
-                            + 時間帯を追加
-                        </button>
-                    </div>
-                `;
-                
-                return dayDiv;
+            const schedule = isRecurring ? defaultSchedule[day] : getCurrentWeekSchedule()[day];
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'day-setting';
+            
+            const headerClass = day === 0 ? 'sunday' : day === 6 ? 'saturday' : '';
+            
+            dayDiv.innerHTML = `
+                <div class="day-setting-header ${headerClass}">
+                    <span>${dayNamesLong[day]}</span>
+                    <div class="day-toggle ${schedule.enabled ? 'active' : ''}" onclick="toggleDay(${day}, ${isRecurring})"></div>
+        </div>
+                <div class="time-slots-container" style="display: ${schedule.enabled ? 'block' : 'none'};">
+                    <div id="timeSlots-${day}-${isRecurring}" class="time-slots">
+                        ${renderTimeSlots(day, schedule.times, isRecurring)}
+        </div>
+                    <button class="add-time-btn" onclick="addTimeSlot(${day}, ${isRecurring})">
+                        + 時間帯を追加
+          </button>
+        </div>
+  `;
+            
+            return dayDiv;
             } catch (error) {
                 console.error(`❌ Error creating day setting div for day ${day}:`, error);
                 return createFallbackDaySettingDiv(day, isRecurring);
@@ -3631,7 +3631,7 @@
             }
         }
 
-                // 設定を保存
+        // 設定を保存
         function saveSettings() {
             // 現在アクティブなタブを確認
             const activeTab = document.querySelector('.tab-button.active');
@@ -3648,9 +3648,9 @@
             
             // バックエンドに保存
             fetch('/admin/reservations/save_shift_settings', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
                     'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
                 },
                 body: JSON.stringify({
@@ -3660,8 +3660,8 @@
                 })
             })
             .then(response => response.json())
-            .then(data => {
-                if (data.success) {
+  .then(data => {
+    if (data.success) {
                     console.log('✅ Shift settings saved successfully');
                     
                     // 表示を更新
@@ -3673,12 +3673,12 @@
                         ? '定期的なスケジュールが保存されました。この設定は全ての週に適用されます。'
                         : '設定が保存されました。この設定は現在の週のみに適用されます。';
                     showMessage(message, 'success');
-                } else {
+    } else {
                     console.error('❌ Failed to save shift settings:', data.message);
                     showMessage(`シフト設定の保存に失敗しました: ${data.message}`, 'error');
-                }
-            })
-            .catch(error => {
+    }
+  })
+  .catch(error => {
                 console.error('❌ Error saving shift settings:', error);
                 showMessage('シフト設定の保存中にエラーが発生しました', 'error');
             });
@@ -4340,27 +4340,27 @@ function showMessage(message, type = 'info') {
             console.log('🔧 Break modal current display:', modal.style.display);
             
             try {
-                // 日付と時間の表示用フォーマット
-                const displayDate = `${date.getFullYear()}年${String(date.getMonth() + 1)}月${String(date.getDate())}日`;
-                const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
-                const dayName = dayNames[date.getDay()];
-                
-                document.getElementById('breakDisplayDate').textContent = `${displayDate}(${dayName})`;
-                document.getElementById('breakDisplayTime').textContent = time;
-                
-                // 内部的に日付と時間を保存
-                window.selectedBreakDate = date;
-                window.selectedBreakTime = time;
-                
-                // フィールドをリセット
-                document.getElementById('breakDuration').value = '';
-                document.getElementById('breakTitle').value = '';
-                document.getElementById('customBreakTitleInput').value = '';
-                document.getElementById('customBreakTitle').style.display = 'none';
-                document.getElementById('breakNote').value = '';
-                
+            // 日付と時間の表示用フォーマット
+            const displayDate = `${date.getFullYear()}年${String(date.getMonth() + 1)}月${String(date.getDate())}日`;
+            const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+            const dayName = dayNames[date.getDay()];
+            
+            document.getElementById('breakDisplayDate').textContent = `${displayDate}(${dayName})`;
+            document.getElementById('breakDisplayTime').textContent = time;
+            
+            // 内部的に日付と時間を保存
+            window.selectedBreakDate = date;
+            window.selectedBreakTime = time;
+            
+            // フィールドをリセット
+            document.getElementById('breakDuration').value = '';
+            document.getElementById('breakTitle').value = '';
+            document.getElementById('customBreakTitleInput').value = '';
+            document.getElementById('customBreakTitle').style.display = 'none';
+            document.getElementById('breakNote').value = '';
+            
                 // モーダルを表示 - より確実な方法
-                modal.style.display = 'block';
+            modal.style.display = 'block';
                 modal.style.visibility = 'visible';
                 modal.style.opacity = '1';
                 modal.style.transition = 'none'; // トランジションを無効化
@@ -4376,7 +4376,7 @@ function showMessage(message, type = 'info') {
                 // 外側クリックで閉じる機能を設定（少し遅延）
                 setTimeout(() => {
                     console.log('🔧 Setting up break modal outside click handler...');
-                    const freshModal = document.getElementById('breakModal');
+            const freshModal = document.getElementById('breakModal');
                     if (freshModal) {
                         console.log('🔧 Fresh break modal found, setting up click handler');
                         
@@ -4389,10 +4389,10 @@ function showMessage(message, type = 'info') {
                         // 新しいイベントリスナーを作成
                         const newHandler = function(event) {
                             console.log('🔧 Break modal clicked:', event.target);
-                            if (event.target === freshModal) {
+                if (event.target === freshModal) {
                                 console.log('✅ Closing break modal via click outside');
-                                closeBreakModal();
-                            }
+                    closeBreakModal();
+                }
                         };
                         
                         // イベントリスナーを追加
@@ -6007,26 +6007,26 @@ function showMessage(message, type = 'info') {
             console.log('🔧 Booking modal current display:', modal.style.display);
             
             try {
-                // 日付と時間の表示用フォーマット
-                const displayDate = `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, '0')}月${String(date.getDate()).padStart(2, '0')}日`;
-                const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
-                const dayName = dayNames[date.getDay()];
-                
-                document.getElementById('bookingDisplayDate').textContent = `${displayDate}(${dayName})`;
-                document.getElementById('bookingDisplayTime').textContent = time;
-                
-                // 内部的に日付と時間を保存
-                window.selectedBookingDate = date;
-                window.selectedBookingTime = time;
-                
-                // フィールドをリセット
-                document.getElementById('bookingDuration').value = '';
-                document.getElementById('customerName').value = '';
-                document.getElementById('customerPhone').value = '';
-                document.getElementById('customerEmail').value = '';
-                document.getElementById('bookingNote').value = '';
-                document.getElementById('bookingStatus').value = 'tentative';
-                
+            // 日付と時間の表示用フォーマット
+            const displayDate = `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, '0')}月${String(date.getDate()).padStart(2, '0')}日`;
+            const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+            const dayName = dayNames[date.getDay()];
+            
+            document.getElementById('bookingDisplayDate').textContent = `${displayDate}(${dayName})`;
+            document.getElementById('bookingDisplayTime').textContent = time;
+            
+            // 内部的に日付と時間を保存
+            window.selectedBookingDate = date;
+            window.selectedBookingTime = time;
+            
+            // フィールドをリセット
+            document.getElementById('bookingDuration').value = '';
+            document.getElementById('customerName').value = '';
+            document.getElementById('customerPhone').value = '';
+            document.getElementById('customerEmail').value = '';
+            document.getElementById('bookingNote').value = '';
+            document.getElementById('bookingStatus').value = 'tentative';
+            
                 // モーダルを表示 - より確実な方法
                 modal.style.display = 'block';
                 modal.style.visibility = 'visible';
@@ -6838,7 +6838,7 @@ function showMessage(message, type = 'info') {
                 console.error('❌ Future reservations content element not found');
                 return;
             }
-            
+
             // セクションタイトルを更新
             if (futureReservationsTitle) {
                 futureReservationsTitle.textContent = '📅 本日以降の予約';

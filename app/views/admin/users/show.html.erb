@@ -904,7 +904,10 @@
     
     if (confirmCheck) confirmCheck.checked = false;
     if (confirmationText) confirmationText.value = '';
-    if (confirmDeleteBtn) confirmDeleteBtn.disabled = true;
+    if (confirmDeleteBtn) {
+      confirmDeleteBtn.disabled = true;
+      confirmDeleteBtn.innerHTML = '<i class="fas fa-trash me-1"></i>削除を実行';
+    }
     
     // モーダルを表示（直接スタイルを設定）
     modal.style.display = 'block';
@@ -959,6 +962,14 @@
       const isChecked = confirmCheck.checked;
       const textMatches = confirmationText.value.trim() === currentUserName;
       
+      console.log('🔍 Validation check:', {
+        currentUserName,
+        isChecked,
+        inputText: confirmationText.value.trim(),
+        textMatches,
+        shouldEnable: isChecked && textMatches
+      });
+      
       confirmDeleteBtn.disabled = !(isChecked && textMatches);
       
       // 入力テキストの色を変更
@@ -972,8 +983,14 @@
     }
     
     // バリデーション実行
-    confirmCheck.addEventListener('change', validateForm);
-    confirmationText.addEventListener('input', validateForm);
+    confirmCheck.addEventListener('change', function() {
+      console.log('🔍 Checkbox changed:', this.checked);
+      validateForm();
+    });
+    confirmationText.addEventListener('input', function() {
+      console.log('🔍 Text input changed:', this.value);
+      validateForm();
+    });
     
     // 最終削除実行
     confirmDeleteBtn.addEventListener('click', function() {
