@@ -860,6 +860,21 @@
     document.body.classList.remove('modal-open');
     document.body.style.overflow = '';
     
+    // フォームをリセット
+    const confirmCheck = document.getElementById('confirmDeletionCheck');
+    const confirmationText = document.getElementById('confirmationText');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    
+    if (confirmCheck) confirmCheck.checked = false;
+    if (confirmationText) {
+      confirmationText.value = '';
+      confirmationText.className = 'form-control';
+    }
+    if (confirmDeleteBtn) {
+      confirmDeleteBtn.disabled = true;
+      confirmDeleteBtn.innerHTML = '<i class="fas fa-trash me-1"></i>削除を実行';
+    }
+    
     console.log('🔍 Delete modal hidden manually');
   }
 
@@ -925,11 +940,53 @@
     document.body.classList.add('modal-open');
     document.body.style.overflow = 'hidden';
     
+    // イベントリスナーを再設定
+    setupDeleteModalEventListeners();
+    
     console.log('🔍 Delete modal shown manually');
   }
 
   document.addEventListener('DOMContentLoaded', function() {
     console.log('🔍 DOM Content Loaded - Initializing delete modal');
+    
+    // 初期化時にイベントリスナーを設定
+    setupDeleteModalEventListeners();
+    
+    const modal = document.getElementById('deleteUserModal');
+    
+    // 背景クリックでモーダルを閉じる（より確実な処理）
+    modal.addEventListener('click', function(e) {
+      console.log('🔍 Modal clicked:', e.target, e.currentTarget);
+      if (e.target === modal) {
+        console.log('🔍 Background clicked, hiding modal');
+        hideDeleteModal();
+      }
+    });
+    
+    // モーダルダイアログの外側クリックでも閉じる
+    const modalDialog = modal.querySelector('.modal-dialog');
+    if (modalDialog) {
+      modalDialog.addEventListener('click', function(e) {
+        if (e.target === modalDialog) {
+          console.log('🔍 Modal dialog background clicked, hiding modal');
+          hideDeleteModal();
+        }
+      });
+    }
+    
+    // ESCキーでモーダルを閉じる
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && modal.classList.contains('show')) {
+        hideDeleteModal();
+      }
+    });
+    
+    console.log('🔍 Delete modal initialization completed');
+  });
+    
+  // イベントリスナーを設定する関数
+  function setupDeleteModalEventListeners() {
+    console.log('🔍 Setting up delete modal event listeners');
     
     const deleteBtn = document.querySelector('button[onclick="showDeleteModal()"]');
     const modal = document.getElementById('deleteUserModal');
@@ -950,11 +1007,10 @@
       return;
     }
     
-    // 削除ボタンクリック（既にonclickで設定済みなので削除）
-    // deleteBtn.addEventListener('click', function() {
-    //   console.log('🔍 Delete button clicked');
-    //   showDeleteModal();
-    // });
+    // 既存のイベントリスナーを削除（重複を防ぐため）
+    confirmCheck.removeEventListener('change', validateForm);
+    confirmationText.removeEventListener('input', validateForm);
+    confirmDeleteBtn.removeEventListener('click', executeDelete);
     
     // バリデーション関数
     function validateForm() {
@@ -982,18 +1038,8 @@
       }
     }
     
-    // バリデーション実行
-    confirmCheck.addEventListener('change', function() {
-      console.log('🔍 Checkbox changed:', this.checked);
-      validateForm();
-    });
-    confirmationText.addEventListener('input', function() {
-      console.log('🔍 Text input changed:', this.value);
-      validateForm();
-    });
-    
-    // 最終削除実行
-    confirmDeleteBtn.addEventListener('click', function() {
+    // 削除実行関数
+    function executeDelete() {
       if (this.disabled) return;
       
       console.log('🔍 Delete execution started');
@@ -1046,37 +1092,23 @@
         this.disabled = false;
         this.innerHTML = '<i class="fas fa-trash me-1"></i>削除を実行';
       });
-    });
-    
-    // 背景クリックでモーダルを閉じる（より確実な処理）
-    modal.addEventListener('click', function(e) {
-      console.log('🔍 Modal clicked:', e.target, e.currentTarget);
-      if (e.target === modal) {
-        console.log('🔍 Background clicked, hiding modal');
-        hideDeleteModal();
-      }
-    });
-    
-    // モーダルダイアログの外側クリックでも閉じる
-    const modalDialog = modal.querySelector('.modal-dialog');
-    if (modalDialog) {
-      modalDialog.addEventListener('click', function(e) {
-        if (e.target === modalDialog) {
-          console.log('🔍 Modal dialog background clicked, hiding modal');
-          hideDeleteModal();
-        }
-      });
     }
     
-    // ESCキーでモーダルを閉じる
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape' && modal.classList.contains('show')) {
-        hideDeleteModal();
-      }
+    // バリデーション実行
+    confirmCheck.addEventListener('change', function() {
+      console.log('🔍 Checkbox changed:', this.checked);
+      validateForm();
+    });
+    confirmationText.addEventListener('input', function() {
+      console.log('🔍 Text input changed:', this.value);
+      validateForm();
     });
     
-    console.log('🔍 Delete modal initialization completed');
-  });
+    // 最終削除実行
+    confirmDeleteBtn.addEventListener('click', executeDelete);
+    
+    console.log('🔍 Delete modal event listeners setup completed');
+  }
   </script>
   
   <!-- 管理者メモと利用状況サマリー -->
