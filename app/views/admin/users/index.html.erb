@@ -559,7 +559,19 @@ function syncLineUsers() {
       </small>
       <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
-    document.querySelector('.container-lg').insertBefore(alertDiv, document.querySelector('.card'));
+    
+    // メッセージを表示する場所を安全に取得
+    const container = document.querySelector('.container-lg');
+    const firstCard = document.querySelector('.card');
+    
+    if (container && firstCard) {
+      container.insertBefore(alertDiv, firstCard);
+    } else if (container) {
+      container.appendChild(alertDiv);
+    } else {
+      // フォールバック: bodyの最初に追加
+      document.body.insertBefore(alertDiv, document.body.firstChild);
+    }
     
     // ページをリロード（新しいユーザーを表示するため）
     setTimeout(() => {
@@ -577,7 +589,19 @@ function syncLineUsers() {
       LINEユーザー同期エラー: ${error.message}
       <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
-    document.querySelector('.container-lg').insertBefore(alertDiv, document.querySelector('.card'));
+    
+    // メッセージを表示する場所を安全に取得
+    const container = document.querySelector('.container-lg');
+    const firstCard = document.querySelector('.card');
+    
+    if (container && firstCard) {
+      container.insertBefore(alertDiv, firstCard);
+    } else if (container) {
+      container.appendChild(alertDiv);
+    } else {
+      // フォールバック: bodyの最初に追加
+      document.body.insertBefore(alertDiv, document.body.firstChild);
+    }
     
     // ボタンを元に戻す
     button.disabled = false;

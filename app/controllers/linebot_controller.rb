@@ -54,9 +54,18 @@ class LinebotController < ApplicationController
         return []
       end
       
-      # LINEからフォロワーリストを取得
+      # LINEからフォロワーリストを取得（Messaging APIのエンドポイントを直接呼び出し）
       begin
-        response = client.get_followers
+        # LINE Messaging APIのフォロワーリスト取得エンドポイント
+        uri = URI('https://api.line.me/v2/bot/followers/ids')
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = true
+        
+        request = Net::HTTP::Get.new(uri)
+        request['Authorization'] = "Bearer #{ENV['LINE_CHANNEL_TOKEN']}"
+        request['Content-Type'] = 'application/json'
+        
+        response = http.request(request)
         Rails.logger.info "LINE APIレスポンス: #{response.inspect}"
         
         # レスポンスのステータスコードを確認
