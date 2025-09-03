@@ -230,13 +230,13 @@ class Admin::UsersController < ApplicationController
       
       # データベーストランザクションで結合を実行
       ActiveRecord::Base.transaction do
+        # チケット使用履歴を結合先ユーザーに移動（最初に実行）
+        source_user.ticket_usages.update_all(user_id: target_user.id)
+        Rails.logger.info "✅ Moved #{source_user.ticket_usages.count} ticket usages"
+        
         # チケットを結合先ユーザーに移動
         source_user.tickets.update_all(user_id: target_user.id)
         Rails.logger.info "✅ Moved #{source_user.tickets.count} tickets"
-        
-        # チケット使用履歴を結合先ユーザーに移動
-        source_user.ticket_usages.update_all(user_id: target_user.id)
-        Rails.logger.info "✅ Moved #{source_user.ticket_usages.count} ticket usages"
         
         # 予約を結合先ユーザーに移動
         source_user.reservations.update_all(user_id: target_user.id)
@@ -253,9 +253,15 @@ class Admin::UsersController < ApplicationController
         source_user.notification_logs.update_all(user_id: target_user.id)
         Rails.logger.info "✅ Moved #{source_user.notification_logs.count} notification logs"
         
-        # 結合元ユーザーを削除
-        source_user.destroy!
-        Rails.logger.info "✅ Deleted source user"
+        # 結合元ユーザーを非アクティブにする（削除の代わり）
+        source_user.update!(
+          name: "#{source_user.name} (結合済み)",
+          email: nil,
+          phone_number: nil,
+          line_user_id: nil,
+          display_name: nil
+        )
+        Rails.logger.info "✅ Deactivated source user"
       end
       
       Rails.logger.info "✅ User merge completed successfully"
