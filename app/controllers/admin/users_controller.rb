@@ -208,8 +208,115 @@ class Admin::UsersController < ApplicationController
     end
   end
 
-  def update_line_profile
-    if @user.line_user_id.present? && @user.line_user_id != ''
+  # ユーザー結合機能
+  def merge_users
+    begin
+      Rails.logger.info "🔄 Starting user merge process..."
+      
+      source_user_id = params[:source_user_id]
+      target_user_id = params[:target_user_id]
+      
+      unless source_user_id && target_user_id
+        error_msg = "結合元と結合先のユーザーIDが必要です"
+        Rails.logger.error error_msg
+        render json: { success: false, error: error_msg }, status: :unprocessable_entity
+        return
+      end
+      
+      source_user = User.find(source_user_id)
+      target_user = User.find(target_user_id)
+      
+      Rails.logger.info "📊 Merging users: #{source_user.id} (#{source_user.name}) -> #{target_user.id} (#{target_user.name})"
+      
+      # データベーストランザクションで結合を実行
+      ActiveRecord::Base.transaction do
+        # チケットを結合先ユーザーに移動
+        source_user.tickets.update_all(user_id: target_user.id)
+        Rails.logger.info "✅ Moved #{source_user.tickets.count} tickets"
+        
+        # チケット使用履歴を結合先ユーザーに移動
+        source_user.ticket_usages.update_all(user_id: target_user.id)
+        Rails.logger.info "✅ Moved #{source_user.ticket_usages.count} ticket usages"
+        
+        # 予約を結合先ユーザーに移動
+        source_user.reservations.update_all(user_id: target_user.id)
+        Rails.logger.info "✅ Moved #{source_user.reservations.count} reservations"
+        
+        # 通知設定を結合先ユーザーに移動（既存の設定がある場合は上書き）
+        if source_user.notification_preference && target_user.notification_preference
+          source_user.notification_preference.destroy
+        elsif source_user.notification_preference
+          source_user.notification_preference.update!(user_id: target_user.id)
+        end
+        
+        # 通知ログを結合先ユーザーに移動
+        source_user.notification_logs.update_all(user_id: target_user.id)
+        Rails.logger.info "✅ Moved #{source_user.notification_logs.count} notification logs"
+        
+        # 結合元ユーザーを削除
+        source_user.destroy!
+        Rails.logger.info "✅ Deleted source user"
+      end
+      
+      Rails.logger.info "✅ User merge completed successfully"
+      
+      render json: {
+        success: true,
+        message: "ユーザーの結合が完了しました",
+        target_user_id: target_user.id,
+        target_user_name: target_user.name
+      }
+      
+    rescue ActiveRecord::RecordNotFound => e
+      error_msg = "指定されたユーザーが見つかりません: #{e.message}"
+      Rails.logger.error error_msg
+      render json: { success: false, error: error_msg }, status: :not_found
+      
+    rescue => e
+      error_msg = "ユーザー結合中にエラーが発生しました: #{e.message}"
+      Rails.logger.error "❌ User merge error: #{e.class}: #{e.message}"
+      Rails.logger.error "Backtrace: #{e.backtrace.first(5).join("\n")}"
+      
+      render json: { success: false, error: error_msg }, status: :internal_server_error
+    end
+  end
+
+  # ユーザー検索API（結合用）
+  def search_for_merge
+    query = params[:query].to_s.strip
+    
+    if query.length < 2
+      render json: { users: [] }
+      return
+    end
+    
+    # 現在のユーザーを除外して検索
+    current_user_id = params[:current_user_id]
+    
+    users = User.where(admin: false)
+      .where.not(id: current_user_id)
+      .where("LOWER(name) LIKE ? OR LOWER(phone_number) LIKE ? OR LOWER(email) LIKE ? OR LOWER(display_name) LIKE ?", 
+             "%#{query.downcase}%", "%#{query.downcase}%", "%#{query.downcase}%", "%#{query.downcase}%")
+      .order(:name)
+      .limit(10)
+    
+    user_data = users.map do |user|
+      {
+        id: user.id,
+        name: user.name,
+        display_name: user.display_name,
+        phone_number: user.phone_number,
+        email: user.email,
+        line_user_id: user.line_user_id,
+        active_tickets: user.tickets.where("remaining_count > 0").count,
+        total_usages: user.ticket_usages.count,
+        created_at: user.created_at.strftime('%Y-%m-%d')
+      }
+    end
+    
+    render json: { users: user_data }
+  end
+      def update_line_profile
       begin
         Rails.logger.info "LINE情報更新開始: ユーザーID #{@user.id}, LINE ID #{@user.line_user_id}"
         

@@ -686,6 +686,11 @@
             <%= link_to edit_admin_user_path(@user), class: "btn btn-light btn-sm" do %>
               <i class="fas fa-edit me-1"></i>編集
             <% end %>
+            <button type="button" class="btn btn-warning btn-sm" onclick="showMergeModal()" 
+                    data-user-id="<%= @user.id %>"
+                    data-user-name="<%= @user.display_name_or_name.presence || @user.line_user_id || "ID:#{@user.id}" %>">
+              <i class="fas fa-link me-1"></i>ユーザー結合
+            </button>
             <button type="button" class="btn btn-danger btn-sm" onclick="showDeleteModal()" 
                     data-user-id="<%= @user.id %>"
                     data-user-name="<%= @user.display_name_or_name.presence || @user.line_user_id || "ID:#{@user.id}" %>"
@@ -827,6 +832,94 @@
                 <i class="fas fa-trash me-1"></i>削除を実行
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ユーザー結合モーダル -->
+  <div class="modal fade" id="mergeUserModal" tabindex="-1" aria-labelledby="mergeUserModalLabel" aria-hidden="true" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050; background-color: rgba(0, 0, 0, 0.5);" onclick="if(event.target === this) hideMergeModal();">
+    <div class="modal-dialog modal-lg" style="position: relative; width: auto; margin: 0.5rem; pointer-events: none; max-width: 800px; width: 90%; margin: 1.75rem auto;">
+      <div class="modal-content" style="position: relative; display: flex; flex-direction: column; width: 100%; pointer-events: auto; background-color: #fff; background-clip: padding-box; border: 1px solid rgba(0, 0, 0, 0.2); border-radius: 0.3rem; outline: 0;">
+        <div class="modal-header bg-warning text-dark">
+          <h5 class="modal-title" id="mergeUserModalLabel">
+            <i class="fas fa-link me-2"></i>ユーザー結合
+          </h5>
+          <button type="button" class="btn-close" onclick="hideMergeModal()" aria-label="閉じる"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-info">
+            <h6><i class="fas fa-info-circle me-2"></i>ユーザー結合について</h6>
+            <p class="mb-0">このユーザーのデータを他のユーザーに統合します。結合後、このユーザーは削除され、すべてのデータが結合先ユーザーに移動されます。</p>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="card mb-3">
+                <div class="card-header bg-light">
+                  <h6 class="mb-0">結合元ユーザー（現在のユーザー）</h6>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-sm-4"><strong>氏名:</strong></div>
+                    <div class="col-sm-8" id="mergeSourceUserName"></div>
+                  </div>
+                  <div class="row">
+                    <div class="col-sm-4"><strong>会員番号:</strong></div>
+                    <div class="col-sm-8" id="mergeSourceUserId"></div>
+                  </div>
+                  <div class="row">
+                    <div class="col-sm-4"><strong>アクティブチケット:</strong></div>
+                    <div class="col-sm-8" id="mergeSourceActiveTickets"></div>
+                  </div>
+                  <div class="row">
+                    <div class="col-sm-4"><strong>使用履歴:</strong></div>
+                    <div class="col-sm-8" id="mergeSourceTotalUsages"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                  <h6 class="mb-0">結合先ユーザー（統合先）</h6>
+                </div>
+                <div class="card-body">
+                  <div class="mb-3">
+                    <label for="mergeSearchInput" class="form-label">ユーザーを検索:</label>
+                    <div class="input-group">
+                      <input type="text" class="form-control" id="mergeSearchInput" placeholder="名前、電話番号、メールアドレスで検索">
+                      <button class="btn btn-outline-secondary" type="button" onclick="searchMergeUsers()">
+                        <i class="fas fa-search"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div id="mergeSearchResults" class="list-group" style="max-height: 200px; overflow-y: auto;">
+                    <div class="text-center text-muted">
+                      <i class="fas fa-search"></i> 検索してください
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="alert alert-warning">
+            <h6><i class="fas fa-exclamation-triangle me-2"></i>注意事項</h6>
+            <ul class="mb-0">
+              <li>この操作は取り消せません</li>
+              <li>結合元ユーザーのすべてのデータが結合先ユーザーに移動されます</li>
+              <li>結合元ユーザーは削除されます</li>
+              <li>重複するデータがある場合は、結合先ユーザーのデータが優先されます</li>
+            </ul>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="hideMergeModal()">キャンセル</button>
+            <button type="button" class="btn btn-warning" id="confirmMergeBtn" disabled>
+              <i class="fas fa-link me-1"></i>ユーザーを結合
+            </button>
           </div>
         </div>
       </div>
@@ -982,6 +1075,299 @@
     });
     
     console.log('🔍 Delete modal initialization completed');
+  });
+  
+  // ユーザー結合モーダル関連の関数
+  // グローバル変数
+  let selectedTargetUser = null;
+
+  // グローバル関数として定義
+  function hideMergeModal() {
+    console.log('🔍 Hiding merge modal manually');
+    
+    const modal = document.getElementById('mergeUserModal');
+    if (!modal) {
+      console.error('❌ Merge modal element not found');
+      return;
+    }
+    
+    // モーダルを非表示（スタイルをリセット）
+    modal.style.display = 'none';
+    modal.style.position = '';
+    modal.style.top = '';
+    modal.style.left = '';
+    modal.style.width = '';
+    modal.style.height = '';
+    modal.style.zIndex = '';
+    modal.style.backgroundColor = '';
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+    
+    // bodyからmodal-openクラスを削除
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    
+    // フォームをリセット
+    const searchInput = document.getElementById('mergeSearchInput');
+    const searchResults = document.getElementById('mergeSearchResults');
+    const confirmMergeBtn = document.getElementById('confirmMergeBtn');
+    
+    if (searchInput) searchInput.value = '';
+    if (searchResults) searchResults.innerHTML = '<div class="text-center text-muted"><i class="fas fa-search"></i> 検索してください</div>';
+    if (confirmMergeBtn) confirmMergeBtn.disabled = true;
+    
+    selectedTargetUser = null;
+    
+    console.log('🔍 Merge modal hidden manually');
+  }
+
+  // グローバル関数として定義
+  function showMergeModal() {
+    console.log('🔍 Showing merge modal manually');
+    
+    const modal = document.getElementById('mergeUserModal');
+    const mergeBtn = document.querySelector('button[onclick="showMergeModal()"]');
+    
+    if (!modal || !mergeBtn) {
+      console.error('❌ Required elements not found');
+      return;
+    }
+    
+    // ユーザー情報を取得
+    const currentUserId = mergeBtn.getAttribute('data-user-id');
+    const currentUserName = mergeBtn.getAttribute('data-user-name');
+    
+    console.log('ユーザー情報:', { currentUserId, currentUserName });
+    
+    // モーダルにデータを設定
+    const sourceUserNameElement = document.getElementById('mergeSourceUserName');
+    const sourceUserIdElement = document.getElementById('mergeSourceUserId');
+    const sourceActiveTicketsElement = document.getElementById('mergeSourceActiveTickets');
+    const sourceTotalUsagesElement = document.getElementById('mergeSourceTotalUsages');
+    
+    if (sourceUserNameElement) sourceUserNameElement.textContent = currentUserName;
+    if (sourceUserIdElement) sourceUserIdElement.textContent = currentUserId;
+    if (sourceActiveTicketsElement) sourceActiveTicketsElement.textContent = '<%= @active_tickets.count %>';
+    if (sourceTotalUsagesElement) sourceTotalUsagesElement.textContent = '<%= @total_usages %>';
+    
+    // フォームをリセット
+    const searchInput = document.getElementById('mergeSearchInput');
+    const searchResults = document.getElementById('mergeSearchResults');
+    const confirmMergeBtn = document.getElementById('confirmMergeBtn');
+    
+    if (searchInput) searchInput.value = '';
+    if (searchResults) searchResults.innerHTML = '<div class="text-center text-muted"><i class="fas fa-search"></i> 検索してください</div>';
+    if (confirmMergeBtn) confirmMergeBtn.disabled = true;
+    
+    selectedTargetUser = null;
+    
+    // モーダルを表示（直接スタイルを設定）
+    modal.style.display = 'block';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.zIndex = '1050';
+    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+    
+    // bodyにmodal-openクラスを追加
+    document.body.classList.add('modal-open');
+    document.body.style.overflow = 'hidden';
+    
+    console.log('🔍 Merge modal shown manually');
+  }
+
+  // ユーザー検索関数
+  function searchMergeUsers() {
+    const searchInput = document.getElementById('mergeSearchInput');
+    const searchResults = document.getElementById('mergeSearchResults');
+    const mergeBtn = document.querySelector('button[onclick="showMergeModal()"]');
+    
+    if (!searchInput || !searchResults || !mergeBtn) {
+      console.error('❌ Required elements not found');
+      return;
+    }
+    
+    const query = searchInput.value.trim();
+    const currentUserId = mergeBtn.getAttribute('data-user-id');
+    
+    if (query.length < 2) {
+      searchResults.innerHTML = '<div class="text-center text-muted">2文字以上入力してください</div>';
+      return;
+    }
+    
+    // 検索中の表示
+    searchResults.innerHTML = '<div class="text-center text-muted"><i class="fas fa-spinner fa-spin"></i> 検索中...</div>';
+    
+    // API呼び出し
+    fetch(`/admin/users/search_for_merge?query=${encodeURIComponent(query)}&current_user_id=${currentUserId}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.users && data.users.length > 0) {
+          const resultsHtml = data.users.map(user => `
+            <div class="list-group-item list-group-item-action" onclick="selectMergeUser(${user.id}, '${user.name}', '${user.display_name || ''}', '${user.phone_number || ''}', '${user.email || ''}', ${user.active_tickets}, ${user.total_usages})">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <strong>${user.name}</strong>
+                  ${user.display_name && user.display_name !== user.name ? `<br><small class="text-muted">${user.display_name}</small>` : ''}
+                  ${user.phone_number ? `<br><small class="text-muted"><i class="fas fa-phone"></i> ${user.phone_number}</small>` : ''}
+                  ${user.email ? `<br><small class="text-muted"><i class="fas fa-envelope"></i> ${user.email}</small>` : ''}
+                </div>
+                <div class="text-end">
+                  <small class="text-muted">
+                    <div>ID: ${user.id}</div>
+                    <div>チケット: ${user.active_tickets}枚</div>
+                    <div>履歴: ${user.total_usages}件</div>
+                  </small>
+                </div>
+              </div>
+            </div>
+          `).join('');
+          searchResults.innerHTML = resultsHtml;
+        } else {
+          searchResults.innerHTML = '<div class="text-center text-muted">該当するユーザーが見つかりません</div>';
+        }
+      })
+      .catch(error => {
+        console.error('❌ Search error:', error);
+        searchResults.innerHTML = '<div class="text-center text-danger">検索中にエラーが発生しました</div>';
+      });
+  }
+
+  // ユーザー選択関数
+  function selectMergeUser(userId, userName, displayName, phoneNumber, email, activeTickets, totalUsages) {
+    selectedTargetUser = {
+      id: userId,
+      name: userName,
+      display_name: displayName,
+      phone_number: phoneNumber,
+      email: email,
+      active_tickets: activeTickets,
+      total_usages: totalUsages
+    };
+    
+    // 選択されたユーザーをハイライト
+    const searchResults = document.getElementById('mergeSearchResults');
+    const items = searchResults.querySelectorAll('.list-group-item');
+    items.forEach(item => item.classList.remove('active'));
+    
+    // クリックされたアイテムをハイライト
+    event.target.closest('.list-group-item').classList.add('active');
+    
+    // 結合ボタンを有効化
+    const confirmMergeBtn = document.getElementById('confirmMergeBtn');
+    if (confirmMergeBtn) confirmMergeBtn.disabled = false;
+    
+    console.log('🔍 Selected target user:', selectedTargetUser);
+  }
+
+  // ユーザー結合実行関数
+  function executeMerge() {
+    if (!selectedTargetUser) {
+      alert('結合先ユーザーを選択してください');
+      return;
+    }
+    
+    const mergeBtn = document.querySelector('button[onclick="showMergeModal()"]');
+    const currentUserId = mergeBtn.getAttribute('data-user-id');
+    const currentUserName = mergeBtn.getAttribute('data-user-name');
+    
+    const confirmMessage = `以下のユーザーを結合しますか？\n\n` +
+      `結合元: ${currentUserName} (ID: ${currentUserId})\n` +
+      `結合先: ${selectedTargetUser.name} (ID: ${selectedTargetUser.id})\n\n` +
+      `この操作は取り消せません。`;
+    
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+    
+    // ボタンを無効化
+    const confirmMergeBtn = document.getElementById('confirmMergeBtn');
+    confirmMergeBtn.disabled = true;
+    confirmMergeBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>結合中...';
+    
+    // CSRF トークンを取得
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    
+    if (!csrfToken) {
+      console.error('❌ CSRF token not found');
+      alert('セキュリティトークンが見つかりません。ページを再読み込みしてください。');
+      confirmMergeBtn.disabled = false;
+      confirmMergeBtn.innerHTML = '<i class="fas fa-link me-1"></i>ユーザーを結合';
+      return;
+    }
+    
+    console.log('🔍 Sending merge request:', { source_user_id: currentUserId, target_user_id: selectedTargetUser.id });
+    
+    // 結合リクエストを送信
+    fetch('/admin/users/merge_users', {
+      method: 'POST',
+      headers: {
+        'X-CSRF-Token': csrfToken,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        source_user_id: currentUserId,
+        target_user_id: selectedTargetUser.id
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        console.log('🔍 Merge success');
+        alert(`ユーザーの結合が完了しました。\n結合先ユーザー: ${data.target_user_name} (ID: ${data.target_user_id})`);
+        // 結合先ユーザーの詳細ページにリダイレクト
+        window.location.href = `/admin/users/${data.target_user_id}`;
+      } else {
+        throw new Error(data.error || '結合に失敗しました');
+      }
+    })
+    .catch(error => {
+      console.error('❌ Merge error:', error);
+      alert('ユーザー結合中にエラーが発生しました: ' + error.message);
+      
+      // ボタンを元に戻す
+      confirmMergeBtn.disabled = false;
+      confirmMergeBtn.innerHTML = '<i class="fas fa-link me-1"></i>ユーザーを結合';
+    });
+  }
+
+  // 検索入力のEnterキー対応とイベントリスナー設定
+  document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('mergeSearchInput');
+    if (searchInput) {
+      searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          searchMergeUsers();
+        }
+      });
+    }
+    
+    // 結合ボタンのイベントリスナー
+    const confirmMergeBtn = document.getElementById('confirmMergeBtn');
+    if (confirmMergeBtn) {
+      confirmMergeBtn.addEventListener('click', executeMerge);
+    }
+    
+    // 背景クリックでモーダルを閉じる
+    const mergeModal = document.getElementById('mergeUserModal');
+    if (mergeModal) {
+      mergeModal.addEventListener('click', function(e) {
+        if (e.target === mergeModal) {
+          hideMergeModal();
+        }
+      });
+    }
+    
+    // ESCキーでモーダルを閉じる
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && mergeModal && mergeModal.classList.contains('show')) {
+        hideMergeModal();
+      }
+    });
   });
     
   // イベントリスナーを設定する関数

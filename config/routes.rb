@@ -41,6 +41,8 @@ Rails.application.routes.draw do
       collection do
         get :search
         post :sync_line_users
+        get :search_for_merge
+        post :merge_users
       end
       member do
         get 'tickets'
