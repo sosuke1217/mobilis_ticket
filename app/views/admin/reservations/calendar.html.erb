@@ -6980,12 +6980,18 @@ function showMessage(message, type = 'info') {
                 const statusIcon = reservation.status === 'confirmed' ? '✓' : reservation.status === 'tentative' ? '⏳' : '❓';
                 const statusText = reservation.status === 'confirmed' ? '確定' : reservation.status === 'tentative' ? '仮予約' : (reservation.status || '未定');
                 
+                // コース名をdurationから生成
+                const courseName = reservation.duration ? `${reservation.duration}分コース` : (reservation.course || 'コース未定');
+                
                 // デバッグ用：表示される予約の詳細
                 console.log('📋 Displaying reservation:', {
                     id: reservation.id,
                     customer: reservation.customer,
                     date: reservation.date,
                     start_time: reservation.start_time,
+                    duration: reservation.duration,
+                    course: reservation.course,
+                    courseName: courseName,
                     reservationDate: reservationDate,
                     displayDate,
                     displayTime
@@ -6996,7 +7002,7 @@ function showMessage(message, type = 'info') {
                         <div class="future-reservation-date" style="color: #495057 !important; font-size: 14px !important; font-weight: 500 !important; min-width: 80px !important;">${displayDate} ${displayTime}</div>
                         <div class="future-reservation-details" style="flex: 1 !important; margin-left: 12px !important;">
                             <div class="future-reservation-customer" style="color: #212529 !important; font-size: 14px !important; font-weight: 600 !important; margin-bottom: 2px !important;">${reservation.customer || 'お客様名未定'}</div>
-                            <div class="future-reservation-course" style="color: #6c757d !important; font-size: 12px !important;">${reservation.course || 'コース未定'} ${statusIcon} ${statusText}</div>
+                            <div class="future-reservation-course" style="color: #6c757d !important; font-size: 12px !important;">${courseName} ${statusIcon} ${statusText}</div>
                         </div>
                     </div>
                 `;
