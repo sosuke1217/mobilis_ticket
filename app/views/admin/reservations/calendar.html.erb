@@ -6841,11 +6841,7 @@ function showMessage(message, type = 'info') {
             
             // セクションタイトルを更新
             if (futureReservationsTitle) {
-                if (userId) {
-                    futureReservationsTitle.textContent = '📅 このお客様の本日以降の予約';
-                } else {
-                    futureReservationsTitle.textContent = '📅 本日以降の予約';
-                }
+                futureReservationsTitle.textContent = '📅 本日以降の予約';
             }
 
             // 本日の日付を取得（複数の方法で）
@@ -6967,7 +6963,7 @@ function showMessage(message, type = 'info') {
             console.log('📋 Limited to', limitedReservations.length, 'reservations for display');
 
             if (limitedReservations.length === 0) {
-                const message = userId ? 'このお客様の本日以降の予約はありません' : '本日以降の予約はありません';
+                const message = '本日以降の予約はありません';
                 console.log('📝 No reservations to display, showing message:', message);
                 futureReservationsContent.innerHTML = `<div class="no-data" style="color: #6c757d !important; font-size: 14px !important; text-align: center !important; padding: 20px !important; font-style: italic !important; background: #f8f9fa !important; border-radius: 6px !important; border: 1px dashed #dee2e6 !important;">${message}</div>`;
                 return;
@@ -6982,7 +6978,7 @@ function showMessage(message, type = 'info') {
                 });
                 const displayTime = reservation.time || reservation.start_time?.split('T')[1]?.substring(0, 5) || '時間未定';
                 const statusIcon = reservation.status === 'confirmed' ? '✓' : reservation.status === 'tentative' ? '⏳' : '❓';
-                const statusText = reservation.status === 'confirmed' ? '確定' : reservation.status === 'tentative' ? '仮予約' : reservation.status;
+                const statusText = reservation.status === 'confirmed' ? '確定' : reservation.status === 'tentative' ? '仮予約' : (reservation.status || '未定');
                 
                 // デバッグ用：表示される予約の詳細
                 console.log('📋 Displaying reservation:', {
@@ -6999,8 +6995,8 @@ function showMessage(message, type = 'info') {
                     <div class="future-reservation-item" style="background: #ffffff !important; border: 1px solid #e9ecef !important; border-radius: 6px !important; padding: 8px 12px !important; margin-bottom: 8px !important; display: flex !important; justify-content: space-between !important; align-items: center !important;">
                         <div class="future-reservation-date" style="color: #495057 !important; font-size: 14px !important; font-weight: 500 !important; min-width: 80px !important;">${displayDate} ${displayTime}</div>
                         <div class="future-reservation-details" style="flex: 1 !important; margin-left: 12px !important;">
-                            <div class="future-reservation-customer" style="color: #212529 !important; font-size: 14px !important; font-weight: 600 !important; margin-bottom: 2px !important;">${reservation.customer}</div>
-                            <div class="future-reservation-course" style="color: #6c757d !important; font-size: 12px !important;">${reservation.course} ${statusIcon} ${statusText}</div>
+                            <div class="future-reservation-customer" style="color: #212529 !important; font-size: 14px !important; font-weight: 600 !important; margin-bottom: 2px !important;">${reservation.customer || 'お客様名未定'}</div>
+                            <div class="future-reservation-course" style="color: #6c757d !important; font-size: 12px !important;">${reservation.course || 'コース未定'} ${statusIcon} ${statusText}</div>
                         </div>
                     </div>
                 `;
