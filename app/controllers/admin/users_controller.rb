@@ -372,8 +372,8 @@ class Admin::UsersController < ApplicationController
     )
   end
 
-  def get_ticket_status(ticket)
-            if ticket.expiry_date && ticket.expiry_date < Date.current
+    def get_ticket_status(ticket)
+    if ticket.expiry_date && ticket.expiry_date < Date.current
       'expired'
     elsif ticket.remaining_count <= 0
       'used'
@@ -381,6 +381,100 @@ class Admin::UsersController < ApplicationController
       'low'
     else
       'available'
+    end
+  end
+
+  # LINEユーザー同期
+  def sync_line_users
+    begin
+      Rails.logger.info "🔄 Starting LINE user sync..."
+      
+      # LINE API設定の確認
+      unless ENV['LINE_CHANNEL_SECRET'].present? && ENV['LINE_CHANNEL_TOKEN'].present?
+        error_msg = "LINE API設定が不完全です"
+        Rails.logger.error error_msg
+        render json: { success: false, error: error_msg }, status: :unprocessable_entity
+        return
+      end
+
+      # LINEボットコントローラーのインスタンスを作成
+      linebot_controller = LinebotController.new
+      
+      # 既存のLINE連携ユーザーを取得
+      existing_line_users = User.where.not(line_user_id: [nil, '']).pluck(:line_user_id)
+      Rails.logger.info "📊 Existing LINE users: #{existing_line_users.count}"
+      
+      # LINE APIからフォロワーリストを取得
+      followers = linebot_controller.send(:get_line_followers)
+      Rails.logger.info "📊 LINE followers count: #{followers.count}"
+      
+      new_users = 0
+      updated_users = 0
+      errors = 0
+      
+      followers.each do |follower|
+        begin
+          line_user_id = follower['userId']
+          
+          # 既存ユーザーを検索
+          user = User.find_by(line_user_id: line_user_id)
+          
+          if user
+            # 既存ユーザーのプロフィールを更新
+            if linebot_controller.send(:update_user_profile, user, line_user_id)
+              updated_users += 1
+              Rails.logger.info "✅ Updated user: #{user.id} (#{line_user_id})"
+            else
+              errors += 1
+              Rails.logger.error "❌ Failed to update user: #{user.id} (#{line_user_id})"
+            end
+          else
+            # 新規ユーザーを作成
+            new_user = User.new(
+              line_user_id: line_user_id,
+              name: follower['displayName'] || 'LINEユーザー',
+              display_name: follower['displayName'] || 'LINEユーザー'
+            )
+            
+            if new_user.save
+              # 通知設定を作成
+              new_user.create_notification_preference!(enabled: true)
+              
+              # LINEプロフィール情報を更新
+              linebot_controller.send(:update_user_profile, new_user, line_user_id)
+              
+              new_users += 1
+              Rails.logger.info "✅ Created new user: #{new_user.id} (#{line_user_id})"
+            else
+              errors += 1
+              Rails.logger.error "❌ Failed to create user: #{line_user_id} - #{new_user.errors.full_messages}"
+            end
+          end
+        rescue => e
+          errors += 1
+          Rails.logger.error "❌ Error processing follower #{follower['userId']}: #{e.message}"
+        end
+      end
+      
+      Rails.logger.info "✅ LINE user sync completed: new=#{new_users}, updated=#{updated_users}, errors=#{errors}"
+      
+      render json: {
+        success: true,
+        message: 'LINEユーザーの同期が完了しました',
+        new_users: new_users,
+        updated_users: updated_users,
+        errors: errors,
+        total_followers: followers.count
+      }
+      
+    rescue => e
+      Rails.logger.error "❌ LINE user sync error: #{e.class}: #{e.message}"
+      Rails.logger.error "Backtrace: #{e.backtrace.first(5).join("\n")}"
+      
+      render json: {
+        success: false,
+        error: "LINEユーザー同期中にエラーが発生しました: #{e.message}"
+      }, status: :internal_server_error
     end
   end
 end
