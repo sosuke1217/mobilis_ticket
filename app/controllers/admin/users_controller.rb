@@ -405,7 +405,7 @@ class Admin::UsersController < ApplicationController
       Rails.logger.info "📊 Existing LINE users: #{existing_line_users.count}"
       
       # LINE APIからフォロワーリストを取得
-      followers = linebot_controller.send(:get_line_followers)
+      followers = linebot_controller.get_line_followers
       Rails.logger.info "📊 LINE followers count: #{followers.count}"
       
       new_users = 0
@@ -421,7 +421,7 @@ class Admin::UsersController < ApplicationController
           
           if user
             # 既存ユーザーのプロフィールを更新
-            if linebot_controller.send(:update_user_profile, user, line_user_id)
+            if linebot_controller.update_user_profile(user, line_user_id)
               updated_users += 1
               Rails.logger.info "✅ Updated user: #{user.id} (#{line_user_id})"
             else
@@ -441,7 +441,7 @@ class Admin::UsersController < ApplicationController
               new_user.create_notification_preference!(enabled: true)
               
               # LINEプロフィール情報を更新
-              linebot_controller.send(:update_user_profile, new_user, line_user_id)
+              linebot_controller.update_user_profile(new_user, line_user_id)
               
               new_users += 1
               Rails.logger.info "✅ Created new user: #{new_user.id} (#{line_user_id})"
