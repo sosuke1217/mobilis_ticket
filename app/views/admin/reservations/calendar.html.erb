@@ -2510,7 +2510,10 @@
                     const now = new Date();
                     const currentHour = now.getHours();
                     const currentMinute = now.getMinutes();
-                    const currentTimeStr = `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`;
+                    
+                    // 現在時刻を10分刻みに丸める
+                    const roundedMinute = Math.floor(currentMinute / 10) * 10;
+                    const currentTimeStr = `${String(currentHour).padStart(2, '0')}:${String(roundedMinute).padStart(2, '0')}`;
                     
                     // 現在の時間の行にcurrent-timeクラスを追加
                     if (timeStr === currentTimeStr) {
