@@ -55,15 +55,36 @@ class User < ApplicationRecord
     ticket_usages.order(used_at: :desc).limit(1).pluck(:used_at).first
   end
 
-  # ユーザーの未使用分のチケット金額（残額合計）
-  def remaining_ticket_value
+  # ユーザーの未使用分のチケット金額（残額合計）- 単価ベース計算
+  def remaining_ticket_value_by_unit_price
     tickets.includes(:ticket_template)
           .where("remaining_count > 0")
           .sum do |ticket|
-      next 0 unless ticket.ticket_template&.price && ticket.ticket_template&.total_count && ticket.remaining_count
-      unit_price = ticket.ticket_template.price.to_f / ticket.ticket_template.total_count
-      unit_price * ticket.remaining_count
+      next 0 unless ticket.ticket_template&.price && ticket.remaining_count
+      # 価格が1回あたりの価格として設定されている場合
+      ticket.ticket_template.price.to_f * ticket.remaining_count
     end
+  end
+
+  # ユーザーの未使用分のチケット金額（残額合計）
+  def remaining_ticket_value
+    total_value = 0
+    tickets.includes(:ticket_template)
+          .where("remaining_count > 0")
+          .each do |ticket|
+      next unless ticket.ticket_template&.price && ticket.remaining_count
+      
+      # 単価を計算（価格 ÷ 総回数）
+      unit_price = ticket.ticket_template.price.to_f / ticket.ticket_template.total_count
+      # 残り回数 × 単価
+      ticket_value = unit_price * ticket.remaining_count
+      total_value += ticket_value
+      
+      Rails.logger.debug "チケット計算: #{ticket.ticket_template.name} - 価格: #{ticket.ticket_template.price}, 総回数: #{ticket.ticket_template.total_count}, 単価: #{unit_price}, 残り回数: #{ticket.remaining_count}, チケット価値: #{ticket_value}"
+    end
+    
+    Rails.logger.debug "ユーザー #{id} (#{name}) の残り回数価値合計: #{total_value}"
+    total_value
   end
 
   def clear_ticket_cache
