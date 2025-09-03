@@ -42,6 +42,156 @@ class LinebotController < ApplicationController
     end
   end
 
+  # LINEフォロワーリストを取得
+  def get_line_followers
+    begin
+      Rails.logger.info "🔄 Getting LINE followers..."
+      
+      # LINE APIクライアントの確認
+      unless client
+        error_msg = "LINE APIクライアントの初期化に失敗しました"
+        Rails.logger.error error_msg
+        return []
+      end
+      
+      # LINEからフォロワーリストを取得
+      begin
+        response = client.get_followers
+        Rails.logger.info "LINE APIレスポンス: #{response.inspect}"
+        
+        # レスポンスのステータスコードを確認
+        unless response.is_a?(Net::HTTPSuccess)
+          error_msg = "LINE API呼び出しに失敗しました: #{response.code} #{response.message}"
+          Rails.logger.error error_msg
+          return []
+        end
+        
+        # レスポンスボディをJSONとして解析
+        followers_data = JSON.parse(response.body)
+        Rails.logger.info "LINEフォロワー取得成功: #{followers_data.inspect}"
+        
+        # フォロワーリストを返す
+        followers = followers_data['userIds'] || []
+        Rails.logger.info "📊 Found #{followers.count} followers"
+        
+        # 各フォロワーの詳細情報を取得
+        followers_with_details = []
+        followers.each do |user_id|
+          begin
+            profile_response = client.get_profile(user_id)
+            if profile_response.is_a?(Net::HTTPSuccess)
+              profile = JSON.parse(profile_response.body)
+              followers_with_details << {
+                'userId' => user_id,
+                'displayName' => profile['displayName'],
+                'pictureUrl' => profile['pictureUrl'],
+                'statusMessage' => profile['statusMessage']
+              }
+            else
+              # プロフィール取得に失敗した場合は基本的な情報のみ
+              followers_with_details << {
+                'userId' => user_id,
+                'displayName' => 'LINEユーザー',
+                'pictureUrl' => nil,
+                'statusMessage' => nil
+              }
+            end
+          rescue => e
+            Rails.logger.error "❌ Error getting profile for #{user_id}: #{e.message}"
+            # エラーの場合も基本的な情報を追加
+            followers_with_details << {
+              'userId' => user_id,
+              'displayName' => 'LINEユーザー',
+              'pictureUrl' => nil,
+              'statusMessage' => nil
+            }
+          end
+        end
+        
+        Rails.logger.info "✅ Successfully retrieved #{followers_with_details.count} followers with details"
+        return followers_with_details
+        
+      rescue => e
+        error_msg = "LINE API呼び出しに失敗しました: #{e.class}: #{e.message}"
+        Rails.logger.error error_msg
+        return []
+      end
+      
+    rescue => e
+      Rails.logger.error "❌ LINE followers error: #{e.class}: #{e.message}"
+      Rails.logger.error "Backtrace: #{e.backtrace.first(5).join("\n")}"
+      return []
+    end
+  end
+
+  # 既存ユーザーのLINEプロフィール情報を更新
+  def update_user_profile(user, user_id)
+    begin
+      Rails.logger.info "LINEプロフィール更新開始: #{user_id}"
+      
+      # LINE APIクライアントの確認
+      unless client
+        error_msg = "LINE APIクライアントの初期化に失敗しました"
+        Rails.logger.error error_msg
+        return false
+      end
+      
+      # LINEからプロフィール情報を取得
+      begin
+        response = client.get_profile(user_id)
+        Rails.logger.info "LINE APIレスポンス: #{response.inspect}"
+        
+        # レスポンスのステータスコードを確認
+        unless response.is_a?(Net::HTTPSuccess)
+          error_msg = "LINE API呼び出しに失敗しました: #{response.code} #{response.message}"
+          Rails.logger.error error_msg
+          return false
+        end
+        
+        # レスポンスボディをJSONとして解析
+        profile = JSON.parse(response.body)
+        Rails.logger.info "LINEプロフィール取得成功: #{profile.inspect}"
+      rescue => e
+        error_msg = "LINE API呼び出しに失敗しました: #{e.class}: #{e.message}"
+        Rails.logger.error error_msg
+        return false
+      end
+      
+      # プロフィール情報の検証
+      unless profile && profile['displayName']
+        error_msg = "LINEプロフィール情報が不正です: #{profile.inspect}"
+        Rails.logger.error error_msg
+        return false
+      end
+      
+      # ユーザー情報を更新
+      update_params = {
+        display_name: profile['displayName']
+      }
+      
+      Rails.logger.info "更新パラメータ: #{update_params.inspect}"
+      
+      # ユーザー情報の更新
+      begin
+        if user.update!(update_params)
+          Rails.logger.info "LINEプロフィール更新完了: #{user_id} - #{profile['displayName']}"
+          return true
+        else
+          Rails.logger.error "LINEプロフィール更新失敗: #{user.errors.full_messages}"
+          return false
+        end
+      rescue => e
+        error_msg = "ユーザー情報の更新に失敗しました: #{e.class}: #{e.message}"
+        Rails.logger.error error_msg
+        return false
+      end
+    rescue => e
+      Rails.logger.error "LINEプロフィール更新エラー: #{user_id} - #{e.class}: #{e.message}"
+      Rails.logger.error "バックトレース: #{e.backtrace.first(5).join("\n")}"
+      return false
+    end
+  end
+
   private
 
   def client
@@ -1383,155 +1533,5 @@ class LinebotController < ApplicationController
       update_user_profile(user, user_id)
     end
     user
-  end
-
-  # 既存ユーザーのLINEプロフィール情報を更新
-  def update_user_profile(user, user_id)
-    begin
-      Rails.logger.info "LINEプロフィール更新開始: #{user_id}"
-      
-      # LINE APIクライアントの確認
-      unless client
-        error_msg = "LINE APIクライアントの初期化に失敗しました"
-        Rails.logger.error error_msg
-        return false
-      end
-      
-      # LINEからプロフィール情報を取得
-      begin
-        response = client.get_profile(user_id)
-        Rails.logger.info "LINE APIレスポンス: #{response.inspect}"
-        
-        # レスポンスのステータスコードを確認
-        unless response.is_a?(Net::HTTPSuccess)
-          error_msg = "LINE API呼び出しに失敗しました: #{response.code} #{response.message}"
-          Rails.logger.error error_msg
-          return false
-        end
-        
-        # レスポンスボディをJSONとして解析
-        profile = JSON.parse(response.body)
-        Rails.logger.info "LINEプロフィール取得成功: #{profile.inspect}"
-      rescue => e
-        error_msg = "LINE API呼び出しに失敗しました: #{e.class}: #{e.message}"
-        Rails.logger.error error_msg
-        return false
-      end
-      
-      # プロフィール情報の検証
-      unless profile && profile['displayName']
-        error_msg = "LINEプロフィール情報が不正です: #{profile.inspect}"
-        Rails.logger.error error_msg
-        return false
-      end
-      
-      # ユーザー情報を更新
-      update_params = {
-        display_name: profile['displayName']
-      }
-      
-      Rails.logger.info "更新パラメータ: #{update_params.inspect}"
-      
-      # ユーザー情報の更新
-      begin
-        if user.update!(update_params)
-          Rails.logger.info "LINEプロフィール更新完了: #{user_id} - #{profile['displayName']}"
-          return true
-        else
-          Rails.logger.error "LINEプロフィール更新失敗: #{user.errors.full_messages}"
-          return false
-        end
-      rescue => e
-        error_msg = "ユーザー情報の更新に失敗しました: #{e.class}: #{e.message}"
-        Rails.logger.error error_msg
-        return false
-      end
-    rescue => e
-      Rails.logger.error "LINEプロフィール更新エラー: #{user_id} - #{e.class}: #{e.message}"
-      Rails.logger.error "バックトレース: #{e.backtrace.first(5).join("\n")}"
-      return false
-    end
-  end
-
-  # LINEフォロワーリストを取得
-  def get_line_followers
-    begin
-      Rails.logger.info "🔄 Getting LINE followers..."
-      
-      # LINE APIクライアントの確認
-      unless client
-        error_msg = "LINE APIクライアントの初期化に失敗しました"
-        Rails.logger.error error_msg
-        return []
-      end
-      
-      # LINEからフォロワーリストを取得
-      begin
-        response = client.get_followers
-        Rails.logger.info "LINE APIレスポンス: #{response.inspect}"
-        
-        # レスポンスのステータスコードを確認
-        unless response.is_a?(Net::HTTPSuccess)
-          error_msg = "LINE API呼び出しに失敗しました: #{response.code} #{response.message}"
-          Rails.logger.error error_msg
-          return []
-        end
-        
-        # レスポンスボディをJSONとして解析
-        followers_data = JSON.parse(response.body)
-        Rails.logger.info "LINEフォロワー取得成功: #{followers_data.inspect}"
-        
-        # フォロワーリストを返す
-        followers = followers_data['userIds'] || []
-        Rails.logger.info "📊 Found #{followers.count} followers"
-        
-        # 各フォロワーの詳細情報を取得
-        followers_with_details = []
-        followers.each do |user_id|
-          begin
-            profile_response = client.get_profile(user_id)
-            if profile_response.is_a?(Net::HTTPSuccess)
-              profile = JSON.parse(profile_response.body)
-              followers_with_details << {
-                'userId' => user_id,
-                'displayName' => profile['displayName'],
-                'pictureUrl' => profile['pictureUrl'],
-                'statusMessage' => profile['statusMessage']
-              }
-            else
-              # プロフィール取得に失敗した場合は基本的な情報のみ
-              followers_with_details << {
-                'userId' => user_id,
-                'displayName' => 'LINEユーザー',
-                'pictureUrl' => nil,
-                'statusMessage' => nil
-              }
-            end
-          rescue => e
-            Rails.logger.error "❌ Error getting profile for #{user_id}: #{e.message}"
-            # エラーの場合も基本的な情報を追加
-            followers_with_details << {
-              'userId' => user_id,
-              'displayName' => 'LINEユーザー',
-              'pictureUrl' => nil,
-              'statusMessage' => nil
-            }
-          end
-        end
-        
-        Rails.logger.info "✅ Successfully retrieved #{followers_with_details.count} followers with details"
-        return followers_with_details
-        
-      rescue => e
-        error_msg = "LINE API呼び出しに失敗しました: #{e.class}: #{e.message}"
-        Rails.logger.error error_msg
-        return []
-      end
-      
-    rescue => e
-      Rails.logger.error "❌ LINE followers error: #{e.class}: #{e.message}"
-      Rails.logger.error "Backtrace: #{e.backtrace.first(5).join("\n")}"
-      return []
-    end
   end
 end
