@@ -360,30 +360,6 @@ class Admin::UsersController < ApplicationController
     end
   end
 
-  private
-
-  def set_user
-    @user = User.find(params[:id])
-  end
-
-  def user_params
-    params.require(:user).permit(
-      :name, :kana, :phone_number, :email, :birth_date, :postal_code, :address, :admin_memo
-    )
-  end
-
-    def get_ticket_status(ticket)
-    if ticket.expiry_date && ticket.expiry_date < Date.current
-      'expired'
-    elsif ticket.remaining_count <= 0
-      'used'
-    elsif ticket.remaining_count <= 2
-      'low'
-    else
-      'available'
-    end
-  end
-
   # LINEユーザー同期
   def sync_line_users
     begin
@@ -475,6 +451,30 @@ class Admin::UsersController < ApplicationController
         success: false,
         error: "LINEユーザー同期中にエラーが発生しました: #{e.message}"
       }, status: :internal_server_error
+    end
+  end
+
+  private
+
+  def set_user
+    @user = User.find(params[:id])
+  end
+
+  def user_params
+    params.require(:user).permit(
+      :name, :kana, :phone_number, :email, :birth_date, :postal_code, :address, :admin_memo
+    )
+  end
+
+    def get_ticket_status(ticket)
+    if ticket.expiry_date && ticket.expiry_date < Date.current
+      'expired'
+    elsif ticket.remaining_count <= 0
+      'used'
+    elsif ticket.remaining_count <= 2
+      'low'
+    else
+      'available'
     end
   end
 end
