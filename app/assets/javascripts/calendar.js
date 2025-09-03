@@ -2226,14 +2226,18 @@ function showMessage(message, type = 'info') {
             }
 
             const historyHtml = usages.map(usage => {
-                const usageDate = new Date(usage.usage_date).toLocaleDateString('ja-JP');
-                const usageTime = new Date(usage.usage_date).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+                // デバッグ用：利用履歴データの詳細をログ出力
+                console.log('📋 Processing usage:', usage);
+                
+                const usageDate = new Date(usage.usage_date || usage.created_at || Date.now()).toLocaleDateString('ja-JP');
+                const usageTime = new Date(usage.usage_date || usage.created_at || Date.now()).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+                const ticketName = usage.ticket_name || 'チケット名未定';
                 
                 return `
                     <div class="history-item">
                         <div class="history-icon">🎫</div>
                         <div class="history-content">
-                            <div class="history-ticket-name">${usage.ticket_name}</div>
+                            <div class="history-ticket-name">${ticketName}</div>
                             <div class="history-date-time">${usageDate} ${usageTime}</div>
                         </div>
                     </div>
