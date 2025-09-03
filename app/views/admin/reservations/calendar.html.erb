@@ -6977,8 +6977,22 @@ function showMessage(message, type = 'info') {
                     weekday: 'short'
                 });
                 const displayTime = reservation.time || reservation.start_time?.split('T')[1]?.substring(0, 5) || '時間未定';
-                const statusIcon = reservation.status === 'confirmed' ? '✓' : reservation.status === 'tentative' ? '⏳' : '❓';
-                const statusText = reservation.status === 'confirmed' ? '確定' : reservation.status === 'tentative' ? '仮予約' : (reservation.status || '未定');
+                
+                // ステータスアイコンを安全に取得
+                let statusIcon = '❓';
+                if (reservation.status === 'confirmed') {
+                    statusIcon = '✓';
+                } else if (reservation.status === 'tentative') {
+                    statusIcon = '⏳';
+                } else if (reservation.status === 'completed') {
+                    statusIcon = '✅';
+                } else if (reservation.status === 'cancelled') {
+                    statusIcon = '❌';
+                } else if (reservation.status === 'no_show') {
+                    statusIcon = '⚠️';
+                }
+                
+                const statusText = reservation.status === 'confirmed' ? '確定' : reservation.status === 'tentative' ? '仮予約' : reservation.status === 'completed' ? '完了' : (reservation.status || '未定');
                 
                 // コース名をdurationから生成
                 const courseName = reservation.duration ? `${reservation.duration}分コース` : (reservation.course || 'コース未定');
@@ -6992,6 +7006,9 @@ function showMessage(message, type = 'info') {
                     duration: reservation.duration,
                     course: reservation.course,
                     courseName: courseName,
+                    status: reservation.status,
+                    statusIcon: statusIcon,
+                    statusText: statusText,
                     reservationDate: reservationDate,
                     displayDate,
                     displayTime
