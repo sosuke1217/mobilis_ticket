@@ -316,7 +316,7 @@ class Admin::UsersController < ApplicationController
     
     render json: { users: user_data }
   end
-      def update_line_profile
+  def update_line_profile
       begin
         Rails.logger.info "LINE情報更新開始: ユーザーID #{@user.id}, LINE ID #{@user.line_user_id}"
         
