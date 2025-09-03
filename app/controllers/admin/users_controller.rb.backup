@@ -316,7 +316,6 @@ class Admin::UsersController < ApplicationController
     
     render json: { users: user_data }
   end
-
   def update_line_profile
     if @user.line_user_id.present? && @user.line_user_id != ''
       begin
@@ -465,8 +464,6 @@ class Admin::UsersController < ApplicationController
       respond_to do |format|
         format.html { redirect_to admin_user_path(@user), alert: "LINE連携の削除に失敗しました: #{e.message}" }
         format.json { render json: { success: false, error: e.message }, status: :internal_server_error }
-      end
-    end
   end
 
   # LINEユーザー同期
@@ -575,7 +572,7 @@ class Admin::UsersController < ApplicationController
     )
   end
 
-  def get_ticket_status(ticket)
+    def get_ticket_status(ticket)
     if ticket.expiry_date && ticket.expiry_date < Date.current
       'expired'
     elsif ticket.remaining_count <= 0
