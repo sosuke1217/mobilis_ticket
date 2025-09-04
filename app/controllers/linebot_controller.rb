@@ -911,71 +911,10 @@ class LinebotController < ApplicationController
   def start_booking_flow(user, reply_token, course)
     Rails.logger.info "🔄 start_booking_flow called for user #{user.id}, course: #{course}"
     
-    # ユーザー情報が不完全な場合は情報入力を促す
-    unless user.name.present? && user.phone_number.present? && user.address.present?
-      Rails.logger.info "❌ User info incomplete - name: #{user.name.present?}, phone: #{user.phone_number.present?}, address: #{user.address.present?}"
-      send_user_info_request(user, reply_token, course)
-      return
-    end
-
-    Rails.logger.info "✅ User info complete, checking available dates"
-
-    # 利用可能な日付を表示
-    available_dates = get_available_dates(7) # 今日から7日間
-    Rails.logger.info "📅 Found #{available_dates.count} available dates: #{available_dates.map(&:strftime).join(', ')}"
-    
-    if available_dates.empty?
-      Rails.logger.info "❌ No available dates found"
-      send_reply(reply_token, {
-        type: "text",
-        text: "申し訳ございません。現在予約可能な日程がございません。\nお電話でお問い合わせください: 03-1234-5678"
-      })
-      return
-    end
-
-    Rails.logger.info "📝 Creating date selection message"
-
-    message = {
-      type: "flex",
-      altText: "日程選択 - #{course}",
-      contents: {
-        type: "bubble",
-        header: {
-          type: "box",
-          layout: "vertical",
-          contents: [
-            {
-              type: "text",
-              text: "📅 日程選択",
-              weight: "bold",
-              size: "lg"
-            },
-            {
-              type: "text",
-              text: "選択コース: #{course}",
-              size: "sm",
-              color: "#1976d2"
-            }
-          ]
-        },
-        body: {
-          type: "box",
-          layout: "vertical",
-          contents: available_dates.map { |date|
-            {
-              type: "button",
-              style: "secondary",
-              action: {
-                type: "postback",
-                label: date.strftime('%m/%d (%a)'),
-                data: "select_date_#{course}_#{date.strftime('%Y-%m-%d')}"
-              }
-            }
-          },
-          spacing: "sm"
-        }
-      }
-    }
+    # コース情報を保存して場所選択画面を表示
+    user.update(booking_course: course)
+    send_location_selection(user, reply_token)
+  end
 
     Rails.logger.info "📤 Sending date selection message"
     send_reply(reply_token, message)
@@ -1112,12 +1051,12 @@ class LinebotController < ApplicationController
     
     send_reply(reply_token, {
       type: "text",
-      text: "ありがとうございます！\n\n情報の入力が完了しました。\n予約フローを再開します。"
+      text: "ありがとうございます！\n\n住所の入力が完了しました。\n予約フローを開始します。"
     })
     
-    # 少し待ってから予約フローを開始
+    # 少し待ってから日付選択を開始
     sleep(1)
-    start_booking_flow(user, reply_token, course)
+    start_date_selection(user, reply_token, course)
   end
 
   # 🆕 情報収集開始
@@ -1233,29 +1172,114 @@ class LinebotController < ApplicationController
   def handle_location_selection(user, reply_token, location_type)
     case location_type
     when 'home'
-      user.update(booking_state: 'collecting_address', booking_location: 'home')
-      send_reply(reply_token, {
-        type: "text",
-        text: "ご自宅の住所を教えてください。\n\n例: 東京都渋谷区○○1-2-3"
-      })
+      # 自宅の場合：登録済みの住所を使用
+      if user.address.present?
+        # 登録済みの住所がある場合は直接予約フローに進む
+        course = user.booking_course
+        user.update(booking_course: nil, booking_location: nil)
+        send_reply(reply_token, {
+          type: "text",
+          text: "ご自宅でのストレッチで承ります。\n予約フローを開始します。"
+        })
+        sleep(1)
+        start_date_selection(user, reply_token, course)
+      else
+        # 登録済みの住所がない場合は住所入力を促す
+        user.update(booking_state: 'collecting_address', booking_location: 'home')
+        send_reply(reply_token, {
+          type: "text",
+          text: "ご自宅の住所を教えてください。\n\n例: 東京都渋谷区○○1-2-3"
+        })
+      end
     when 'other'
+      # 別の場所の場合：住所入力
       user.update(booking_state: 'collecting_address', booking_location: 'other')
       send_reply(reply_token, {
         type: "text",
         text: "ストレッチを受ける場所の住所を教えてください。\n\n例: 東京都渋谷区○○1-2-3"
       })
     when 'rental'
-      user.update(booking_state: 'collecting_address', booking_location: 'rental')
+      # レンタルスペースの場合：こちらから連絡
+      course = user.booking_course
+      user.update(booking_course: nil, booking_location: nil)
       send_reply(reply_token, {
         type: "text",
-        text: "レンタルスペースの住所を教えてください。\n\n例: 東京都渋谷区○○1-2-3"
+        text: "レンタルスペースでのストレッチで承ります。\n\nレンタルスペースの手配について、こちらからご連絡いたします。\n予約フローを開始します。"
       })
+      sleep(1)
+      start_date_selection(user, reply_token, course)
     else
       send_reply(reply_token, {
         type: "text",
         text: "申し訳ございません。場所の選択に問題が発生しました。もう一度お試しください。"
       })
     end
+  end
+
+  # 🆕 日付選択画面を表示
+  def start_date_selection(user, reply_token, course)
+    Rails.logger.info "📅 start_date_selection called for user #{user.id}, course: #{course}"
+    
+    # 利用可能な日付を表示
+    available_dates = get_available_dates(7) # 今日から7日間
+    Rails.logger.info "📅 Found #{available_dates.count} available dates: #{available_dates.map(&:strftime).join(', ')}"
+    
+    if available_dates.empty?
+      Rails.logger.info "❌ No available dates found"
+      send_reply(reply_token, {
+        type: "text",
+        text: "申し訳ございません。現在予約可能な日程がございません。\nお電話でお問い合わせください: 03-1234-5678"
+      })
+      return
+    end
+    
+    Rails.logger.info "📝 Creating date selection message"
+    
+    message = {
+      type: "flex",
+      altText: "日程選択 - #{course}",
+      contents: {
+        type: "bubble",
+        header: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "📅 日程選択",
+              weight: "bold",
+              size: "lg"
+            },
+            {
+              type: "text",
+              text: "選択コース: #{course}",
+              size: "sm",
+              color: "#1976d2"
+            }
+          ]
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: available_dates.map { |date|
+            {
+              type: "button",
+              style: "secondary",
+              action: {
+                type: "postback",
+                label: date.strftime('%m/%d (%a)'),
+                data: "select_date_#{course}_#{date.strftime('%Y-%m-%d')}"
+              }
+            }
+          },
+          spacing: "sm"
+        }
+      }
+    }
+    
+    Rails.logger.info "📤 Sending date selection message"
+    send_reply(reply_token, message)
+    Rails.logger.info "✅ Date selection message sent successfully"
   end
 
   # 🆕 利用可能な時間を送信
