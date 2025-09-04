@@ -68,7 +68,7 @@ Rails.application.routes.draw do
     resources :ticket_usages
     
     # 通知管理
-    resources :notification_logs, only: [:index]
+    resources :notification_logs, only: [:index, :destroy]
     resources :notification_preferences, only: [:index]
     
     # テスト用コントローラー
