@@ -177,7 +177,7 @@
   <!-- ページネーション -->
   <% if @notification_logs.any? %>
     <div class="d-flex justify-content-center mt-4">
-      <%= paginate @notification_logs, theme: 'bootstrap5' %>
+      <%= paginate @notification_logs %>
     </div>
   <% end %>
 </div>
