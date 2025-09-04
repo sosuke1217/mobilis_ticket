@@ -226,7 +226,7 @@ class LinebotController < ApplicationController
         text: "通知🔔をオンにしました。\n期限が近づいたチケットをお知らせします。\nNotifications 🔔 turned on."
       })
 
-    when /予約|booking|ご予約/i
+    when /予約|booking|ご予約|予約したい|予約お願い/i
       send_booking_options(user, reply_token)
 
     when /40分|40分コース/i
@@ -237,6 +237,21 @@ class LinebotController < ApplicationController
 
     when /80分|80分コース/i
       start_booking_flow(user, reply_token, "80分コース")
+
+    when /今日|きょう|today/i
+      send_today_availability(user, reply_token)
+
+    when /明日|あした|tomorrow/i
+      send_tomorrow_availability(user, reply_token)
+
+    when /空き|空いてる|空き時間|available/i
+      send_availability_info(user, reply_token)
+
+    when /メニュー|menu/i
+      send_main_menu(reply_token)
+
+    when /ヘルプ|help|使い方/i
+      send_help_message(reply_token)
 
     else
       send_default_help(reply_token)
@@ -259,6 +274,14 @@ class LinebotController < ApplicationController
 
     when "reviews"
       send_reviews_menu(reply_token)
+
+    when "check_tomorrow_availability"
+      send_tomorrow_availability(user, reply_token)
+
+    when /^quick_book_60min_(.+)_(.+)$/
+      date_str = $1
+      time_str = $2
+      create_booking(user, reply_token, "60分コース", date_str, time_str)
 
     when /^select_time_period_(.+)_(.+)_(.+)$/
       course = $1
@@ -376,7 +399,476 @@ class LinebotController < ApplicationController
     send_reply(reply_token, message)
   end
 
-  # 🆕 予約フローを開始
+  # 🆕 今日の空き状況を表示
+  def send_today_availability(user, reply_token)
+    today = Date.current
+    available_slots = get_available_time_slots(today, 60) # 60分コースを基準
+    
+    if available_slots.empty?
+      message = {
+        type: "flex",
+        altText: "今日の空き状況",
+        contents: {
+          type: "bubble",
+          header: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "text",
+                text: "📅 今日の空き状況",
+                weight: "bold",
+                size: "lg"
+              },
+              {
+                type: "text",
+                text: today.strftime('%m/%d (%a)'),
+                size: "sm",
+                color: "#666666"
+              }
+            ]
+          },
+          body: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "text",
+                text: "❌ 本日は予約可能な時間がございません",
+                color: "#dc3545",
+                weight: "bold"
+              },
+              {
+                type: "text",
+                text: "明日以降の予約をご検討ください",
+                size: "sm",
+                color: "#666666",
+                margin: "md"
+              }
+            ]
+          },
+          footer: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "button",
+                style: "primary",
+                action: {
+                  type: "postback",
+                  label: "明日の空きを確認",
+                  data: "check_tomorrow_availability"
+                }
+              }
+            ]
+          }
+        }
+      }
+    else
+      time_buttons = available_slots.first(6).map do |slot|
+        {
+          type: "button",
+          style: "secondary",
+          action: {
+            type: "postback",
+            label: slot[:start_time].strftime('%H:%M'),
+            data: "quick_book_60min_#{today.strftime('%Y-%m-%d')}_#{slot[:start_time].strftime('%H:%M')}"
+          }
+        }
+      end
+
+      message = {
+        type: "flex",
+        altText: "今日の空き状況",
+        contents: {
+          type: "bubble",
+          header: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "text",
+                text: "📅 今日の空き状況",
+                weight: "bold",
+                size: "lg"
+              },
+              {
+                type: "text",
+                text: today.strftime('%m/%d (%a)'),
+                size: "sm",
+                color: "#666666"
+              }
+            ]
+          },
+          body: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "text",
+                text: "✅ 以下の時間が予約可能です",
+                color: "#28a745",
+                weight: "bold"
+              },
+              {
+                type: "text",
+                text: "60分コースで予約可能な時間",
+                size: "sm",
+                color: "#666666",
+                margin: "md"
+              }
+            ]
+          },
+          footer: {
+            type: "box",
+            layout: "vertical",
+            contents: time_buttons
+          }
+        }
+      }
+    end
+
+    send_reply(reply_token, message)
+  end
+
+  # 🆕 明日の空き状況を表示
+  def send_tomorrow_availability(user, reply_token)
+    tomorrow = Date.current + 1.day
+    available_slots = get_available_time_slots(tomorrow, 60) # 60分コースを基準
+    
+    if available_slots.empty?
+      message = {
+        type: "flex",
+        altText: "明日の空き状況",
+        contents: {
+          type: "bubble",
+          header: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "text",
+                text: "📅 明日の空き状況",
+                weight: "bold",
+                size: "lg"
+              },
+              {
+                type: "text",
+                text: tomorrow.strftime('%m/%d (%a)'),
+                size: "sm",
+                color: "#666666"
+              }
+            ]
+          },
+          body: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "text",
+                text: "❌ 明日は予約可能な時間がございません",
+                color: "#dc3545",
+                weight: "bold"
+              },
+              {
+                type: "text",
+                text: "他の日付をご検討ください",
+                size: "sm",
+                color: "#666666",
+                margin: "md"
+              }
+            ]
+          },
+          footer: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "button",
+                style: "primary",
+                action: {
+                  type: "postback",
+                  label: "他の日付を確認",
+                  data: "booking"
+                }
+              }
+            ]
+          }
+        }
+      }
+    else
+      time_buttons = available_slots.first(6).map do |slot|
+        {
+          type: "button",
+          style: "secondary",
+          action: {
+            type: "postback",
+            label: slot[:start_time].strftime('%H:%M'),
+            data: "quick_book_60min_#{tomorrow.strftime('%Y-%m-%d')}_#{slot[:start_time].strftime('%H:%M')}"
+          }
+        }
+      end
+
+      message = {
+        type: "flex",
+        altText: "明日の空き状況",
+        contents: {
+          type: "bubble",
+          header: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "text",
+                text: "📅 明日の空き状況",
+                weight: "bold",
+                size: "lg"
+              },
+              {
+                type: "text",
+                text: tomorrow.strftime('%m/%d (%a)'),
+                size: "sm",
+                color: "#666666"
+              }
+            ]
+          },
+          body: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "text",
+                text: "✅ 以下の時間が予約可能です",
+                color: "#28a745",
+                weight: "bold"
+              },
+              {
+                type: "text",
+                text: "60分コースで予約可能な時間",
+                size: "sm",
+                color: "#666666",
+                margin: "md"
+              }
+            ]
+          },
+          footer: {
+            type: "box",
+            layout: "vertical",
+            contents: time_buttons
+          }
+        }
+      }
+    end
+
+    send_reply(reply_token, message)
+  end
+
+  # 🆕 空き状況の概要を表示
+  def send_availability_info(user, reply_token)
+    today = Date.current
+    tomorrow = today + 1.day
+    
+    today_slots = get_available_time_slots(today, 60)
+    tomorrow_slots = get_available_time_slots(tomorrow, 60)
+    
+    message = {
+      type: "flex",
+      altText: "空き状況の概要",
+      contents: {
+        type: "bubble",
+        header: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "📅 空き状況の概要",
+              weight: "bold",
+              size: "lg"
+            }
+          ]
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "今日 (#{today.strftime('%m/%d')})",
+              weight: "bold",
+              size: "sm"
+            },
+            {
+              type: "text",
+              text: today_slots.empty? ? "❌ 予約不可" : "✅ #{today_slots.count}枠空き",
+              size: "sm",
+              color: today_slots.empty? ? "#dc3545" : "#28a745",
+              margin: "sm"
+            },
+            {
+              type: "text",
+              text: "明日 (#{tomorrow.strftime('%m/%d')})",
+              weight: "bold",
+              size: "sm",
+              margin: "md"
+            },
+            {
+              type: "text",
+              text: tomorrow_slots.empty? ? "❌ 予約不可" : "✅ #{tomorrow_slots.count}枠空き",
+              size: "sm",
+              color: tomorrow_slots.empty? ? "#dc3545" : "#28a745",
+              margin: "sm"
+            }
+          ]
+        },
+        footer: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "button",
+              style: "primary",
+              action: {
+                type: "postback",
+                label: "詳細を確認",
+                data: "booking"
+              }
+            }
+          ]
+        }
+      }
+    }
+
+    send_reply(reply_token, message)
+  end
+
+  # 🆕 メインメニューを表示
+  def send_main_menu(reply_token)
+    message = {
+      type: "flex",
+      altText: "メインメニュー",
+      contents: {
+        type: "bubble",
+        header: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "🏠 メインメニュー",
+              weight: "bold",
+              size: "lg"
+            }
+          ]
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "button",
+              style: "primary",
+              action: {
+                type: "postback",
+                label: "📅 予約する",
+                data: "booking"
+              }
+            },
+            {
+              type: "button",
+              style: "secondary",
+              action: {
+                type: "postback",
+                label: "📋 チケット確認",
+                data: "check_tickets"
+              }
+            },
+            {
+              type: "button",
+              style: "secondary",
+              action: {
+                type: "postback",
+                label: "📊 利用履歴",
+                data: "usage_history"
+              }
+            },
+            {
+              type: "button",
+              style: "secondary",
+              action: {
+                type: "postback",
+                label: "📰 最新情報",
+                data: "news"
+              }
+            }
+          ],
+          spacing: "sm"
+        }
+      }
+    }
+
+    send_reply(reply_token, message)
+  end
+
+  # 🆕 ヘルプメッセージを表示
+  def send_help_message(reply_token)
+    message = {
+      type: "flex",
+      altText: "使い方ガイド",
+      contents: {
+        type: "bubble",
+        header: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "❓ 使い方ガイド",
+              weight: "bold",
+              size: "lg"
+            }
+          ]
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "📝 よく使うコマンド",
+              weight: "bold",
+              size: "sm"
+            },
+            {
+              type: "text",
+              text: "• 予約 → 予約メニュー\n• 今日 → 今日の空き確認\n• 明日 → 明日の空き確認\n• 空き → 空き状況確認\n• メニュー → メインメニュー",
+              size: "sm",
+              color: "#666666",
+              margin: "sm",
+              wrap: true
+            },
+            {
+              type: "text",
+              text: "📱 リッチメニュー",
+              weight: "bold",
+              size: "sm",
+              margin: "md"
+            },
+            {
+              type: "text",
+              text: "画面下部の「メニューを開く」からも各種機能をご利用いただけます。",
+              size: "sm",
+              color: "#666666",
+              margin: "sm",
+              wrap: true
+            }
+          ]
+        }
+      }
+    }
+
+    send_reply(reply_token, message)
+  end
   def start_booking_flow(user, reply_token, course)
     # ユーザー情報が不完全な場合は情報入力を促す
     unless user.name.present? && user.phone_number.present? && user.address.present?
