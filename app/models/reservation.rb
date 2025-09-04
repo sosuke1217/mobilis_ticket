@@ -699,11 +699,17 @@ class Reservation < ApplicationRecord
   end
 
   def handle_status_change
+    Rails.logger.info "🔄 handle_status_change called for reservation #{id}"
+    Rails.logger.info "🔄 saved_change_to_status?: #{saved_change_to_status?}"
+    Rails.logger.info "🔄 status: #{status}"
+    
     if saved_change_to_status?
       case status
       when 'confirmed'
+        Rails.logger.info "✅ Calling send_confirmation_notifications"
         send_confirmation_notifications
       when 'cancelled'
+        Rails.logger.info "❌ Calling send_cancellation_notifications"
         send_cancellation_notifications
       end
     end
