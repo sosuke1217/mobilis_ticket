@@ -265,6 +265,19 @@ class LinebotController < ApplicationController
     when /ヘルプ|help|使い方/i
       send_help_message(reply_token)
 
+    when /日程選択開始|日付選択開始|date selection/i
+      # ユーザーのbooking_courseを確認
+      if user.booking_course.present?
+        course = user.booking_course
+        Rails.logger.info "📅 Starting date selection via text for course: #{course}"
+        start_date_selection(user, reply_token, course)
+      else
+        send_reply(reply_token, {
+          type: "text",
+          text: "申し訳ございません。コースが選択されていません。\nまずコースを選択してください。"
+        })
+      end
+
     else
       send_default_help(reply_token)
     end
@@ -1198,37 +1211,8 @@ class LinebotController < ApplicationController
         # ユーザーが次のアクションを取るまで待機
         # 日付選択を開始するためのボタンを送信
         send_reply(reply_token, {
-          type: "flex",
-          altText: "日付選択を開始",
-          contents: {
-            type: "bubble",
-            body: {
-              type: "box",
-              layout: "vertical",
-              contents: [
-                {
-                  type: "text",
-                  text: "日程選択を開始しますか？",
-                  wrap: true
-                }
-              ]
-            },
-            footer: {
-              type: "box",
-              layout: "vertical",
-              contents: [
-                {
-                  type: "button",
-                  style: "primary",
-                  action: {
-                    type: "postback",
-                    label: "日程選択開始",
-                    data: "start_date_selection_#{course_safe}"
-                  }
-                }
-              ]
-            }
-          }
+          type: "text",
+          text: "日程選択を開始するには「日程選択開始」と入力してください。"
         })
       else
         # 登録済みの住所がない場合は住所入力を促す
@@ -1261,37 +1245,8 @@ class LinebotController < ApplicationController
       # ユーザーが次のアクションを取るまで待機
       # 日付選択を開始するためのボタンを送信
       send_reply(reply_token, {
-        type: "flex",
-        altText: "日付選択を開始",
-        contents: {
-          type: "bubble",
-          body: {
-            type: "box",
-            layout: "vertical",
-            contents: [
-              {
-                type: "text",
-                text: "日程選択を開始しますか？",
-                wrap: true
-              }
-            ]
-          },
-          footer: {
-            type: "box",
-            layout: "vertical",
-            contents: [
-              {
-                type: "button",
-                style: "primary",
-                action: {
-                  type: "postback",
-                  label: "日程選択開始",
-                  data: "start_date_selection_#{course_safe}"
-                }
-              }
-            ]
-          }
-        }
+        type: "text",
+        text: "日程選択を開始するには「日程選択開始」と入力してください。"
       })
     else
       send_reply(reply_token, {
