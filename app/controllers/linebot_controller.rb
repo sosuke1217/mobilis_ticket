@@ -1064,6 +1064,16 @@ class LinebotController < ApplicationController
     Rails.logger.info "🔍 user.booking_location: '#{user.booking_location}'"
     Rails.logger.info "🔍 user.address: '#{user.address}'"
     
+    # 🆕 「日程選択開始」などの特殊なメッセージは住所として保存しない
+    if message_text.match?(/日程選択開始|日付選択開始|date selection/i)
+      Rails.logger.info "🔍 Special message detected, not saving as address"
+      send_reply(reply_token, {
+        type: "text",
+        text: "申し訳ございません。住所を入力してください。\n\n例: 東京都渋谷区○○1-2-3"
+      })
+      return
+    end
+    
     # 場所情報を含めた住所を保存
     location_type = user.booking_location || 'unknown'
     location_text = case location_type
