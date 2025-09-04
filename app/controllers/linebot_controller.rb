@@ -1108,12 +1108,36 @@ class LinebotController < ApplicationController
     Rails.logger.info "📝 User current info - name: '#{user.name}', phone: '#{user.phone_number}', address: '#{user.address}'"
     Rails.logger.info "📝 User booking_state: #{user.booking_state}"
     
-    user.update(booking_state: 'collecting_name')
-    
-    send_reply(reply_token, {
-      type: "text",
-      text: "まず、お名前を教えてください。\n\nフルネームで入力してください。\n例: 田中太郎"
-    })
+    # 不足している情報を確認
+    if !user.name.present?
+      user.update(booking_state: 'collecting_name')
+      send_reply(reply_token, {
+        type: "text",
+        text: "まず、お名前を教えてください。\n\nフルネームで入力してください。\n例: 田中太郎"
+      })
+    elsif !user.phone_number.present?
+      user.update(booking_state: 'collecting_phone')
+      send_reply(reply_token, {
+        type: "text",
+        text: "次にお電話番号を教えてください。\n例: 090-1234-5678"
+      })
+    elsif !user.address.present?
+      user.update(booking_state: 'collecting_address')
+      send_reply(reply_token, {
+        type: "text",
+        text: "最後にご住所を教えてください。\n例: 東京都渋谷区○○1-2-3"
+      })
+    else
+      # すべての情報が揃っている場合は予約フローを再開
+      course = user.booking_course
+      user.update(booking_course: nil, booking_state: nil)
+      send_reply(reply_token, {
+        type: "text",
+        text: "情報の入力が完了しました。\n予約フローを再開します。"
+      })
+      sleep(1)
+      start_booking_flow(user, reply_token, course)
+    end
   end
 
   # 🆕 利用可能な時間を送信
