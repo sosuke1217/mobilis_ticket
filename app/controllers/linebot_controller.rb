@@ -1100,9 +1100,9 @@ class LinebotController < ApplicationController
       text: "ありがとうございます！\n\n住所の入力が完了しました。\n予約フローを開始します。"
     })
     
-    # 少し待ってから日付選択を開始
+    # 少し待ってから日付選択を開始（push_message使用）
     sleep(1)
-    start_date_selection(user, reply_token, course)
+    start_date_selection_with_push(user, course)
   end
 
   # 🆕 情報収集開始
