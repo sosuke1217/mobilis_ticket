@@ -916,10 +916,7 @@ class LinebotController < ApplicationController
     send_location_selection(user, reply_token)
   end
 
-    Rails.logger.info "📤 Sending date selection message"
-    send_reply(reply_token, message)
-    Rails.logger.info "✅ Date selection message sent successfully"
-  end
+  # 🆕 日付選択画面を表示
 
   # 🆕 ユーザー情報入力を促す
   def send_user_info_request(user, reply_token, course)
