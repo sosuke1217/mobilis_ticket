@@ -60,7 +60,8 @@ namespace :notifications do
     reservation = Reservation.new(
       user: user,
       name: user.name,
-      start_time: 1.day.from_now,
+      start_time: Time.current + 1.day,
+      end_time: Time.current + 1.day + 1.hour,
       course: "テストコース",
       status: "tentative"
     )
@@ -74,7 +75,7 @@ namespace :notifications do
       puts "   設定を確認してください"
     end
   end
-  
+
   desc "LINE通知のテスト送信"
   task test_line: :environment do
     puts "📱 LINE通知テスト開始"
@@ -90,7 +91,8 @@ namespace :notifications do
     reservation = Reservation.new(
       user: user,
       name: user.name,
-      start_time: 1.day.from_now,
+      start_time: Time.current + 1.day,
+      end_time: Time.current + 1.day + 1.hour,
       course: "テストコース",
       status: "tentative"
     )
