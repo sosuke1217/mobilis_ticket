@@ -319,6 +319,18 @@ class LinebotController < ApplicationController
       period = $3
       handle_time_period_selection(user, reply_token, course, date, period)
 
+    when /^start_date_selection_(.+)$/
+      Rails.logger.info "📅 Starting date selection for course: #{$1}"
+      course_safe = $1
+      # コース名を復元
+      course = case course_safe
+               when "60" then "60分コース"
+               when "40" then "40分コース"
+               when "80" then "80分コース"
+               else "60分コース" # デフォルト
+               end
+      start_date_selection(user, reply_token, course)
+
     when /^select_date_(.+)_(.+)$/
       Rails.logger.info "📅 Selecting date"
       course = $1
@@ -1174,12 +1186,50 @@ class LinebotController < ApplicationController
         # 登録済みの住所がある場合は直接予約フローに進む
         course = user.booking_course
         user.update(booking_location: nil) # booking_courseは保持
+        
+        # コース名をURLセーフな形式に変換
+        course_safe = course.gsub(/[^\w\s]/, '').gsub(/\s+/, '_')
+        
         send_reply(reply_token, {
           type: "text",
           text: "ご自宅でのストレッチで承ります。\n予約フローを開始します。"
         })
-        sleep(1)
-        start_date_selection(user, reply_token, course)
+        # reply_tokenは一度しか使用できないため、ここで終了
+        # ユーザーが次のアクションを取るまで待機
+        # 日付選択を開始するためのボタンを送信
+        send_reply(reply_token, {
+          type: "flex",
+          altText: "日付選択を開始",
+          contents: {
+            type: "bubble",
+            body: {
+              type: "box",
+              layout: "vertical",
+              contents: [
+                {
+                  type: "text",
+                  text: "日程選択を開始しますか？",
+                  wrap: true
+                }
+              ]
+            },
+            footer: {
+              type: "box",
+              layout: "vertical",
+              contents: [
+                {
+                  type: "button",
+                  style: "primary",
+                  action: {
+                    type: "postback",
+                    label: "日程選択開始",
+                    data: "start_date_selection_#{course_safe}"
+                  }
+                }
+              ]
+            }
+          }
+        })
       else
         # 登録済みの住所がない場合は住所入力を促す
         user.update(booking_state: 'collecting_address', booking_location: 'home')
@@ -1199,12 +1249,50 @@ class LinebotController < ApplicationController
       # レンタルスペースの場合：こちらから連絡
       course = user.booking_course
       user.update(booking_location: nil) # booking_courseは保持
+      
+      # コース名をURLセーフな形式に変換
+      course_safe = course.gsub(/[^\w\s]/, '').gsub(/\s+/, '_')
+      
       send_reply(reply_token, {
         type: "text",
         text: "レンタルスペースでのストレッチで承ります。\n\nレンタルスペースの手配について、こちらからご連絡いたします。\n予約フローを開始します。"
       })
-      sleep(1)
-      start_date_selection(user, reply_token, course)
+      # reply_tokenは一度しか使用できないため、ここで終了
+      # ユーザーが次のアクションを取るまで待機
+      # 日付選択を開始するためのボタンを送信
+      send_reply(reply_token, {
+        type: "flex",
+        altText: "日付選択を開始",
+        contents: {
+          type: "bubble",
+          body: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "text",
+                text: "日程選択を開始しますか？",
+                wrap: true
+              }
+            ]
+          },
+          footer: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "button",
+                style: "primary",
+                action: {
+                  type: "postback",
+                  label: "日程選択開始",
+                  data: "start_date_selection_#{course_safe}"
+                }
+              }
+            ]
+          }
+        }
+      })
     else
       send_reply(reply_token, {
         type: "text",
