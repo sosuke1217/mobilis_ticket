@@ -107,6 +107,56 @@ namespace :notifications do
     end
   end
   
+  desc "チケット期限前通知のテスト"
+  task test_expiry_reminder: :environment do
+    puts "🔔 チケット期限前通知テスト開始"
+    
+    # LINE連携しているユーザーを取得
+    user = User.where.not(line_user_id: nil).first
+    if user.nil?
+      puts "❌ LINE連携しているユーザーが見つかりません"
+      next
+    end
+    
+    # テスト用のチケットテンプレートを作成（存在しない場合）
+    template = TicketTemplate.find_or_create_by(
+      name: "テストチケット",
+      total_count: 4,
+      expiry_days: 30,
+      price: 4000
+    )
+    
+    # テスト用のチケットを作成（明日期限）
+    ticket = Ticket.find_or_create_by(
+      user: user,
+      ticket_template: template,
+      title: "テストチケット（期限通知テスト）"
+    ) do |t|
+      t.total_count = 4
+      t.remaining_count = 2
+      t.purchase_date = Time.current
+      t.expiry_date = Time.current + 1.day  # 明日期限
+    end
+    
+    # 期限を明日に更新
+    ticket.update!(expiry_date: Time.current + 1.day)
+    
+    puts "📋 テストチケット作成: #{ticket.title}"
+    puts "👤 ユーザー: #{user.name}"
+    puts "📅 期限: #{ticket.expiry_date}"
+    puts "🔢 残り回数: #{ticket.remaining_count}回"
+    
+    begin
+      # 期限前通知テスト（0日前）
+      LineNotifier.send_reminder(user, ticket, 0)
+      puts "✅ チケット期限前通知テスト成功: #{user.name}"
+      puts "📱 通知内容: #{ticket.title} の期限通知（0日前）"
+    rescue => e
+      puts "❌ チケット期限前通知テスト失敗: #{e.message}"
+      puts "   設定を確認してください"
+    end
+  end
+
   desc "全通知機能のテスト"
   task test_all: [:test_config, :test_email, :test_line] do
     puts "\n🎯 全通知機能テスト完了"
