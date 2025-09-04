@@ -979,11 +979,16 @@ class LinebotController < ApplicationController
 
   # 🆕 ユーザー情報入力を促す
   def send_user_info_request(user, reply_token, course)
+    Rails.logger.info "📝 send_user_info_request called for user #{user.id}"
+    Rails.logger.info "📝 User current info - name: '#{user.name}', phone: '#{user.phone_number}', address: '#{user.address}'"
+    
     missing_info = []
     missing_info << "お名前" unless user.name.present?
     missing_info << "お電話番号" unless user.phone_number.present?
     missing_info << "ご住所" unless user.address.present?
-
+    
+    Rails.logger.info "📝 Missing info: #{missing_info.join(', ')}"
+    
     # 保存するコース情報
     user.update(booking_course: course)
 
@@ -1099,6 +1104,10 @@ class LinebotController < ApplicationController
 
   # 🆕 情報収集開始
   def start_info_collection(user, reply_token)
+    Rails.logger.info "📝 start_info_collection called for user #{user.id}"
+    Rails.logger.info "📝 User current info - name: '#{user.name}', phone: '#{user.phone_number}', address: '#{user.address}'"
+    Rails.logger.info "📝 User booking_state: #{user.booking_state}"
+    
     user.update(booking_state: 'collecting_name')
     
     send_reply(reply_token, {
