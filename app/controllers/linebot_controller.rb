@@ -327,6 +327,7 @@ class LinebotController < ApplicationController
   
     when /^confirm_booking_(.+)_(.+)_(.+)$/
       Rails.logger.info "✅ Confirming booking"
+      Rails.logger.info "✅ Course: #{$1}, Date: #{$2}, Time: #{$3}"
       course = $1
       date = $2
       time = $3
@@ -1295,15 +1296,20 @@ class LinebotController < ApplicationController
 
   def send_single_time_slots_message(user, reply_token, course, date_str, available_slots)
     date = Date.parse(date_str)
+    Rails.logger.info "📝 send_single_time_slots_message called for course: #{course}, date: #{date_str}"
+    Rails.logger.info "📝 Available slots count: #{available_slots.count}"
     
     time_buttons = available_slots.map do |slot|
+      postback_data = "confirm_booking_#{course}_#{date_str}_#{slot[:start_time].strftime('%H:%M')}"
+      Rails.logger.info "📝 Creating button with postback data: #{postback_data}"
+      
       {
         type: "button",
         style: "secondary",
         action: {
           type: "postback",
           label: "#{slot[:start_time].strftime('%H:%M')} - #{slot[:end_time].strftime('%H:%M')}",
-          data: "confirm_booking_#{course}_#{date_str}_#{slot[:start_time].strftime('%H:%M')}"
+          data: postback_data
         }
       }
     end
@@ -1381,6 +1387,9 @@ class LinebotController < ApplicationController
 
   # 🆕 予約を作成
   def create_booking(user, reply_token, course, date_str, time_str)
+    Rails.logger.info "📝 create_booking called for user #{user.id}"
+    Rails.logger.info "📝 Course: #{course}, Date: #{date_str}, Time: #{time_str}"
+    
     begin
       date = Date.parse(date_str)
       start_time = Time.zone.parse("#{date} #{time_str}")
