@@ -2265,24 +2265,26 @@ class LinebotController < ApplicationController
     dates = []
     (1..days_ahead).each do |i|
       date = Date.current + i.days
-      # 営業日チェック（例：日曜日は休み）
-      next if date.sunday?
+      # 営業日チェック（一時的に日曜日も含める）
+      # next if date.sunday?
       
-      # その日に空きがあるかチェック
+      # その日に空きがあるかチェック（より緩やかな条件）
       if has_available_slots_on_date(date)
         dates << date
       end
     end
+    Rails.logger.info "📅 get_available_dates: Found #{dates.count} available dates: #{dates.map(&:strftime).join(', ')}"
     dates
   end
 
   def has_available_slots_on_date(date)
-    # 簡単なチェック：その日の予約数が一定数以下なら空きありとする
+    # より緩やかなチェック：その日の予約数が一定数以下なら空きありとする
     reservations_count = Reservation.active
       .where(start_time: date.beginning_of_day..date.end_of_day)
       .count
     
-    reservations_count < 8 # 1日最大8枠と仮定
+    Rails.logger.info "📅 has_available_slots_on_date: #{date.strftime} has #{reservations_count} reservations"
+    reservations_count < 12 # 1日最大12枠に緩和（10:00-20:00で30分間隔なら20枠可能）
   end
 
   def get_available_time_slots(date, duration)
