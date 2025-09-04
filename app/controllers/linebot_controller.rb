@@ -1618,7 +1618,7 @@ class LinebotController < ApplicationController
               create_info_row("日時", "#{start_time.strftime('%m/%d (%a) %H:%M')} - #{end_time.strftime('%H:%M')}"),
               create_info_row("コース", course),
               create_info_row("お名前", user.name),
-              create_info_row("ご住所", user.address.present? ? truncate_address(user.address) : "住所未設定"),
+              create_info_row("ご住所", get_display_address(user)),
               {
                 type: "separator",
                 margin: "md"
@@ -2418,6 +2418,27 @@ class LinebotController < ApplicationController
   def truncate_address(address)
     return "" unless address
     address.length > 20 ? "#{address[0..20]}..." : address
+  end
+
+  # 🆕 表示用住所を取得
+  def get_display_address(user)
+    if user.booking_location == 'other'
+      # 別の場所の場合はキャッシュから住所を取得
+      other_address = Rails.cache.read("other_location_address_#{user.id}")
+      if other_address.present?
+        return truncate_address(other_address)
+      else
+        return "別の場所（住所未設定）"
+      end
+    elsif user.booking_location == 'rental'
+      # レンタルスペースの場合は専用メッセージ
+      return "レンタルスペース（手配予定）"
+    elsif user.address.present?
+      # 自宅または通常の住所
+      return truncate_address(user.address)
+    else
+      return "住所未設定"
+    end
   end
 
   def get_duration_from_course(course)
