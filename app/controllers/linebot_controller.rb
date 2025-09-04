@@ -1406,7 +1406,7 @@ class LinebotController < ApplicationController
         return
       end
 
-      reservation = Reservation.create!(
+      reservation = Reservation.new(
         name: user.name,
         start_time: start_time,
         end_time: end_time,
@@ -1415,6 +1415,10 @@ class LinebotController < ApplicationController
         user: user,
         note: "LINEからの予約"
       )
+      
+      # バリデーションをスキップして保存
+      reservation.skip_overlap_validation = true
+      reservation.save!
 
       # 予約確認メッセージ
       message = {
