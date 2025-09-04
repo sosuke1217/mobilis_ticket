@@ -904,22 +904,31 @@ class LinebotController < ApplicationController
     send_reply(reply_token, message)
   end
   def start_booking_flow(user, reply_token, course)
+    Rails.logger.info "🔄 start_booking_flow called for user #{user.id}, course: #{course}"
+    
     # ユーザー情報が不完全な場合は情報入力を促す
     unless user.name.present? && user.phone_number.present? && user.address.present?
+      Rails.logger.info "❌ User info incomplete - name: #{user.name.present?}, phone: #{user.phone_number.present?}, address: #{user.address.present?}"
       send_user_info_request(user, reply_token, course)
       return
     end
 
+    Rails.logger.info "✅ User info complete, checking available dates"
+
     # 利用可能な日付を表示
     available_dates = get_available_dates(7) # 今日から7日間
+    Rails.logger.info "📅 Found #{available_dates.count} available dates: #{available_dates.map(&:strftime).join(', ')}"
     
     if available_dates.empty?
+      Rails.logger.info "❌ No available dates found"
       send_reply(reply_token, {
         type: "text",
         text: "申し訳ございません。現在予約可能な日程がございません。\nお電話でお問い合わせください: 03-1234-5678"
       })
       return
     end
+
+    Rails.logger.info "📝 Creating date selection message"
 
     message = {
       type: "flex",
@@ -963,7 +972,9 @@ class LinebotController < ApplicationController
       }
     }
 
+    Rails.logger.info "📤 Sending date selection message"
     send_reply(reply_token, message)
+    Rails.logger.info "✅ Date selection message sent successfully"
   end
 
   # 🆕 ユーザー情報入力を促す
@@ -1973,7 +1984,20 @@ class LinebotController < ApplicationController
 
   # ヘルパーメソッド
   def send_reply(reply_token, message)
-    client.reply_message(reply_token, message)
+    Rails.logger.info "📤 send_reply called with token: #{reply_token}"
+    Rails.logger.info "📤 Message type: #{message[:type]}"
+    
+    begin
+      response = client.reply_message(reply_token, message)
+      Rails.logger.info "📤 LINE API response: #{response.code}"
+      
+      if response.code != '200'
+        Rails.logger.error "❌ LINE API error: #{response.body}"
+      end
+    rescue => e
+      Rails.logger.error "❌ send_reply error: #{e.message}"
+      Rails.logger.error "❌ Backtrace: #{e.backtrace.first(5).join("\n")}"
+    end
   end
 
   def create_course_button(course_name, price, data)
