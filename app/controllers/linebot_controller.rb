@@ -1203,17 +1203,9 @@ class LinebotController < ApplicationController
         # コース名をURLセーフな形式に変換
         course_safe = course.gsub(/[^\w\s]/, '').gsub(/\s+/, '_')
         
-        send_reply(reply_token, {
-          type: "text",
-          text: "ご自宅でのストレッチで承ります。\n予約フローを開始します。"
-        })
-        # reply_tokenは一度しか使用できないため、ここで終了
-        # ユーザーが次のアクションを取るまで待機
-        # 日付選択を開始するためのボタンを送信
-        send_reply(reply_token, {
-          type: "text",
-          text: "日程選択を開始するには「日程選択開始」と入力してください。"
-        })
+        # 日程選択を直接開始（push_message使用）
+        sleep(1)
+        start_date_selection_with_push(user, course)
       else
         # 登録済みの住所がない場合は住所入力を促す
         user.update(booking_state: 'collecting_address', booking_location: 'home')
@@ -1237,17 +1229,9 @@ class LinebotController < ApplicationController
       # コース名をURLセーフな形式に変換
       course_safe = course.gsub(/[^\w\s]/, '').gsub(/\s+/, '_')
       
-      send_reply(reply_token, {
-        type: "text",
-        text: "レンタルスペースでのストレッチで承ります。\n\nレンタルスペースの手配について、こちらからご連絡いたします。\n予約フローを開始します。"
-      })
-      # reply_tokenは一度しか使用できないため、ここで終了
-      # ユーザーが次のアクションを取るまで待機
-      # 日付選択を開始するためのボタンを送信
-      send_reply(reply_token, {
-        type: "text",
-        text: "日程選択を開始するには「日程選択開始」と入力してください。"
-      })
+      # 日程選択を直接開始（push_message使用）
+      sleep(1)
+      start_date_selection_with_push(user, course)
     else
       send_reply(reply_token, {
         type: "text",
@@ -2272,6 +2256,28 @@ class LinebotController < ApplicationController
       end
     rescue => e
       Rails.logger.error "❌ send_reply error: #{e.message}"
+      Rails.logger.error "❌ Backtrace: #{e.backtrace.first(5).join("\n")}"
+    end
+  end
+
+  # 🆕 push_messageメソッド
+  def push_message(user_id, message)
+    Rails.logger.info "📤 push_message called for user: #{user_id}"
+    Rails.logger.info "📤 Message type: #{message[:type]}"
+    
+    begin
+      Rails.logger.info "📤 About to call LINE API with push message: #{message.inspect}"
+      response = client.push_message(user_id, message)
+      Rails.logger.info "📤 LINE API response code: #{response.code}"
+      Rails.logger.info "📤 LINE API response body: #{response.body}"
+      
+      if response.code != '200'
+        Rails.logger.error "❌ LINE API error: #{response.body}"
+      else
+        Rails.logger.info "✅ LINE API push call successful"
+      end
+    rescue => e
+      Rails.logger.error "❌ push_message error: #{e.message}"
       Rails.logger.error "❌ Backtrace: #{e.backtrace.first(5).join("\n")}"
     end
   end
