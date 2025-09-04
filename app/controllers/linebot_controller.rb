@@ -271,68 +271,86 @@ class LinebotController < ApplicationController
   end
 
   def handle_postback_action(user, data, reply_token)
+    Rails.logger.info "🔄 Postback action received: #{data}"
+    
     case data
     when "check_tickets"
+      Rails.logger.info "📋 Checking tickets"
       send_ticket_status(user, reply_token)
 
     when "usage_history"
+      Rails.logger.info "📊 Showing usage history"
       send_usage_history(user, reply_token)
 
     when "booking"
+      Rails.logger.info "📅 Showing booking options"
       send_booking_options(user, reply_token)
 
     when "news"
+      Rails.logger.info "📰 Showing news menu"
       send_news_menu(reply_token)
 
     when "reviews"
+      Rails.logger.info "⭐ Showing reviews menu"
       send_reviews_menu(reply_token)
 
     when "check_tomorrow_availability"
+      Rails.logger.info "📅 Checking tomorrow availability"
       send_tomorrow_availability(user, reply_token)
 
     when "start_info_collection"
+      Rails.logger.info "📝 Starting info collection"
       start_info_collection(user, reply_token)
 
     when /^quick_book_60min_(.+)_(.+)$/
+      Rails.logger.info "⚡ Quick booking 60min"
       date_str = $1
       time_str = $2
       create_booking(user, reply_token, "60分コース", date_str, time_str)
 
     when /^select_time_period_(.+)_(.+)_(.+)$/
+      Rails.logger.info "⏰ Selecting time period"
       course = $1
       date = $2
       period = $3
       handle_time_period_selection(user, reply_token, course, date, period)
 
     when /^select_date_(.+)_(.+)$/
+      Rails.logger.info "📅 Selecting date"
       course = $1
       date = $2
       send_available_times(user, reply_token, course, date)
   
     when /^confirm_booking_(.+)_(.+)_(.+)$/
+      Rails.logger.info "✅ Confirming booking"
       course = $1
       date = $2
       time = $3
       create_booking(user, reply_token, course, date, time)  
 
     when /^book_(\d+)min$/
+      Rails.logger.info "📅 Starting booking flow for #{$1}min course"
       course = "#{$1}分コース"
       start_booking_flow(user, reply_token, course)
 
     when /^cancel_booking_(\d+)$/
+      Rails.logger.info "❌ Cancelling booking"
       reservation_id = $1.to_i
       handle_booking_cancellation(user, reply_token, reservation_id, "お客様都合によるキャンセル")
 
     when /^cancel_confirmed_booking_(\d+)$/
+      Rails.logger.info "❌ Cancelling confirmed booking"
       reservation_id = $1.to_i
       handle_booking_cancellation(user, reply_token, reservation_id, "お客様都合によるキャンセル")
 
     when /^cancel_with_reason_(\d+)_(.+)$/
+      Rails.logger.info "❌ Cancelling with reason"
       reservation_id = $1.to_i
       reason = $2
       handle_booking_cancellation(user, reply_token, reservation_id, reason)
     
     when /^urgent_cancel_(\d+)$/
+      Rails.logger.info "🚨 Urgent cancellation"
       reservation_id = $1.to_i
       send_cancellation_reason_options(user, reply_token, reservation_id)
 
@@ -351,6 +369,7 @@ class LinebotController < ApplicationController
       })
 
     else
+      Rails.logger.error "⚠️ Unknown postback action: #{data}"
       send_reply(reply_token, {
         type: "text",
         text: "⚠️ 未知のアクション: #{data}"
