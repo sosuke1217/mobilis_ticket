@@ -7,16 +7,16 @@
   <div class="row mb-4">
     <div class="col-12">
       <div class="d-flex justify-content-between align-items-start">
-        <div>
+    <div>
           <h1 class="h2 mb-1">
             <i class="fas fa-user me-2 text-primary"></i>
-            <%= @user.display_name_or_name || @user.line_user_id %> さんの詳細
-          </h1>
-          <% if @user.display_name.present? && @user.name.present? && @user.display_name != @user.name %>
+        <%= @user.display_name_or_name || @user.line_user_id %> さんの詳細
+      </h1>
+      <% if @user.display_name.present? && @user.name.present? && @user.display_name != @user.name %>
             <p class="text-muted mb-0 small">
               <i class="fas fa-id-card me-1"></i>登録名: <%= @user.name %>
             </p>
-          <% end %>
+      <% end %>
         </div>
         <div class="d-flex gap-2">
           <%= link_to admin_users_path, class: "btn btn-outline-secondary btn-sm" do %>
@@ -39,7 +39,7 @@
         <div class="card-body">
           <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center">
-              <% if @user.line_user_id.present? && @user.line_user_id != '' %>
+    <% if @user.line_user_id.present? && @user.line_user_id != '' %>
                 <span class="badge bg-success fs-6 me-3">
                   <i class="fas fa-check-circle me-1"></i>連携済み
                 </span>
@@ -59,15 +59,15 @@
               <% if @user.line_user_id.present? && @user.line_user_id != '' %>
                 <button type="button" class="btn btn-outline-primary btn-sm" onclick="updateLineProfile()">
                   <i class="fas fa-sync-alt me-1"></i>更新
-                </button>
+        </button>
                 <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeLineLink()">
                   <i class="fas fa-unlink me-1"></i>解除
-                </button>
-              <% else %>
+        </button>
+    <% else %>
                 <button type="button" class="btn btn-success btn-sm" onclick="showLineLinkForm()">
                   <i class="fas fa-link me-1"></i>連携作成
-                </button>
-              <% end %>
+      </button>
+    <% end %>
             </div>
           </div>
         </div>
@@ -692,51 +692,51 @@
               <i class="fas fa-link me-1"></i>ユーザー結合
             </button>
             <button type="button" class="btn btn-danger btn-sm" onclick="showDeleteModal()" 
-                    data-user-id="<%= @user.id %>"
-                    data-user-name="<%= @user.display_name_or_name.presence || @user.line_user_id || "ID:#{@user.id}" %>"
-                    data-active-tickets="<%= @active_tickets.count %>"
-                    data-total-usages="<%= @total_usages %>"
-                    data-remaining-value="<%= number_to_currency(@user.remaining_ticket_value, unit: "¥", precision: 0) %>">
+                data-user-id="<%= @user.id %>"
+                data-user-name="<%= @user.display_name_or_name.presence || @user.line_user_id || "ID:#{@user.id}" %>"
+                data-active-tickets="<%= @active_tickets.count %>"
+                data-total-usages="<%= @total_usages %>"
+                data-remaining-value="<%= number_to_currency(@user.remaining_ticket_value, unit: "¥", precision: 0) %>">
               <i class="fas fa-trash me-1"></i>削除
-            </button>
-          </div>
-        </div>
-        <div class="card-body p-0">
+        </button>
+      </div>
+    </div>
+    <div class="card-body p-0">
           <div class="row g-0">
             <div class="col-md-6">
               <table class="table table-borderless mb-0">
-                <tbody>
-                  <tr>
+        <tbody>
+          <tr>
                     <th class="w-40 bg-light">会員番号</th>
                     <td><strong>#<%= @user.id %></strong></td>
-                  </tr>
-                  <tr>
-                    <th class="bg-light">氏名</th>
-                    <td>
-                      <% if @user.display_name_or_name.present? %>
+          </tr>
+          <tr>
+            <th class="bg-light">氏名</th>
+            <td>
+              <% if @user.display_name_or_name.present? %>
                         <strong><%= @user.display_name_or_name %></strong>
-                        <% if @user.display_name.present? && @user.name.present? && @user.display_name != @user.name %>
-                          <br><small class="text-muted">登録名: <%= @user.name %></small>
-                        <% end %>
-                      <% else %>
+                <% if @user.display_name.present? && @user.name.present? && @user.display_name != @user.name %>
+                  <br><small class="text-muted">登録名: <%= @user.name %></small>
+                <% end %>
+              <% else %>
                         <span class="text-muted">未登録</span>
-                      <% end %>
-                    </td>
-                  </tr>
-                  <tr>
-                    <th class="bg-light">LINE表示名</th>
-                    <td>
-                      <% if @user.display_name.present? %>
-                        <%= @user.display_name %>
-                      <% else %>
+              <% end %>
+            </td>
+          </tr>
+          <tr>
+            <th class="bg-light">LINE表示名</th>
+            <td>
+              <% if @user.display_name.present? %>
+                <%= @user.display_name %>
+              <% else %>
                         <span class="text-muted">未取得</span>
-                      <% end %>
-                    </td>
-                  </tr>
-                  <tr>
-                    <th class="bg-light">生年月日</th>
-                    <td><%= @user.birth_date.present? ? l(@user.birth_date) : content_tag(:span, "未登録", class: "text-muted") %></td>
-                  </tr>
+              <% end %>
+            </td>
+          </tr>
+          <tr>
+            <th class="bg-light">生年月日</th>
+            <td><%= @user.birth_date.present? ? l(@user.birth_date) : content_tag(:span, "未登録", class: "text-muted") %></td>
+          </tr>
                 </tbody>
               </table>
             </div>
@@ -745,22 +745,22 @@
                 <tbody>
                   <tr>
                     <th class="w-40 bg-light">郵便番号</th>
-                    <td><%= @user.postal_code.presence || content_tag(:span, "未登録", class: "text-muted") %></td>
-                  </tr>
-                  <tr>
-                    <th class="bg-light">住所</th>
-                    <td><%= @user.address.presence || content_tag(:span, "未登録", class: "text-muted") %></td>
-                  </tr>
-                  <tr>
-                    <th class="bg-light">電話番号</th>
-                    <td><%= @user.phone_number.presence || content_tag(:span, "未登録", class: "text-muted") %></td>
-                  </tr>
-                  <tr>
-                    <th class="bg-light">メールアドレス</th>
-                    <td><%= @user.email.presence || content_tag(:span, "未登録", class: "text-muted") %></td>
-                  </tr>
-                </tbody>
-              </table>
+            <td><%= @user.postal_code.presence || content_tag(:span, "未登録", class: "text-muted") %></td>
+          </tr>
+          <tr>
+            <th class="bg-light">住所</th>
+            <td><%= @user.address.presence || content_tag(:span, "未登録", class: "text-muted") %></td>
+          </tr>
+          <tr>
+            <th class="bg-light">電話番号</th>
+            <td><%= @user.phone_number.presence || content_tag(:span, "未登録", class: "text-muted") %></td>
+          </tr>
+          <tr>
+            <th class="bg-light">メールアドレス</th>
+            <td><%= @user.email.presence || content_tag(:span, "未登録", class: "text-muted") %></td>
+          </tr>
+        </tbody>
+      </table>
             </div>
           </div>
         </div>
@@ -954,10 +954,10 @@
     document.body.style.overflow = '';
     
     // フォームをリセット
-    const confirmCheck = document.getElementById('confirmDeletionCheck');
-    const confirmationText = document.getElementById('confirmationText');
-    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-    
+      const confirmCheck = document.getElementById('confirmDeletionCheck');
+      const confirmationText = document.getElementById('confirmationText');
+      const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+      
     if (confirmCheck) confirmCheck.checked = false;
     if (confirmationText) {
       confirmationText.value = '';
@@ -989,36 +989,36 @@
     const activeTickets = deleteBtn.getAttribute('data-active-tickets');
     const totalUsages = deleteBtn.getAttribute('data-total-usages');
     const remainingValue = deleteBtn.getAttribute('data-remaining-value');
-    
-    console.log('ユーザー情報:', { currentUserId, currentUserName, activeTickets, totalUsages, remainingValue });
-    
-    // モーダルにデータを設定
-    const userNameElement = document.getElementById('deleteUserName');
-    const userIdElement = document.getElementById('deleteUserId');
-    const activeTicketsElement = document.getElementById('deleteActiveTickets');
-    const totalUsagesElement = document.getElementById('deleteTotalUsages');
-    const remainingValueElement = document.getElementById('deleteRemainingValue');
-    
-    if (userNameElement) userNameElement.textContent = currentUserName;
-    if (userIdElement) userIdElement.textContent = currentUserId;
-    if (activeTicketsElement) activeTicketsElement.textContent = activeTickets;
+      
+      console.log('ユーザー情報:', { currentUserId, currentUserName, activeTickets, totalUsages, remainingValue });
+      
+      // モーダルにデータを設定
+      const userNameElement = document.getElementById('deleteUserName');
+      const userIdElement = document.getElementById('deleteUserId');
+      const activeTicketsElement = document.getElementById('deleteActiveTickets');
+      const totalUsagesElement = document.getElementById('deleteTotalUsages');
+      const remainingValueElement = document.getElementById('deleteRemainingValue');
+      
+      if (userNameElement) userNameElement.textContent = currentUserName;
+      if (userIdElement) userIdElement.textContent = currentUserId;
+      if (activeTicketsElement) activeTicketsElement.textContent = activeTickets;
     if (totalUsagesElement) totalUsagesElement.textContent = totalUsages;
-    if (remainingValueElement) remainingValueElement.textContent = remainingValue;
-    
-    // フォームをリセット
+      if (remainingValueElement) remainingValueElement.textContent = remainingValue;
+      
+      // フォームをリセット
     const confirmCheck = document.getElementById('confirmDeletionCheck');
     const confirmationText = document.getElementById('confirmationText');
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
     
-    if (confirmCheck) confirmCheck.checked = false;
-    if (confirmationText) confirmationText.value = '';
+      if (confirmCheck) confirmCheck.checked = false;
+      if (confirmationText) confirmationText.value = '';
     if (confirmDeleteBtn) {
       confirmDeleteBtn.disabled = true;
       confirmDeleteBtn.innerHTML = '<i class="fas fa-trash me-1"></i>削除を実行';
     }
     
     // モーダルを表示（直接スタイルを設定）
-    modal.style.display = 'block';
+        modal.style.display = 'block';
     modal.style.position = 'fixed';
     modal.style.top = '0';
     modal.style.left = '0';
@@ -1026,8 +1026,8 @@
     modal.style.height = '100%';
     modal.style.zIndex = '1050';
     modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-    modal.classList.add('show');
-    modal.setAttribute('aria-hidden', 'false');
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden', 'false');
     
     // bodyにmodal-openクラスを追加
     document.body.classList.add('modal-open');
@@ -1179,7 +1179,7 @@
     
     // bodyにmodal-openクラスを追加
     document.body.classList.add('modal-open');
-    document.body.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
     
     console.log('🔍 Merge modal shown manually');
   }
@@ -1430,57 +1430,57 @@
     
     // 削除実行関数
     function executeDelete() {
-      if (this.disabled) return;
-      
+        if (this.disabled) return;
+        
       console.log('🔍 Delete execution started');
-      
-      this.disabled = true;
-      this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>削除中...';
-      
-      // CSRF トークンを取得
-      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>削除中...';
+        
+        // CSRF トークンを取得
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
       const currentUserId = deleteBtn.getAttribute('data-user-id');
-      
-      if (!csrfToken) {
+        
+        if (!csrfToken) {
         console.error('❌ CSRF token not found');
-        alert('セキュリティトークンが見つかりません。ページを再読み込みしてください。');
-        this.disabled = false;
-        this.innerHTML = '<i class="fas fa-trash me-1"></i>削除を実行';
-        return;
-      }
-      
+          alert('セキュリティトークンが見つかりません。ページを再読み込みしてください。');
+          this.disabled = false;
+          this.innerHTML = '<i class="fas fa-trash me-1"></i>削除を実行';
+          return;
+        }
+        
       console.log('🔍 Sending delete request:', `/admin/users/${currentUserId}`);
-      
-      // 削除リクエストを送信
-      fetch(`/admin/users/${currentUserId}`, {
-        method: 'DELETE',
-        headers: {
-          'X-CSRF-Token': csrfToken,
-          'Content-Type': 'application/json'
-        }
-      })
-      .then(response => {
+        
+        // 削除リクエストを送信
+        fetch(`/admin/users/${currentUserId}`, {
+          method: 'DELETE',
+          headers: {
+            'X-CSRF-Token': csrfToken,
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => {
         console.log('🔍 Delete response:', response);
-        
-        if (response.redirected) {
-          // 成功時はリダイレクトされる
+          
+          if (response.redirected) {
+            // 成功時はリダイレクトされる
           console.log('🔍 Delete success, redirecting:', response.url);
-          window.location.href = response.url;
-        } else if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        } else {
-          // 成功時は手動でリダイレクト
+            window.location.href = response.url;
+          } else if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          } else {
+            // 成功時は手動でリダイレクト
           console.log('🔍 Delete success');
-          window.location.href = '/admin/users';
-        }
-      })
-      .catch(error => {
+            window.location.href = '/admin/users';
+          }
+        })
+        .catch(error => {
         console.error('❌ Delete error:', error);
-        alert('削除中にエラーが発生しました: ' + error.message);
-        
-        // ボタンを元に戻す
-        this.disabled = false;
-        this.innerHTML = '<i class="fas fa-trash me-1"></i>削除を実行';
+          alert('削除中にエラーが発生しました: ' + error.message);
+          
+          // ボタンを元に戻す
+          this.disabled = false;
+          this.innerHTML = '<i class="fas fa-trash me-1"></i>削除を実行';
       });
     }
     
@@ -1511,18 +1511,18 @@
             <i class="fas fa-sticky-note me-2"></i>管理者メモ
           </h5>
         </div>
-        <div class="card-body">
-          <% if @user.admin_memo.present? %>
+    <div class="card-body">
+      <% if @user.admin_memo.present? %>
             <pre class="mb-0 text-muted"><%= @user.admin_memo %></pre>
-          <% else %>
+      <% else %>
             <p class="text-muted mb-0">
               <i class="fas fa-info-circle me-1"></i>メモは登録されていません。
             </p>
-          <% end %>
+      <% end %>
         </div>
-      </div>
     </div>
-    
+  </div>
+
     <!-- 利用状況サマリー -->
     <div class="col-md-6">
       <div class="card border-0 shadow-sm h-100">
@@ -1530,8 +1530,8 @@
           <h5 class="mb-0">
             <i class="fas fa-chart-bar me-2"></i>利用状況サマリー
           </h5>
-        </div>
-        <div class="card-body">
+    </div>
+    <div class="card-body">
           <div class="row g-3">
             <div class="col-6">
               <div class="text-center">
@@ -1575,8 +1575,8 @@
           <h5 class="mb-0">
             <i class="fas fa-ticket-alt me-2"></i>チケット管理
           </h5>
-        </div>
-        <div class="card-body text-center">
+    </div>
+    <div class="card-body text-center">
           <div class="row align-items-center">
             <div class="col-md-8">
               <p class="mb-0 text-muted">
@@ -1605,21 +1605,21 @@
           <h5 class="mb-0">
             <i class="fas fa-ticket-alt me-2"></i>所持チケット一覧
           </h5>
-        </div>
-        <div class="card-body p-0">
-          <% if @active_tickets.any? %>
-            <div class="table-responsive">
+    </div>
+    <div class="card-body p-0">
+      <% if @active_tickets.any? %>
+        <div class="table-responsive">
               <table class="table table-hover table-sm mb-0">
                 <thead class="table-light">
                   <tr>
                     <th class="small">チケット名</th>
                     <th class="small text-center">残数</th>
                     <th class="small text-center">期限</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% @active_tickets.each do |ticket| %>
-                    <tr>
+              </tr>
+            </thead>
+            <tbody>
+              <% @active_tickets.each do |ticket| %>
+                <tr>
                       <td class="small">
                         <% if ticket.ticket_template.present? %>
                           <%= ticket.ticket_template.name %>
@@ -1631,29 +1631,29 @@
                         <span class="badge bg-primary"><%= ticket.remaining_count %></span>
                       </td>
                       <td class="text-center small">
-                        <% if ticket.expiry_date < Time.zone.today %>
+                    <% if ticket.expiry_date < Time.zone.today %>
                           <span class="badge bg-danger">期限切れ</span>
-                        <% elsif ticket.expiry_date < 1.month.from_now %>
+                    <% elsif ticket.expiry_date < 1.month.from_now %>
                           <span class="badge bg-warning text-dark">期限間近</span>
-                        <% else %>
+                    <% else %>
                           <span class="text-muted"><%= ticket.expiry_date.strftime("%m/%d") %></span>
-                        <% end %>
-                      </td>
-                    </tr>
-                  <% end %>
-                </tbody>
-              </table>
-            </div>
-          <% else %>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
             <div class="p-3 text-center">
               <i class="fas fa-ticket-alt fa-2x text-muted mb-2"></i>
               <p class="text-muted mb-0">使用可能なチケットはありません。</p>
-            </div>
-          <% end %>
         </div>
-      </div>
+      <% end %>
+        </div>
     </div>
-    
+  </div>
+
     <!-- 最近の使用履歴 -->
     <div class="col-md-6">
       <div class="card border-0 shadow-sm h-100">
@@ -1664,21 +1664,21 @@
           <%= link_to ticket_usages_admin_user_path(@user), class: "btn btn-light btn-sm" do %>
             <i class="fas fa-external-link-alt me-1"></i>全て見る
           <% end %>
-        </div>
-        <div class="card-body p-0">
-          <% if @recent_ticket_usages.any? %>
+    </div>
+    <div class="card-body p-0">
+      <% if @recent_ticket_usages.any? %>
             <div class="table-responsive">
               <table class="table table-hover table-sm mb-0">
-                <thead class="table-light">
-                  <tr>
+          <thead class="table-light">
+            <tr>
                     <th class="small">チケット名</th>
                     <th class="small text-center">使用日</th>
                     <th class="small text-center">残数</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% @recent_ticket_usages.each do |usage| %>
-                    <tr>
+            </tr>
+          </thead>
+          <tbody>
+            <% @recent_ticket_usages.each do |usage| %>
+              <tr>
                       <td class="small">
                         <% if usage.ticket&.ticket_template.present? %>
                           <%= usage.ticket.ticket_template.name %>
@@ -1691,18 +1691,18 @@
                       </td>
                       <td class="text-center">
                         <span class="badge bg-secondary"><%= usage.ticket.remaining_count %></span>
-                      </td>
-                    </tr>
-                  <% end %>
-                </tbody>
-              </table>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
             </div>
-          <% else %>
+      <% else %>
             <div class="p-3 text-center">
               <i class="fas fa-history fa-2x text-muted mb-2"></i>
               <p class="text-muted mb-0">まだ使用履歴がありません。</p>
-            </div>
-          <% end %>
+        </div>
+      <% end %>
         </div>
       </div>
     </div>
@@ -1716,22 +1716,22 @@
           <h5 class="mb-0">
             <i class="fas fa-archive me-2"></i>使用済みチケット
           </h5>
-        </div>
-        <div class="card-body p-0">
-          <% if @used_up_tickets.any? %>
+    </div>
+    <div class="card-body p-0">
+      <% if @used_up_tickets.any? %>
             <div class="table-responsive">
               <table class="table table-hover table-sm mb-0">
-                <thead class="table-light">
-                  <tr>
+          <thead class="table-light">
+            <tr>
                     <th class="small">チケット名</th>
                     <th class="small text-center">使用済</th>
                     <th class="small text-center">購入日</th>
                     <th class="small text-center">期限</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% @used_up_tickets.each do |ticket| %>
-                    <tr>
+            </tr>
+          </thead>
+          <tbody>
+                          <% @used_up_tickets.each do |ticket| %>
+                <tr>
                       <td class="small">
                         <% if ticket.ticket_template.present? %>
                           <%= ticket.ticket_template.name %>
@@ -1748,17 +1748,17 @@
                       <td class="text-center small">
                         <%= ticket.expiry_date.strftime("%m/%d") %>
                       </td>
-                    </tr>
-                  <% end %>
-                </tbody>
-              </table>
+                </tr>
+              <% end %>
+          </tbody>
+        </table>
             </div>
-          <% else %>
+      <% else %>
             <div class="p-3 text-center">
               <i class="fas fa-archive fa-2x text-muted mb-2"></i>
               <p class="text-muted mb-0">使用済みチケットはまだありません。</p>
-            </div>
-          <% end %>
+        </div>
+      <% end %>
         </div>
       </div>
     </div>

@@ -1259,6 +1259,7 @@ class LinebotController < ApplicationController
   end
 
   # 🆕 利用可能な時間を送信
+  def send_available_times(user, reply_token, course, date_str)
     begin
       date = Date.parse(date_str)
       duration = get_duration_from_course(course)

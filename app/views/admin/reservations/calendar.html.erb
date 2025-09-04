@@ -2433,7 +2433,7 @@
               // 今日の日付を取得
               const today = new Date();
               const todayDateKey = formatDateKey(today);
-              
+            
             // 日付ヘッダーを更新
             const headers = document.querySelectorAll('.day-header');
             for (let i = 0; i < headers.length; i++) {
@@ -2457,7 +2457,7 @@
                   const currentDateKey = formatDateKey(date);
                   if (currentDateKey === todayDateKey) {
                       headers[i].classList.add('today');
-                  }
+                }
                 
                 headers[i].innerHTML = `${dayName}<br><span style="font-size: 12px;">${dateStr}</span>`;
             }
