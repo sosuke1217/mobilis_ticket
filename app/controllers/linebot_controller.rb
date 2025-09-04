@@ -1525,6 +1525,34 @@ class LinebotController < ApplicationController
         return
       end
 
+      # メモにLINE予約とストレッチ場所の情報を追加
+      note_parts = ["LINEからの予約"]
+      
+      # ストレッチ場所の情報を追加
+      if user.booking_location.present?
+        case user.booking_location
+        when 'home'
+          note_parts << "ストレッチ場所: 自宅"
+        when 'other'
+          note_parts << "ストレッチ場所: 別の場所"
+        when 'rental'
+          note_parts << "ストレッチ場所: レンタルスペース"
+        end
+      elsif user.address.present?
+        # 住所から場所タイプを推測
+        if user.address.include?("自宅:")
+          note_parts << "ストレッチ場所: 自宅"
+        elsif user.address.include?("別の場所:")
+          note_parts << "ストレッチ場所: 別の場所"
+        elsif user.address.include?("レンタルスペース:")
+          note_parts << "ストレッチ場所: レンタルスペース"
+        else
+          note_parts << "ストレッチ場所: 住所指定"
+        end
+      else
+        note_parts << "ストレッチ場所: 未設定"
+      end
+      
       reservation = Reservation.new(
         name: user.name,
         start_time: start_time,
@@ -1532,7 +1560,7 @@ class LinebotController < ApplicationController
         course: course,
         status: :tentative, # 仮予約
         user: user,
-        note: "LINEからの予約"
+        note: note_parts.join(" | ")
       )
       
       # バリデーションをスキップして保存
