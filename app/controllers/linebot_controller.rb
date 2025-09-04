@@ -1280,7 +1280,11 @@ class LinebotController < ApplicationController
     
     Rails.logger.info "📤 Sending date selection message"
     begin
-      send_reply(reply_token, message)
+      # まずシンプルなテキストメッセージでテスト
+      send_reply(reply_token, {
+        type: "text",
+        text: "日程選択画面を表示します。\n\n利用可能な日程：\n#{available_dates.map { |date| "• #{date.strftime('%m/%d (%a)')}" }.join('\n')}"
+      })
       Rails.logger.info "✅ Date selection message sent successfully"
     rescue => e
       Rails.logger.error "❌ Error sending date selection message: #{e.message}"
@@ -2213,11 +2217,15 @@ class LinebotController < ApplicationController
     Rails.logger.info "📤 Message type: #{message[:type]}"
     
     begin
+      Rails.logger.info "📤 About to call LINE API with message: #{message.inspect}"
       response = client.reply_message(reply_token, message)
-      Rails.logger.info "📤 LINE API response: #{response.code}"
+      Rails.logger.info "📤 LINE API response code: #{response.code}"
+      Rails.logger.info "📤 LINE API response body: #{response.body}"
       
       if response.code != '200'
         Rails.logger.error "❌ LINE API error: #{response.body}"
+      else
+        Rails.logger.info "✅ LINE API call successful"
       end
     rescue => e
       Rails.logger.error "❌ send_reply error: #{e.message}"
