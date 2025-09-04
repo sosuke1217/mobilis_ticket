@@ -1083,9 +1083,11 @@ class LinebotController < ApplicationController
       location_text = "自宅: #{message_text}"
       user.update(address: location_text, booking_state: nil, booking_location: nil)
     when 'other'
-      # 別の場所の場合は一時的に住所を保存（予約作成後に元に戻す）
+      # 別の場所の場合は住所を更新せず、予約時に直接使用
+      user.update(booking_state: nil, booking_location: 'other')
+      # 別の場所の住所を一時的に保存（セッション変数として）
+      Rails.cache.write("other_location_address_#{user.id}", message_text, expires_in: 1.hour)
       location_text = "別の場所: #{message_text}"
-      user.update(address: location_text, booking_state: nil, booking_location: nil)
     when 'rental'
       # レンタルスペースの場合は住所を更新しない
       location_text = "レンタルスペース: #{message_text}"
@@ -1541,10 +1543,9 @@ class LinebotController < ApplicationController
           note_parts << "ストレッチ場所: 自宅"
         when 'other'
           # 別の場所の場合は住所も含める
-          if user.address.present? && user.address.include?("別の場所:")
-            # 別の場所の住所を抽出
-            address_part = user.address.gsub("別の場所: ", "")
-            note_parts << "ストレッチ場所: 別の場所 (#{address_part})"
+          other_address = Rails.cache.read("other_location_address_#{user.id}")
+          if other_address.present?
+            note_parts << "ストレッチ場所: 別の場所 (#{other_address})"
           else
             note_parts << "ストレッチ場所: 別の場所"
           end
@@ -1656,6 +1657,16 @@ class LinebotController < ApplicationController
         end
         Rails.logger.info "🔍 住所を元に戻しました: '#{user.address}'"
       end
+
+      # 🆕 別の場所の住所をクリア
+      if user.respond_to?(:other_location_address) && user.other_location_address.present?
+        user.update(other_location_address: nil, booking_location: nil)
+        Rails.logger.info "🔍 別の場所の住所をクリアしました"
+      end
+
+      # 🆕 キャッシュから別の場所の住所をクリア
+      Rails.cache.delete("other_location_address_#{user.id}")
+      Rails.logger.info "🔍 キャッシュから別の場所の住所をクリアしました"
 
     rescue => e
       Rails.logger.error "LINE予約作成エラー: #{e.message}"
