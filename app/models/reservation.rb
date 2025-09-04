@@ -716,6 +716,9 @@ class Reservation < ApplicationRecord
   end
 
   def send_confirmation_notifications
+    Rails.logger.info "📧 send_confirmation_notifications called for reservation #{id}"
+    Rails.logger.info "📧 user: #{user&.name}, email: #{user&.email.present?}, line_user_id: #{user&.line_user_id.present?}"
+    
     # メール通知
     if user&.email.present?
       begin
@@ -729,11 +732,15 @@ class Reservation < ApplicationRecord
     # LINE通知
     if user&.line_user_id.present?
       begin
+        Rails.logger.info "📱 Attempting to send LINE confirmation notification"
         LineBookingNotifier.booking_confirmed(self)
         Rails.logger.info "📱 LINE confirmation notification sent to: #{user.line_user_id}"
       rescue => e
         Rails.logger.error "LINE確認通知送信エラー: #{e.message}"
+        Rails.logger.error "LINE確認通知送信エラー詳細: #{e.backtrace.first(5).join("\n")}"
       end
+    else
+      Rails.logger.info "📱 No LINE user ID found for user: #{user&.name}"
     end
   end
 
