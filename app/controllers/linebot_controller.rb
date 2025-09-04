@@ -1232,6 +1232,9 @@ class LinebotController < ApplicationController
     
     Rails.logger.info "📝 Creating date selection message"
     
+    # コース名をURLセーフな形式に変換
+    course_safe = course.gsub(/[^\w\s]/, '').gsub(/\s+/, '_')
+    
     message = {
       type: "flex",
       altText: "日程選択 - #{course}",
@@ -1259,13 +1262,14 @@ class LinebotController < ApplicationController
           type: "box",
           layout: "vertical",
           contents: available_dates.map { |date|
+            Rails.logger.info "📝 Creating date button for #{date.strftime('%Y-%m-%d')}"
             {
               type: "button",
               style: "secondary",
               action: {
                 type: "postback",
                 label: date.strftime('%m/%d (%a)'),
-                data: "select_date_#{course}_#{date.strftime('%Y-%m-%d')}"
+                data: "select_date_#{course_safe}_#{date.strftime('%Y-%m-%d')}"
               }
             }
           },
@@ -1275,8 +1279,18 @@ class LinebotController < ApplicationController
     }
     
     Rails.logger.info "📤 Sending date selection message"
-    send_reply(reply_token, message)
-    Rails.logger.info "✅ Date selection message sent successfully"
+    begin
+      send_reply(reply_token, message)
+      Rails.logger.info "✅ Date selection message sent successfully"
+    rescue => e
+      Rails.logger.error "❌ Error sending date selection message: #{e.message}"
+      Rails.logger.error "❌ Error backtrace: #{e.backtrace.first(5).join('\n')}"
+      # フォールバック：シンプルなテキストメッセージを送信
+      send_reply(reply_token, {
+        type: "text",
+        text: "日程選択画面の表示に問題が発生しました。\n\n利用可能な日程：\n#{available_dates.map { |date| "• #{date.strftime('%m/%d (%a)')}" }.join('\n')}\n\n希望の日程をお電話でお申し込みください: 03-1234-5678"
+      })
+    end
   end
 
   # 🆕 利用可能な時間を送信
