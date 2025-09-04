@@ -211,6 +211,18 @@ class LinebotController < ApplicationController
   end
 
   def handle_text_message(user, message_text, reply_token)
+    # ユーザー情報収集中の場合は特別処理
+    if user.booking_state == 'collecting_name'
+      handle_name_input(user, message_text, reply_token)
+      return
+    elsif user.booking_state == 'collecting_phone'
+      handle_phone_input(user, message_text, reply_token)
+      return
+    elsif user.booking_state == 'collecting_address'
+      handle_address_input(user, message_text, reply_token)
+      return
+    end
+
     case message_text
     when /通知オフ|notification off/i
       user.notification_preference.update(enabled: false)
@@ -277,6 +289,9 @@ class LinebotController < ApplicationController
 
     when "check_tomorrow_availability"
       send_tomorrow_availability(user, reply_token)
+
+    when "start_info_collection"
+      start_info_collection(user, reply_token)
 
     when /^quick_book_60min_(.+)_(.+)$/
       date_str = $1
@@ -939,6 +954,9 @@ class LinebotController < ApplicationController
     missing_info << "お電話番号" unless user.phone_number.present?
     missing_info << "ご住所" unless user.address.present?
 
+    # 保存するコース情報
+    user.update(booking_course: course)
+
     message = {
       type: "flex",
       altText: "ユーザー情報の入力が必要です",
@@ -953,7 +971,7 @@ class LinebotController < ApplicationController
               text: "📝 情報入力",
               weight: "bold",
               size: "lg",
-              color: "#dc3545"
+              color: "#1976d2"
             }
           ]
         },
@@ -975,7 +993,7 @@ class LinebotController < ApplicationController
             },
             {
               type: "text",
-              text: "下記フォームからご入力ください",
+              text: "LINEチャットで順番に入力していきましょう",
               wrap: true,
               margin: "lg"
             }
@@ -989,9 +1007,9 @@ class LinebotController < ApplicationController
               type: "button",
               style: "primary",
               action: {
-                type: "uri",
-                label: "情報入力フォームへ",
-                uri: "#{ENV.fetch('APP_HOST', 'https://mobilis-stretch.com')}/public/bookings/new"
+                type: "postback",
+                label: "情報入力開始",
+                data: "start_info_collection"
               }
             }
           ]
@@ -1000,6 +1018,63 @@ class LinebotController < ApplicationController
     }
 
     send_reply(reply_token, message)
+  end
+
+  # 🆕 名前入力の処理
+  def handle_name_input(user, message_text, reply_token)
+    user.update(name: message_text, booking_state: 'collecting_phone')
+    
+    send_reply(reply_token, {
+      type: "text",
+      text: "ありがとうございます！\n\n次にお電話番号を教えてください。\n例: 090-1234-5678"
+    })
+  end
+
+  # 🆕 電話番号入力の処理
+  def handle_phone_input(user, message_text, reply_token)
+    # 電話番号の簡易バリデーション
+    phone = message_text.gsub(/[^\d]/, '')
+    if phone.length >= 10
+      user.update(phone_number: message_text, booking_state: 'collecting_address')
+      
+      send_reply(reply_token, {
+        type: "text",
+        text: "ありがとうございます！\n\n最後にご住所を教えてください。\n例: 東京都渋谷区○○1-2-3"
+      })
+    else
+      send_reply(reply_token, {
+        type: "text",
+        text: "電話番号の形式が正しくありません。\n090-1234-5678 のような形式で入力してください。"
+      })
+    end
+  end
+
+  # 🆕 住所入力の処理
+  def handle_address_input(user, message_text, reply_token)
+    user.update(address: message_text, booking_state: nil)
+    
+    # 予約フローを再開
+    course = user.booking_course
+    user.update(booking_course: nil)
+    
+    send_reply(reply_token, {
+      type: "text",
+      text: "ありがとうございます！\n\n情報の入力が完了しました。\n予約フローを再開します。"
+    })
+    
+    # 少し待ってから予約フローを開始
+    sleep(1)
+    start_booking_flow(user, reply_token, course)
+  end
+
+  # 🆕 情報収集開始
+  def start_info_collection(user, reply_token)
+    user.update(booking_state: 'collecting_name')
+    
+    send_reply(reply_token, {
+      type: "text",
+      text: "まず、お名前を教えてください。\n\nフルネームで入力してください。\n例: 田中太郎"
+    })
   end
 
   # 🆕 利用可能な時間を送信
