@@ -302,6 +302,10 @@ class LinebotController < ApplicationController
       Rails.logger.info "📝 Starting info collection"
       start_info_collection(user, reply_token)
 
+    when /^select_location_(.+)$/
+      Rails.logger.info "🏠 Selecting location: #{$1}"
+      handle_location_selection(user, reply_token, $1)
+
     when /^quick_book_60min_(.+)_(.+)$/
       Rails.logger.info "⚡ Quick booking 60min"
       date_str = $1
@@ -1086,7 +1090,20 @@ class LinebotController < ApplicationController
 
   # 🆕 住所入力の処理
   def handle_address_input(user, message_text, reply_token)
-    user.update(address: message_text, booking_state: nil)
+    # 場所情報を含めた住所を保存
+    location_type = user.booking_location || 'unknown'
+    location_text = case location_type
+                   when 'home'
+                     "自宅: #{message_text}"
+                   when 'other'
+                     "別の場所: #{message_text}"
+                   when 'rental'
+                     "レンタルスペース: #{message_text}"
+                   else
+                     message_text
+                   end
+    
+    user.update(address: location_text, booking_state: nil, booking_location: nil)
     
     # 予約フローを再開
     course = user.booking_course
@@ -1122,11 +1139,8 @@ class LinebotController < ApplicationController
         text: "次にお電話番号を教えてください。\n例: 090-1234-5678"
       })
     elsif !user.address.present?
-      user.update(booking_state: 'collecting_address')
-      send_reply(reply_token, {
-        type: "text",
-        text: "最後にご住所を教えてください。\n例: 東京都渋谷区○○1-2-3"
-      })
+      # 場所選択画面を表示
+      send_location_selection(user, reply_token)
     else
       # すべての情報が揃っている場合は予約フローを再開
       course = user.booking_course
@@ -1140,8 +1154,110 @@ class LinebotController < ApplicationController
     end
   end
 
+  # 🆕 場所選択画面を送信
+  def send_location_selection(user, reply_token)
+    user.update(booking_state: 'selecting_location')
+    
+    message = {
+      type: "flex",
+      altText: "ストレッチ場所の選択",
+      contents: {
+        type: "bubble",
+        header: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "🏠 ストレッチ場所",
+              weight: "bold",
+              size: "lg",
+              color: "#1976d2"
+            }
+          ]
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "ストレッチを受ける場所を選択してください：",
+              wrap: true
+            }
+          ]
+        },
+        footer: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "button",
+              style: "primary",
+              action: {
+                type: "postback",
+                label: "🏠 自宅",
+                data: "select_location_home"
+              }
+            },
+            {
+              type: "button",
+              style: "secondary",
+              action: {
+                type: "postback",
+                label: "📍 別の場所",
+                data: "select_location_other"
+              },
+              margin: "sm"
+            },
+            {
+              type: "button",
+              style: "secondary",
+              action: {
+                type: "postback",
+                label: "🏢 レンタルスペース",
+                data: "select_location_rental"
+              },
+              margin: "sm"
+            }
+          ]
+        }
+      }
+    }
+    
+    send_reply(reply_token, message)
+  end
+
+  # 🆕 場所選択の処理
+  def handle_location_selection(user, reply_token, location_type)
+    case location_type
+    when 'home'
+      user.update(booking_state: 'collecting_address', booking_location: 'home')
+      send_reply(reply_token, {
+        type: "text",
+        text: "ご自宅の住所を教えてください。\n\n例: 東京都渋谷区○○1-2-3"
+      })
+    when 'other'
+      user.update(booking_state: 'collecting_address', booking_location: 'other')
+      send_reply(reply_token, {
+        type: "text",
+        text: "ストレッチを受ける場所の住所を教えてください。\n\n例: 東京都渋谷区○○1-2-3"
+      })
+    when 'rental'
+      user.update(booking_state: 'collecting_address', booking_location: 'rental')
+      send_reply(reply_token, {
+        type: "text",
+        text: "レンタルスペースの住所を教えてください。\n\n例: 東京都渋谷区○○1-2-3"
+      })
+    else
+      send_reply(reply_token, {
+        type: "text",
+        text: "申し訳ございません。場所の選択に問題が発生しました。もう一度お試しください。"
+      })
+    end
+  end
+
   # 🆕 利用可能な時間を送信
-  def send_available_times(user, reply_token, course, date_str)
     begin
       date = Date.parse(date_str)
       duration = get_duration_from_course(course)
