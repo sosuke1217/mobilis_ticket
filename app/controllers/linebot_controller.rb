@@ -2455,4 +2455,74 @@ class LinebotController < ApplicationController
     end
     user
   end
+
+  # 🆕 日付選択画面を表示（push_message使用）
+  def start_date_selection_with_push(user, course)
+    Rails.logger.info "📅 start_date_selection_with_push called for user #{user.id}, course: #{course}"
+    
+    # 利用可能な日付を表示
+    available_dates = get_available_dates(7) # 今日から7日間
+    Rails.logger.info "📅 Found #{available_dates.count} available dates: #{available_dates.map(&:strftime).join(', ')}"
+    
+    if available_dates.empty?
+      Rails.logger.info "❌ No available dates found"
+      push_message(user.line_user_id, {
+        type: "text",
+        text: "申し訳ございません。現在予約可能な日程がございません。\nお電話でお問い合わせください: 03-1234-5678"
+      })
+      return
+    end
+    
+    Rails.logger.info "📝 Creating date selection message"
+    
+    # コース名をURLセーフな形式に変換
+    course_safe = course.gsub(/[^\w\s]/, '').gsub(/\s+/, '_')
+    
+    message = {
+      type: "flex",
+      altText: "日程選択 - #{course}",
+      contents: {
+        type: "bubble",
+        header: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "📅 日程選択",
+              weight: "bold",
+              size: "lg"
+            },
+            {
+              type: "text",
+              text: "選択コース: #{course}",
+              size: "sm",
+              color: "#1976d2"
+            }
+          ]
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: available_dates.map { |date|
+            Rails.logger.info "📝 Creating date button for #{date.strftime('%Y-%m-%d')}"
+            {
+              type: "button",
+              style: "secondary",
+              action: {
+                type: "postback",
+                label: date.strftime('%m/%d (%a)'),
+                data: "select_date_#{course_safe}_#{date.strftime('%Y-%m-%d')}"
+              }
+            }
+          },
+          spacing: "sm"
+        }
+      }
+    }
+    
+    Rails.logger.info "📤 Pushing date selection message"
+    push_message(user.line_user_id, message)
+    Rails.logger.info "✅ Date selection message pushed successfully"
+  end
 end
