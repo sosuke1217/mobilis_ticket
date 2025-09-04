@@ -1173,7 +1173,7 @@ class LinebotController < ApplicationController
       if user.address.present?
         # 登録済みの住所がある場合は直接予約フローに進む
         course = user.booking_course
-        user.update(booking_course: nil, booking_location: nil)
+        user.update(booking_location: nil) # booking_courseは保持
         send_reply(reply_token, {
           type: "text",
           text: "ご自宅でのストレッチで承ります。\n予約フローを開始します。"
@@ -1198,7 +1198,7 @@ class LinebotController < ApplicationController
     when 'rental'
       # レンタルスペースの場合：こちらから連絡
       course = user.booking_course
-      user.update(booking_course: nil, booking_location: nil)
+      user.update(booking_location: nil) # booking_courseは保持
       send_reply(reply_token, {
         type: "text",
         text: "レンタルスペースでのストレッチで承ります。\n\nレンタルスペースの手配について、こちらからご連絡いたします。\n予約フローを開始します。"
