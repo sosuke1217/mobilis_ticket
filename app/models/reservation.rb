@@ -709,17 +709,6 @@ class Reservation < ApplicationRecord
     end
   end
 
-  def handle_status_change
-    if saved_change_to_status?
-      case status
-      when 'confirmed'
-        send_confirmation_notifications
-      when 'cancelled'
-        send_cancellation_notifications
-      end
-    end
-  end
-
   def send_confirmation_notifications
     # メール通知
     if user&.email.present?
@@ -734,7 +723,7 @@ class Reservation < ApplicationRecord
     # LINE通知
     if user&.line_user_id.present?
       begin
-        # LineBookingNotifier.booking_confirmed(self)
+        LineBookingNotifier.booking_confirmed(self)
         Rails.logger.info "📱 LINE confirmation notification sent to: #{user.line_user_id}"
       rescue => e
         Rails.logger.error "LINE確認通知送信エラー: #{e.message}"
@@ -756,7 +745,7 @@ class Reservation < ApplicationRecord
     # LINE通知
     if user&.line_user_id.present?
       begin
-        # LineBookingNotifier.send_cancellation_notification(self)
+        LineBookingNotifier.send_cancellation_notification(self)
         Rails.logger.info "📱 LINE cancellation notification sent to: #{user.line_user_id}"
       rescue => e
         Rails.logger.error "LINEキャンセル通知送信エラー: #{e.message}"
