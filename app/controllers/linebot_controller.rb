@@ -1534,7 +1534,12 @@ class LinebotController < ApplicationController
         when 'home'
           note_parts << "ストレッチ場所: 自宅"
         when 'other'
-          note_parts << "ストレッチ場所: 別の場所"
+          # 別の場所の場合は住所も含める
+          if user.address.present?
+            note_parts << "ストレッチ場所: 別の場所 (#{user.address})"
+          else
+            note_parts << "ストレッチ場所: 別の場所"
+          end
         when 'rental'
           note_parts << "ストレッチ場所: レンタルスペース"
         end
@@ -1543,11 +1548,13 @@ class LinebotController < ApplicationController
         if user.address.include?("自宅:")
           note_parts << "ストレッチ場所: 自宅"
         elsif user.address.include?("別の場所:")
-          note_parts << "ストレッチ場所: 別の場所"
+          # 別の場所の場合は住所も含める
+          address_part = user.address.gsub("別の場所: ", "")
+          note_parts << "ストレッチ場所: 別の場所 (#{address_part})"
         elsif user.address.include?("レンタルスペース:")
           note_parts << "ストレッチ場所: レンタルスペース"
         else
-          note_parts << "ストレッチ場所: 住所指定"
+          note_parts << "ストレッチ場所: 住所指定 (#{user.address})"
         end
       else
         note_parts << "ストレッチ場所: 未設定"
