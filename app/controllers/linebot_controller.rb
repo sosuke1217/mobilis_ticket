@@ -1198,7 +1198,8 @@ class LinebotController < ApplicationController
       if user.address.present?
         # 登録済みの住所がある場合は直接予約フローに進む
         course = user.booking_course
-        user.update(booking_location: nil) # booking_courseは保持
+        # 住所情報を保持し、booking_locationをクリア
+        user.update(booking_location: 'home', booking_state: nil)
         
         # コース名をURLセーフな形式に変換
         course_safe = course.gsub(/[^\w\s]/, '').gsub(/\s+/, '_')
@@ -1224,7 +1225,8 @@ class LinebotController < ApplicationController
     when 'rental'
       # レンタルスペースの場合：こちらから連絡
       course = user.booking_course
-      user.update(booking_location: nil) # booking_courseは保持
+      # レンタルスペースとして設定
+      user.update(booking_location: 'rental', booking_state: nil)
       
       # コース名をURLセーフな形式に変換
       course_safe = course.gsub(/[^\w\s]/, '').gsub(/\s+/, '_')
@@ -1548,7 +1550,7 @@ class LinebotController < ApplicationController
               create_info_row("日時", "#{start_time.strftime('%m/%d (%a) %H:%M')} - #{end_time.strftime('%H:%M')}"),
               create_info_row("コース", course),
               create_info_row("お名前", user.name),
-              create_info_row("ご住所", truncate_address(user.address)),
+              create_info_row("ご住所", user.address.present? ? truncate_address(user.address) : "住所未設定"),
               {
                 type: "separator",
                 margin: "md"
@@ -1570,6 +1572,12 @@ class LinebotController < ApplicationController
 
       # 管理者に通知
       AdminNotificationJob.perform_later(reservation) rescue nil
+
+      # 🆕 デバッグログ：住所情報を確認
+      Rails.logger.info "🔍 予約作成時の住所情報確認:"
+      Rails.logger.info "🔍 user.address: '#{user.address}'"
+      Rails.logger.info "🔍 user.booking_location: '#{user.booking_location}'"
+      Rails.logger.info "🔍 user.booking_state: '#{user.booking_state}'"
 
     rescue => e
       Rails.logger.error "LINE予約作成エラー: #{e.message}"
