@@ -1079,9 +1079,9 @@ class LinebotController < ApplicationController
     
     case location_type
     when 'home'
-      # 自宅の場合は住所を更新
+      # 自宅の場合は住所のみを保存（プレフィックスなし）
+      user.update(address: message_text, booking_state: nil, booking_location: nil)
       location_text = "自宅: #{message_text}"
-      user.update(address: location_text, booking_state: nil, booking_location: nil)
     when 'other'
       # 別の場所の場合は住所を更新せず、予約時に直接使用
       user.update(booking_state: nil, booking_location: 'other')
@@ -2434,8 +2434,12 @@ class LinebotController < ApplicationController
       # レンタルスペースの場合は専用メッセージ
       return "レンタルスペース（手配予定）"
     elsif user.address.present?
-      # 自宅または通常の住所
-      return truncate_address(user.address)
+      # 自宅または通常の住所（自宅の場合は「自宅:」プレフィックスを付ける）
+      if user.booking_location == 'home' || user.address.include?("自宅:")
+        return truncate_address("自宅: #{user.address.gsub('自宅: ', '')}")
+      else
+        return truncate_address(user.address)
+      end
     else
       return "住所未設定"
     end
