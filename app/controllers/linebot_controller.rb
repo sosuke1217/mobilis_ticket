@@ -211,6 +211,13 @@ class LinebotController < ApplicationController
   end
 
   def handle_text_message(user, message_text, reply_token)
+    # 🆕 デバッグログ：現在の状態を確認
+    Rails.logger.info "🔍 handle_text_message called with:"
+    Rails.logger.info "🔍 message_text: '#{message_text}'"
+    Rails.logger.info "🔍 user.booking_state: '#{user.booking_state}'"
+    Rails.logger.info "🔍 user.booking_location: '#{user.booking_location}'"
+    Rails.logger.info "🔍 user.address: '#{user.address}'"
+    
     # ユーザー情報収集中の場合は特別処理
     if user.booking_state == 'collecting_name'
       handle_name_input(user, message_text, reply_token)
@@ -1052,6 +1059,11 @@ class LinebotController < ApplicationController
 
   # 🆕 住所入力の処理
   def handle_address_input(user, message_text, reply_token)
+    Rails.logger.info "🔍 handle_address_input called with:"
+    Rails.logger.info "🔍 message_text: '#{message_text}'"
+    Rails.logger.info "🔍 user.booking_location: '#{user.booking_location}'"
+    Rails.logger.info "🔍 user.address: '#{user.address}'"
+    
     # 場所情報を含めた住所を保存
     location_type = user.booking_location || 'unknown'
     location_text = case location_type
@@ -1066,6 +1078,8 @@ class LinebotController < ApplicationController
                    end
     
     user.update(address: location_text, booking_state: nil, booking_location: nil)
+    
+    Rails.logger.info "🔍 Address saved: '#{location_text}'"
     
     # 予約フローを再開
     course = user.booking_course
