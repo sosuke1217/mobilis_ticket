@@ -1397,8 +1397,35 @@ class LinebotController < ApplicationController
       duration = get_duration_from_course(course)
       end_time = start_time + duration.minutes
 
-      # 重複チェック
-      if Reservation.active.where('start_time < ? AND end_time > ?', end_time, start_time).exists?
+      # 重複チェック（Reservationモデルのno_time_overlapと同じロジック）
+      overlapping = Reservation.active
+        .where.not(id: nil) # 新規作成時はidがnil
+        .select do |other|
+          # 各予約のインターバル時間を取得（デフォルト10分）
+          other_interval = other.respond_to?(:effective_interval_minutes) ? other.effective_interval_minutes : 10
+          other_end_with_interval = other.end_time + other_interval.minutes
+          
+          # 現在の予約のインターバル時間を取得（デフォルト10分）
+          current_interval = 10 # デフォルト値
+          current_end_with_interval = end_time + current_interval.minutes
+          
+          # 重複判定（インターバル時間も含む）
+          overlap = start_time < other_end_with_interval && current_end_with_interval > other.start_time
+          
+          Rails.logger.info "🔍 Checking overlap with reservation #{other.id}: #{other.start_time.strftime('%H:%M')} - #{other_end_with_interval.strftime('%H:%M')}"
+          Rails.logger.info "🔍 Current reservation: #{start_time.strftime('%H:%M')} - #{current_end_with_interval.strftime('%H:%M')}"
+          Rails.logger.info "🔍 Overlap: #{overlap}"
+          
+          overlap
+        end
+
+      if overlapping.any?
+        overlapping_reservation = overlapping.first
+        other_interval = overlapping_reservation.respond_to?(:effective_interval_minutes) ? overlapping_reservation.effective_interval_minutes : 10
+        other_end_with_interval = overlapping_reservation.end_time + other_interval.minutes
+        
+        Rails.logger.info "❌ Overlap detected: #{overlapping_reservation.start_time.strftime('%H:%M')} - #{other_end_with_interval.strftime('%H:%M')}"
+        
         send_reply(reply_token, {
           type: "text",
           text: "申し訳ございません。選択された時間は既に予約が入っております。\n別の時間をお選びください。"
@@ -2248,7 +2275,25 @@ class LinebotController < ApplicationController
     while current_time + duration.minutes <= closing_time
       end_time = current_time + duration.minutes
       
-      unless Reservation.active.where('start_time < ? AND end_time > ?', end_time, current_time).exists?
+      # 重複チェック（Reservationモデルのno_time_overlapと同じロジック）
+      overlapping = Reservation.active
+        .where.not(id: nil)
+        .select do |other|
+          # 各予約のインターバル時間を取得（デフォルト10分）
+          other_interval = other.respond_to?(:effective_interval_minutes) ? other.effective_interval_minutes : 10
+          other_end_with_interval = other.end_time + other_interval.minutes
+          
+          # 現在のスロットのインターバル時間を取得（デフォルト10分）
+          current_interval = 10 # デフォルト値
+          current_end_with_interval = end_time + current_interval.minutes
+          
+          # 重複判定（インターバル時間も含む）
+          overlap = current_time < other_end_with_interval && current_end_with_interval > other.start_time
+          
+          overlap
+        end
+      
+      unless overlapping.any?
         available_slots << {
           start_time: current_time,
           end_time: end_time
