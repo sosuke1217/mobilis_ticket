@@ -1076,18 +1076,24 @@ class LinebotController < ApplicationController
     
     # 場所情報を含めた住所を保存
     location_type = user.booking_location || 'unknown'
-    location_text = case location_type
-                   when 'home'
-                     "自宅: #{message_text}"
-                   when 'other'
-                     "別の場所: #{message_text}"
-                   when 'rental'
-                     "レンタルスペース: #{message_text}"
-                   else
-                     message_text
-                   end
     
-    user.update(address: location_text, booking_state: nil, booking_location: nil)
+    case location_type
+    when 'home'
+      # 自宅の場合は住所を更新
+      location_text = "自宅: #{message_text}"
+      user.update(address: location_text, booking_state: nil, booking_location: nil)
+    when 'other'
+      # 別の場所の場合は一時的に住所を保存（予約作成後に元に戻す）
+      location_text = "別の場所: #{message_text}"
+      user.update(address: location_text, booking_state: nil, booking_location: nil)
+    when 'rental'
+      # レンタルスペースの場合は住所を更新しない
+      location_text = "レンタルスペース: #{message_text}"
+      user.update(booking_state: nil, booking_location: nil)
+    else
+      location_text = message_text
+      user.update(address: location_text, booking_state: nil, booking_location: nil)
+    end
     
     Rails.logger.info "🔍 Address saved: '#{location_text}'"
     
@@ -1535,8 +1541,10 @@ class LinebotController < ApplicationController
           note_parts << "ストレッチ場所: 自宅"
         when 'other'
           # 別の場所の場合は住所も含める
-          if user.address.present?
-            note_parts << "ストレッチ場所: 別の場所 (#{user.address})"
+          if user.address.present? && user.address.include?("別の場所:")
+            # 別の場所の住所を抽出
+            address_part = user.address.gsub("別の場所: ", "")
+            note_parts << "ストレッチ場所: 別の場所 (#{address_part})"
           else
             note_parts << "ストレッチ場所: 別の場所"
           end
@@ -1637,6 +1645,17 @@ class LinebotController < ApplicationController
       Rails.logger.info "🔍 user.address: '#{user.address}'"
       Rails.logger.info "🔍 user.booking_location: '#{user.booking_location}'"
       Rails.logger.info "🔍 user.booking_state: '#{user.booking_state}'"
+
+      # 🆕 別の場所の場合は元の住所に戻す
+      if user.address.present? && user.address.include?("別の場所:")
+        # 元の住所を復元（別の場所の住所を削除）
+        original_address = user.address.gsub("別の場所: ", "").strip
+        # 元の住所が自宅の形式でない場合は、自宅として保存
+        if !original_address.include?("自宅:")
+          user.update(address: "自宅: #{original_address}")
+        end
+        Rails.logger.info "🔍 住所を元に戻しました: '#{user.address}'"
+      end
 
     rescue => e
       Rails.logger.error "LINE予約作成エラー: #{e.message}"
