@@ -745,6 +745,19 @@ function hideDeleteTicketModal() {
     return;
   }
   
+  // Stimulusコントローラーが存在する場合は、そのクリーンアップメソッドを呼ぶ
+  const controller = document.querySelector('[data-controller*="ticket-management"]');
+  if (controller && controller.stimulusController) {
+    try {
+      controller.stimulusController.cleanupModalBackground();
+      // isProcessingフラグもリセット
+      controller.stimulusController.isProcessing = false;
+      console.log('✅ Stimulus controller cleanup called and isProcessing reset');
+    } catch (error) {
+      console.log('⚠️ Stimulus controller cleanup failed:', error);
+    }
+  }
+  
   // 複数の方法でモーダルを閉じる
   try {
     // 方法1: BootstrapのモーダルAPIを使用
@@ -765,7 +778,15 @@ function hideDeleteTicketModal() {
   // 方法3: 確実に手動で非表示（フォールバック）
   setTimeout(() => {
     modalElement.style.display = 'none';
+    modalElement.style.position = '';
+    modalElement.style.top = '';
+    modalElement.style.left = '';
+    modalElement.style.width = '';
+    modalElement.style.height = '';
+    modalElement.style.zIndex = '';
+    modalElement.style.backgroundColor = '';
     modalElement.classList.remove('show');
+    
     document.body.classList.remove('modal-open');
     document.body.style.overflow = '';
     document.body.style.paddingRight = '';
