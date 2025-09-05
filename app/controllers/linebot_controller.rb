@@ -2027,59 +2027,142 @@ class LinebotController < ApplicationController
 
   def send_ticket_status(user, reply_token)
     tickets = user.tickets.where("remaining_count > 0 AND expiry_date >= ?", Time.zone.today)
+    
     if tickets.any?
       bubbles = tickets.map do |t|
         expiry_soon = t.expiry_date <= Time.zone.today + 30.days
-        low_remaining = t.remaining_count == 2
-  
-        contents = [
-          {
-            type: "text",
-            text: t.title,
-            weight: "bold",
-            size: "lg",
-            wrap: true
-          },
-          {
-            type: "text",
-            text: "残り/Remaining：#{t.remaining_count}回",
-            size: "md",
-            margin: "md"
-          }.merge(low_remaining ? { color: "#FFA500" } : {}),
-          {
-            type: "text",
-            text: "期限/Exp：#{t.expiry_date.strftime('%Y/%m/%d')}",
-            size: "sm",
-            margin: "sm",
-            color: expiry_soon ? "#FF5555" : "#888888"
-          }
-        ]
+        low_remaining = t.remaining_count <= 2
   
         {
           type: "bubble",
+          header: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "text",
+                text: "🎫 チケット情報",
+                weight: "bold",
+                size: "lg",
+                color: "#1976d2",
+                align: "center"
+              }
+            ],
+            paddingAll: "15px",
+            paddingTop: "20px",
+            paddingBottom: "10px"
+          },
           body: {
             type: "box",
             layout: "vertical",
-            contents: contents
+            contents: [
+              {
+                type: "text",
+                text: t.title,
+                weight: "bold",
+                size: "md",
+                wrap: true,
+                margin: "md",
+                align: "center"
+              },
+              {
+                type: "separator",
+                margin: "md"
+              },
+              {
+                type: "text",
+                text: "残り回数",
+                size: "sm",
+                color: "#666666",
+                margin: "md"
+              },
+              {
+                type: "text",
+                text: "#{t.remaining_count}回",
+                weight: "bold",
+                size: "xl",
+                color: low_remaining ? "#FFA500" : "#1976d2",
+                align: "center",
+                margin: "sm"
+              },
+              {
+                type: "text",
+                text: "有効期限",
+                size: "sm",
+                color: "#666666",
+                margin: "md"
+              },
+              {
+                type: "text",
+                text: t.expiry_date.strftime('%Y年%m月%d日'),
+                size: "md",
+                color: expiry_soon ? "#FF5555" : "#888888",
+                align: "center",
+                margin: "sm"
+              }
+            ],
+            paddingAll: "20px"
           }
         }
       end
   
-      response = client.reply_message(reply_token, { 
+      send_reply(reply_token, { 
         type: "flex",
-        altText: "使用可能な回数券一覧 / Available Tickets",
+        altText: "使用可能な回数券一覧",
         contents: {
           type: "carousel",
           contents: bubbles
         }
       })
-      Rails.logger.info "[LINE API] status: #{response.code}, body: #{response.body}"
     else
-      response = client.reply_message(reply_token, {
-        type: "text",
-        text: "使用可能な回数券が見つかりません / No available tickets found."
+      send_reply(reply_token, {
+        type: "flex",
+        altText: "チケット情報",
+        contents: {
+          type: "bubble",
+          header: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "text",
+                text: "🎫 チケット情報",
+                weight: "bold",
+                size: "lg",
+                color: "#1976d2",
+                align: "center"
+              }
+            ],
+            paddingAll: "15px",
+            paddingTop: "20px",
+            paddingBottom: "10px"
+          },
+          body: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "text",
+                text: "使用可能な回数券がありません",
+                size: "md",
+                color: "#666666",
+                align: "center",
+                margin: "lg"
+              },
+              {
+                type: "text",
+                text: "新しいチケットを購入するか、\n管理者にお問い合わせください。",
+                size: "sm",
+                color: "#888888",
+                align: "center",
+                wrap: true,
+                margin: "md"
+              }
+            ],
+            paddingAll: "20px"
+          }
+        }
       })
-      Rails.logger.info "[LINE API] status: #{response.code}, body: #{response.body}"
     end
   end
 
@@ -2095,18 +2178,16 @@ class LinebotController < ApplicationController
   
       message = "🕓 直近12回の使用履歴 / Recent 12 Usage Records\n" + lines.join("\n")
   
-      response = client.reply_message(reply_token, {
+      send_reply(reply_token, {
         type: "text",
         text: message
       })
     else
-      response = client.reply_message(reply_token, {
+      send_reply(reply_token, {
         type: "text",
         text: "使用履歴が見つかりません / No usage records found."
       })
     end
-  
-    Rails.logger.info "[LINE API] status: #{response.code}, body: #{response.body}"
   end
 
   def send_default_help(reply_token)
