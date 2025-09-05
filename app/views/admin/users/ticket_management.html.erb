@@ -545,7 +545,7 @@
         </div>
       </div>
       <div class="modal-footer justify-content-center">
-        <button type="button" class="btn btn-secondary" onclick="hideDeleteTicketModal()">
+        <button type="button" class="btn btn-secondary">
           <i class="fas fa-times me-1"></i>キャンセル
         </button>
         <button type="button" class="btn btn-danger" id="confirmDeleteTicketBtn" data-ticket-management-target="confirmButton">
@@ -745,21 +745,37 @@ function hideDeleteTicketModal() {
     return;
   }
   
-  // BootstrapのモーダルAPIを使用
-  const modal = bootstrap.Modal.getInstance(modalElement);
-  if (modal) {
-    modal.hide();
-    console.log('✅ Delete ticket modal hidden using Bootstrap API');
-  } else {
-    // フォールバック: 手動で非表示
-    modalElement.style.display = 'none';
-    document.body.classList.remove('modal-open');
-    const backdrop = document.querySelector('.modal-backdrop');
-    if (backdrop) {
-      backdrop.remove();
+  // 複数の方法でモーダルを閉じる
+  try {
+    // 方法1: BootstrapのモーダルAPIを使用
+    const modal = bootstrap.Modal.getInstance(modalElement);
+    if (modal) {
+      modal.hide();
+      console.log('✅ Delete ticket modal hidden using Bootstrap API');
+    } else {
+      // 方法2: 新しいBootstrapモーダルインスタンスを作成して閉じる
+      const newModal = new bootstrap.Modal(modalElement);
+      newModal.hide();
+      console.log('✅ Delete ticket modal hidden using new Bootstrap instance');
     }
-    console.log('✅ Delete ticket modal hidden manually');
+  } catch (error) {
+    console.log('⚠️ Bootstrap API failed, using manual method:', error);
   }
+  
+  // 方法3: 確実に手動で非表示（フォールバック）
+  setTimeout(() => {
+    modalElement.style.display = 'none';
+    modalElement.classList.remove('show');
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+    
+    // 背景を削除
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    backdrops.forEach(backdrop => backdrop.remove());
+    
+    console.log('✅ Delete ticket modal hidden manually (fallback)');
+  }, 100);
 }
 
 // モーダル初期化関数
@@ -782,8 +798,8 @@ function initializeDeleteTicketModal() {
   // キャンセルボタンのイベントリスナーを追加
   const cancelButton = modalElement.querySelector('.btn-secondary');
   if (cancelButton) {
-    cancelButton.removeEventListener('click', hideDeleteTicketModal);
-    cancelButton.addEventListener('click', hideDeleteTicketModal);
+    cancelButton.removeEventListener('click', handleCancel);
+    cancelButton.addEventListener('click', handleCancel);
   }
   
   // 閉じるボタンのイベントリスナーを追加
@@ -799,10 +815,19 @@ function initializeDeleteTicketModal() {
 // 削除確認処理
 function handleDeleteConfirm(e) {
   e.preventDefault();
+  e.stopPropagation();
   console.log('🔍 Delete confirmed, hiding modal');
   hideDeleteTicketModal();
   // ここで実際の削除処理を実行
   // 削除処理は別途実装
+}
+
+// キャンセル処理
+function handleCancel(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  console.log('🔍 Cancel clicked, hiding modal');
+  hideDeleteTicketModal();
 }
 
 // DOMContentLoadedでイベントリスナーを設定
