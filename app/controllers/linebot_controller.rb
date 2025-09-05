@@ -2189,17 +2189,84 @@ class LinebotController < ApplicationController
 
   def send_usage_history(user, reply_token)
     Rails.logger.info "🕓 send_usage_history called for user: #{user.id} (#{user.name})"
-    usages = user.ticket_usages.order(used_at: :desc).limit(10)
+    usages = user.ticket_usages.order(used_at: :desc).limit(12)
     Rails.logger.info "🕓 Found #{usages.count} usage records"
   
     if usages.any?
-      bubbles = usages.map do |usage|
+      # リスト形式で12件表示
+      list_items = usages.map.with_index(1) do |usage, index|
         ticket_title = usage.ticket.title.present? ? usage.ticket.title : "チケット"
         course_name = usage.ticket.ticket_template.present? ? usage.ticket.ticket_template.name : "コース未設定"
-        date = usage.used_at.strftime('%Y年%m月%d日')
+        date = usage.used_at.strftime('%m/%d')
         time = usage.used_at.strftime('%H:%M')
         
         {
+          type: "box",
+          layout: "horizontal",
+          contents: [
+            {
+              type: "text",
+              text: "#{index}.",
+              size: "sm",
+              color: "#666666",
+              flex: 0,
+              margin: "sm"
+            },
+            {
+              type: "box",
+              layout: "vertical",
+              contents: [
+                {
+                  type: "text",
+                  text: ticket_title,
+                  weight: "bold",
+                  size: "sm",
+                  wrap: true
+                },
+                {
+                  type: "text",
+                  text: course_name,
+                  size: "xs",
+                  color: "#888888",
+                  wrap: true
+                }
+              ],
+              flex: 1,
+              margin: "sm"
+            },
+            {
+              type: "box",
+              layout: "vertical",
+              contents: [
+                {
+                  type: "text",
+                  text: date,
+                  size: "sm",
+                  color: "#1976d2",
+                  align: "end"
+                },
+                {
+                  type: "text",
+                  text: time,
+                  size: "xs",
+                  color: "#888888",
+                  align: "end"
+                }
+              ],
+              flex: 0,
+              margin: "sm"
+            }
+          ],
+          margin: "xs",
+          paddingAll: "sm",
+          backgroundColor: index.odd? ? "#f8f9fa" : "#ffffff"
+        }
+      end
+
+      send_reply(reply_token, {
+        type: "flex",
+        altText: "使用履歴一覧（12件）",
+        contents: {
           type: "bubble",
           header: {
             type: "box",
@@ -2207,7 +2274,7 @@ class LinebotController < ApplicationController
             contents: [
               {
                 type: "text",
-                text: "🕓 使用履歴",
+                text: "🕓 使用履歴（直近12回）",
                 weight: "bold",
                 size: "lg",
                 color: "#1976d2",
@@ -2221,64 +2288,9 @@ class LinebotController < ApplicationController
           body: {
             type: "box",
             layout: "vertical",
-            contents: [
-              {
-                type: "text",
-                text: ticket_title,
-                weight: "bold",
-                size: "md",
-                wrap: true,
-                margin: "md",
-                align: "center"
-              },
-              {
-                type: "text",
-                text: course_name,
-                size: "sm",
-                color: "#666666",
-                margin: "sm",
-                align: "center"
-              },
-              {
-                type: "separator",
-                margin: "md"
-              },
-              {
-                type: "text",
-                text: "使用日時",
-                size: "sm",
-                color: "#666666",
-                margin: "md"
-              },
-              {
-                type: "text",
-                text: date,
-                weight: "bold",
-                size: "md",
-                color: "#1976d2",
-                align: "center",
-                margin: "sm"
-              },
-              {
-                type: "text",
-                text: time,
-                size: "sm",
-                color: "#888888",
-                align: "center",
-                margin: "xs"
-              }
-            ],
-            paddingAll: "20px"
+            contents: list_items,
+            paddingAll: "10px"
           }
-        }
-      end
-
-      send_reply(reply_token, { 
-        type: "flex",
-        altText: "使用履歴一覧",
-        contents: {
-          type: "carousel",
-          contents: bubbles
         }
       })
     else
