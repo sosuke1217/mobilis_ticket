@@ -569,17 +569,35 @@ function updateStatistics() {
 document.addEventListener('DOMContentLoaded', function() {
   const newTicketForm = document.getElementById('newTicketForm');
   if (newTicketForm) {
-    newTicketForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const formData = new FormData(this);
-      const templateId = document.getElementById('ticketTemplate').value;
-      const count = document.getElementById('ticketCount').value;
-      
-      if (!templateId || !count) {
-        alert('チケット種類と枚数を選択してください');
-        return;
-      }
+    // 既存のイベントリスナーを削除してから追加
+    newTicketForm.removeEventListener('submit', handleTicketFormSubmit);
+    newTicketForm.addEventListener('submit', handleTicketFormSubmit);
+  }
+});
+
+// フォーム送信処理を関数として分離
+function handleTicketFormSubmit(e) {
+  e.preventDefault();
+  
+  // 重複送信を防ぐため、ボタンを無効化
+  const submitButton = e.target.querySelector('button[type="submit"]');
+  if (submitButton.disabled) {
+    console.log('🚫 Form submission already in progress, ignoring');
+    return;
+  }
+  
+  submitButton.disabled = true;
+  submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>発行中...';
+  
+  const templateId = document.getElementById('ticketTemplate').value;
+  const count = document.getElementById('ticketCount').value;
+  
+  if (!templateId || !count) {
+    alert('チケット種類と枚数を選択してください');
+    submitButton.disabled = false;
+    submitButton.innerHTML = '<i class="fas fa-plus me-1"></i>発行';
+    return;
+  }
       
       // チケット作成のAJAXリクエスト
       fetch(`/admin/tickets/create_for_user`, {
@@ -614,6 +632,9 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
           console.error('❌ Failed to create ticket:', data.error);
           alert('チケットの作成に失敗しました: ' + (data.error || '不明なエラー'));
+          // エラー時はボタンを元に戻す
+          submitButton.disabled = false;
+          submitButton.innerHTML = '<i class="fas fa-plus me-1"></i>発行';
         }
       })
       .catch(error => {
@@ -623,19 +644,32 @@ document.addEventListener('DOMContentLoaded', function() {
           stack: error.stack
         });
         alert('チケットの作成中にエラーが発生しました: ' + error.message);
+        // エラー時はボタンを元に戻す
+        submitButton.disabled = false;
+        submitButton.innerHTML = '<i class="fas fa-plus me-1"></i>発行';
       });
-    });
-  }
+}
   
   // チケット使用ボタンのイベントリスナー
   document.querySelectorAll('.use-ticket-btn').forEach(button => {
     button.addEventListener('click', function() {
+      // 重複クリックを防ぐ
+      if (this.disabled) {
+        console.log('🚫 Button already clicked, ignoring');
+        return;
+      }
+      
       const ticketId = this.dataset.ticketId;
       const ticketName = this.dataset.ticketName;
       
       if (!confirm(`「${ticketName}」を使用しますか？`)) {
         return;
       }
+      
+      // ボタンを無効化
+      this.disabled = true;
+      const originalHTML = this.innerHTML;
+      this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
       
       // チケット使用のAJAXリクエスト
       fetch(`/admin/tickets/${ticketId}/use`, {
@@ -664,6 +698,9 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
           console.error('❌ Failed to use ticket:', data.error);
           alert('チケットの使用に失敗しました: ' + (data.error || '不明なエラー'));
+          // エラー時はボタンを元に戻す
+          this.disabled = false;
+          this.innerHTML = originalHTML;
         }
       })
       .catch(error => {
@@ -673,6 +710,9 @@ document.addEventListener('DOMContentLoaded', function() {
           stack: error.stack
         });
         alert('チケットの使用中にエラーが発生しました: ' + error.message);
+        // エラー時はボタンを元に戻す
+        this.disabled = false;
+        this.innerHTML = originalHTML;
       });
     });
   });
