@@ -2080,7 +2080,7 @@ class LinebotController < ApplicationController
               },
               {
                 type: "text",
-                text: t.ticket_template.present? ? "#{t.ticket_template.duration}分コース" : "コース未設定",
+                text: t.ticket_template.present? ? t.ticket_template.name : "コース未設定",
                 size: "sm",
                 color: "#666666",
                 margin: "sm",
