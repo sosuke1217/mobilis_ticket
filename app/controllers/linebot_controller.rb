@@ -22,10 +22,11 @@ class LinebotController < ApplicationController
     Rails.logger.info "🔔 Parsed events: #{events.count} events"
     
     events.each do |event|
-      Rails.logger.info "🔔 Processing event: #{event.class} - #{event.type}"
+      Rails.logger.info "🔔 Processing event: #{event.class}"
       
       case event
       when Line::Bot::Event::Message
+        Rails.logger.info "🔔 Message event type: #{event.type}"
         next unless event.type == Line::Bot::Event::MessageType::Text
 
         user_id = event['source']['userId']
@@ -40,7 +41,7 @@ class LinebotController < ApplicationController
         handle_text_message(user, message_text, event['replyToken'])
 
       when Line::Bot::Event::Postback
-        Rails.logger.info "[LINE POSTBACK] data=#{event['postback']['data']}, user=#{event['source']['userId']}"
+        Rails.logger.info "🔄 Postback event: #{event['postback']['data']}, user: #{event['source']['userId']}"
 
         user_id = event['source']['userId']
         user = find_or_create_user_with_profile(user_id)
