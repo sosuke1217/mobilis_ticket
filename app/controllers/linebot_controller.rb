@@ -2122,6 +2122,10 @@ class LinebotController < ApplicationController
 
   # 🆕 Googleレビューメニュー送信
   def send_reviews_menu(reply_token)
+    # GoogleビジネスプロフィールのURLを取得
+    google_review_url = get_google_review_url
+    google_business_url = get_google_business_url
+    
     message = {
       type: "flex",
       altText: "Googleレビュー",
@@ -2172,6 +2176,25 @@ class LinebotController < ApplicationController
             },
             {
               type: "text",
+              text: "🏢 店舗情報",
+              weight: "bold",
+              size: "md",
+              margin: "md"
+            },
+            {
+              type: "text",
+              text: "店舗名: Mobilis Stretch\n出張ストレッチサービス",
+              size: "sm",
+              color: "#666666",
+              wrap: true,
+              margin: "sm"
+            },
+            {
+              type: "separator",
+              margin: "md"
+            },
+            {
+              type: "text",
               text: "📊 現在の評価",
               weight: "bold",
               size: "md",
@@ -2197,7 +2220,7 @@ class LinebotController < ApplicationController
               action: {
                 type: "uri",
                 label: "📝 Googleレビューを投稿",
-                uri: "https://search.google.com/local/writereview?placeid=YOUR_PLACE_ID"
+                uri: google_review_url
               }
             },
             {
@@ -2206,7 +2229,7 @@ class LinebotController < ApplicationController
               action: {
                 type: "uri",
                 label: "📊 Googleレビューを見る",
-                uri: "https://www.google.com/maps/place/mobilis-stretch"
+                uri: google_business_url
               }
             },
             {
@@ -2646,5 +2669,17 @@ class LinebotController < ApplicationController
     Rails.logger.info "📤 Pushing date selection message"
     push_message(user.line_user_id, message)
     Rails.logger.info "✅ Date selection message pushed successfully"
+  end
+
+  # 🆕 Googleレビュー投稿URLを取得
+  def get_google_review_url
+    # 環境変数から取得、なければデフォルトの検索URL
+    ENV['GOOGLE_REVIEW_URL'] || "https://www.google.com/search?q=mobilis+stretch+reviews&tbm=lcl"
+  end
+
+  # 🆕 GoogleビジネスプロフィールURLを取得
+  def get_google_business_url
+    # 環境変数から取得、なければデフォルトの検索URL
+    ENV['GOOGLE_BUSINESS_URL'] || "https://www.google.com/search?q=mobilis+stretch+reviews&tbm=lcl"
   end
 end
