@@ -557,6 +557,97 @@
 </div>
 
 <script>
+// 統計を更新する関数
+function updateStatistics() {
+  console.log('🔄 Updating statistics...');
+  
+  // ページをリロードして統計を更新
+  window.location.reload();
+}
+
+// チケット作成フォームの送信処理
+document.addEventListener('DOMContentLoaded', function() {
+  const newTicketForm = document.getElementById('newTicketForm');
+  if (newTicketForm) {
+    newTicketForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      const templateId = document.getElementById('ticketTemplate').value;
+      const count = document.getElementById('ticketCount').value;
+      
+      if (!templateId || !count) {
+        alert('チケット種類と枚数を選択してください');
+        return;
+      }
+      
+      // チケット作成のAJAXリクエスト
+      fetch(`/admin/users/<%= @user.id %>/tickets/create_for_user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({
+          ticket_template_id: templateId,
+          count: count
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          console.log('✅ Ticket created successfully');
+          // 統計を更新
+          updateStatistics();
+        } else {
+          console.error('❌ Failed to create ticket:', data.error);
+          alert('チケットの作成に失敗しました: ' + data.error);
+        }
+      })
+      .catch(error => {
+        console.error('❌ Error creating ticket:', error);
+        alert('チケットの作成中にエラーが発生しました');
+      });
+    });
+  }
+  
+  // チケット使用ボタンのイベントリスナー
+  document.querySelectorAll('.use-ticket-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const ticketId = this.dataset.ticketId;
+      const ticketName = this.dataset.ticketName;
+      
+      if (!confirm(`「${ticketName}」を使用しますか？`)) {
+        return;
+      }
+      
+      // チケット使用のAJAXリクエスト
+      fetch(`/admin/tickets/${ticketId}/use`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          console.log('✅ Ticket used successfully');
+          // 統計を更新
+          updateStatistics();
+        } else {
+          console.error('❌ Failed to use ticket:', data.error);
+          alert('チケットの使用に失敗しました: ' + data.error);
+        }
+      })
+      .catch(error => {
+        console.error('❌ Error using ticket:', error);
+        alert('チケットの使用中にエラーが発生しました');
+      });
+    });
+  });
+});
+
 // グローバル関数として定義
 function hideDeleteTicketModal() {
   console.log('🔍 Hiding delete ticket modal manually');
