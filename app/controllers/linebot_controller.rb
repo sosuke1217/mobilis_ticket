@@ -2144,7 +2144,8 @@ class LinebotController < ApplicationController
               align: "center"
             }
           ],
-          paddingAll: "10px"
+          paddingAll: "10px",
+          paddingTop: "5px"
         },
         body: {
           type: "box",
