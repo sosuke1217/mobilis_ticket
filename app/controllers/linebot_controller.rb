@@ -2079,6 +2079,14 @@ class LinebotController < ApplicationController
                 align: "center"
               },
               {
+                type: "text",
+                text: t.ticket_template.present? ? "#{t.ticket_template.duration}分コース" : "コース未設定",
+                size: "sm",
+                color: "#666666",
+                margin: "sm",
+                align: "center"
+              },
+              {
                 type: "separator",
                 margin: "md"
               },
