@@ -718,6 +718,34 @@ function handleTicketFormSubmit(e) {
   });
 });
 
+// モーダル表示関数
+function showDeleteTicketModal(ticketId, ticketName) {
+  console.log('🔍 Showing delete ticket modal for ticket:', ticketId);
+  
+  const modal = document.getElementById('deleteTicketModal');
+  if (!modal) {
+    console.error('❌ Delete ticket modal not found');
+    return;
+  }
+  
+  // モーダルを表示
+  modal.style.display = 'block';
+  
+  // 背景の暗さを追加
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop fade show';
+  document.body.appendChild(backdrop);
+  
+  // bodyのスタイルを設定
+  document.body.classList.add('modal-open');
+  document.body.style.overflow = 'hidden';
+  
+  // イベントリスナーを再初期化
+  initializeDeleteTicketModal();
+  
+  console.log('✅ Delete ticket modal shown');
+}
+
 // グローバル関数として定義
 function hideDeleteTicketModal() {
   console.log('🔍 Hiding delete ticket modal manually');
@@ -761,9 +789,9 @@ function hideDeleteTicketModal() {
   console.log('✅ Delete ticket modal hidden');
 }
 
-// DOMContentLoadedでイベントリスナーを設定
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('🔍 DOM Content Loaded - Initializing delete ticket modal');
+// モーダル初期化関数
+function initializeDeleteTicketModal() {
+  console.log('🔍 Initializing delete ticket modal');
   
   const modal = document.getElementById('deleteTicketModal');
   if (!modal) {
@@ -771,33 +799,62 @@ document.addEventListener('DOMContentLoaded', function() {
     return;
   }
   
-  // ESCキーでモーダルを閉じる
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && modal.style.display === 'block') {
-      console.log('🔍 ESCキーが押されました')
-      hideDeleteTicketModal();
-    }
-  });
-  
-  // モーダルダイアログの外側クリックでも閉じる
-  const modalDialog = modal.querySelector('.modal-dialog');
-  if (modalDialog) {
-    modalDialog.addEventListener('click', function(e) {
-      if (e.target === modalDialog) {
-        console.log('🔍 Modal dialog background clicked, hiding modal');
-        hideDeleteTicketModal();
-      }
-    });
-  }
+  // 既存のイベントリスナーを削除
+  modal.removeEventListener('click', handleModalClick);
   
   // モーダル背景クリックで閉じる
-  modal.addEventListener('click', function(e) {
-    if (e.target === modal) {
-      console.log('🔍 Modal background clicked, hiding modal');
-      hideDeleteTicketModal();
-    }
-  });
+  modal.addEventListener('click', handleModalClick);
+  
+  // 削除ボタンのイベントリスナーを追加
+  const deleteButton = modal.querySelector('.btn-danger');
+  if (deleteButton) {
+    deleteButton.removeEventListener('click', handleDeleteConfirm);
+    deleteButton.addEventListener('click', handleDeleteConfirm);
+  }
+  
+  // キャンセルボタンのイベントリスナーを追加
+  const cancelButton = modal.querySelector('.btn-secondary');
+  if (cancelButton) {
+    cancelButton.removeEventListener('click', hideDeleteTicketModal);
+    cancelButton.addEventListener('click', hideDeleteTicketModal);
+  }
   
   console.log('✅ Delete ticket modal initialization completed');
+}
+
+// モーダルクリック処理
+function handleModalClick(e) {
+  if (e.target === e.currentTarget) {
+    console.log('🔍 Modal background clicked, hiding modal');
+    hideDeleteTicketModal();
+  }
+}
+
+// 削除確認処理
+function handleDeleteConfirm(e) {
+  e.preventDefault();
+  console.log('🔍 Delete confirmed, hiding modal');
+  hideDeleteTicketModal();
+  // ここで実際の削除処理を実行
+  // 削除処理は別途実装
+}
+
+// DOMContentLoadedでイベントリスナーを設定
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🔍 DOM Content Loaded - Initializing all modals');
+  
+  // 削除モーダルを初期化
+  initializeDeleteTicketModal();
+  
+  // ESCキーでモーダルを閉じる（グローバル）
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const modal = document.getElementById('deleteTicketModal');
+      if (modal && modal.style.display === 'block') {
+        console.log('🔍 ESCキーが押されました')
+        hideDeleteTicketModal();
+      }
+    }
+  });
 });
 </script>
