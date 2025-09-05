@@ -593,20 +593,36 @@ document.addEventListener('DOMContentLoaded', function() {
           count: count
         })
       })
-      .then(response => response.json())
+      .then(response => {
+        console.log('📡 Response status:', response.status);
+        console.log('📡 Response headers:', response.headers);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        return response.json();
+      })
       .then(data => {
+        console.log('📦 Response data:', data);
+        
         if (data.success) {
           console.log('✅ Ticket created successfully');
+          alert('チケットを発行しました！');
           // 統計を更新
           updateStatistics();
         } else {
           console.error('❌ Failed to create ticket:', data.error);
-          alert('チケットの作成に失敗しました: ' + data.error);
+          alert('チケットの作成に失敗しました: ' + (data.error || '不明なエラー'));
         }
       })
       .catch(error => {
         console.error('❌ Error creating ticket:', error);
-        alert('チケットの作成中にエラーが発生しました');
+        console.error('❌ Error details:', {
+          message: error.message,
+          stack: error.stack
+        });
+        alert('チケットの作成中にエラーが発生しました: ' + error.message);
       });
     });
   }
@@ -629,20 +645,35 @@ document.addEventListener('DOMContentLoaded', function() {
           'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
         }
       })
-      .then(response => response.json())
+      .then(response => {
+        console.log('📡 Use response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        return response.json();
+      })
       .then(data => {
+        console.log('📦 Use response data:', data);
+        
         if (data.success) {
           console.log('✅ Ticket used successfully');
+          alert('チケットを使用しました！');
           // 統計を更新
           updateStatistics();
         } else {
           console.error('❌ Failed to use ticket:', data.error);
-          alert('チケットの使用に失敗しました: ' + data.error);
+          alert('チケットの使用に失敗しました: ' + (data.error || '不明なエラー'));
         }
       })
       .catch(error => {
         console.error('❌ Error using ticket:', error);
-        alert('チケットの使用中にエラーが発生しました');
+        console.error('❌ Use error details:', {
+          message: error.message,
+          stack: error.stack
+        });
+        alert('チケットの使用中にエラーが発生しました: ' + error.message);
       });
     });
   });
