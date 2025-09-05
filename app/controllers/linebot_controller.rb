@@ -2439,10 +2439,17 @@ class LinebotController < ApplicationController
       Rails.logger.info "📤 About to call LINE API with message: #{message.inspect}"
       response = client.reply_message(reply_token, message)
       Rails.logger.info "📤 LINE API response code: #{response.code}"
-      Rails.logger.info "📤 LINE API response body: #{response.body}"
+      
+      # エンコーディングエラーを避けるため、レスポンスボディを安全にログ出力
+      begin
+        response_body = response.body.force_encoding('UTF-8')
+        Rails.logger.info "📤 LINE API response body: #{response_body}"
+      rescue => encoding_error
+        Rails.logger.info "📤 LINE API response body: [encoding error: #{encoding_error.message}]"
+      end
       
       if response.code != '200'
-        Rails.logger.error "❌ LINE API error: #{response.body}"
+        Rails.logger.error "❌ LINE API error: #{response_body}"
       else
         Rails.logger.info "✅ LINE API call successful"
       end
