@@ -582,13 +582,14 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       // チケット作成のAJAXリクエスト
-      fetch(`/admin/users/<%= @user.id %>/tickets/create_for_user`, {
+      fetch(`/admin/tickets/create_for_user`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
         },
         body: JSON.stringify({
+          user_id: <%= @user.id %>,
           ticket_template_id: templateId,
           count: count
         })
