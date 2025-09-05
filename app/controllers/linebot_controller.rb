@@ -2140,13 +2140,8 @@ class LinebotController < ApplicationController
               text: "⭐️ Googleレビュー",
               weight: "bold",
               size: "xl",
-              color: "#4285F4"
-            },
-            {
-              type: "text",
-              text: "Googleでレビューを投稿してください",
-              size: "sm",
-              color: "#666666"
+              color: "#4285F4",
+              align: "center"
             }
           ],
           paddingAll: "20px"
@@ -2157,56 +2152,33 @@ class LinebotController < ApplicationController
           contents: [
             {
               type: "text",
-              text: "📝 Googleレビュー投稿",
-              weight: "bold",
-              size: "md",
-              margin: "md"
-            },
-            {
-              type: "text",
-              text: "ご利用いただいた感想やご意見をGoogleで共有してください。",
+              text: "ご利用いただいた感想やご意見を\nGoogleで共有してください。",
               size: "sm",
               color: "#666666",
               wrap: true,
-              margin: "sm"
+              margin: "md",
+              align: "center"
             },
             {
               type: "separator",
-              margin: "md"
+              margin: "lg"
             },
             {
               type: "text",
-              text: "🏢 店舗情報",
+              text: "🏢 Mobilis Stretch",
               weight: "bold",
               size: "md",
-              margin: "md"
+              margin: "md",
+              align: "center"
             },
             {
               type: "text",
-              text: "店舗名: Mobilis Stretch\n出張ストレッチサービス",
+              text: "出張ストレッチサービス",
               size: "sm",
               color: "#666666",
               wrap: true,
-              margin: "sm"
-            },
-            {
-              type: "separator",
-              margin: "md"
-            },
-            {
-              type: "text",
-              text: "📊 現在の評価",
-              weight: "bold",
-              size: "md",
-              margin: "md"
-            },
-            {
-              type: "text",
-              text: "現在のGoogleレビューの評価をご確認いただけます。",
-              size: "sm",
-              color: "#666666",
-              wrap: true,
-              margin: "sm"
+              margin: "sm",
+              align: "center"
             }
           ]
         },
@@ -2219,18 +2191,20 @@ class LinebotController < ApplicationController
               style: "primary",
               action: {
                 type: "uri",
-                label: "📝 Googleレビューを投稿",
+                label: "📝 レビューを投稿",
                 uri: google_review_url
-              }
+              },
+              margin: "sm"
             },
             {
               type: "button",
               style: "secondary",
               action: {
                 type: "uri",
-                label: "📊 Googleレビューを見る",
+                label: "📊 レビューを見る",
                 uri: google_business_url
-              }
+              },
+              margin: "sm"
             },
             {
               type: "button",
@@ -2239,9 +2213,11 @@ class LinebotController < ApplicationController
                 type: "postback",
                 label: "🔙 戻る",
                 data: "reviews"
-              }
+              },
+              margin: "sm"
             }
-          ]
+          ],
+          paddingAll: "20px"
         }
       }
     }
