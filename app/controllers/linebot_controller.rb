@@ -2071,7 +2071,7 @@ class LinebotController < ApplicationController
             contents: [
               {
                 type: "text",
-                text: t.title,
+                text: t.title.present? ? t.title : "チケット",
                 weight: "bold",
                 size: "md",
                 wrap: true,
