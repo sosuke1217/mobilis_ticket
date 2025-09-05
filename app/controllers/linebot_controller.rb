@@ -6,21 +6,30 @@ class LinebotController < ApplicationController
   protect_from_forgery with: :null_session
 
   def callback
+    Rails.logger.info "🔔 LINE webhook received"
     body = request.body.read
+    Rails.logger.info "🔔 Request body length: #{body.length}"
     signature = request.env['HTTP_X_LINE_SIGNATURE']
+    Rails.logger.info "🔔 Signature present: #{signature.present?}"
 
     unless client.validate_signature(body, signature)
+      Rails.logger.error "❌ Invalid signature"
       head :bad_request
       return
     end
 
     events = client.parse_events_from(body)
+    Rails.logger.info "🔔 Parsed events: #{events.count} events"
+    
     events.each do |event|
+      Rails.logger.info "🔔 Processing event: #{event.class} - #{event.type}"
+      
       case event
       when Line::Bot::Event::Message
         next unless event.type == Line::Bot::Event::MessageType::Text
 
         user_id = event['source']['userId']
+        Rails.logger.info "📝 Text message from user: #{user_id}"
         user = find_or_create_user_with_profile(user_id)
 
         if user.notification_preference.nil?
