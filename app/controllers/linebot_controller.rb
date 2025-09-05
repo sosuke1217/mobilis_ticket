@@ -295,7 +295,8 @@ class LinebotController < ApplicationController
     
     case data
     when "check_tickets"
-      Rails.logger.info "📋 Checking tickets"
+      Rails.logger.info "📋 Checking tickets for user: #{user.id} (#{user.name})"
+      Rails.logger.info "📋 User line_user_id: #{user.line_user_id}"
       send_ticket_status(user, reply_token)
 
     when "usage_history"
@@ -2026,7 +2027,9 @@ class LinebotController < ApplicationController
   end
 
   def send_ticket_status(user, reply_token)
+    Rails.logger.info "🎫 send_ticket_status called for user: #{user.id} (#{user.name})"
     tickets = user.tickets.where("remaining_count > 0 AND expiry_date >= ?", Time.zone.today)
+    Rails.logger.info "🎫 Found #{tickets.count} active tickets"
     
     if tickets.any?
       bubbles = tickets.map do |t|
