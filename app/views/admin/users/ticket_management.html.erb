@@ -745,16 +745,33 @@ function hideDeleteTicketModal() {
     return;
   }
   
-  // Stimulusコントローラーが存在する場合は、そのクリーンアップメソッドを呼ぶ
+  // 強制的にStimulusコントローラーの状態をリセット
   const controller = document.querySelector('[data-controller*="ticket-management"]');
-  if (controller && controller.stimulusController) {
+  if (controller) {
     try {
-      controller.stimulusController.cleanupModalBackground();
-      // isProcessingフラグもリセット
-      controller.stimulusController.isProcessing = false;
-      console.log('✅ Stimulus controller cleanup called and isProcessing reset');
+      // Stimulusコントローラーのインスタンスを取得
+      const stimulusApp = window.Stimulus || window.Application;
+      if (stimulusApp) {
+        const controllerInstance = stimulusApp.getControllerForElementAndIdentifier(controller, 'ticket-management');
+        if (controllerInstance) {
+          controllerInstance.isProcessing = false;
+          console.log('✅ Stimulus controller isProcessing reset via Stimulus API');
+        }
+      }
+      
+      // 直接プロパティアクセスも試す
+      if (controller.stimulusController) {
+        controller.stimulusController.isProcessing = false;
+        console.log('✅ Stimulus controller isProcessing reset via direct access');
+      }
+      
+      // クリーンアップメソッドも呼ぶ
+      if (controller.stimulusController && controller.stimulusController.cleanupModalBackground) {
+        controller.stimulusController.cleanupModalBackground();
+        console.log('✅ Stimulus controller cleanup called');
+      }
     } catch (error) {
-      console.log('⚠️ Stimulus controller cleanup failed:', error);
+      console.log('⚠️ Stimulus controller manipulation failed:', error);
     }
   }
   
@@ -777,6 +794,7 @@ function hideDeleteTicketModal() {
   
   // 方法3: 確実に手動で非表示（フォールバック）
   setTimeout(() => {
+    // モーダル要素を完全にリセット
     modalElement.style.display = 'none';
     modalElement.style.position = '';
     modalElement.style.top = '';
@@ -786,16 +804,37 @@ function hideDeleteTicketModal() {
     modalElement.style.zIndex = '';
     modalElement.style.backgroundColor = '';
     modalElement.classList.remove('show');
+    modalElement.setAttribute('aria-hidden', 'true');
+    modalElement.setAttribute('aria-modal', 'false');
     
+    // bodyの状態を完全にリセット
     document.body.classList.remove('modal-open');
     document.body.style.overflow = '';
     document.body.style.paddingRight = '';
+    document.body.style.position = '';
     
-    // 背景を削除
+    // すべての背景要素を削除
     const backdrops = document.querySelectorAll('.modal-backdrop');
     backdrops.forEach(backdrop => backdrop.remove());
     
+    // 追加のクリーンアップ: すべてのモーダル関連クラスを削除
+    document.querySelectorAll('.modal').forEach(modal => {
+      modal.classList.remove('show');
+      modal.style.display = 'none';
+    });
+    
     console.log('✅ Delete ticket modal hidden manually (fallback)');
+    
+    // 最終確認: 1秒後にモーダルがまだ表示されている場合は強制削除
+    setTimeout(() => {
+      if (modalElement.style.display !== 'none' || modalElement.offsetParent !== null) {
+        console.log('🚨 Modal still visible, forcing removal');
+        modalElement.remove();
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        console.log('🚨 Modal forcibly removed');
+      }
+    }, 1000);
   }, 100);
 }
 
@@ -858,4 +897,32 @@ document.addEventListener('DOMContentLoaded', function() {
   // 削除モーダルを初期化
   initializeDeleteTicketModal();
 });
+
+// 緊急時のモーダル強制閉じる関数（グローバル）
+window.forceCloseModal = function() {
+  console.log('🚨 Emergency modal close function called');
+  
+  // すべてのモーダルを強制的に閉じる
+  document.querySelectorAll('.modal').forEach(modal => {
+    modal.style.display = 'none';
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+  });
+  
+  // bodyの状態をリセット
+  document.body.classList.remove('modal-open');
+  document.body.style.overflow = '';
+  document.body.style.paddingRight = '';
+  
+  // すべての背景を削除
+  document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+  
+  // Stimulusコントローラーの状態もリセット
+  const controller = document.querySelector('[data-controller*="ticket-management"]');
+  if (controller && controller.stimulusController) {
+    controller.stimulusController.isProcessing = false;
+  }
+  
+  console.log('🚨 Emergency modal close completed');
+};
 </script>
