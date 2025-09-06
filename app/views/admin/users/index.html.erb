@@ -378,6 +378,8 @@
   window.hideModal = function() {
     const modal = document.getElementById('addUserModal');
     if (modal) {
+      console.log('🔍 Hiding modal...');
+      
       // Bootstrap Modal APIを使用して閉じる
       const bootstrapModal = bootstrap.Modal.getInstance(modal);
       if (bootstrapModal) {
@@ -387,8 +389,11 @@
         modal.style.display = 'none';
         modal.classList.remove('show');
         document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
         const backdrop = document.querySelector('.modal-backdrop');
         if (backdrop) backdrop.remove();
+        console.log('✅ Modal hidden manually');
       }
     }
   };
@@ -396,13 +401,48 @@
   window.showModal = function() {
     const modal = document.getElementById('addUserModal');
     if (modal) {
-      // Bootstrap Modal APIを使用して開く
+      console.log('🔍 Opening modal...');
+      
+      // 既存のModalインスタンスがある場合は破棄
+      const existingModal = bootstrap.Modal.getInstance(modal);
+      if (existingModal) {
+        existingModal.dispose();
+      }
+      
+      // 新しいModalインスタンスを作成
       const bootstrapModal = new bootstrap.Modal(modal, {
         backdrop: true,  // 背景クリックで閉じる
         keyboard: true,  // ESCキーで閉じる
         focus: true      // モーダルにフォーカス
       });
+      
+      // モーダル表示イベントを監視
+      modal.addEventListener('shown.bs.modal', function() {
+        console.log('✅ Modal shown successfully');
+      });
+      
+      // モーダル非表示イベントを監視
+      modal.addEventListener('hidden.bs.modal', function() {
+        console.log('✅ Modal hidden successfully');
+        // バックドロップを確実に削除
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) {
+          backdrop.remove();
+        }
+        // bodyのスタイルをリセット
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+      });
+      
+      // エラーイベントを監視
+      modal.addEventListener('show.bs.modal', function() {
+        console.log('🔍 Modal show event fired');
+      });
+      
       bootstrapModal.show();
+    } else {
+      console.error('❌ Modal element not found');
     }
   };
   
@@ -546,6 +586,36 @@
   // フォールバック
   setTimeout(init, 100);
   setTimeout(init, 500);
+  
+  // 緊急時の復旧機能（モーダルが固まった場合）
+  window.forceCloseModal = function() {
+    console.log('🚨 Force closing modal...');
+    const modal = document.getElementById('addUserModal');
+    if (modal) {
+      // すべてのモーダル関連のスタイルを強制リセット
+      modal.style.display = 'none';
+      modal.classList.remove('show');
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+      
+      // バックドロップをすべて削除
+      const backdrops = document.querySelectorAll('.modal-backdrop');
+      backdrops.forEach(backdrop => backdrop.remove());
+      
+      console.log('✅ Modal force closed');
+    }
+  };
+  
+  // ESCキーで強制閉じる機能
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const modal = document.getElementById('addUserModal');
+      if (modal && modal.classList.contains('show')) {
+        window.forceCloseModal();
+      }
+    }
+  });
   
 })();
 </script>
