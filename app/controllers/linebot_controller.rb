@@ -213,23 +213,37 @@ class LinebotController < ApplicationController
 
   private
 
-  # 多言語対応のヘルパーメソッド（短縮版）
+  # 多言語対応のヘルパーメソッド
   def get_message(user, key, **options)
     messages = {
       reservation_check_title: "📅 予約確認",
+      reservation_check_title_en: "Reservation Check",
       reservation_check_subtitle: "今後の予約一覧",
+      reservation_check_subtitle_en: "Upcoming Reservations",
       new_reservation: "新規予約",
+      new_reservation_en: "New Reservation",
       cancel_reservation: "予約をキャンセル",
+      cancel_reservation_en: "Cancel Reservation",
       return_to_check: "予約確認に戻る",
+      return_to_check_en: "Back to Reservations",
       cancel_menu_title: "❌ 予約キャンセル",
+      cancel_menu_title_en: "Cancel Reservation",
       cancel_menu_subtitle: "キャンセルしたい予約を選択",
+      cancel_menu_subtitle_en: "Select reservation to cancel",
       cancel_warning: "⚠️ キャンセルした予約は復元できません",
+      cancel_warning_en: "Cancelled reservations cannot be restored",
       no_reservations: "キャンセルできる予約がありません",
+      no_reservations_en: "No reservations available for cancellation",
       no_upcoming_reservations: "現在、今後の予約はありません",
+      no_upcoming_reservations_en: "Currently, no upcoming reservations",
       no_upcoming_reservations_sub: "新しい予約を取りたい場合は、下のボタンからお申し込みください",
+      no_upcoming_reservations_sub_en: "To make a new reservation, please use the button below",
       confirmed: "✅ 確定",
+      confirmed_en: "Confirmed",
       tentative: "⏳ 保留",
+      tentative_en: "Pending",
       cancelled: "❌ キャンセル済み",
+      cancelled_en: "Cancelled",
       location: "📍"
     }
     
@@ -2975,6 +2989,13 @@ class LinebotController < ApplicationController
                 weight: "bold",
                 size: "xl",
                 color: "#FF6B35"
+              },
+              {
+                type: "text",
+                text: get_message(user, :reservation_check_title_en),
+                size: "sm",
+                color: "#999999",
+                margin: "xs"
               }
             ],
             paddingAll: "20px"
@@ -2992,11 +3013,27 @@ class LinebotController < ApplicationController
               },
               {
                 type: "text",
+                text: get_message(user, :no_upcoming_reservations_en),
+                size: "sm",
+                color: "#999999",
+                wrap: true,
+                margin: "xs"
+              },
+              {
+                type: "text",
                 text: get_message(user, :no_upcoming_reservations_sub),
                 size: "sm",
                 color: "#999999",
                 wrap: true,
                 margin: "md"
+              },
+              {
+                type: "text",
+                text: get_message(user, :no_upcoming_reservations_sub_en),
+                size: "sm",
+                color: "#999999",
+                wrap: true,
+                margin: "xs"
               }
             ],
             paddingAll: "20px"
@@ -3043,6 +3080,13 @@ class LinebotController < ApplicationController
             },
             {
               type: "text",
+              text: reservation.status == 'confirmed' ? get_message(user, :confirmed_en) : get_message(user, :tentative_en),
+              size: "sm",
+              color: reservation.status == 'confirmed' ? "#00C851" : "#FF8800",
+              margin: "xs"
+            },
+            {
+              type: "text",
               text: "📍 #{reservation.course || 'コース未設定'}",
               size: "sm",
               color: "#666666",
@@ -3074,9 +3118,24 @@ class LinebotController < ApplicationController
               },
               {
                 type: "text",
+                text: get_message(user, :reservation_check_title_en),
+                size: "sm",
+                color: "#999999",
+                margin: "xs"
+              },
+              {
+                type: "text",
                 text: get_message(user, :reservation_check_subtitle),
                 size: "sm",
-                color: "#666666"
+                color: "#666666",
+                margin: "sm"
+              },
+              {
+                type: "text",
+                text: get_message(user, :reservation_check_subtitle_en),
+                size: "sm",
+                color: "#999999",
+                margin: "xs"
               }
             ],
             paddingAll: "20px"
@@ -3149,6 +3208,13 @@ class LinebotController < ApplicationController
                 weight: "bold",
                 size: "xl",
                 color: "#DC3545"
+              },
+              {
+                type: "text",
+                text: get_message(user, :cancel_menu_title_en),
+                size: "sm",
+                color: "#999999",
+                margin: "xs"
               }
             ],
             paddingAll: "20px"
@@ -3163,6 +3229,14 @@ class LinebotController < ApplicationController
                 size: "md",
                 color: "#666666",
                 wrap: true
+              },
+              {
+                type: "text",
+                text: get_message(user, :no_reservations_en),
+                size: "sm",
+                color: "#999999",
+                wrap: true,
+                margin: "xs"
               }
             ],
             paddingAll: "20px"
@@ -3219,9 +3293,24 @@ class LinebotController < ApplicationController
               },
               {
                 type: "text",
+                text: get_message(user, :cancel_menu_title_en),
+                size: "sm",
+                color: "#999999",
+                margin: "xs"
+              },
+              {
+                type: "text",
                 text: get_message(user, :cancel_menu_subtitle),
                 size: "sm",
-                color: "#666666"
+                color: "#666666",
+                margin: "sm"
+              },
+              {
+                type: "text",
+                text: get_message(user, :cancel_menu_subtitle_en),
+                size: "sm",
+                color: "#999999",
+                margin: "xs"
               }
             ],
             paddingAll: "20px"
@@ -3236,6 +3325,13 @@ class LinebotController < ApplicationController
                 size: "sm",
                 color: "#DC3545",
                 margin: "md"
+              },
+              {
+                type: "text",
+                text: get_message(user, :cancel_warning_en),
+                size: "sm",
+                color: "#DC3545",
+                margin: "xs"
               }
             ],
             paddingAll: "20px"
