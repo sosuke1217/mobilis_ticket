@@ -322,7 +322,9 @@ class LinebotController < ApplicationController
       send_news_menu(reply_token)
 
     when "check_reservations"
-      Rails.logger.info "📅 Showing reservation check"
+      Rails.logger.info "📅 Showing reservation check for user: #{user.id} (#{user.name})"
+      Rails.logger.info "📅 User has #{user.reservations.count} total reservations"
+      Rails.logger.info "📅 User has #{user.reservations.where('start_time > ?', Time.current).count} upcoming reservations"
       send_reservation_check(user, reply_token)
 
     when "reviews"
@@ -633,7 +635,7 @@ class LinebotController < ApplicationController
             layout: "vertical",
             contents: [
               {
-                type: "text",
+        type: "text",
                 text: "📅 明日の空き状況",
                 weight: "bold",
                 size: "lg"
@@ -693,34 +695,34 @@ class LinebotController < ApplicationController
             data: "quick_book_60min_#{tomorrow.strftime('%Y-%m-%d')}_#{slot[:start_time].strftime('%H:%M')}"
           }
         }
-      end
+    end
 
-      message = {
-        type: "flex",
+    message = {
+      type: "flex",
         altText: "明日の空き状況",
-        contents: {
-          type: "bubble",
-          header: {
-            type: "box",
-            layout: "vertical",
-            contents: [
-              {
-                type: "text",
+      contents: {
+        type: "bubble",
+        header: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
                 text: "📅 明日の空き状況",
-                weight: "bold",
-                size: "lg"
-              },
-              {
-                type: "text",
+              weight: "bold",
+              size: "lg"
+            },
+            {
+              type: "text",
                 text: tomorrow.strftime('%m/%d (%a)'),
-                size: "sm",
+              size: "sm",
                 color: "#666666"
-              }
-            ]
-          },
-          body: {
-            type: "box",
-            layout: "vertical",
+            }
+          ]
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
             contents: [
               {
                 type: "text",
@@ -2056,11 +2058,11 @@ class LinebotController < ApplicationController
             type: "box",
             layout: "vertical",
             contents: [
-              {
-                type: "text",
+          {
+            type: "text",
                 text: "🎫 チケット情報",
-                weight: "bold",
-                size: "lg",
+            weight: "bold",
+            size: "lg",
                 color: "#1976d2",
                 align: "center"
               }
@@ -2073,21 +2075,21 @@ class LinebotController < ApplicationController
             type: "box",
             layout: "vertical",
             contents: [
-              {
-                type: "text",
+          {
+            type: "text",
                 text: t.title.present? ? t.title : "チケット",
                 weight: "bold",
-                size: "md",
+            size: "md",
                 wrap: true,
                 margin: "md",
                 align: "center"
               },
-              {
-                type: "text",
+          {
+            type: "text",
                 text: t.ticket_template.present? ? t.ticket_template.name : "コース未設定",
-                size: "sm",
+            size: "sm",
                 color: "#666666",
-                margin: "sm",
+            margin: "sm",
                 align: "center"
               },
               {
@@ -2150,7 +2152,7 @@ class LinebotController < ApplicationController
             layout: "vertical",
             contents: [
               {
-                type: "text",
+        type: "text",
                 text: "🎫 チケット情報",
                 weight: "bold",
                 size: "lg",
@@ -2277,7 +2279,7 @@ class LinebotController < ApplicationController
             layout: "vertical",
             contents: [
               {
-                type: "text",
+        type: "text",
                 text: "🕓 使用履歴（直近12回）",
                 weight: "bold",
                 size: "lg",
@@ -2308,7 +2310,7 @@ class LinebotController < ApplicationController
             layout: "vertical",
             contents: [
               {
-                type: "text",
+        type: "text",
                 text: "🕓 使用履歴",
                 weight: "bold",
                 size: "lg",
@@ -2457,7 +2459,7 @@ class LinebotController < ApplicationController
                 data: "reviews"
               },
               margin: "sm"
-            }
+              }
           ],
           paddingAll: "20px"
         }
@@ -2910,11 +2912,15 @@ class LinebotController < ApplicationController
 
   # 🆕 予約確認メニュー送信
   def send_reservation_check(user, reply_token)
+    Rails.logger.info "🔍 send_reservation_check called for user: #{user.id}"
+    
     # ユーザーの今後の予約を取得
     upcoming_reservations = user.reservations
                                .where('start_time > ?', Time.current)
                                .order(:start_time)
                                .limit(5)
+
+    Rails.logger.info "🔍 Found #{upcoming_reservations.count} upcoming reservations"
 
     if upcoming_reservations.empty?
       message = {
@@ -3078,6 +3084,8 @@ class LinebotController < ApplicationController
       }
     end
 
+    Rails.logger.info "🔍 Sending reservation check message to user: #{user.id}"
     send_reply(reply_token, message)
+    Rails.logger.info "✅ Reservation check message sent successfully"
   end
 end
