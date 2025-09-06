@@ -392,14 +392,14 @@ export default class extends Controller {
         </td>
         <td>
           <span class="badge bg-info">
-            ${ticket.ticket_template.duration || '80'}分
+            80分
           </span>
         </td>
         <td>
           <div class="fw-bold text-success">
-            <i class="fas fa-yen-sign me-1"></i>${Math.floor(ticket.ticket_template.price / ticket.ticket_template.total_count).toLocaleString()}
+            <i class="fas fa-yen-sign me-1"></i>${ticket.ticket_template.total_count > 0 ? Math.floor(ticket.ticket_template.price / ticket.ticket_template.total_count).toLocaleString() : '0'}
           </div>
-          <small class="text-muted" data-unit-price="${Math.floor(ticket.ticket_template.price / ticket.ticket_template.total_count)}">
+          <small class="text-muted" data-unit-price="${ticket.ticket_template.total_count > 0 ? Math.floor(ticket.ticket_template.price / ticket.ticket_template.total_count) : 0}">
             単価
           </small>
         </td>
@@ -435,7 +435,7 @@ export default class extends Controller {
         <td>
           ${(() => {
             const usedCount = ticket.total_count - ticket.remaining_count;
-            const usagePercentage = Math.round((usedCount / ticket.total_count) * 100);
+            const usagePercentage = ticket.total_count > 0 ? Math.round((usedCount / ticket.total_count) * 100) : 0;
             const progressColor = usagePercentage >= 80 ? 'success' : usagePercentage >= 50 ? 'warning' : 'info';
             return `
               <div class="progress mb-1" style="height: 8px;">

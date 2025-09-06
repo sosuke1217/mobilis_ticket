@@ -349,7 +349,15 @@
         <div class="card stat-card border-0 shadow-sm text-center">
           <div class="card-body">
             <div class="stat-number text-warning" id="usedTicketValue">
-              ¥<%= number_with_delimiter(@user.tickets.sum { |t| (t.ticket_template&.price || 0) - (t.remaining_count * (t.ticket_template&.price || 0) / t.ticket_template&.total_count || 0) }) %>
+              ¥<%= number_with_delimiter(@user.tickets.sum { |t| 
+                if t.ticket_template.present?
+                  total_price = t.ticket_template.price
+                  unit_price = t.ticket_template.total_count > 0 ? total_price / t.ticket_template.total_count : 0
+                  total_price - (t.remaining_count * unit_price)
+                else
+                  0
+                end
+              }) %>
             </div>
             <div class="stat-label">消化価値合計</div>
           </div>
@@ -468,7 +476,7 @@
                   <td>
                     <% if ticket.ticket_template.present? %>
                       <span class="badge bg-info">
-                        <%= ticket.ticket_template.duration || '80' %>分
+                        80分
                       </span>
                     <% else %>
                       <span class="text-muted">-分</span>
@@ -525,7 +533,7 @@
                   <td>
                     <% if ticket.ticket_template.present? %>
                       <% used_count = ticket.total_count - ticket.remaining_count %>
-                      <% usage_percentage = (used_count.to_f / ticket.total_count * 100).round %>
+                      <% usage_percentage = ticket.total_count > 0 ? (used_count.to_f / ticket.total_count * 100).round : 0 %>
                       <div class="progress mb-1" style="height: 8px;">
                         <div class="progress-bar bg-<%= usage_percentage >= 80 ? 'success' : usage_percentage >= 50 ? 'warning' : 'info' %>" 
                              role="progressbar" 
