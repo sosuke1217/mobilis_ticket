@@ -389,8 +389,8 @@ export default class extends Controller {
           <div>
             <strong>${ticket.ticket_template.name}</strong>
             <br>
-            <small class="text-muted" data-unit-price="${Math.floor(ticket.ticket_template.price / ticket.ticket_template.total_count)}">
-              ¥${Math.floor(ticket.ticket_template.price / ticket.ticket_template.total_count).toLocaleString()}
+            <small class="text-muted" data-unit-price="${ticket.ticket_template && ticket.ticket_template.price && ticket.ticket_template.total_count && ticket.ticket_template.total_count > 0 ? Math.floor(ticket.ticket_template.price / ticket.ticket_template.total_count) : 0}">
+              ¥${ticket.ticket_template && ticket.ticket_template.price && ticket.ticket_template.total_count && ticket.ticket_template.total_count > 0 ? Math.floor(ticket.ticket_template.price / ticket.ticket_template.total_count).toLocaleString() : '0'}
             </small>
           </div>
         </td>
@@ -1093,10 +1093,15 @@ export default class extends Controller {
       
       const data = await response.json()
       console.log('📊 サーバーから取得した統計データ:', data)
+      console.log('📊 active_ticket_count:', data.active_ticket_count)
+      console.log('📊 remaining_ticket_value:', data.remaining_ticket_value)
       
       // 表示を更新
       const ticketCountElement = document.querySelector('#remainingTicketCount')
       const totalPriceElement = document.querySelector('#remainingTicketValue')
+      
+      console.log('🔍 更新前 - 残り回数:', ticketCountElement?.textContent)
+      console.log('🔍 更新前 - 残り価値:', totalPriceElement?.textContent)
       
       if (ticketCountElement) {
         ticketCountElement.textContent = data.active_ticket_count
@@ -1104,9 +1109,13 @@ export default class extends Controller {
       }
       
       if (totalPriceElement) {
-        totalPriceElement.textContent = `¥${data.remaining_ticket_value.toLocaleString()}`
-        console.log('✅ 残り回数価値合計表示を更新しました:', data.remaining_ticket_value)
+        const formattedValue = `¥${data.remaining_ticket_value.toLocaleString()}`
+        totalPriceElement.textContent = formattedValue
+        console.log('✅ 残り回数価値合計表示を更新しました:', formattedValue)
       }
+      
+      console.log('🔍 更新後 - 残り回数:', ticketCountElement?.textContent)
+      console.log('🔍 更新後 - 残り価値:', totalPriceElement?.textContent)
       
     } catch (error) {
       console.error('❌ 統計データの取得中にエラーが発生しました:', error)
@@ -1270,9 +1279,16 @@ export default class extends Controller {
           
           // 1. data属性から直接取得（最優先）
           if (priceElement.hasAttribute('data-unit-price')) {
-            unitPrice = parseInt(priceElement.getAttribute('data-unit-price'))
+            const unitPriceStr = priceElement.getAttribute('data-unit-price')
+            unitPrice = parseInt(unitPriceStr)
             console.log(`🔍 data属性から取得: ${unitPrice}`)
-            console.log(`🔍 data属性の値: "${priceElement.getAttribute('data-unit-price')}"`)
+            console.log(`🔍 data属性の値: "${unitPriceStr}"`)
+            
+            // NaNや文字列"NaN"の場合は0に設定
+            if (isNaN(unitPrice) || unitPriceStr === 'NaN') {
+              unitPrice = 0
+              console.log(`⚠️ 価格がNaNだったため0に設定: "${unitPriceStr}"`)
+            }
           } else {
             console.log(`⚠️ data属性が見つかりません: ${priceElement.outerHTML}`)
           }
