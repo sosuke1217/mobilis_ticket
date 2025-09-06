@@ -2168,6 +2168,13 @@ class LinebotController < ApplicationController
                   },
                   {
                     type: "text",
+                    text: "Remaining Count",
+                    size: "xs",
+                    color: "#999999",
+                    flex: 0
+                  },
+                  {
+                    type: "text",
                     text: "　　　　",
                     size: "sm",
                     flex: 0
@@ -2193,6 +2200,13 @@ class LinebotController < ApplicationController
                     text: "有効期限",
                     size: "sm",
                     color: "#666666",
+                    flex: 0
+                  },
+                  {
+                    type: "text",
+                    text: "Expiry Date",
+                    size: "xs",
+                    color: "#999999",
                     flex: 0
                   },
                   {
