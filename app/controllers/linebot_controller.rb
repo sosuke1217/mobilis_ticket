@@ -2152,7 +2152,7 @@ class LinebotController < ApplicationController
               },
               {
                 type: "separator",
-                margin: "md"
+            margin: "md"
               },
               {
                 type: "box",
@@ -2162,10 +2162,10 @@ class LinebotController < ApplicationController
                     type: "box",
                     layout: "vertical",
                     contents: [
-                      {
-                        type: "text",
+          {
+            type: "text",
                         text: "残り回数",
-                        size: "sm",
+            size: "sm",
                         color: "#666666",
                         flex: 0
                       },
@@ -2587,6 +2587,14 @@ class LinebotController < ApplicationController
               margin: "sm"
             },
             {
+              type: "text",
+              text: "Post Review",
+              size: "xs",
+              color: "#999999",
+              align: "center",
+              margin: "xs"
+            },
+            {
               type: "button",
               style: "secondary",
               action: {
@@ -2597,15 +2605,13 @@ class LinebotController < ApplicationController
               margin: "sm"
             },
             {
-              type: "button",
-              style: "secondary",
-              action: {
-                type: "postback",
-                label: "🔙 戻る",
-                data: "reviews"
-              },
-              margin: "sm"
-              }
+              type: "text",
+              text: "View Reviews",
+              size: "xs",
+              color: "#999999",
+              align: "center",
+              margin: "xs"
+            }
           ],
           paddingAll: "20px"
         }
