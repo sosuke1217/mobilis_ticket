@@ -1,3 +1,8 @@
+<!-- キャッシュバスティング -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+
 <style>
   /* 削除モーダルのカスタムスタイル */
   #deleteTicketModal .modal-content {
@@ -941,7 +946,32 @@ window.updateTicketCountsDirect = function() {
 
 // ページ読み込み時に実行
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('🎫 直接的な価格計算を初期実行します');
+  console.log('🎫 直接的な価格計算を初期実行します - Version: <%= Time.current.to_i %>');
+  
+  // 強制的にキャッシュをクリア
+  if ('caches' in window) {
+    caches.keys().then(function(names) {
+      for (let name of names) {
+        caches.delete(name);
+      }
+    });
+  }
+  
+  // 直接的な価格計算を実行
   setTimeout(window.updateTicketCountsDirect, 100);
+  
+  // 手動で価格計算を実行するボタンを追加
+  const manualUpdateButton = document.createElement('button');
+  manualUpdateButton.textContent = '価格計算を手動更新';
+  manualUpdateButton.className = 'btn btn-warning btn-sm mt-2';
+  manualUpdateButton.onclick = function() {
+    console.log('🔄 手動で価格計算を実行します');
+    window.updateTicketCountsDirect();
+  };
+  
+  const container = document.querySelector('.container-lg');
+  if (container) {
+    container.insertBefore(manualUpdateButton, container.firstChild);
+  }
 });
 </script>
