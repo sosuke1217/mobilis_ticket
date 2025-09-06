@@ -342,16 +342,18 @@ function showModal() {
   console.log('🔍 Modal shown manually');
 }
 
+// 初期化済みフラグ
+let isInitialized = false;
+
 // ページ読み込み完了後に実行
 function initializeUserManagement() {
   console.log('🔍 Initializing User Management - Page Ready');
   console.log('🔍 Current timestamp:', new Date().toISOString());
   
-  // 既存のイベントリスナーを削除（重複を防ぐ）
-  const existingBtn = document.getElementById('addUserBtn');
-  if (existingBtn) {
-    const newBtn = existingBtn.cloneNode(true);
-    existingBtn.parentNode.replaceChild(newBtn, existingBtn);
+  // 既に初期化済みの場合はスキップ
+  if (isInitialized) {
+    console.log('🔍 Already initialized, skipping...');
+    return;
   }
   
   const addUserBtn = document.getElementById('addUserBtn');
@@ -386,6 +388,10 @@ function initializeUserManagement() {
   });
   
   console.log('✅ Event listener added to addUserBtn');
+  
+  // 初期化完了フラグを設定
+  isInitialized = true;
+  console.log('✅ User management initialized successfully');
   
   // ユーザー保存ボタンのクリックイベント
   saveBtn.addEventListener('click', function() {
@@ -638,14 +644,18 @@ function syncLineUsers() {
   });
 }
 
-// DOM読み込み完了時に初期化
-document.addEventListener('DOMContentLoaded', function() {
-  initializeUserManagement();
-});
+// 複数の初期化タイミングで確実に実行
+document.addEventListener('DOMContentLoaded', initializeUserManagement);
+window.addEventListener('load', initializeUserManagement);
 
-// ページが完全に読み込まれた後にも実行（フォールバック）
-window.addEventListener('load', function() {
-  console.log('🔍 Window load event fired');
-  setTimeout(initializeUserManagement, 100);
-});
+// Turbo対応（Rails 7のTurbo）
+document.addEventListener('turbo:load', initializeUserManagement);
+
+// ページ遷移対応
+document.addEventListener('turbo:render', initializeUserManagement);
+
+// より確実な初期化のため、短い間隔でも実行
+setTimeout(initializeUserManagement, 100);
+setTimeout(initializeUserManagement, 500);
+setTimeout(initializeUserManagement, 1000);
 </script>
