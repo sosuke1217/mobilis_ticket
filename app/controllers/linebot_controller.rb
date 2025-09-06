@@ -2141,7 +2141,6 @@ class LinebotController < ApplicationController
                 weight: "bold",
             size: "md",
                 wrap: true,
-                margin: "md",
                 align: "center"
               },
           {
