@@ -2923,9 +2923,10 @@ class LinebotController < ApplicationController
   def send_reservation_check(user, reply_token)
     Rails.logger.info "🔍 send_reservation_check called for user: #{user.id}"
     
-    # ユーザーの今後の予約を取得
+    # ユーザーの今後の予約を取得（キャンセル済みを除外）
     upcoming_reservations = user.reservations
                                .where('start_time > ?', Time.current)
+                               .where.not(status: 'cancelled')
                                .order(:start_time)
                                .limit(5)
 
