@@ -441,14 +441,9 @@ export default class extends Controller {
       // 新しく追加された行のボタンにイベントリスナーを設定
       this.setupButtonsForRow(newRow)
       
-      // チケット数を更新（DOMの更新を待つ）
+      // サーバーから正しい値を取得して表示を更新
       setTimeout(() => {
-        // 直接的な価格計算関数を呼び出し
-        if (window.updateTicketCountsDirect) {
-          window.updateTicketCountsDirect()
-        } else {
-          this.updateTicketCounts()
-        }
+        this.updateStatisticsFromServer()
       }, 100)
       
       // 成功メッセージを表示
@@ -1072,6 +1067,52 @@ export default class extends Controller {
     }
   }
   
+  // サーバーから正しい統計値を取得して表示を更新
+  async updateStatisticsFromServer() {
+    try {
+      console.log('🔄 サーバーから統計値を取得中...')
+      
+      // 現在のURLからユーザーIDを取得
+      const currentPath = window.location.pathname
+      const userIdMatch = currentPath.match(/\/admin\/users\/(\d+)\/ticket_management/)
+      
+      if (!userIdMatch) {
+        console.error('❌ ユーザーIDが見つかりません')
+        return
+      }
+      
+      const userId = userIdMatch[1]
+      
+      // サーバーから統計データを取得
+      const response = await fetch(`/admin/users/${userId}/statistics.json`)
+      
+      if (!response.ok) {
+        console.error('❌ 統計データの取得に失敗しました:', response.status)
+        return
+      }
+      
+      const data = await response.json()
+      console.log('📊 サーバーから取得した統計データ:', data)
+      
+      // 表示を更新
+      const ticketCountElement = document.querySelector('#remainingTicketCount')
+      const totalPriceElement = document.querySelector('#remainingTicketValue')
+      
+      if (ticketCountElement) {
+        ticketCountElement.textContent = data.active_ticket_count
+        console.log('✅ 残り回数合計表示を更新しました:', data.active_ticket_count)
+      }
+      
+      if (totalPriceElement) {
+        totalPriceElement.textContent = `¥${data.remaining_ticket_value.toLocaleString()}`
+        console.log('✅ 残り回数価値合計表示を更新しました:', data.remaining_ticket_value)
+      }
+      
+    } catch (error) {
+      console.error('❌ 統計データの取得中にエラーが発生しました:', error)
+    }
+  }
+
   // チケット数と残額の更新
   updateTicketCounts() {
     try {

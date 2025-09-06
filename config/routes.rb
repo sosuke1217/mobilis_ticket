@@ -49,6 +49,7 @@ Rails.application.routes.draw do
         get 'history'
         get 'ticket_management'
         get 'ticket_usages'
+        get 'statistics', to: 'users#statistics'
         patch :update_line_profile
         post :create_line_link
         delete :remove_line_link

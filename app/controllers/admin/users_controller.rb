@@ -1,6 +1,6 @@
 class Admin::UsersController < ApplicationController
   before_action :authenticate_admin_user!
-  before_action :set_user, only: [:show, :edit, :update, :destroy, :tickets, :history, :ticket_management, :ticket_usages, :update_line_profile, :create_line_link, :remove_line_link]
+  before_action :set_user, only: [:show, :edit, :update, :destroy, :tickets, :history, :ticket_management, :ticket_usages, :statistics, :update_line_profile, :create_line_link, :remove_line_link]
 
   def index
     @q = User.ransack(params[:q])
@@ -579,6 +579,14 @@ class Admin::UsersController < ApplicationController
     params.require(:user).permit(
       :name, :kana, :phone_number, :email, :birth_date, :postal_code, :address, :admin_memo
     )
+  end
+
+  def statistics
+    # ユーザーの統計データをJSONで返す
+    render json: {
+      active_ticket_count: @user.active_ticket_count,
+      remaining_ticket_value: @user.remaining_ticket_value
+    }
   end
 
   def get_ticket_status(ticket)
