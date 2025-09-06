@@ -2168,7 +2168,7 @@ class LinebotController < ApplicationController
                   },
                   {
                     type: "text",
-                    text: "　　",
+                    text: "　　　　",
                     size: "sm",
                     flex: 0
                   },
@@ -2197,7 +2197,7 @@ class LinebotController < ApplicationController
                   },
                   {
                     type: "text",
-                    text: "　　",
+                    text: "　　　　",
                     size: "sm",
                     flex: 0
                   },
