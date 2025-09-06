@@ -302,6 +302,8 @@ class LinebotController < ApplicationController
 
   def handle_postback_action(user, data, reply_token)
     Rails.logger.info "🔄 Postback action received: #{data}"
+    Rails.logger.info "🔍 Postback data type: #{data.class}"
+    Rails.logger.info "🔍 Postback data length: #{data.length}"
     
     case data
     when "check_tickets"
@@ -334,7 +336,7 @@ class LinebotController < ApplicationController
     when /^cancel_reservation_(\d+)$/
       reservation_id = $1.to_i
       Rails.logger.info "❌ Cancelling reservation ID: #{reservation_id} for user: #{user.id}"
-      Rails.logger.info "🔍 Postback data: #{postback_data}"
+      Rails.logger.info "🔍 Postback data: #{data}"
       Rails.logger.info "🔍 Matched regex pattern: cancel_reservation_#{reservation_id}"
       cancel_reservation(user, reservation_id, reply_token)
 
