@@ -350,9 +350,12 @@ function showModal() {
 
 // バージョン情報（キャッシュ無効化用）
 const USER_MANAGEMENT_VERSION = '2025-09-06-07-30';
+const SERVER_TIMESTAMP = <%= Time.current.to_i %>;
+const CACHE_BUSTING_HASH = '<%= SecureRandom.hex(8) %>';
+
 console.log('🔍 User Management JavaScript Version:', USER_MANAGEMENT_VERSION);
-console.log('🔍 Server timestamp:', '<%= Time.current.to_i %>');
-console.log('🔍 Cache busting hash:', '<%= SecureRandom.hex(8) %>');
+console.log('🔍 Server timestamp:', SERVER_TIMESTAMP);
+console.log('🔍 Cache busting hash:', CACHE_BUSTING_HASH);
 
 // キャッシュクリア強制実行
 if (typeof window !== 'undefined' && window.location) {
@@ -674,18 +677,23 @@ function safeInitializeUserManagement() {
   }
 }
 
-// 複数の初期化タイミングで確実に実行
-document.addEventListener('DOMContentLoaded', safeInitializeUserManagement);
-window.addEventListener('load', safeInitializeUserManagement);
+// Turbo対応の初期化関数
+function initializeWithTurboSupport() {
+  // Turboが使用されている場合は、turbo:loadイベントを待つ
+  if (window.Turbo) {
+    console.log('🔍 Turbo detected, using turbo:load event');
+    document.addEventListener('turbo:load', safeInitializeUserManagement);
+  } else {
+    console.log('🔍 No Turbo detected, using standard events');
+    document.addEventListener('DOMContentLoaded', safeInitializeUserManagement);
+    window.addEventListener('load', safeInitializeUserManagement);
+  }
+  
+  // フォールバック用のタイムアウト
+  setTimeout(safeInitializeUserManagement, 100);
+  setTimeout(safeInitializeUserManagement, 500);
+}
 
-// Turbo対応（Rails 7のTurbo）
-document.addEventListener('turbo:load', safeInitializeUserManagement);
-
-// ページ遷移対応
-document.addEventListener('turbo:render', safeInitializeUserManagement);
-
-// より確実な初期化のため、短い間隔でも実行
-setTimeout(safeInitializeUserManagement, 100);
-setTimeout(safeInitializeUserManagement, 500);
-setTimeout(safeInitializeUserManagement, 1000);
+// 初期化実行
+initializeWithTurboSupport();
 </script>
