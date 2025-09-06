@@ -184,43 +184,74 @@
 </div>
 
 <!-- 新規ユーザー追加モーダル -->
-<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="addUserModalLabel">
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content shadow-lg border-0">
+      <div class="modal-header bg-gradient-success text-white">
+        <h5 class="modal-title fw-bold" id="addUserModalLabel">
           <i class="fas fa-user-plus me-2"></i>新規ユーザー追加
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <%= form_with model: [:admin, User.new], local: false, id: "addUserForm", class: "needs-validation", novalidate: true do |form| %>
-        <div class="modal-body">
-          <div class="mb-3">
-            <%= form.label :name, "お名前", class: "form-label" %>
-            <%= form.text_field :name, class: "form-control", id: "userName", required: true %>
-            <div class="invalid-feedback">
-              お名前を入力してください。
+        <div class="modal-body p-4">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-4">
+                <%= form.label :name, "お名前", class: "form-label fw-semibold text-dark" %>
+                <div class="input-group">
+                  <span class="input-group-text bg-light">
+                    <i class="fas fa-user text-primary"></i>
+                  </span>
+                  <%= form.text_field :name, class: "form-control form-control-lg", id: "userName", required: true, placeholder: "例: 山田太郎" %>
+                </div>
+                <div class="invalid-feedback">
+                  お名前を入力してください。
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-4">
+                <%= form.label :phone, "電話番号", class: "form-label fw-semibold text-dark" %>
+                <div class="input-group">
+                  <span class="input-group-text bg-light">
+                    <i class="fas fa-phone text-primary"></i>
+                  </span>
+                  <%= form.telephone_field :phone, class: "form-control form-control-lg", id: "userPhone", required: true, placeholder: "例: 090-1234-5678" %>
+                </div>
+                <div class="invalid-feedback">
+                  電話番号を入力してください。
+                </div>
+              </div>
             </div>
           </div>
-          <div class="mb-3">
-            <%= form.label :phone, "電話番号", class: "form-label" %>
-            <%= form.telephone_field :phone, class: "form-control", id: "userPhone", required: true %>
-            <div class="invalid-feedback">
-              電話番号を入力してください。
+          
+          <div class="mb-4">
+            <%= form.label :address, "住所", class: "form-label fw-semibold text-dark" %>
+            <div class="input-group">
+              <span class="input-group-text bg-light align-items-start pt-3">
+                <i class="fas fa-map-marker-alt text-primary"></i>
+              </span>
+              <%= form.text_area :address, class: "form-control form-control-lg", id: "userAddress", rows: 3, required: true, placeholder: "例: 東京都渋谷区..." %>
             </div>
-          </div>
-          <div class="mb-3">
-            <%= form.label :address, "住所", class: "form-label" %>
-            <%= form.text_area :address, class: "form-control", id: "userAddress", rows: 3, required: true %>
             <div class="invalid-feedback">
               住所を入力してください。
             </div>
           </div>
+          
+          <div class="alert alert-info d-flex align-items-center" role="alert">
+            <i class="fas fa-info-circle me-2"></i>
+            <div>
+              <strong>ご注意:</strong> 入力された情報はユーザー管理で使用されます。正確な情報を入力してください。
+            </div>
+          </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
-          <button type="submit" class="btn btn-success" id="saveUserBtn">
-            <i class="fas fa-save me-1"></i>ユーザーを追加
+        <div class="modal-footer bg-light border-0 p-4">
+          <button type="button" class="btn btn-outline-secondary btn-lg px-4" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>キャンセル
+          </button>
+          <button type="submit" class="btn btn-success btn-lg px-4" id="saveUserBtn">
+            <i class="fas fa-save me-2"></i>ユーザーを追加
           </button>
         </div>
       <% end %>
@@ -231,6 +262,10 @@
 <style>
 .bg-gradient-primary {
   background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+}
+
+.bg-gradient-success {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
 }
 
 .table th {
@@ -257,9 +292,77 @@
   border-bottom-right-radius: 0.375rem !important;
 }
 
+/* モーダルのスタイリング */
+.modal-content {
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.modal-header {
+  border-bottom: none;
+  padding: 1.5rem 2rem 1rem;
+}
+
+.modal-body {
+  padding: 1rem 2rem;
+}
+
+.modal-footer {
+  border-top: none;
+  padding: 1rem 2rem 1.5rem;
+}
+
+.input-group-text {
+  border-right: none;
+  background-color: #f8f9fa !important;
+  border-color: #dee2e6;
+}
+
+.form-control {
+  border-left: none;
+  border-color: #dee2e6;
+}
+
+.form-control:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.form-control-lg {
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+}
+
+/* アニメーション効果 */
+.modal.fade .modal-dialog {
+  transition: transform 0.3s ease-out;
+  transform: translate(0, -50px);
+}
+
+.modal.show .modal-dialog {
+  transform: none;
+}
+
+/* レスポンシブ対応 */
 @media (max-width: 768px) {
   .table-responsive {
     font-size: 0.875rem;
+  }
+  
+  .modal-dialog {
+    margin: 1rem;
+  }
+  
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+  
+  .btn-lg {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
   }
 }
 </style>
@@ -275,20 +378,31 @@
   window.hideModal = function() {
     const modal = document.getElementById('addUserModal');
     if (modal) {
-      modal.style.display = 'none';
-      modal.classList.remove('show');
-      document.body.classList.remove('modal-open');
-      const backdrop = document.querySelector('.modal-backdrop');
-      if (backdrop) backdrop.remove();
+      // Bootstrap Modal APIを使用して閉じる
+      const bootstrapModal = bootstrap.Modal.getInstance(modal);
+      if (bootstrapModal) {
+        bootstrapModal.hide();
+      } else {
+        // フォールバック: 手動で閉じる
+        modal.style.display = 'none';
+        modal.classList.remove('show');
+        document.body.classList.remove('modal-open');
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) backdrop.remove();
+      }
     }
   };
   
   window.showModal = function() {
     const modal = document.getElementById('addUserModal');
     if (modal) {
-      modal.style.display = 'block';
-      modal.classList.add('show');
-      document.body.classList.add('modal-open');
+      // Bootstrap Modal APIを使用して開く
+      const bootstrapModal = new bootstrap.Modal(modal, {
+        backdrop: true,  // 背景クリックで閉じる
+        keyboard: true,  // ESCキーで閉じる
+        focus: true      // モーダルにフォーカス
+      });
+      bootstrapModal.show();
     }
   };
   
