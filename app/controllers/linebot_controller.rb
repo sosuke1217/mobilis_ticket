@@ -2148,7 +2148,6 @@ class LinebotController < ApplicationController
                 text: t.ticket_template.present? ? t.ticket_template.name : "コース未設定",
             size: "sm",
                 color: "#666666",
-            margin: "sm",
                 align: "center"
               },
               {
