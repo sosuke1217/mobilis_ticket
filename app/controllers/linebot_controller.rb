@@ -3272,7 +3272,7 @@ class LinebotController < ApplicationController
     # 予約をキャンセル
     begin
       reservation.skip_time_validation = true
-      reservation.skip_cancellation_notifications = true  # LINE通知をスキップ
+      # skip_cancellation_notifications = true を削除して、通常のキャンセル通知を使用
       reservation.update!(
         status: 'cancelled',
         cancelled_at: Time.current,
@@ -3288,67 +3288,6 @@ class LinebotController < ApplicationController
       return
     end
 
-    # キャンセル完了メッセージ
-    message = {
-      type: "flex",
-      altText: "予約キャンセル完了",
-      contents: {
-        type: "bubble",
-        header: {
-          type: "box",
-          layout: "vertical",
-          contents: [
-            {
-              type: "text",
-              text: "✅ 予約キャンセル完了",
-              weight: "bold",
-              size: "xl",
-              color: "#28A745"
-            }
-          ],
-          paddingAll: "20px"
-        },
-        body: {
-          type: "box",
-          layout: "vertical",
-          contents: [
-            {
-              type: "text",
-              text: "#{reservation.start_time.strftime('%m月%d日 %H:%M')}の予約をキャンセルしました。",
-              size: "md",
-              color: "#666666",
-              wrap: true
-            },
-            {
-              type: "text",
-              text: "ご利用ありがとうございました。",
-              size: "sm",
-              color: "#999999",
-              margin: "md"
-            }
-          ],
-          paddingAll: "20px"
-        },
-        footer: {
-          type: "box",
-          layout: "vertical",
-          contents: [
-            {
-              type: "button",
-              action: {
-                type: "postback",
-                label: "予約確認に戻る",
-                data: "check_reservations"
-              },
-              style: "primary",
-              color: "#FF6B35"
-            }
-          ],
-          paddingAll: "20px"
-        }
-      }
-    }
-
-    send_reply(reply_token, message)
+    # 元々のキャンセル通知を使用するため、追加のメッセージは送信しない
   end
 end
