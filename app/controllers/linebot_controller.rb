@@ -2117,9 +2117,9 @@ class LinebotController < ApplicationController
             size: "lg",
                 color: "#1976d2",
                 align: "center"
-              },
-              {
-                type: "text",
+          },
+          {
+            type: "text",
                 text: "Ticket Information",
                 size: "sm",
                 color: "#999999",
@@ -2135,70 +2135,78 @@ class LinebotController < ApplicationController
             type: "box",
             layout: "vertical",
             contents: [
-          {
-            type: "text",
-                text: t.title.present? ? t.title : "チケット",
-                weight: "bold",
+              {
+                type: "box",
+                layout: "horizontal",
+                contents: [
+                  {
+                    type: "box",
+                    layout: "vertical",
+                    contents: [
+                      {
+                        type: "text",
+                        text: t.title.present? ? t.title : "チケット",
+                        weight: "bold",
             size: "md",
-                wrap: true,
-                align: "center"
-              },
+                        wrap: true,
+                        align: "start"
+                      },
           {
             type: "text",
-                text: t.ticket_template.present? ? t.ticket_template.name : "コース未設定",
+                        text: t.ticket_template.present? ? t.ticket_template.name : "コース未設定",
             size: "sm",
-                color: "#666666",
-            margin: "sm",
-                align: "center"
-              },
-              {
-                type: "separator",
+                        color: "#666666",
+                        margin: "xs",
+                        align: "start"
+          }
+                    ],
+                    flex: 1
+                  },
+        {
+            type: "box",
+            layout: "vertical",
+                    contents: [
+                      {
+                        type: "text",
+                        text: "残り回数",
+                        size: "xs",
+                        color: "#666666",
+                        align: "end"
+                      },
+                      {
+                        type: "text",
+                        text: "#{t.remaining_count}回",
+                        weight: "bold",
+                        size: "lg",
+                        color: low_remaining ? "#FFA500" : "#1976d2",
+                        align: "end"
+                      }
+                    ],
+                    flex: 0
+                  },
+                  {
+                    type: "box",
+                    layout: "vertical",
+                    contents: [
+                      {
+                        type: "text",
+                        text: "有効期限",
+                        size: "xs",
+                        color: "#666666",
+                        align: "end"
+                      },
+                      {
+                        type: "text",
+                        text: t.expiry_date.strftime('%m/%d'),
+                        size: "sm",
+                        color: expiry_soon ? "#FF5555" : "#888888",
+                        align: "end"
+                      }
+                    ],
+                    flex: 0
+                  }
+                ],
                 margin: "md"
-              },
-              {
-                type: "text",
-                text: "残り回数",
-                size: "sm",
-                color: "#666666",
-                margin: "md"
-              },
-              {
-                type: "text",
-                text: "Remaining Count",
-                size: "xs",
-                color: "#999999",
-                margin: "xs"
-              },
-              {
-                type: "text",
-                text: "#{t.remaining_count}回",
-                weight: "bold",
-                size: "xl",
-                color: low_remaining ? "#FFA500" : "#1976d2",
-                align: "center",
-                margin: "sm"
-              },
-              {
-                type: "text",
-                text: "有効期限",
-                size: "sm",
-                color: "#666666",
-                margin: "md"
-              },
-              {
-                type: "text",
-                text: "Expiry Date",
-                size: "xs",
-                color: "#999999",
-                margin: "xs"
-              },
-              {
-                type: "text",
-                text: t.expiry_date.strftime('%Y年%m月%d日'),
-                size: "md",
-                color: expiry_soon ? "#FF5555" : "#888888",
-                align: "center",
-                margin: "sm"
               }
             ],
             paddingAll: "20px"
@@ -2225,7 +2233,7 @@ class LinebotController < ApplicationController
             layout: "vertical",
             contents: [
               {
-                type: "text",
+        type: "text",
                 text: "🎫 チケット情報",
                 weight: "bold",
                 size: "lg",
@@ -2344,7 +2352,7 @@ class LinebotController < ApplicationController
             layout: "vertical",
             contents: [
               {
-                type: "text",
+        type: "text",
                 text: "🕓 使用履歴（直近12回）",
                 weight: "bold",
                 size: "lg",
@@ -2383,7 +2391,7 @@ class LinebotController < ApplicationController
             layout: "vertical",
             contents: [
               {
-                type: "text",
+        type: "text",
                 text: "🕓 使用履歴",
                 weight: "bold",
                 size: "lg",
