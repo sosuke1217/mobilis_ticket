@@ -3103,7 +3103,7 @@ class LinebotController < ApplicationController
             },
             {
               type: "text",
-              text: "📍 #{reservation.course || 'コース未設定'}",
+              text: "📍 #{reservation.course || 'コース未設定'}min",
               size: "sm",
               color: "#666666",
               margin: "sm"
@@ -3299,7 +3299,7 @@ class LinebotController < ApplicationController
           type: "button",
           action: {
             type: "postback",
-            label: "#{reservation.start_time.strftime('%m/%d %H:%M')} #{reservation.course}",
+            label: "#{reservation.start_time.strftime('%m/%d %H:%M')} #{reservation.course}min",
             data: "cancel_reservation_#{reservation.id}"
           },
           style: "secondary",
