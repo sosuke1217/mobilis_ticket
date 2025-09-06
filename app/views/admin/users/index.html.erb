@@ -21,45 +21,69 @@
     </div>
   </div>
 
-  <!-- 検索・統計セクション -->
-  <div class="row mb-4">
-    <div class="col-lg-8">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <%= search_form_for @q, url: admin_users_path, method: :get, html: { class: "row g-3 align-items-end" } do |f| %>
-            <div class="col-md-8">
-              <div class="input-group">
-                <span class="input-group-text">
-                  <i class="fas fa-search"></i>
-                </span>
-                <%= f.search_field :name_cont, class: "form-control", placeholder: "名前で検索..." %>
-                <button class="btn btn-primary" type="submit">
-                  <i class="fas fa-search me-1"></i>検索
-                </button>
-                <% if params[:q].present? %>
-                  <%= link_to admin_users_path, class: "btn btn-outline-secondary" do %>
-                    <i class="fas fa-times me-1"></i>リセット
-                  <% end %>
-                <% end %>
-              </div>
-            </div>
-          <% end %>
+  <!-- 検索・フィルターセクション -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <%= search_form_for @q, url: admin_users_path, method: :get, html: { class: "row g-3 align-items-end" } do |f| %>
+        <div class="col-md-8">
+          <div class="input-group">
+            <span class="input-group-text">
+              <i class="fas fa-search"></i>
+            </span>
+            <%= f.search_field :name_cont, class: "form-control", placeholder: "名前で検索..." %>
+            <button class="btn btn-primary" type="submit">
+              <i class="fas fa-search me-1"></i>検索
+            </button>
+            <% if params[:q].present? %>
+              <%= link_to admin_users_path, class: "btn btn-outline-secondary" do %>
+                <i class="fas fa-times me-1"></i>リセット
+              <% end %>
+            <% end %>
+          </div>
         </div>
-      </div>
+      <% end %>
     </div>
-    <div class="col-lg-4">
-      <div class="card border-0 shadow-sm bg-gradient-primary text-white">
-        <div class="card-body text-center">
+  </div>
+
+  <!-- 統計情報 -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
           <div class="h4 mb-1"><%= @users.count %></div>
           <div class="small">登録ユーザー数</div>
         </div>
       </div>
     </div>
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <div class="h4 mb-1 text-success"><%= @users.joins(:tickets).distinct.count %></div>
+          <div class="small">チケット保有者</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <div class="h4 mb-1 text-info"><%= @users.where.not(line_user_id: [nil, '']).count %></div>
+          <div class="small">LINE連携済み</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <div class="h4 mb-1 text-warning"><%= @users.where(line_user_id: [nil, '']).count %></div>
+          <div class="small">未連携ユーザー</div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- ユーザー一覧 -->
-  <div class="card border-0 shadow-sm">
-    <div class="card-header bg-light">
+  <!-- ユーザー一覧テーブル -->
+  <div class="card">
+    <div class="card-header bg-gradient-primary text-white">
       <h5 class="mb-0">
         <i class="fas fa-list me-2"></i>ユーザー一覧
       </h5>
@@ -69,23 +93,18 @@
         <table class="table table-hover mb-0">
           <thead class="table-light">
             <tr>
-              <th class="px-3">ユーザー</th>
+              <th>ユーザー情報</th>
               <th>LINE連携</th>
               <th>チケット状況</th>
-              <th>最終来店</th>
+              <th>最終利用日</th>
               <th class="text-center">操作</th>
             </tr>
           </thead>
           <tbody>
             <% @users.each do |user| %>
               <tr>
-                <td class="px-3">
+                <td>
                   <div class="d-flex align-items-center">
-                    <div class="flex-shrink-0 me-3">
-                      <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                        <i class="fas fa-user text-white"></i>
-                      </div>
-                    </div>
                     <div class="flex-grow-1">
                       <div class="fw-semibold">
                         <% if user.display_name_or_name.present? %>
@@ -106,21 +125,21 @@
                 <td>
                   <% if user.line_user_id.present? && user.line_user_id != '' %>
                     <span class="badge bg-success">
-                      <i class="fas fa-check me-1"></i>連携済み
+                      <i class="fab fa-line me-1"></i>連携済み
                     </span>
                   <% else %>
                     <span class="badge bg-secondary">
-                      <i class="fas fa-times me-1"></i>未連携
+                      <i class="fas fa-unlink me-1"></i>未連携
                     </span>
                   <% end %>
                 </td>
                 <td>
-                  <div class="d-flex align-items-center">
-                    <div class="me-2">
+                  <div>
+                    <% if user.active_ticket_count > 0 %>
                       <span class="badge bg-info">
                         <i class="fas fa-ticket-alt me-1"></i><%= user.active_ticket_count %>回
                       </span>
-                    </div>
+                    <% end %>
                     <div class="small text-muted">
                       <%= number_to_currency(user.remaining_ticket_value, unit: "¥", precision: 0) %>
                     </div>
@@ -134,7 +153,7 @@
                     </div>
                   <% else %>
                     <span class="text-muted small">
-                      <i class="fas fa-minus me-1"></i>未使用
+                      <i class="fas fa-minus me-1"></i>未利用
                     </span>
                   <% end %>
                 </td>
@@ -165,75 +184,46 @@
 </div>
 
 <!-- 新規ユーザー追加モーダル -->
-<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050; background-color: rgba(0, 0, 0, 0.5);">
-  <div class="modal-dialog modal-lg" style="position: relative; width: auto; margin: 0.5rem; pointer-events: none; max-width: 800px; margin: 1.75rem auto;">
-    <div class="modal-content" style="position: relative; display: flex; flex-direction: column; width: 100%; pointer-events: auto; background-color: #fff; background-clip: padding-box; border: 1px solid rgba(0, 0, 0, 0.2); border-radius: 0.3rem; outline: 0;">
-      <div class="modal-header bg-success text-white">
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
         <h5 class="modal-title" id="addUserModalLabel">
           <i class="fas fa-user-plus me-2"></i>新規ユーザー追加
         </h5>
-        <button type="button" class="btn-close btn-close-white" onclick="hideModal()" aria-label="閉じる"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
-        <form id="addUserForm">
-          <div class="row">
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label for="userName" class="form-label">氏名 <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="userName" required placeholder="例: 山田太郎">
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label for="userPhone" class="form-label">電話番号</label>
-                <input type="tel" class="form-control" id="userPhone" placeholder="例: 090-1234-5678">
-              </div>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label for="userEmail" class="form-label">メールアドレス</label>
-                <input type="email" class="form-control" id="userEmail" placeholder="例: example@email.com">
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label for="userBirthDate" class="form-label">生年月日</label>
-                <input type="date" class="form-control" id="userBirthDate">
-              </div>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col-md-4">
-              <div class="mb-3">
-                <label for="userPostalCode" class="form-label">郵便番号</label>
-                <input type="text" class="form-control" id="userPostalCode" placeholder="例: 123-4567">
-              </div>
-            </div>
-            <div class="col-md-8">
-              <div class="mb-3">
-                <label for="userAddress" class="form-label">住所</label>
-                <input type="text" class="form-control" id="userAddress" placeholder="例: 東京都渋谷区...">
-              </div>
-            </div>
-          </div>
-
+      <%= form_with model: [:admin, User.new], local: false, id: "addUserForm", class: "needs-validation", novalidate: true do |form| %>
+        <div class="modal-body">
           <div class="mb-3">
-            <label for="userMemo" class="form-label">管理者メモ</label>
-            <textarea class="form-control" id="userMemo" rows="3" placeholder="初回来店の経緯、アレルギー情報、特記事項など"></textarea>
+            <%= form.label :name, "お名前", class: "form-label" %>
+            <%= form.text_field :name, class: "form-control", id: "userName", required: true %>
+            <div class="invalid-feedback">
+              お名前を入力してください。
+            </div>
           </div>
-
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" onclick="hideModal()">キャンセル</button>
-        <button type="button" class="btn btn-success" id="saveUserBtn">
-          <i class="fas fa-save me-1"></i>ユーザーを追加
-        </button>
-      </div>
+          <div class="mb-3">
+            <%= form.label :phone, "電話番号", class: "form-label" %>
+            <%= form.telephone_field :phone, class: "form-control", id: "userPhone", required: true %>
+            <div class="invalid-feedback">
+              電話番号を入力してください。
+            </div>
+          </div>
+          <div class="mb-3">
+            <%= form.label :address, "住所", class: "form-label" %>
+            <%= form.text_area :address, class: "form-control", id: "userAddress", rows: 3, required: true %>
+            <div class="invalid-feedback">
+              住所を入力してください。
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+          <button type="submit" class="btn btn-success" id="saveUserBtn">
+            <i class="fas fa-save me-1"></i>ユーザーを追加
+          </button>
+        </div>
+      <% end %>
     </div>
   </div>
 </div>
@@ -268,15 +258,6 @@
 }
 
 @media (max-width: 768px) {
-  .btn-group {
-    flex-direction: column;
-  }
-  
-  .btn-group .btn {
-    border-radius: 0.375rem !important;
-    margin-bottom: 0.25rem;
-  }
-  
   .table-responsive {
     font-size: 0.875rem;
   }
@@ -284,416 +265,73 @@
 </style>
 
 <script>
-/*!
- * User Management JavaScript - Version 2025-09-06-07-30
- * Cache busting timestamp: 2025-09-06T07:30:00Z
- * Server timestamp: <%= Time.current.to_i %>
- * Force cache refresh: <%= SecureRandom.hex(8) %>
- */
-// グローバル関数として定義
-function hideModal() {
-  console.log('🔍 Hiding modal manually');
+// シンプルで確実な新規追加ボタンの初期化
+(function() {
+  'use strict';
   
-  const modal = document.getElementById('addUserModal');
-  if (!modal) {
-    console.error('❌ Modal element not found');
-    return;
-  }
+  console.log('🔍 User Management Script Loading...');
   
-  // モーダルを非表示（スタイルをリセット）
-  modal.style.display = 'none';
-  modal.style.position = '';
-  modal.style.top = '';
-  modal.style.left = '';
-  modal.style.width = '';
-  modal.style.height = '';
-  modal.style.zIndex = '';
-  modal.style.backgroundColor = '';
-  modal.classList.remove('show');
-  modal.setAttribute('aria-hidden', 'true');
+  // グローバル関数
+  window.hideModal = function() {
+    const modal = document.getElementById('addUserModal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.remove('show');
+      document.body.classList.remove('modal-open');
+      const backdrop = document.querySelector('.modal-backdrop');
+      if (backdrop) backdrop.remove();
+    }
+  };
   
-  // bodyからmodal-openクラスを削除
-  document.body.classList.remove('modal-open');
-  document.body.style.overflow = '';
+  window.showModal = function() {
+    const modal = document.getElementById('addUserModal');
+    if (modal) {
+      modal.style.display = 'block';
+      modal.classList.add('show');
+      document.body.classList.add('modal-open');
+    }
+  };
   
-  console.log('🔍 Modal hidden manually');
-}
-
-// グローバル関数として定義
-function showModal() {
-  console.log('🔍 Showing modal manually');
-  
-  const modal = document.getElementById('addUserModal');
-  if (!modal) {
-    console.error('❌ Modal element not found');
-    return;
-  }
-  
-  // モーダルを表示
-  modal.style.display = 'block';
-  modal.style.position = 'fixed';
-  modal.style.top = '0';
-  modal.style.left = '0';
-  modal.style.width = '100%';
-  modal.style.height = '100%';
-  modal.style.zIndex = '1050';
-  modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-  modal.classList.add('show');
-  modal.setAttribute('aria-hidden', 'false');
-  
-  // bodyにmodal-openクラスを追加
-  document.body.classList.add('modal-open');
-  document.body.style.overflow = 'hidden';
-  
-  console.log('🔍 Modal shown manually');
-}
-
-// バージョン情報（キャッシュ無効化用）
-const USER_MANAGEMENT_VERSION = '2025-09-06-07-30';
-const SERVER_TIMESTAMP = <%= Time.current.to_i %>;
-const CACHE_BUSTING_HASH = '<%= SecureRandom.hex(8) %>';
-
-console.log('🔍 User Management JavaScript Version:', USER_MANAGEMENT_VERSION);
-console.log('🔍 Server timestamp:', SERVER_TIMESTAMP);
-console.log('🔍 Cache busting hash:', CACHE_BUSTING_HASH);
-
-// キャッシュクリア強制実行
-if (typeof window !== 'undefined' && window.location) {
-  console.log('🔍 Forcing cache refresh...');
-  // 古いキャッシュされたJavaScriptを無効化
-  if (window.performance && window.performance.clearResourceTimings) {
-    window.performance.clearResourceTimings();
-  }
-}
-
-// 初期化済みフラグ
-let isInitialized = false;
-
-// ページ読み込み完了後に実行
-function initializeUserManagement() {
-  console.log('🔍 Initializing User Management - Page Ready');
-  console.log('🔍 Current timestamp:', new Date().toISOString());
-  
-  // 既に初期化済みの場合はスキップ
-  if (isInitialized) {
-    console.log('🔍 Already initialized, skipping...');
-    return;
-  }
-  
-  const addUserBtn = document.getElementById('addUserBtn');
-  const modal = document.getElementById('addUserModal');
-  const form = document.getElementById('addUserForm');
-  const saveBtn = document.getElementById('saveUserBtn');
-  
-  console.log('🔍 Element check:');
-  console.log('  - addUserBtn:', !!addUserBtn);
-  console.log('  - modal:', !!modal);
-  console.log('  - form:', !!form);
-  console.log('  - saveBtn:', !!saveBtn);
-  
-  if (!addUserBtn || !modal || !form || !saveBtn) {
-    console.error('❌ Required elements not found');
-    console.error('❌ Missing elements:', {
-      addUserBtn: !addUserBtn,
-      modal: !modal,
-      form: !form,
-      saveBtn: !saveBtn
-    });
-    return;
-  }
-  
-  console.log('✅ All required elements found');
-  
-  // 新規ユーザー追加ボタンのクリックイベント
-  addUserBtn.addEventListener('click', function() {
-    console.log('🔍 Add user button clicked');
-    console.log('🔍 Button element:', this);
-    showModal();
-  });
-  
-  console.log('✅ Event listener added to addUserBtn');
-  
-  // 初期化完了フラグを設定
-  isInitialized = true;
-  console.log('✅ User management initialized successfully');
-  
-  // ユーザー保存ボタンのクリックイベント
-  saveBtn.addEventListener('click', function() {
-    console.log('🔍 Save user button clicked');
+  // 初期化関数
+  function init() {
+    console.log('🔍 Initializing User Management...');
     
-    // フォームのバリデーション
-    const userName = form.querySelector('#userName').value.trim();
-    if (!userName) {
-      alert('氏名は必須です');
+    const addUserBtn = document.getElementById('addUserBtn');
+    if (!addUserBtn) {
+      console.error('❌ Add user button not found');
       return;
     }
     
-    // ボタンを無効化
-    this.disabled = true;
-    this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>保存中...';
+    console.log('✅ Add user button found');
     
-    // リクエストデータの準備
-    const requestData = {
-      user: {
-        name: userName,
-        phone_number: form.querySelector('#userPhone').value.trim(),
-        email: form.querySelector('#userEmail').value.trim(),
-        birth_date: form.querySelector('#userBirthDate').value,
-        postal_code: form.querySelector('#userPostalCode').value.trim(),
-        address: form.querySelector('#userAddress').value.trim(),
-        admin_memo: form.querySelector('#userMemo').value.trim()
-      }
-    };
+    // 既存のイベントリスナーを削除
+    const newBtn = addUserBtn.cloneNode(true);
+    addUserBtn.parentNode.replaceChild(newBtn, addUserBtn);
     
-    console.log('📤 Sending request:', requestData);
-    
-    // CSRFトークンの取得
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    if (!csrfToken) {
-      console.error('❌ CSRF token not found');
-      alert('セキュリティエラーが発生しました。ページを再読み込みしてください。');
-      this.disabled = false;
-      this.innerHTML = '<i class="fas fa-save me-1"></i>ユーザーを追加';
-      return;
-    }
-    
-    // APIリクエスト
-    fetch('/admin/users', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-CSRF-Token': csrfToken
-      },
-      body: JSON.stringify(requestData)
-    })
-    .then(response => {
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-      
-      if (!response.ok) {
-        // レスポンスのテキストを取得して詳細を確認
-        return response.text().then(text => {
-          console.log('Response text:', text);
-          try {
-            const data = JSON.parse(text);
-            console.log('Error response data:', data);
-            throw new Error(data.errors ? data.errors.join(', ') : 'ユーザー作成に失敗しました');
-          } catch (parseError) {
-            console.log('JSON parse error:', parseError);
-            throw new Error(`サーバーエラーが発生しました。ステータス: ${response.status}`);
-          }
-        });
-      }
-      return response.json();
-    })
-    .then(data => {
-      console.log('✅ User created:', data);
-      
-      // 成功メッセージを表示
-      const alertDiv = document.createElement('div');
-      alertDiv.className = 'alert alert-success alert-dismissible fade show';
-      alertDiv.innerHTML = `
-        <i class="fas fa-check-circle me-2"></i>
-        ユーザー「${userName}」を追加しました！
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-      `;
-      
-      // メッセージを表示する場所を安全に取得
-      const container = document.querySelector('.container-lg');
-      if (container) {
-        // コンテナの最初に追加
-        container.insertBefore(alertDiv, container.firstChild);
-      } else {
-        // フォールバック: bodyの最初に追加
-        document.body.insertBefore(alertDiv, document.body.firstChild);
-      }
-      
-      // モーダルを閉じる
-      hideModal();
-      
-      // ページをリロード（新しいユーザーを表示するため）
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
-    })
-    .catch(error => {
-      console.error('❌ Error creating user:', error);
-      console.error('Error name:', error.name);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-      
-      // エラーメッセージを表示
-      let errorMessage = 'ユーザー作成エラー: ';
-      if (error.message.includes('Unexpected token')) {
-        errorMessage += 'サーバーエラーが発生しました。ページを再読み込みしてください。';
-      } else if (error.message.includes('Failed to fetch')) {
-        errorMessage += 'ネットワークエラーが発生しました。サーバーが起動しているか確認してください。';
-      } else {
-        errorMessage += error.message || '不明なエラーが発生しました';
-      }
-      
-      alert(errorMessage);
-      
-      // ボタンを元に戻す
-      this.disabled = false;
-      this.innerHTML = '<i class="fas fa-save me-1"></i>ユーザーを追加';
+    // 新しいイベントリスナーを追加
+    newBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      console.log('🔍 Add user button clicked');
+      window.showModal();
     });
-  });
-  
-  // 背景クリックでモーダルを閉じる
-  modal.addEventListener('click', function(e) {
-    console.log('🔍 Modal clicked:', e.target, e.currentTarget);
-    if (e.target === modal) {
-      console.log('🔍 Background clicked, hiding modal');
-      hideModal();
-    }
-  });
-  
-  // ESCキーでモーダルを閉じる
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && modal.classList.contains('show')) {
-      hideModal();
-    }
-  });
-  
-  // フォームリセット処理
-  function resetForm() {
-    form.reset();
-    form.querySelectorAll('.form-control').forEach(input => {
-      input.classList.remove('is-valid', 'is-invalid');
-    });
-    saveBtn.disabled = false;
-    saveBtn.innerHTML = '<i class="fas fa-save me-1"></i>ユーザーを追加';
+    
+    console.log('✅ Event listener added to add user button');
   }
-});
-
-// LINEユーザー同期機能
-function syncLineUsers() {
-  const button = event.target;
-  const originalText = button.innerHTML;
   
-  // ボタンを無効化してローディング表示
-  button.disabled = true;
-  button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>同期中...';
-  
-  // CSRFトークンを取得
-  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-  
-  console.log('🔄 Starting LINE user sync...');
-  
-  fetch('/admin/users/sync_line_users', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'X-CSRF-Token': csrfToken
-    }
-  })
-  .then(response => {
-    console.log('Response status:', response.status);
-    
-    if (!response.ok) {
-      return response.text().then(text => {
-        console.log('Response text:', text);
-        try {
-          const data = JSON.parse(text);
-          throw new Error(data.error || 'LINEユーザー同期に失敗しました');
-        } catch (parseError) {
-          throw new Error(`サーバーエラーが発生しました。ステータス: ${response.status}`);
-        }
-      });
-    }
-    return response.json();
-  })
-  .then(data => {
-    console.log('✅ LINE user sync completed:', data);
-    
-    // 成功メッセージを表示
-    const alertDiv = document.createElement('div');
-    alertDiv.className = 'alert alert-success alert-dismissible fade show';
-    alertDiv.innerHTML = `
-      <i class="fas fa-check-circle me-2"></i>
-      LINEユーザーの同期が完了しました！<br>
-      <small class="text-muted">
-        新規ユーザー: ${data.new_users || 0}人 | 
-        更新ユーザー: ${data.updated_users || 0}人 | 
-        エラー: ${data.errors || 0}件
-      </small>
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    // メッセージを表示する場所を安全に取得
-    const container = document.querySelector('.container-lg');
-    
-    if (container) {
-      // コンテナの最初に追加
-      container.insertBefore(alertDiv, container.firstChild);
-    } else {
-      // フォールバック: bodyの最初に追加
-      document.body.insertBefore(alertDiv, document.body.firstChild);
-    }
-    
-    // ページをリロード（新しいユーザーを表示するため）
-    setTimeout(() => {
-      window.location.reload();
-    }, 2000);
-  })
-  .catch(error => {
-    console.error('❌ Error syncing LINE users:', error);
-    
-    // エラーメッセージを表示
-    const alertDiv = document.createElement('div');
-    alertDiv.className = 'alert alert-danger alert-dismissible fade show';
-    alertDiv.innerHTML = `
-      <i class="fas fa-exclamation-triangle me-2"></i>
-      LINEユーザー同期エラー: ${error.message}
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    // メッセージを表示する場所を安全に取得
-    const container = document.querySelector('.container-lg');
-    
-    if (container) {
-      // コンテナの最初に追加
-      container.insertBefore(alertDiv, container.firstChild);
-    } else {
-      // フォールバック: bodyの最初に追加
-      document.body.insertBefore(alertDiv, document.body.firstChild);
-    }
-    
-    // ボタンを元に戻す
-    button.disabled = false;
-    button.innerHTML = originalText;
-  });
-}
-
-// エラーハンドリング付き初期化関数
-function safeInitializeUserManagement() {
-  try {
-    initializeUserManagement();
-  } catch (error) {
-    console.error('❌ Error initializing user management:', error);
-  }
-}
-
-// Turbo対応の初期化関数
-function initializeWithTurboSupport() {
-  // Turboが使用されている場合は、turbo:loadイベントを待つ
-  if (window.Turbo) {
-    console.log('🔍 Turbo detected, using turbo:load event');
-    document.addEventListener('turbo:load', safeInitializeUserManagement);
+  // 複数のタイミングで初期化を試行
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
   } else {
-    console.log('🔍 No Turbo detected, using standard events');
-    document.addEventListener('DOMContentLoaded', safeInitializeUserManagement);
-    window.addEventListener('load', safeInitializeUserManagement);
+    init();
   }
   
-  // フォールバック用のタイムアウト
-  setTimeout(safeInitializeUserManagement, 100);
-  setTimeout(safeInitializeUserManagement, 500);
-}
-
-// 初期化実行
-initializeWithTurboSupport();
+  // Turbo対応
+  document.addEventListener('turbo:load', init);
+  document.addEventListener('turbo:render', init);
+  
+  // フォールバック
+  setTimeout(init, 100);
+  setTimeout(init, 500);
+  
+})();
 </script>
