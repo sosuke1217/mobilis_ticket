@@ -196,47 +196,142 @@
       </div>
       <%= form_with model: [:admin, User.new], local: false, id: "addUserForm", class: "needs-validation", novalidate: true do |form| %>
         <div class="modal-body p-4">
-          <div class="row">
-            <div class="col-md-6">
-              <div class="mb-4">
-                <%= form.label :name, "お名前", class: "form-label fw-semibold text-dark" %>
-                <div class="input-group">
-                  <span class="input-group-text bg-light">
-                    <i class="fas fa-user text-primary"></i>
-                  </span>
-                  <%= form.text_field :name, class: "form-control form-control-lg", id: "userName", required: true, placeholder: "例: 山田太郎" %>
-                </div>
-                <div class="invalid-feedback">
-                  お名前を入力してください。
+          <!-- 基本情報セクション -->
+          <div class="mb-4">
+            <h6 class="text-primary fw-bold mb-3">
+              <i class="fas fa-user me-2"></i>基本情報
+            </h6>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <%= form.label :name, "お名前", class: "form-label fw-semibold text-dark" %>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light">
+                      <i class="fas fa-user text-primary"></i>
+                    </span>
+                    <%= form.text_field :name, class: "form-control", id: "userName", required: true, placeholder: "例: 山田太郎" %>
+                  </div>
+                  <div class="invalid-feedback">
+                    お名前を入力してください。
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="col-md-6">
-              <div class="mb-4">
-                <%= form.label :phone, "電話番号", class: "form-label fw-semibold text-dark" %>
-                <div class="input-group">
-                  <span class="input-group-text bg-light">
-                    <i class="fas fa-phone text-primary"></i>
-                  </span>
-                  <%= form.telephone_field :phone, class: "form-control form-control-lg", id: "userPhone", required: true, placeholder: "例: 090-1234-5678" %>
-                </div>
-                <div class="invalid-feedback">
-                  電話番号を入力してください。
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <%= form.label :display_name, "表示名", class: "form-label fw-semibold text-dark" %>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light">
+                      <i class="fas fa-id-card text-primary"></i>
+                    </span>
+                    <%= form.text_field :display_name, class: "form-control", id: "userDisplayName", placeholder: "例: たろう" %>
+                  </div>
+                  <small class="form-text text-muted">LINEで表示される名前（任意）</small>
                 </div>
               </div>
             </div>
           </div>
-          
+
+          <!-- 連絡先情報セクション -->
           <div class="mb-4">
-            <%= form.label :address, "住所", class: "form-label fw-semibold text-dark" %>
-            <div class="input-group">
-              <span class="input-group-text bg-light align-items-start pt-3">
-                <i class="fas fa-map-marker-alt text-primary"></i>
-              </span>
-              <%= form.text_area :address, class: "form-control form-control-lg", id: "userAddress", rows: 3, required: true, placeholder: "例: 東京都渋谷区..." %>
+            <h6 class="text-primary fw-bold mb-3">
+              <i class="fas fa-address-book me-2"></i>連絡先情報
+            </h6>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <%= form.label :phone_number, "電話番号", class: "form-label fw-semibold text-dark" %>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light">
+                      <i class="fas fa-phone text-primary"></i>
+                    </span>
+                    <%= form.telephone_field :phone_number, class: "form-control", id: "userPhone", placeholder: "例: 090-1234-5678" %>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <%= form.label :email, "メールアドレス", class: "form-label fw-semibold text-dark" %>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light">
+                      <i class="fas fa-envelope text-primary"></i>
+                    </span>
+                    <%= form.email_field :email, class: "form-control", id: "userEmail", placeholder: "例: example@email.com" %>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="invalid-feedback">
-              住所を入力してください。
+          </div>
+
+          <!-- 住所情報セクション -->
+          <div class="mb-4">
+            <h6 class="text-primary fw-bold mb-3">
+              <i class="fas fa-map-marker-alt me-2"></i>住所情報
+            </h6>
+            <div class="row">
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <%= form.label :postal_code, "郵便番号", class: "form-label fw-semibold text-dark" %>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light">
+                      <i class="fas fa-mail-bulk text-primary"></i>
+                    </span>
+                    <%= form.text_field :postal_code, class: "form-control", id: "userPostalCode", placeholder: "例: 123-4567" %>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-8">
+                <div class="mb-3">
+                  <%= form.label :address, "住所", class: "form-label fw-semibold text-dark" %>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light align-items-start pt-3">
+                      <i class="fas fa-home text-primary"></i>
+                    </span>
+                    <%= form.text_area :address, class: "form-control", id: "userAddress", rows: 2, placeholder: "例: 東京都渋谷区..." %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- その他情報セクション -->
+          <div class="mb-4">
+            <h6 class="text-primary fw-bold mb-3">
+              <i class="fas fa-info-circle me-2"></i>その他情報
+            </h6>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <%= form.label :birth_date, "生年月日", class: "form-label fw-semibold text-dark" %>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light">
+                      <i class="fas fa-birthday-cake text-primary"></i>
+                    </span>
+                    <%= form.date_field :birth_date, class: "form-control", id: "userBirthDate" %>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <%= form.label :line_user_id, "LINEユーザーID", class: "form-label fw-semibold text-dark" %>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light">
+                      <i class="fab fa-line text-primary"></i>
+                    </span>
+                    <%= form.text_field :line_user_id, class: "form-control", id: "userLineId", placeholder: "LINE連携時に自動設定" %>
+                  </div>
+                  <small class="form-text text-muted">LINE連携時に自動で設定されます</small>
+                </div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <%= form.label :admin_memo, "管理者メモ", class: "form-label fw-semibold text-dark" %>
+              <div class="input-group">
+                <span class="input-group-text bg-light align-items-start pt-3">
+                  <i class="fas fa-sticky-note text-primary"></i>
+                </span>
+                <%= form.text_area :admin_memo, class: "form-control", id: "userAdminMemo", rows: 3, placeholder: "初回来店の経緯、アレルギー情報、特記事項など" %>
+              </div>
+              <small class="form-text text-muted">管理者のみが閲覧できるメモです</small>
             </div>
           </div>
           
@@ -318,9 +413,11 @@
 
 .custom-modal-dialog {
   position: relative;
-  width: 90%;
-  max-width: 800px;
+  width: 95%;
+  max-width: 1000px;
   margin: 0 auto;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .custom-modal-content {
