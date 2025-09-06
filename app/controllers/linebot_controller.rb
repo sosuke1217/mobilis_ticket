@@ -2275,16 +2275,9 @@ class LinebotController < ApplicationController
               contents: [
                 {
                   type: "text",
-                  text: ticket_title,
+                  text: course_name,
                   weight: "bold",
                   size: "sm",
-                  wrap: true
-                },
-                {
-                  type: "text",
-                  text: course_name,
-                  size: "xs",
-                  color: "#888888",
                   wrap: true
                 }
               ],
