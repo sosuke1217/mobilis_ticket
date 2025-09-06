@@ -398,9 +398,7 @@ class LineBookingNotifier
               layout: "vertical",
               contents: [
                 create_info_row("日時", reservation.start_time.strftime('%m/%d(%a) %H:%M〜')),
-                create_info_row("Date & Time", reservation.start_time.strftime('%m/%d(%a) %H:%M〜'), true),
-                create_info_row("コース", reservation.course.to_s.gsub(/分$/, '') + "min"),
-                create_info_row("Course", reservation.course.to_s.gsub(/分$/, '') + "min", true)
+                create_info_row("コース", reservation.course.to_s.gsub(/分$/, '') + "min")
               ],
               margin: "md"
             },
