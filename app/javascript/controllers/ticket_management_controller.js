@@ -389,7 +389,7 @@ export default class extends Controller {
             <strong>${ticket.ticket_template.name}</strong>
             <br>
             <small class="text-muted">
-              <i class="fas fa-yen-sign me-1"></i>${ticket.ticket_template.price.toLocaleString()}
+              <i class="fas fa-yen-sign me-1"></i>${Math.floor(ticket.ticket_template.price / ticket.ticket_template.total_count).toLocaleString()}
             </small>
           </div>
         </td>
@@ -1198,7 +1198,7 @@ export default class extends Controller {
             if (!isNaN(unitPrice)) {
               const ticketValue = unitPrice * remainingCount
               totalPrice += ticketValue
-              console.log(`💰 チケット${index + 1}: 単価=${unitPrice}, 残り回数=${remainingCount}, 価値=${ticketValue}, 累計価格=${totalPrice}`)
+              console.log(`💰 チケット${index + 1}: 抽出価格="${priceMatch[1]}", 単価=${unitPrice}, 残り回数=${remainingCount}, 価値=${ticketValue}, 累計価格=${totalPrice}`)
             } else {
               console.log(`⚠️ チケット${index + 1}: 価格が数値ではありません: ${priceMatch[1]}`)
             }
