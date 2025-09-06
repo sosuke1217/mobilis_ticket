@@ -1,8 +1,3 @@
-<!-- キャッシュバスティング -->
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
-
 <style>
   /* 削除モーダルのカスタムスタイル */
   #deleteTicketModal .modal-content {
@@ -312,59 +307,31 @@
       </div>
     </div>
 
-  <!-- 統計カード -->
-  <div class="col-lg-4">
-    <div class="row g-3">
-      <div class="col-12">
-        <div class="card stat-card border-0 shadow-sm text-center">
-          <div class="card-body">
-            <div class="stat-number text-primary" id="remainingTicketCount">
-              <%= @user.active_ticket_count %>
+    <!-- 統計カード -->
+    <div class="col-lg-4">
+      <div class="row g-3">
+        <div class="col-12">
+          <div class="card stat-card border-0 shadow-sm text-center">
+            <div class="card-body">
+              <div class="stat-number text-primary" id="remainingTicketCount">
+                <%= @user.active_ticket_count %>
+              </div>
+              <div class="stat-label">残り回数合計</div>
             </div>
-            <div class="stat-label">残り回数合計</div>
           </div>
         </div>
-      </div>
-      <div class="col-12">
-        <div class="card stat-card border-0 shadow-sm text-center">
-          <div class="card-body">
-            <div class="stat-number text-success" id="remainingTicketValue">
-              ¥<%= number_with_delimiter(@user.remaining_ticket_value) %>
+        <div class="col-12">
+          <div class="card stat-card border-0 shadow-sm text-center">
+            <div class="card-body">
+              <div class="stat-number text-success" id="remainingTicketValue">
+                ¥<%= number_with_delimiter(@user.remaining_ticket_value) %>
+              </div>
+              <div class="stat-label">残り回数価値合計</div>
             </div>
-            <div class="stat-label">残り回数価値合計</div>
-          </div>
-        </div>
-      </div>
-      <div class="col-12">
-        <div class="card stat-card border-0 shadow-sm text-center">
-          <div class="card-body">
-            <div class="stat-number text-info" id="totalPurchaseValue">
-              ¥<%= number_with_delimiter(@user.tickets.sum { |t| t.ticket_template&.price || 0 }) %>
-            </div>
-            <div class="stat-label">購入価値合計</div>
-          </div>
-        </div>
-      </div>
-      <div class="col-12">
-        <div class="card stat-card border-0 shadow-sm text-center">
-          <div class="card-body">
-            <div class="stat-number text-warning" id="usedTicketValue">
-              ¥<%= number_with_delimiter(@user.tickets.sum { |t| 
-                if t.ticket_template.present?
-                  total_price = t.ticket_template.price
-                  unit_price = t.ticket_template.total_count > 0 ? total_price / t.ticket_template.total_count : 0
-                  total_price - (t.remaining_count * unit_price)
-                else
-                  0
-                end
-              }) %>
-            </div>
-            <div class="stat-label">消化価値合計</div>
           </div>
         </div>
       </div>
     </div>
-  </div>
   </div>
 
   <!-- 新規チケット発行 -->
@@ -426,13 +393,7 @@
                 <i class="fas fa-tag me-1"></i>チケット名
               </th>
               <th>
-                <i class="fas fa-clock me-1"></i>時間
-              </th>
-              <th>
-                <i class="fas fa-yen-sign me-1"></i>単価
-              </th>
-              <th>
-                <i class="fas fa-hashtag me-1"></i>残回数/総数
+                <i class="fas fa-hashtag me-1"></i>残回数
               </th>
               <th>
                 <i class="fas fa-calendar me-1"></i>購入日
@@ -441,7 +402,7 @@
                 <i class="fas fa-clock me-1"></i>有効期限
               </th>
               <th>
-                <i class="fas fa-chart-line me-1"></i>消化状況
+                <i class="fas fa-info-circle me-1"></i>ステータス
               </th>
               <th class="text-center">
                 <i class="fas fa-cog me-1"></i>操作
@@ -451,7 +412,7 @@
           <tbody data-ticket-management-target="ticketList">
             <% if @tickets.empty? %>
               <tr>
-                <td colspan="8" class="text-center py-5">
+                <td colspan="6" class="text-center py-5">
                   <div class="text-muted">
                     <i class="fas fa-ticket-alt fa-3x mb-4"></i>
                     <p class="mb-2">保有チケットがありません</p>
@@ -471,80 +432,53 @@
                           <span class="text-muted">削除されたチケット</span>
                         <% end %>
                       </strong>
+                      <br>
+                      <small class="text-muted" data-unit-price="<%= ticket.ticket_template.present? ? ticket.ticket_template.price / ticket.ticket_template.total_count : 0 %>">
+                        <% if ticket.ticket_template.present? %>
+                          <i class="fas fa-yen-sign me-1"></i><%= number_with_delimiter(ticket.ticket_template.price / ticket.ticket_template.total_count) %>
+                        <% else %>
+                          <i class="fas fa-yen-sign me-1"></i>0
+                        <% end %>
+                      </small>
                     </div>
-                  </td>
-                  <td>
-                    <% if ticket.ticket_template.present? %>
-                      <span class="badge bg-info">
-                        80分
-                      </span>
-                    <% else %>
-                      <span class="text-muted">-分</span>
-                    <% end %>
-                  </td>
-                  <td>
-                    <div class="fw-bold text-success">
-                      <% if ticket.ticket_template.present? %>
-                        <i class="fas fa-yen-sign me-1"></i><%= number_with_delimiter(ticket.ticket_template.price / ticket.ticket_template.total_count) %>
-                      <% else %>
-                        <i class="fas fa-yen-sign me-1"></i>0
-                      <% end %>
-                    </div>
-                    <small class="text-muted" data-unit-price="<%= ticket.ticket_template.present? ? ticket.ticket_template.price / ticket.ticket_template.total_count : 0 %>">
-                      単価
-                    </small>
                   </td>
                   <td>
                     <span class="badge bg-primary">
                       <%= ticket.remaining_count %> / <%= ticket.total_count %>
                     </span>
-                    <br>
-                    <small class="text-muted">
-                      残り: <%= ticket.remaining_count %>回
-                    </small>
                   </td>
                   <td>
-                    <div>
-                      <i class="fas fa-calendar-day me-1 text-muted"></i>
-                      <%= ticket.purchase_date&.strftime('%m/%d') %>
-                    </div>
-                    <small class="text-muted">
-                      <%= ticket.purchase_date&.strftime('%H:%M') %>
-                    </small>
+                    <i class="fas fa-calendar-day me-1 text-muted"></i>
+                    <%= ticket.purchase_date&.strftime('%m/%d') %>
                   </td>
                   <td>
                     <% if ticket.expiry_date %>
-                      <div>
-                        <i class="fas fa-clock me-1 text-muted"></i>
-                        <%= ticket.expiry_date.strftime('%m/%d') %>
-                        <% if ticket.expiry_date < Date.current %>
-                          <span class="badge bg-danger ms-1">期限切れ</span>
-                        <% end %>
-                      </div>
-                      <small class="text-muted">
-                        <%= ticket.expiry_date.strftime('%Y') %>
-                      </small>
+                      <i class="fas fa-clock me-1 text-muted"></i>
+                      <%= ticket.expiry_date.strftime('%m/%d') %>
+                      <% if ticket.expiry_date < Date.current %>
+                        <span class="badge bg-danger ms-1">期限切れ</span>
+                      <% end %>
                     <% else %>
-                      <span class="badge bg-secondary">
-                        <i class="fas fa-infinity me-1"></i>無期限
-                      </span>
+                      <span class="text-muted">無期限</span>
                     <% end %>
                   </td>
                   <td>
-                    <% if ticket.ticket_template.present? %>
-                      <% used_count = ticket.total_count - ticket.remaining_count %>
-                      <% usage_percentage = ticket.total_count > 0 ? (used_count.to_f / ticket.total_count * 100).round : 0 %>
-                      <div class="progress mb-1" style="height: 8px;">
-                        <div class="progress-bar bg-<%= usage_percentage >= 80 ? 'success' : usage_percentage >= 50 ? 'warning' : 'info' %>" 
-                             role="progressbar" 
-                             style="width: <%= usage_percentage %>%">
-                        </div>
-                      </div>
-                      <small class="text-muted">
-                        消化: <%= used_count %>回 (<%= usage_percentage %>%)
-                      </small>
+                    <% if ticket.expiry_date && ticket.expiry_date < Date.current %>
+                      <span class="badge bg-danger">
+                        <i class="fas fa-times me-1"></i>期限切れ
+                      </span>
+                    <% elsif ticket.remaining_count <= 0 %>
+                      <span class="badge bg-secondary">
+                        <i class="fas fa-check me-1"></i>使用済み
+                      </span>
+                    <% elsif ticket.remaining_count <= 2 %>
+                      <span class="badge bg-warning">
+                        <i class="fas fa-exclamation me-1"></i>残り少ない
+                      </span>
                     <% else %>
-                      <span class="text-muted">-</span>
+                      <span class="badge bg-success">
+                        <i class="fas fa-check me-1"></i>利用可能
+                      </span>
                     <% end %>
                   </td>
                   <td class="text-center">
@@ -950,89 +884,111 @@ window.updateTicketCountsDirect = function() {
   const rows = Array.from(tbody.children);
   console.log('🔍 現在のtbody状態:', { totalRows: rows.length });
   
+  // 空の行（"保有チケットがありません"）を除外
+  const ticketRows = rows.filter(row => !row.querySelector('td[colspan]'));
+  console.log('🎫 チケット行数:', ticketRows.length);
+  
   let remainingTickets = 0;
   let totalRemainingCount = 0;
   let totalPrice = 0;
   
-  rows.forEach((row, index) => {
+  ticketRows.forEach((row, index) => {
     const badgeElement = row.querySelector('.badge');
     const priceElement = row.querySelector('small[data-unit-price]');
     
-    console.log(`=== 行${index + 1}の分析 ===`);
+    console.log(`=== チケット行${index + 1}の詳細分析 ===`);
+    console.log('行のHTML:', row.outerHTML.substring(0, 200) + '...');
     console.log('バッジ要素:', badgeElement?.textContent);
     console.log('価格要素:', priceElement?.outerHTML);
+    console.log('data-unit-price属性:', priceElement?.getAttribute('data-unit-price'));
     
     if (badgeElement && priceElement) {
       // 残り回数を取得
       const badgeText = badgeElement.textContent.trim();
+      console.log('バッジテキスト:', badgeText);
+      
       const countMatch = badgeText.match(/(\d+)\s*\/\s*(\d+)/);
       if (countMatch) {
         const remainingCount = parseInt(countMatch[1]);
         const totalCount = parseInt(countMatch[2]);
+        
+        console.log('残り回数:', remainingCount, '総回数:', totalCount);
         
         if (remainingCount > 0) {
           remainingTickets++;
           totalRemainingCount += remainingCount;
           
           // 価格を取得
-          const unitPrice = parseInt(priceElement.getAttribute('data-unit-price'));
-          if (!isNaN(unitPrice)) {
+          const unitPriceStr = priceElement.getAttribute('data-unit-price');
+          const unitPrice = parseInt(unitPriceStr);
+          
+          console.log('価格文字列:', unitPriceStr, '数値:', unitPrice, 'isNaN:', isNaN(unitPrice));
+          
+          if (!isNaN(unitPrice) && unitPrice > 0) {
             const ticketValue = unitPrice * remainingCount;
             totalPrice += ticketValue;
             console.log(`💰 チケット${index + 1}: 単価=${unitPrice}, 残り回数=${remainingCount}, 価値=${ticketValue}, 累計価格=${totalPrice}`);
           } else {
-            console.log(`⚠️ チケット${index + 1}: 価格が数値ではありません: ${priceElement.getAttribute('data-unit-price')}`);
+            console.log(`⚠️ チケット${index + 1}: 価格が無効です - 文字列:"${unitPriceStr}", 数値:${unitPrice}`);
           }
+        } else {
+          console.log(`⚠️ チケット${index + 1}: 残り回数が0以下: ${remainingCount}`);
         }
+      } else {
+        console.log(`⚠️ チケット${index + 1}: バッジから残り回数を抽出できません: "${badgeText}"`);
       }
+    } else {
+      console.log(`⚠️ チケット${index + 1}: 必要な要素が見つかりません`);
+      console.log('  - バッジ要素:', !!badgeElement);
+      console.log('  - 価格要素:', !!priceElement);
     }
   });
   
   console.log('💰 最終チケット価格合計:', totalPrice);
+  console.log('📊 残りチケット数:', remainingTickets);
+  console.log('📊 残り回数合計:', totalRemainingCount);
   
   // 表示を更新
   const ticketCountElement = document.querySelector('#remainingTicketCount');
   const totalPriceElement = document.querySelector('#remainingTicketValue');
   
+  console.log('表示要素の確認:');
+  console.log('  - 残り回数要素:', !!ticketCountElement);
+  console.log('  - 価値合計要素:', !!totalPriceElement);
+  
   if (ticketCountElement) {
     ticketCountElement.textContent = totalRemainingCount;
     console.log('✅ 残り回数合計表示を更新しました:', totalRemainingCount);
+  } else {
+    console.error('❌ 残り回数合計要素が見つかりません');
   }
   
   if (totalPriceElement) {
     totalPriceElement.textContent = `¥${totalPrice.toLocaleString()}`;
     console.log('✅ 残り回数価値合計表示を更新しました:', totalPrice);
+  } else {
+    console.error('❌ 残り回数価値合計要素が見つかりません');
   }
 };
 
 // ページ読み込み時に実行
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('🎫 直接的な価格計算を初期実行します - Version: <%= Time.current.to_i %>');
-  
-  // 強制的にキャッシュをクリア
-  if ('caches' in window) {
-    caches.keys().then(function(names) {
-      for (let name of names) {
-        caches.delete(name);
-      }
-    });
-  }
-  
-  // 直接的な価格計算を実行
+  console.log('🎫 直接的な価格計算を初期実行します');
   setTimeout(window.updateTicketCountsDirect, 100);
   
   // 手動で価格計算を実行するボタンを追加
   const manualUpdateButton = document.createElement('button');
-  manualUpdateButton.textContent = '価格計算を手動更新';
+  manualUpdateButton.textContent = '価格計算を手動実行';
   manualUpdateButton.className = 'btn btn-warning btn-sm mt-2';
+  manualUpdateButton.style.position = 'fixed';
+  manualUpdateButton.style.top = '10px';
+  manualUpdateButton.style.right = '10px';
+  manualUpdateButton.style.zIndex = '9999';
   manualUpdateButton.onclick = function() {
     console.log('🔄 手動で価格計算を実行します');
     window.updateTicketCountsDirect();
   };
   
-  const container = document.querySelector('.container-lg');
-  if (container) {
-    container.insertBefore(manualUpdateButton, container.firstChild);
-  }
+  document.body.appendChild(manualUpdateButton);
 });
 </script>

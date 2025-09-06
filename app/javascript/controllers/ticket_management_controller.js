@@ -388,64 +388,31 @@ export default class extends Controller {
         <td class="px-3">
           <div>
             <strong>${ticket.ticket_template.name}</strong>
+            <br>
+            <small class="text-muted" data-unit-price="${Math.floor(ticket.ticket_template.price / ticket.ticket_template.total_count)}">
+              ¥${Math.floor(ticket.ticket_template.price / ticket.ticket_template.total_count).toLocaleString()}
+            </small>
           </div>
-        </td>
-        <td>
-          <span class="badge bg-info">
-            80分
-          </span>
-        </td>
-        <td>
-          <div class="fw-bold text-success">
-            <i class="fas fa-yen-sign me-1"></i>${ticket.ticket_template.total_count > 0 ? Math.floor(ticket.ticket_template.price / ticket.ticket_template.total_count).toLocaleString() : '0'}
-          </div>
-          <small class="text-muted" data-unit-price="${ticket.ticket_template.total_count > 0 ? Math.floor(ticket.ticket_template.price / ticket.ticket_template.total_count) : 0}">
-            単価
-          </small>
         </td>
         <td>
           <span class="badge bg-primary">
             ${ticket.remaining_count} / ${ticket.total_count}
           </span>
-          <br>
-          <small class="text-muted">
-            残り: ${ticket.remaining_count}回
-          </small>
         </td>
         <td>
-          <div>
-            <i class="fas fa-calendar-day me-1 text-muted"></i>
-            ${purchaseDate}
-          </div>
-          <small class="text-muted">
-            ${ticket.purchase_date ? new Date(ticket.purchase_date).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : ''}
-          </small>
+          <i class="fas fa-calendar-day me-1 text-muted"></i>
+          ${purchaseDate}
         </td>
         <td>
           ${ticket.expiry_date ? 
-            `<div>
-              <i class="fas fa-clock me-1 text-muted"></i>${expiryDate}
-            </div>
-            <small class="text-muted">
-              ${new Date(ticket.expiry_date).getFullYear()}
-            </small>` : 
-            '<span class="badge bg-secondary"><i class="fas fa-infinity me-1"></i>無期限</span>'
+            `<i class="fas fa-clock me-1 text-muted"></i>${expiryDate}` : 
+            '<span class="text-muted">無期限</span>'
           }
         </td>
         <td>
-          ${(() => {
-            const usedCount = ticket.total_count - ticket.remaining_count;
-            const usagePercentage = ticket.total_count > 0 ? Math.round((usedCount / ticket.total_count) * 100) : 0;
-            const progressColor = usagePercentage >= 80 ? 'success' : usagePercentage >= 50 ? 'warning' : 'info';
-            return `
-              <div class="progress mb-1" style="height: 8px;">
-                <div class="progress-bar bg-${progressColor}" role="progressbar" style="width: ${usagePercentage}%"></div>
-              </div>
-              <small class="text-muted">
-                消化: ${usedCount}回 (${usagePercentage}%)
-              </small>
-            `;
-          })()}
+          <span class="badge bg-success">
+            <i class="fas fa-check me-1"></i>利用可能
+          </span>
         </td>
         <td class="text-center">
           <div class="btn-group" role="group">
