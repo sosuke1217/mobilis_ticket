@@ -213,47 +213,27 @@ class LinebotController < ApplicationController
 
   private
 
-  # 多言語対応のヘルパーメソッド
+  # 多言語対応のヘルパーメソッド（両方表示）
   def get_message(user, key, **options)
-    language = user.language || 'ja'
     messages = {
-      'ja' => {
-        reservation_check_title: "📅 予約確認",
-        reservation_check_subtitle: "今後の予約一覧",
-        new_reservation: "新規予約",
-        cancel_reservation: "予約をキャンセル",
-        return_to_check: "予約確認に戻る",
-        cancel_menu_title: "❌ 予約キャンセル",
-        cancel_menu_subtitle: "キャンセルしたい予約を選択してください",
-        cancel_warning: "⚠️ キャンセルした予約は復元できません。",
-        no_reservations: "キャンセルできる予約がありません。",
-        no_upcoming_reservations: "現在、今後の予約はありません。",
-        no_upcoming_reservations_sub: "新しい予約を取りたい場合は、下の「予約」ボタンからお申し込みください。",
-        confirmed: "✅ 確定",
-        tentative: "⏳ 保留",
-        cancelled: "❌ キャンセル済み",
-        location: "📍"
-      },
-      'en' => {
-        reservation_check_title: "📅 Reservation Check",
-        reservation_check_subtitle: "Upcoming Reservations",
-        new_reservation: "New Reservation",
-        cancel_reservation: "Cancel Reservation",
-        return_to_check: "Back to Reservations",
-        cancel_menu_title: "❌ Cancel Reservation",
-        cancel_menu_subtitle: "Select the reservation to cancel",
-        cancel_warning: "⚠️ Cancelled reservations cannot be restored.",
-        no_reservations: "No reservations available for cancellation.",
-        no_upcoming_reservations: "Currently, there are no upcoming reservations.",
-        no_upcoming_reservations_sub: "If you would like to make a new reservation, please use the 'Reservation' button below.",
-        confirmed: "✅ Confirmed",
-        tentative: "⏳ Pending",
-        cancelled: "❌ Cancelled",
-        location: "📍"
-      }
+      reservation_check_title: "📅 予約確認 / Reservation Check",
+      reservation_check_subtitle: "今後の予約一覧 / Upcoming Reservations",
+      new_reservation: "新規予約 / New Reservation",
+      cancel_reservation: "予約をキャンセル / Cancel Reservation",
+      return_to_check: "予約確認に戻る / Back to Reservations",
+      cancel_menu_title: "❌ 予約キャンセル / Cancel Reservation",
+      cancel_menu_subtitle: "キャンセルしたい予約を選択してください / Select the reservation to cancel",
+      cancel_warning: "⚠️ キャンセルした予約は復元できません。 / Cancelled reservations cannot be restored.",
+      no_reservations: "キャンセルできる予約がありません。 / No reservations available for cancellation.",
+      no_upcoming_reservations: "現在、今後の予約はありません。 / Currently, there are no upcoming reservations.",
+      no_upcoming_reservations_sub: "新しい予約を取りたい場合は、下の「予約」ボタンからお申し込みください。 / If you would like to make a new reservation, please use the 'Reservation' button below.",
+      confirmed: "✅ 確定 / Confirmed",
+      tentative: "⏳ 保留 / Pending",
+      cancelled: "❌ キャンセル済み / Cancelled",
+      location: "📍"
     }
     
-    messages[language][key] || messages['ja'][key]
+    messages[key]
   end
 
   def client
@@ -297,9 +277,6 @@ class LinebotController < ApplicationController
         type: "text",
         text: "通知🔔をオンにしました。\n期限が近づいたチケットをお知らせします。\nNotifications 🔔 turned on."
       })
-
-    when /言語|language|日本語|english|英語|japanese/i
-      send_language_selection(user, reply_token)
 
     when /予約|booking|ご予約|予約したい|予約お願い/i
       send_booking_options(user, reply_token)
@@ -385,22 +362,6 @@ class LinebotController < ApplicationController
       Rails.logger.info "🔍 Postback data: #{data}"
       Rails.logger.info "🔍 Matched regex pattern: cancel_reservation_#{reservation_id}"
       cancel_reservation(user, reservation_id, reply_token)
-
-    when "set_language_ja"
-      Rails.logger.info "🇯🇵 Setting language to Japanese for user: #{user.id}"
-      user.update(language: 'ja')
-      send_reply(reply_token, {
-        type: "text",
-        text: "言語を日本語に設定しました。\nLanguage set to Japanese."
-      })
-
-    when "set_language_en"
-      Rails.logger.info "🇺🇸 Setting language to English for user: #{user.id}"
-      user.update(language: 'en')
-      send_reply(reply_token, {
-        type: "text",
-        text: "言語を英語に設定しました。\nLanguage set to English."
-      })
 
     when "reviews"
       Rails.logger.info "⭐ Showing reviews menu"
@@ -2983,85 +2944,6 @@ class LinebotController < ApplicationController
   def get_google_business_url
     # 環境変数から取得、なければデフォルトの検索URL
     ENV['GOOGLE_BUSINESS_URL'] || "https://www.google.com/search?q=mobilis+stretch+reviews&tbm=lcl"
-  end
-
-  # 🆕 言語選択メニュー送信
-  def send_language_selection(user, reply_token)
-    current_language = user.language || 'ja'
-    
-    message = {
-      type: "flex",
-      altText: "言語選択 / Language Selection",
-      contents: {
-        type: "bubble",
-        header: {
-          type: "box",
-          layout: "vertical",
-          contents: [
-            {
-              type: "text",
-              text: "🌐 言語選択 / Language Selection",
-              weight: "bold",
-              size: "xl",
-              color: "#1976d2"
-            },
-            {
-              type: "text",
-              text: "現在の言語 / Current language: #{current_language == 'ja' ? '日本語 / Japanese' : '英語 / English'}",
-              size: "sm",
-              color: "#666666",
-              margin: "sm"
-            }
-          ],
-          paddingAll: "20px"
-        },
-        body: {
-          type: "box",
-          layout: "vertical",
-          contents: [
-            {
-              type: "text",
-              text: "表示言語を選択してください\nPlease select your display language",
-              size: "md",
-              color: "#666666",
-              wrap: true
-            }
-          ],
-          paddingAll: "20px"
-        },
-        footer: {
-          type: "box",
-          layout: "vertical",
-          contents: [
-            {
-              type: "button",
-              action: {
-                type: "postback",
-                label: "🇯🇵 日本語 / Japanese",
-                data: "set_language_ja"
-              },
-              style: "primary",
-              color: "#4CAF50",
-              margin: "sm"
-            },
-            {
-              type: "button",
-              action: {
-                type: "postback",
-                label: "🇺🇸 English / 英語",
-                data: "set_language_en"
-              },
-              style: "secondary",
-              color: "#2196F3",
-              margin: "sm"
-            }
-          ],
-          paddingAll: "20px"
-        }
-      }
-    }
-
-    send_reply(reply_token, message)
   end
 
   # 🆕 予約確認メニュー送信
