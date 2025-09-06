@@ -2160,17 +2160,24 @@ class LinebotController < ApplicationController
                 layout: "horizontal",
                 contents: [
                   {
-                    type: "text",
-                    text: "残り回数",
-                    size: "sm",
-                    color: "#666666",
-                    flex: 0
-                  },
-                  {
-                    type: "text",
-                    text: "Remaining Count",
-                    size: "xs",
-                    color: "#999999",
+                    type: "box",
+                    layout: "vertical",
+                    contents: [
+                      {
+                        type: "text",
+                        text: "残り回数",
+                        size: "sm",
+                        color: "#666666",
+                        flex: 0
+                      },
+                      {
+                        type: "text",
+                        text: "Remaining Count",
+                        size: "xs",
+                        color: "#999999",
+                        flex: 0
+                      }
+                    ],
                     flex: 0
                   },
                   {
@@ -2196,17 +2203,24 @@ class LinebotController < ApplicationController
                 layout: "horizontal",
                 contents: [
                   {
-                    type: "text",
-                    text: "有効期限",
-                    size: "sm",
-                    color: "#666666",
-                    flex: 0
-                  },
-                  {
-                    type: "text",
-                    text: "Expiry Date",
-                    size: "xs",
-                    color: "#999999",
+                    type: "box",
+                    layout: "vertical",
+                    contents: [
+                      {
+                        type: "text",
+                        text: "有効期限",
+                        size: "sm",
+                        color: "#666666",
+                        flex: 0
+                      },
+                      {
+                        type: "text",
+                        text: "Expiry Date",
+                        size: "xs",
+                        color: "#999999",
+                        flex: 0
+                      }
+                    ],
                     flex: 0
                   },
                   {
