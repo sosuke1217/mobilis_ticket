@@ -213,23 +213,23 @@ class LinebotController < ApplicationController
 
   private
 
-  # 多言語対応のヘルパーメソッド（両方表示）
+  # 多言語対応のヘルパーメソッド（短縮版）
   def get_message(user, key, **options)
     messages = {
-      reservation_check_title: "📅 予約確認 / Reservation Check",
-      reservation_check_subtitle: "今後の予約一覧 / Upcoming Reservations",
-      new_reservation: "新規予約 / New Reservation",
-      cancel_reservation: "予約をキャンセル / Cancel Reservation",
-      return_to_check: "予約確認に戻る / Back to Reservations",
-      cancel_menu_title: "❌ 予約キャンセル / Cancel Reservation",
-      cancel_menu_subtitle: "キャンセルしたい予約を選択してください / Select the reservation to cancel",
-      cancel_warning: "⚠️ キャンセルした予約は復元できません。 / Cancelled reservations cannot be restored.",
-      no_reservations: "キャンセルできる予約がありません。 / No reservations available for cancellation.",
-      no_upcoming_reservations: "現在、今後の予約はありません。 / Currently, there are no upcoming reservations.",
-      no_upcoming_reservations_sub: "新しい予約を取りたい場合は、下の「予約」ボタンからお申し込みください。 / If you would like to make a new reservation, please use the 'Reservation' button below.",
-      confirmed: "✅ 確定 / Confirmed",
-      tentative: "⏳ 保留 / Pending",
-      cancelled: "❌ キャンセル済み / Cancelled",
+      reservation_check_title: "📅 予約確認",
+      reservation_check_subtitle: "今後の予約一覧",
+      new_reservation: "新規予約",
+      cancel_reservation: "予約をキャンセル",
+      return_to_check: "予約確認に戻る",
+      cancel_menu_title: "❌ 予約キャンセル",
+      cancel_menu_subtitle: "キャンセルしたい予約を選択",
+      cancel_warning: "⚠️ キャンセルした予約は復元できません",
+      no_reservations: "キャンセルできる予約がありません",
+      no_upcoming_reservations: "現在、今後の予約はありません",
+      no_upcoming_reservations_sub: "新しい予約を取りたい場合は、下のボタンからお申し込みください",
+      confirmed: "✅ 確定",
+      tentative: "⏳ 保留",
+      cancelled: "❌ キャンセル済み",
       location: "📍"
     }
     
