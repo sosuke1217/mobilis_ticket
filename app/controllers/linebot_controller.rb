@@ -2168,7 +2168,7 @@ class LinebotController < ApplicationController
                   },
                   {
                     type: "text",
-                    text: "　",
+                    text: "　　",
                     size: "sm",
                     flex: 0
                   },
@@ -2197,13 +2197,13 @@ class LinebotController < ApplicationController
                   },
                   {
                     type: "text",
-                    text: "　",
+                    text: "　　",
                     size: "sm",
                     flex: 0
                   },
                   {
                     type: "text",
-                    text: t.expiry_date.strftime('%m/%d'),
+                    text: t.expiry_date.strftime('%Y/%m/%d'),
                     size: "sm",
                     color: expiry_soon ? "#FF5555" : "#888888",
                     flex: 0,
