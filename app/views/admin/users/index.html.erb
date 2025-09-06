@@ -342,16 +342,37 @@ function showModal() {
   console.log('🔍 Modal shown manually');
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('🔍 DOM Content Loaded');
+// ページ読み込み完了後に実行
+function initializeUserManagement() {
+  console.log('🔍 Initializing User Management - Page Ready');
+  console.log('🔍 Current timestamp:', new Date().toISOString());
+  
+  // 既存のイベントリスナーを削除（重複を防ぐ）
+  const existingBtn = document.getElementById('addUserBtn');
+  if (existingBtn) {
+    const newBtn = existingBtn.cloneNode(true);
+    existingBtn.parentNode.replaceChild(newBtn, existingBtn);
+  }
   
   const addUserBtn = document.getElementById('addUserBtn');
   const modal = document.getElementById('addUserModal');
   const form = document.getElementById('addUserForm');
   const saveBtn = document.getElementById('saveUserBtn');
   
+  console.log('🔍 Element check:');
+  console.log('  - addUserBtn:', !!addUserBtn);
+  console.log('  - modal:', !!modal);
+  console.log('  - form:', !!form);
+  console.log('  - saveBtn:', !!saveBtn);
+  
   if (!addUserBtn || !modal || !form || !saveBtn) {
     console.error('❌ Required elements not found');
+    console.error('❌ Missing elements:', {
+      addUserBtn: !addUserBtn,
+      modal: !modal,
+      form: !form,
+      saveBtn: !saveBtn
+    });
     return;
   }
   
@@ -360,8 +381,11 @@ document.addEventListener('DOMContentLoaded', function() {
   // 新規ユーザー追加ボタンのクリックイベント
   addUserBtn.addEventListener('click', function() {
     console.log('🔍 Add user button clicked');
+    console.log('🔍 Button element:', this);
     showModal();
   });
+  
+  console.log('✅ Event listener added to addUserBtn');
   
   // ユーザー保存ボタンのクリックイベント
   saveBtn.addEventListener('click', function() {
@@ -613,4 +637,15 @@ function syncLineUsers() {
     button.innerHTML = originalText;
   });
 }
+
+// DOM読み込み完了時に初期化
+document.addEventListener('DOMContentLoaded', function() {
+  initializeUserManagement();
+});
+
+// ページが完全に読み込まれた後にも実行（フォールバック）
+window.addEventListener('load', function() {
+  console.log('🔍 Window load event fired');
+  setTimeout(initializeUserManagement, 100);
+});
 </script>
