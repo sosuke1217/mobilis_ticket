@@ -102,6 +102,43 @@
     overflow: hidden;
   }
   
+  /* チケットテーブルに余白を追加 */
+  .ticket-table-container {
+    margin-bottom: 3rem;
+  }
+  
+  /* チケットが少ない時の余白調整 */
+  .ticket-table-container .table-responsive {
+    padding-bottom: 2rem;
+  }
+  
+  /* チケットが1枚の時の特別な余白 */
+  .ticket-table-container.single-ticket {
+    margin-bottom: 4rem;
+  }
+  
+  .ticket-table-container.single-ticket .table-responsive {
+    padding-bottom: 3rem;
+  }
+  
+  /* チケットが2枚以下の時の余白調整 */
+  .ticket-table-container.few-tickets {
+    margin-bottom: 3.5rem;
+  }
+  
+  /* フォールバック: CSS :has() セレクター（対応ブラウザのみ） */
+  .ticket-table-container:has(tbody tr:only-child) {
+    margin-bottom: 4rem;
+  }
+  
+  .ticket-table-container:has(tbody tr:only-child) .table-responsive {
+    padding-bottom: 3rem;
+  }
+  
+  .ticket-table-container:has(tbody tr:nth-child(2):last-child) {
+    margin-bottom: 3.5rem;
+  }
+  
   .table thead th {
     border-bottom: 2px solid #dee2e6;
     font-weight: 600;
@@ -346,7 +383,7 @@
       </h5>
     </div>
     <div class="card-body p-0">
-      <div class="table-responsive">
+      <div class="table-responsive ticket-table-container">
         <table class="table table-hover mb-0">
           <thead class="table-light">
             <tr>
@@ -375,8 +412,8 @@
               <tr>
                 <td colspan="6" class="text-center py-5">
                   <div class="text-muted">
-                    <i class="fas fa-ticket-alt fa-3x mb-3"></i>
-                    <p class="mb-0">保有チケットがありません</p>
+                    <i class="fas fa-ticket-alt fa-3x mb-4"></i>
+                    <p class="mb-2">保有チケットがありません</p>
                     <small>新規チケットを発行してください</small>
                   </div>
                 </td>
@@ -743,7 +780,31 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // 削除モーダルを初期化
   initializeDeleteTicketModal();
+  
+  // チケット数に応じて余白クラスを追加
+  adjustTableSpacing();
 });
+
+// チケット数に応じてテーブルの余白を調整
+function adjustTableSpacing() {
+  const tableContainer = document.querySelector('.ticket-table-container');
+  const ticketRows = document.querySelectorAll('tbody tr');
+  const ticketCount = ticketRows.length;
+  
+  if (!tableContainer) return;
+  
+  // 既存のクラスを削除
+  tableContainer.classList.remove('single-ticket', 'few-tickets');
+  
+  // チケット数に応じてクラスを追加
+  if (ticketCount === 1) {
+    tableContainer.classList.add('single-ticket');
+    console.log('🎫 Single ticket detected - adding extra spacing');
+  } else if (ticketCount <= 2) {
+    tableContainer.classList.add('few-tickets');
+    console.log('🎫 Few tickets detected - adding moderate spacing');
+  }
+}
 
 // 緊急時のモーダル強制閉じる関数（グローバル）
 window.forceCloseModal = function() {
