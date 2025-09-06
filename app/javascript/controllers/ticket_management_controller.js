@@ -388,7 +388,7 @@ export default class extends Controller {
           <div>
             <strong>${ticket.ticket_template.name}</strong>
             <br>
-            <small class="text-muted">
+            <small class="text-muted" data-unit-price="${Math.floor(ticket.ticket_template.price / ticket.ticket_template.total_count)}">
               ¥${Math.floor(ticket.ticket_template.price / ticket.ticket_template.total_count).toLocaleString()}
             </small>
           </div>
@@ -1218,90 +1218,81 @@ export default class extends Controller {
             }
           }
           
-          // 価格を取得（簡素化された方法）
-          const priceHTML = priceElement.innerHTML
-          console.log(`🔍 価格HTML: "${priceHTML}"`)
+          // 価格を取得（data属性を優先）
+          let unitPrice = 0
           
-          // 価格抽出の簡素化されたロジック
-          let priceMatch = null
-          
-          // 1. ¥記号付き価格
-          priceMatch = priceText.match(/¥([\d,]+)/)
-          if (priceMatch) {
-            console.log(`🔍 ¥記号付き価格で抽出: "${priceMatch[1]}"`)
+          // 1. data属性から直接取得（最優先）
+          if (priceElement.hasAttribute('data-unit-price')) {
+            unitPrice = parseInt(priceElement.getAttribute('data-unit-price'))
+            console.log(`🔍 data属性から取得: ${unitPrice}`)
           }
           
-          // 2. 数字のみ（カンマ付き）
-          if (!priceMatch) {
-            priceMatch = priceText.match(/(\d{1,3}(?:,\d{3})*)/)
-            if (priceMatch) {
-              console.log(`🔍 カンマ付き数字で抽出: "${priceMatch[1]}"`)
-            }
-          }
-          
-          // 3. 数字のみ
-          if (!priceMatch) {
-            priceMatch = priceText.match(/(\d+)/)
-            if (priceMatch) {
-              console.log(`🔍 数字のみで抽出: "${priceMatch[1]}"`)
-            }
-          }
-          
-          // 4. HTMLから直接抽出
-          if (!priceMatch) {
-            priceMatch = priceHTML.match(/(\d+(?:,\d+)*)/)
-            if (priceMatch) {
-              console.log(`🔍 HTMLから抽出: "${priceMatch[1]}"`)
-            }
-          }
-          
-          // 5. 最後の手段：行内の数字から価格を推測
-          if (!priceMatch && allNumbers.length > 0) {
-            // バッジの数字を除外
-            const badgeNumbers = badgeElement.textContent.match(/\d+/g) || []
-            const nonBadgeNumbers = allNumbers.filter(num => !badgeNumbers.includes(num))
-            if (nonBadgeNumbers.length > 0) {
-              // 最も長い数字を価格として選択
-              const longestPriceNumber = nonBadgeNumbers.reduce((a, b) => a.length > b.length ? a : b)
-              priceMatch = [null, longestPriceNumber]
-              console.log(`🔍 行内数字から抽出: "${longestPriceNumber}"`)
-            }
-          }
-          
-          if (priceMatch && remainingCount > 0) {
-            const unitPrice = parseInt(priceMatch[1].replace(/,/g, ''))
-            if (!isNaN(unitPrice)) {
-              const ticketValue = unitPrice * remainingCount
-              totalPrice += ticketValue
-              console.log(`💰 チケット${index + 1}: 抽出価格="${priceMatch[1]}", 単価=${unitPrice}, 残り回数=${remainingCount}, 価値=${ticketValue}, 累計価格=${totalPrice}`)
-            } else {
-              console.log(`⚠️ チケット${index + 1}: 価格が数値ではありません: ${priceMatch[1]}`)
-              console.log(`⚠️ チケット${index + 1}: 価格変換詳細:`, {
-                originalMatch: priceMatch[1],
-                afterReplace: priceMatch[1].replace(/,/g, ''),
-                parseIntResult: parseInt(priceMatch[1].replace(/,/g, '')),
-                isNaN: isNaN(parseInt(priceMatch[1].replace(/,/g, '')))
-              })
-            }
-          } else if (priceMatch) {
-            console.log(`⚠️ チケット${index + 1}: 価格は抽出されたが残り回数が0: 価格="${priceMatch[1]}", 残り回数=${remainingCount}`)
-          } else if (!priceMatch) {
-            console.log(`⚠️ チケット${index + 1}: 価格が見つかりません: "${priceText}"`)
-            console.log(`⚠️ チケット${index + 1}: 価格要素の詳細:`, {
-              element: priceElement,
-              innerHTML: priceElement.innerHTML,
-              textContent: priceElement.textContent,
-              children: Array.from(priceElement.children).map(child => ({
-                tagName: child.tagName,
-                textContent: child.textContent,
-                innerHTML: child.innerHTML
-              }))
-            })
+          // 2. data属性がない場合は従来の方法
+          if (!unitPrice || isNaN(unitPrice)) {
+            const priceHTML = priceElement.innerHTML
+            console.log(`🔍 価格HTML: "${priceHTML}"`)
             
-            // 追加のデバッグ：行全体の構造を確認
-            console.log(`⚠️ チケット${index + 1}: 行全体のHTML:`, row.innerHTML)
+            // 価格抽出の簡素化されたロジック
+            let priceMatch = null
+            
+            // 1. ¥記号付き価格
+            priceMatch = priceText.match(/¥([\d,]+)/)
+            if (priceMatch) {
+              console.log(`🔍 ¥記号付き価格で抽出: "${priceMatch[1]}"`)
+            }
+            
+            // 2. 数字のみ（カンマ付き）
+            if (!priceMatch) {
+              priceMatch = priceText.match(/(\d{1,3}(?:,\d{3})*)/)
+              if (priceMatch) {
+                console.log(`🔍 カンマ付き数字で抽出: "${priceMatch[1]}"`)
+              }
+            }
+            
+            // 3. 数字のみ
+            if (!priceMatch) {
+              priceMatch = priceText.match(/(\d+)/)
+              if (priceMatch) {
+                console.log(`🔍 数字のみで抽出: "${priceMatch[1]}"`)
+              }
+            }
+            
+            // 4. HTMLから直接抽出
+            if (!priceMatch) {
+              priceMatch = priceHTML.match(/(\d+(?:,\d+)*)/)
+              if (priceMatch) {
+                console.log(`🔍 HTMLから抽出: "${priceMatch[1]}"`)
+              }
+            }
+            
+            // 5. 最後の手段：行内の数字から価格を推測
+            if (!priceMatch && allNumbers.length > 0) {
+              // バッジの数字を除外
+              const badgeNumbers = badgeElement.textContent.match(/\d+/g) || []
+              const nonBadgeNumbers = allNumbers.filter(num => !badgeNumbers.includes(num))
+              if (nonBadgeNumbers.length > 0) {
+                // 最も長い数字を価格として選択
+                const longestPriceNumber = nonBadgeNumbers.reduce((a, b) => a.length > b.length ? a : b)
+                priceMatch = [null, longestPriceNumber]
+                console.log(`🔍 行内数字から抽出: "${longestPriceNumber}"`)
+              }
+            }
+            
+            if (priceMatch) {
+              unitPrice = parseInt(priceMatch[1].replace(/,/g, ''))
+            }
+          }
+          
+          if (unitPrice && remainingCount > 0) {
+            const ticketValue = unitPrice * remainingCount
+            totalPrice += ticketValue
+            console.log(`💰 チケット${index + 1}: 単価=${unitPrice}, 残り回数=${remainingCount}, 価値=${ticketValue}, 累計価格=${totalPrice}`)
+          } else if (unitPrice === 0) {
+            console.log(`⚠️ チケット${index + 1}: 価格が0です`)
           } else if (remainingCount <= 0) {
             console.log(`⚠️ チケット${index + 1}: 残り回数が0以下: ${remainingCount}`)
+          } else {
+            console.log(`⚠️ チケット${index + 1}: 価格が取得できませんでした`)
           }
         } else {
           console.log(`⚠️ チケット${index + 1}: 要素が見つかりません`)
