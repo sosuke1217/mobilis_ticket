@@ -383,6 +383,13 @@ class LineBookingNotifier
               size: "md"
             },
             {
+              type: "text",
+              text: "Cancelled Reservation",
+              size: "sm",
+              color: "#999999",
+              margin: "xs"
+            },
+            {
               type: "separator",
               margin: "md"
             },
@@ -391,7 +398,9 @@ class LineBookingNotifier
               layout: "vertical",
               contents: [
                 create_info_row("日時", reservation.start_time.strftime('%m/%d(%a) %H:%M〜')),
-                create_info_row("コース", reservation.course)
+                create_info_row("Date & Time", reservation.start_time.strftime('%m/%d(%a) %H:%M〜'), true),
+                create_info_row("コース", reservation.course.to_s.gsub(/分$/, '') + "min"),
+                create_info_row("Course", reservation.course.to_s.gsub(/分$/, '') + "min", true)
               ],
               margin: "md"
             },
@@ -402,6 +411,14 @@ class LineBookingNotifier
               color: "#666666",
               wrap: true,
               margin: "lg"
+            },
+            {
+              type: "text",
+              text: "We look forward to serving you again.\nPlease contact us if you would like to make a new reservation.",
+              size: "sm",
+              color: "#999999",
+              wrap: true,
+              margin: "xs"
             }
           ]
         },
@@ -417,6 +434,14 @@ class LineBookingNotifier
                 label: "新しい予約をする",
                 data: "booking"
               }
+            },
+            {
+              type: "text",
+              text: "Make New Reservation",
+              size: "sm",
+              color: "#999999",
+              align: "center",
+              margin: "xs"
             }
           ]
         }
@@ -424,7 +449,7 @@ class LineBookingNotifier
     }
   end
 
-  def self.create_info_row(label, value)
+  def self.create_info_row(label, value, is_english = false)
     {
       type: "box",
       layout: "baseline",
@@ -433,7 +458,7 @@ class LineBookingNotifier
           type: "text",
           text: label,
           size: "sm",
-          color: "#666666",
+          color: is_english ? "#999999" : "#666666",
           flex: 2
         },
         {
