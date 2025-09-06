@@ -3229,7 +3229,7 @@ class LinebotController < ApplicationController
                   data: "check_reservations"
                 },
                 style: "primary",
-                color: "#FF6B35",
+                color: "#FF9800",
                 margin: "md"
               }
             ],
