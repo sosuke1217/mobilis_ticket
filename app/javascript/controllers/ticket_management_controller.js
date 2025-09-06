@@ -1130,34 +1130,72 @@ export default class extends Controller {
       let totalPrice = 0
       rows.forEach((row, index) => {
         const badgeElement = row.querySelector('.badge')
-        // より柔軟な価格要素の選択
-        let priceElement = row.querySelector('small.text-muted')
+        
+        // 行全体の詳細な構造分析
+        console.log(`=== 行${index + 1}の詳細分析 ===`)
+        console.log(`行のHTML: ${row.outerHTML}`)
+        
+        // すべてのtd要素を確認
+        const allTds = row.querySelectorAll('td')
+        allTds.forEach((td, tdIndex) => {
+          console.log(`TD${tdIndex + 1}: ${td.innerHTML}`)
+          console.log(`TD${tdIndex + 1}のテキスト: "${td.textContent}"`)
+        })
+        
+        // 価格要素を複数の方法で探す
+        let priceElement = null
+        let priceText = ''
+        
+        // 方法1: small.text-muted要素
+        priceElement = row.querySelector('small.text-muted')
+        if (priceElement) {
+          priceText = priceElement.textContent.trim()
+          console.log(`方法1で発見: small.text-muted = "${priceText}"`)
+        }
+        
+        // 方法2: small要素
         if (!priceElement) {
-          // 代替方法1: small要素を探す
           priceElement = row.querySelector('small')
-        }
-        if (!priceElement) {
-          // 代替方法2: text-mutedクラスを持つ要素を探す
-          priceElement = row.querySelector('.text-muted')
-        }
-        if (!priceElement) {
-          // 代替方法3: 最初のtd内の2番目の要素を探す（価格が表示される場所）
-          const firstTd = row.querySelector('td')
-          if (firstTd) {
-            const allElements = firstTd.querySelectorAll('*')
-            priceElement = allElements.length > 1 ? allElements[1] : null
+          if (priceElement) {
+            priceText = priceElement.textContent.trim()
+            console.log(`方法2で発見: small = "${priceText}"`)
           }
         }
         
-        console.log(`行${index + 1}: ${row.innerHTML}`)
+        // 方法3: text-mutedクラス
+        if (!priceElement) {
+          priceElement = row.querySelector('.text-muted')
+          if (priceElement) {
+            priceText = priceElement.textContent.trim()
+            console.log(`方法3で発見: .text-muted = "${priceText}"`)
+          }
+        }
+        
+        // 方法4: 最初のtdの2番目の要素
+        if (!priceElement) {
+          const firstTd = row.querySelector('td')
+          if (firstTd) {
+            const allElements = firstTd.querySelectorAll('*')
+            if (allElements.length > 1) {
+              priceElement = allElements[1]
+              priceText = priceElement.textContent.trim()
+              console.log(`方法4で発見: 最初のtdの2番目要素 = "${priceText}"`)
+            }
+          }
+        }
+        
+        // 方法5: 行内のすべての数字を抽出
+        const allNumbers = row.textContent.match(/\d+/g) || []
+        console.log(`行内のすべての数字: [${allNumbers.join(', ')}]`)
+        
         console.log('🔍 行' + (index + 1) + 'の要素:', { 
           badge: badgeElement?.textContent, 
-          priceElement: priceElement?.textContent,
+          priceElement: priceText,
           priceElementExists: !!priceElement,
           priceElementHTML: priceElement?.innerHTML,
           priceElementTagName: priceElement?.tagName,
           priceElementClassName: priceElement?.className,
-          rowHTML: row.innerHTML.substring(0, 200) + '...'
+          allNumbers: allNumbers
         })
         
         if (badgeElement && priceElement) {
@@ -1180,68 +1218,53 @@ export default class extends Controller {
             }
           }
           
-          // 価格を取得（より確実な方法）
-          const priceText = priceElement.textContent.trim()
-          console.log(`🔍 価格テキスト: "${priceText}"`)
-          
-          // innerHTMLも確認（アイコンが含まれている場合）
+          // 価格を取得（簡素化された方法）
           const priceHTML = priceElement.innerHTML
           console.log(`🔍 価格HTML: "${priceHTML}"`)
           
-          // 複数の価格形式に対応
+          // 価格抽出の簡素化されたロジック
           let priceMatch = null
           
-          // 1. 通常の¥記号付き価格（優先）
+          // 1. ¥記号付き価格
           priceMatch = priceText.match(/¥([\d,]+)/)
-          
-          // 2. カンマ付き数字のみ
-          if (!priceMatch) {
-            priceMatch = priceText.match(/([\d,]+)/)
+          if (priceMatch) {
+            console.log(`🔍 ¥記号付き価格で抽出: "${priceMatch[1]}"`)
           }
           
-          // 2.5. ¥記号付き価格（HTMLから）
+          // 2. 数字のみ（カンマ付き）
           if (!priceMatch) {
-            priceMatch = priceHTML.match(/¥([\d,]+)/)
+            priceMatch = priceText.match(/(\d{1,3}(?:,\d{3})*)/)
+            if (priceMatch) {
+              console.log(`🔍 カンマ付き数字で抽出: "${priceMatch[1]}"`)
+            }
           }
           
           // 3. 数字のみ
           if (!priceMatch) {
             priceMatch = priceText.match(/(\d+)/)
-          }
-          
-          // 4. HTMLから直接数字を抽出（アイコンが含まれている場合）
-          if (!priceMatch) {
-            priceMatch = priceHTML.match(/(\d+(?:,\d+)*)/)
-          }
-          
-          // 5. 最後の手段：数字とカンマの組み合わせを探す
-          if (!priceMatch) {
-            priceMatch = priceText.match(/(\d{1,3}(?:,\d{3})*)/)
-          }
-          
-          // 6. さらに柔軟な抽出：HTML内の数字を探す
-          if (!priceMatch) {
-            const allNumbers = priceHTML.match(/\d+/g)
-            if (allNumbers && allNumbers.length > 0) {
-              // 最も長い数字を選択（価格の可能性が高い）
-              const longestNumber = allNumbers.reduce((a, b) => a.length > b.length ? a : b)
-              priceMatch = [null, longestNumber]
-              console.log(`🔍 代替抽出: 最長数字 "${longestNumber}"`)
+            if (priceMatch) {
+              console.log(`🔍 数字のみで抽出: "${priceMatch[1]}"`)
             }
           }
           
-          // 7. 最後の手段：要素全体から数字を抽出
+          // 4. HTMLから直接抽出
           if (!priceMatch) {
-            const allNumbersInRow = row.textContent.match(/\d+/g)
-            if (allNumbersInRow && allNumbersInRow.length > 0) {
-              // バッジの数字を除外して価格を探す
-              const badgeNumbers = badgeElement.textContent.match(/\d+/g) || []
-              const nonBadgeNumbers = allNumbersInRow.filter(num => !badgeNumbers.includes(num))
-              if (nonBadgeNumbers.length > 0) {
-                const longestPriceNumber = nonBadgeNumbers.reduce((a, b) => a.length > b.length ? a : b)
-                priceMatch = [null, longestPriceNumber]
-                console.log(`🔍 行全体から抽出: 最長数字 "${longestPriceNumber}"`)
-              }
+            priceMatch = priceHTML.match(/(\d+(?:,\d+)*)/)
+            if (priceMatch) {
+              console.log(`🔍 HTMLから抽出: "${priceMatch[1]}"`)
+            }
+          }
+          
+          // 5. 最後の手段：行内の数字から価格を推測
+          if (!priceMatch && allNumbers.length > 0) {
+            // バッジの数字を除外
+            const badgeNumbers = badgeElement.textContent.match(/\d+/g) || []
+            const nonBadgeNumbers = allNumbers.filter(num => !badgeNumbers.includes(num))
+            if (nonBadgeNumbers.length > 0) {
+              // 最も長い数字を価格として選択
+              const longestPriceNumber = nonBadgeNumbers.reduce((a, b) => a.length > b.length ? a : b)
+              priceMatch = [null, longestPriceNumber]
+              console.log(`🔍 行内数字から抽出: "${longestPriceNumber}"`)
             }
           }
           
