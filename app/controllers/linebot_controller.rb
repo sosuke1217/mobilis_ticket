@@ -3074,7 +3074,7 @@ class LinebotController < ApplicationController
           contents: [
             {
               type: "text",
-              text: "📅 #{reservation.start_time.strftime('%m/%d %H:%M')}",
+              text: "📅 #{reservation.start_time.strftime('%m/%d %H:%M')}~",
               weight: "bold",
               size: "md",
               color: "#FF6B35"
@@ -3299,7 +3299,7 @@ class LinebotController < ApplicationController
           type: "button",
           action: {
             type: "postback",
-            label: "#{reservation.start_time.strftime('%m/%d %H:%M')} #{reservation.course}min",
+            label: "#{reservation.start_time.strftime('%m/%d %H:%M')}~ #{reservation.course}min",
             data: "cancel_reservation_#{reservation.id}"
           },
           style: "secondary",
