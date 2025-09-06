@@ -3356,7 +3356,7 @@ class LinebotController < ApplicationController
           footer: {
             type: "box",
             layout: "vertical",
-            contents: reservation_buttons + [
+            contents:             reservation_buttons + [
               {
                 type: "button",
                 action: {
@@ -3367,6 +3367,14 @@ class LinebotController < ApplicationController
                 style: "primary",
                 color: "#FF9800",
                 margin: "sm"
+              },
+              {
+                type: "text",
+                text: get_message(user, :return_to_check_en),
+                size: "sm",
+                color: "#999999",
+                align: "center",
+                margin: "xs"
               }
             ],
             paddingAll: "10px"
