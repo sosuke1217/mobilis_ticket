@@ -2251,24 +2251,6 @@ class LinebotController < ApplicationController
                 color: "#999999",
                 align: "center",
                 margin: "xs"
-              },
-              {
-                type: "text",
-                text: "新しいチケットを購入するか、\n管理者にお問い合わせください。",
-                size: "sm",
-                color: "#888888",
-                align: "center",
-                wrap: true,
-                margin: "md"
-              },
-              {
-                type: "text",
-                text: "Please purchase new tickets or contact the administrator.",
-                size: "xs",
-                color: "#999999",
-                align: "center",
-                wrap: true,
-                margin: "xs"
               }
             ],
             paddingAll: "20px"
