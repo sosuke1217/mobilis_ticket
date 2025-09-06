@@ -2117,6 +2117,14 @@ class LinebotController < ApplicationController
             size: "lg",
                 color: "#1976d2",
                 align: "center"
+              },
+              {
+                type: "text",
+                text: "Ticket Information",
+                size: "sm",
+                color: "#999999",
+                align: "center",
+                margin: "xs"
               }
             ],
             paddingAll: "15px",
@@ -2204,12 +2212,20 @@ class LinebotController < ApplicationController
             layout: "vertical",
             contents: [
               {
-        type: "text",
+                type: "text",
                 text: "🎫 チケット情報",
                 weight: "bold",
                 size: "lg",
                 color: "#1976d2",
                 align: "center"
+              },
+              {
+                type: "text",
+                text: "Ticket Information",
+                size: "sm",
+                color: "#999999",
+                align: "center",
+                margin: "xs"
               }
             ],
             paddingAll: "15px",
@@ -2230,12 +2246,29 @@ class LinebotController < ApplicationController
               },
               {
                 type: "text",
+                text: "No available tickets",
+                size: "sm",
+                color: "#999999",
+                align: "center",
+                margin: "xs"
+              },
+              {
+                type: "text",
                 text: "新しいチケットを購入するか、\n管理者にお問い合わせください。",
                 size: "sm",
                 color: "#888888",
                 align: "center",
                 wrap: true,
                 margin: "md"
+              },
+              {
+                type: "text",
+                text: "Please purchase new tickets or contact the administrator.",
+                size: "xs",
+                color: "#999999",
+                align: "center",
+                wrap: true,
+                margin: "xs"
               }
             ],
             paddingAll: "20px"
