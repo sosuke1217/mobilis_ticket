@@ -440,8 +440,10 @@ export default class extends Controller {
       // 新しく追加された行のボタンにイベントリスナーを設定
       this.setupButtonsForRow(newRow)
       
-      // チケット数を更新
-      this.updateTicketCounts()
+      // チケット数を更新（DOMの更新を待つ）
+      setTimeout(() => {
+        this.updateTicketCounts()
+      }, 100)
       
       // 成功メッセージを表示
       this.showAlert('success', 'チケットを発行しました')
@@ -1164,12 +1166,16 @@ export default class extends Controller {
           // 複数の価格形式に対応
           let priceMatch = priceText.match(/¥([\d,]+)/)
           if (!priceMatch) {
-            // アイコンなしの価格形式
+            // アイコンなしの価格形式（カンマ付き）
             priceMatch = priceText.match(/([\d,]+)/)
           }
           if (!priceMatch) {
             // 数字のみの形式
             priceMatch = priceText.match(/(\d+)/)
+          }
+          if (!priceMatch) {
+            // アイコンを含む形式（¥記号なし）
+            priceMatch = priceText.match(/[^\d]*([\d,]+)/)
           }
           
           if (priceMatch && remainingCount > 0) {
@@ -1183,6 +1189,15 @@ export default class extends Controller {
             }
           } else if (!priceMatch) {
             console.log(`⚠️ チケット${index + 1}: 価格が見つかりません: "${priceText}"`)
+            console.log(`⚠️ チケット${index + 1}: 価格要素の詳細:`, {
+              element: priceElement,
+              innerHTML: priceElement.innerHTML,
+              textContent: priceElement.textContent,
+              children: Array.from(priceElement.children).map(child => ({
+                tagName: child.tagName,
+                textContent: child.textContent
+              }))
+            })
           } else if (remainingCount <= 0) {
             console.log(`⚠️ チケット${index + 1}: 残り回数が0以下: ${remainingCount}`)
           }
