@@ -1136,6 +1136,8 @@ export default class extends Controller {
         console.log('🔍 行' + (index + 1) + 'の要素:', { 
           badge: badgeElement?.textContent, 
           priceElement: priceElement?.textContent,
+          priceElementExists: !!priceElement,
+          priceElementHTML: priceElement?.innerHTML,
           rowHTML: row.innerHTML.substring(0, 200) + '...'
         })
         
@@ -1246,6 +1248,12 @@ export default class extends Controller {
           }
         } else {
           console.log(`⚠️ チケット${index + 1}: 要素が見つかりません`)
+          console.log(`⚠️ チケット${index + 1}: 要素検索結果:`, {
+            badgeElement: badgeElement,
+            priceElement: priceElement,
+            allSmallElements: Array.from(row.querySelectorAll('small')),
+            allTextMutedElements: Array.from(row.querySelectorAll('.text-muted'))
+          })
         }
       })
       
