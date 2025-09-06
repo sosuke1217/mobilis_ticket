@@ -389,8 +389,14 @@ export default class extends Controller {
           <div>
             <strong>${ticket.ticket_template.name}</strong>
             <br>
-            <small class="text-muted" data-unit-price="${ticket.ticket_template && ticket.ticket_template.price && ticket.ticket_template.total_count && ticket.ticket_template.total_count > 0 ? Math.floor(ticket.ticket_template.price / ticket.ticket_template.total_count) : 0}">
-              ¥${ticket.ticket_template && ticket.ticket_template.price && ticket.ticket_template.total_count && ticket.ticket_template.total_count > 0 ? Math.floor(ticket.ticket_template.price / ticket.ticket_template.total_count).toLocaleString() : '0'}
+            <small class="text-muted" data-unit-price="${ticket.ticket_template && ticket.ticket_template.price ? (() => {
+              const totalCount = ticket.ticket_template.total_count || ticket.total_count;
+              return totalCount && totalCount > 0 ? Math.floor(ticket.ticket_template.price / totalCount) : 0;
+            })() : 0}">
+              ¥${ticket.ticket_template && ticket.ticket_template.price ? (() => {
+                const totalCount = ticket.ticket_template.total_count || ticket.total_count;
+                return totalCount && totalCount > 0 ? Math.floor(ticket.ticket_template.price / totalCount).toLocaleString() : '0';
+              })() : '0'}
             </small>
           </div>
         </td>
