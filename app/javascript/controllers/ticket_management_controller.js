@@ -1159,23 +1159,38 @@ export default class extends Controller {
             }
           }
           
-          // 価格を取得
+          // 価格を取得（より確実な方法）
           const priceText = priceElement.textContent.trim()
           console.log(`🔍 価格テキスト: "${priceText}"`)
           
+          // innerHTMLも確認（アイコンが含まれている場合）
+          const priceHTML = priceElement.innerHTML
+          console.log(`🔍 価格HTML: "${priceHTML}"`)
+          
           // 複数の価格形式に対応
-          let priceMatch = priceText.match(/¥([\d,]+)/)
+          let priceMatch = null
+          
+          // 1. 通常の¥記号付き価格
+          priceMatch = priceText.match(/¥([\d,]+)/)
+          
+          // 2. カンマ付き数字のみ
           if (!priceMatch) {
-            // アイコンなしの価格形式（カンマ付き）
             priceMatch = priceText.match(/([\d,]+)/)
           }
+          
+          // 3. 数字のみ
           if (!priceMatch) {
-            // 数字のみの形式
             priceMatch = priceText.match(/(\d+)/)
           }
+          
+          // 4. HTMLから直接数字を抽出（アイコンが含まれている場合）
           if (!priceMatch) {
-            // アイコンを含む形式（¥記号なし）
-            priceMatch = priceText.match(/[^\d]*([\d,]+)/)
+            priceMatch = priceHTML.match(/(\d+(?:,\d+)*)/)
+          }
+          
+          // 5. 最後の手段：数字とカンマの組み合わせを探す
+          if (!priceMatch) {
+            priceMatch = priceText.match(/(\d{1,3}(?:,\d{3})*)/)
           }
           
           if (priceMatch && remainingCount > 0) {
@@ -1195,9 +1210,13 @@ export default class extends Controller {
               textContent: priceElement.textContent,
               children: Array.from(priceElement.children).map(child => ({
                 tagName: child.tagName,
-                textContent: child.textContent
+                textContent: child.textContent,
+                innerHTML: child.innerHTML
               }))
             })
+            
+            // 追加のデバッグ：行全体の構造を確認
+            console.log(`⚠️ チケット${index + 1}: 行全体のHTML:`, row.innerHTML)
           } else if (remainingCount <= 0) {
             console.log(`⚠️ チケット${index + 1}: 残り回数が0以下: ${remainingCount}`)
           }
