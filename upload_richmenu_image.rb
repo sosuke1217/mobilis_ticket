@@ -6,7 +6,7 @@ require 'json'
 
 # LINE Channel Token
 token = ENV['LINE_CHANNEL_TOKEN']
-richmenu_id = "richmenu-b2c9a6668642ef7d9d018bd19c1aebb0"
+richmenu_id = "richmenu-4dba2fd678a834c9449a779f30a4eadb"
 
 if token.nil?
   puts "❌ LINE_CHANNEL_TOKENが設定されていません"
