@@ -3167,58 +3167,41 @@ class LinebotController < ApplicationController
               layout: "vertical",
               contents: [
                 {
-                  type: "box",
-                  layout: "horizontal",
-                  contents: [
-                    {
-                      type: "button",
-                      action: {
-                        type: "postback",
-                        label: get_message(user, :new_reservation),
-                        data: "booking"
-                      },
-                      style: "primary",
-                      color: "#4CAF50",
-                      flex: 1,
-                      margin: "xs"
-                    },
-                    {
-                      type: "button",
-                      action: {
-                        type: "postback",
-                        label: get_message(user, :cancel_reservation),
-                        data: "cancel_reservation_menu"
-                      },
-                      style: "secondary",
-                      color: "#FF9800",
-                      flex: 1,
-                      margin: "xs"
-                    }
-                  ]
+                  type: "button",
+                  action: {
+                    type: "postback",
+                    label: get_message(user, :new_reservation),
+                    data: "booking"
+                  },
+                  style: "primary",
+                  color: "#4CAF50"
                 },
                 {
-                  type: "box",
-                  layout: "horizontal",
-                  contents: [
-                    {
-                      type: "text",
-                      text: get_message(user, :new_reservation_en),
-                      size: "sm",
-                      color: "#999999",
-                      flex: 1,
-                      align: "center",
-                      margin: "xs"
-                    },
-                    {
-                      type: "text",
-                      text: get_message(user, :cancel_reservation_en),
-                      size: "sm",
-                      color: "#999999",
-                      flex: 1,
-                      align: "center",
-                      margin: "xs"
-                    }
-                  ]
+                  type: "text",
+                  text: get_message(user, :new_reservation_en),
+                  size: "sm",
+                  color: "#999999",
+                  align: "center",
+                  margin: "xs"
+                },
+                {
+                  type: "button",
+                  action: {
+                    type: "postback",
+                    label: get_message(user, :cancel_reservation),
+                    data: "cancel_reservation_menu"
+                  },
+                  style: "secondary",
+                  color: "#FF9800",
+                  margin: "sm"
+                },
+                {
+                  type: "text",
+                  text: get_message(user, :cancel_reservation_en),
+                  size: "sm",
+                  color: "#999999",
+                  align: "center",
+                  margin: "xs"
                 }
               ],
               paddingAll: "20px"
