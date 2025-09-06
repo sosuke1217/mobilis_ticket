@@ -284,6 +284,10 @@
 </style>
 
 <script>
+/*!
+ * User Management JavaScript - Version 2025-09-06-07-25
+ * Cache busting timestamp: 2025-09-06T07:25:00Z
+ */
 // グローバル関数として定義
 function hideModal() {
   console.log('🔍 Hiding modal manually');
@@ -341,6 +345,10 @@ function showModal() {
   
   console.log('🔍 Modal shown manually');
 }
+
+// バージョン情報（キャッシュ無効化用）
+const USER_MANAGEMENT_VERSION = '2025-09-06-07-25';
+console.log('🔍 User Management JavaScript Version:', USER_MANAGEMENT_VERSION);
 
 // 初期化済みフラグ
 let isInitialized = false;
@@ -644,18 +652,27 @@ function syncLineUsers() {
   });
 }
 
+// エラーハンドリング付き初期化関数
+function safeInitializeUserManagement() {
+  try {
+    initializeUserManagement();
+  } catch (error) {
+    console.error('❌ Error initializing user management:', error);
+  }
+}
+
 // 複数の初期化タイミングで確実に実行
-document.addEventListener('DOMContentLoaded', initializeUserManagement);
-window.addEventListener('load', initializeUserManagement);
+document.addEventListener('DOMContentLoaded', safeInitializeUserManagement);
+window.addEventListener('load', safeInitializeUserManagement);
 
 // Turbo対応（Rails 7のTurbo）
-document.addEventListener('turbo:load', initializeUserManagement);
+document.addEventListener('turbo:load', safeInitializeUserManagement);
 
 // ページ遷移対応
-document.addEventListener('turbo:render', initializeUserManagement);
+document.addEventListener('turbo:render', safeInitializeUserManagement);
 
 // より確実な初期化のため、短い間隔でも実行
-setTimeout(initializeUserManagement, 100);
-setTimeout(initializeUserManagement, 500);
-setTimeout(initializeUserManagement, 1000);
+setTimeout(safeInitializeUserManagement, 100);
+setTimeout(safeInitializeUserManagement, 500);
+setTimeout(safeInitializeUserManagement, 1000);
 </script>
