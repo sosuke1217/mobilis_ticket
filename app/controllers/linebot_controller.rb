@@ -3076,7 +3076,7 @@ class LinebotController < ApplicationController
                     data: "booking"
                   },
                   style: "primary",
-                  color: "#28A745"
+                  color: "#4CAF50"
                 },
                 {
                   type: "button",
@@ -3086,7 +3086,7 @@ class LinebotController < ApplicationController
                     data: "cancel_reservation_menu"
                   },
                   style: "secondary",
-                  color: "#FF6B35",
+                  color: "#FF9800",
                   margin: "sm"
                 }
               ],
