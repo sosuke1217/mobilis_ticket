@@ -334,6 +334,7 @@ class LinebotController < ApplicationController
     when /^cancel_reservation_(\d+)$/
       reservation_id = $1.to_i
       Rails.logger.info "❌ Cancelling reservation ID: #{reservation_id} for user: #{user.id}"
+      Rails.logger.info "🔍 Postback data: #{postback_data}"
       cancel_reservation(user, reservation_id, reply_token)
 
     when "reviews"
@@ -3241,9 +3242,12 @@ class LinebotController < ApplicationController
 
   # 🆕 予約キャンセル処理
   def cancel_reservation(user, reservation_id, reply_token)
+    Rails.logger.info "🔍 Starting cancellation for reservation ID: #{reservation_id}, user: #{user.id}"
+    
     reservation = user.reservations.find_by(id: reservation_id)
     
     unless reservation
+      Rails.logger.error "❌ Reservation not found: #{reservation_id}"
       send_reply(reply_token, {
         type: "text",
         text: "❌ 予約が見つかりませんでした。"
@@ -3251,7 +3255,10 @@ class LinebotController < ApplicationController
       return
     end
 
+    Rails.logger.info "🔍 Found reservation: #{reservation.id}, status: #{reservation.status}, start_time: #{reservation.start_time}"
+
     unless ['confirmed', 'tentative'].include?(reservation.status)
+      Rails.logger.warn "❌ Cannot cancel reservation with status: #{reservation.status}"
       send_reply(reply_token, {
         type: "text",
         text: "❌ この予約はキャンセルできません。（ステータス: #{reservation.status}）"
@@ -3260,13 +3267,21 @@ class LinebotController < ApplicationController
     end
 
     # 予約をキャンセル
-    reservation.update!(
-      status: 'cancelled',
-      cancelled_at: Time.current,
-      cancellation_reason: 'ユーザーによるキャンセル'
-    )
-
-    Rails.logger.info "✅ Reservation #{reservation_id} cancelled successfully"
+    begin
+      reservation.update!(
+        status: 'cancelled',
+        cancelled_at: Time.current,
+        cancellation_reason: 'ユーザーによるキャンセル'
+      )
+      Rails.logger.info "✅ Reservation #{reservation_id} cancelled successfully"
+    rescue => e
+      Rails.logger.error "❌ Failed to cancel reservation #{reservation_id}: #{e.message}"
+      send_reply(reply_token, {
+        type: "text",
+        text: "❌ キャンセル処理中にエラーが発生しました。"
+      })
+      return
+    end
 
     # キャンセル完了メッセージ
     message = {
