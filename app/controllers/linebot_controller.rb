@@ -3353,7 +3353,9 @@ class LinebotController < ApplicationController
             type: "box",
             layout: "vertical",
             contents: reservation_buttons,
-            paddingAll: "0px"
+            paddingAll: "0px",
+            paddingStart: "20px",
+            paddingEnd: "20px"
           },
           footer: {
             type: "box",
