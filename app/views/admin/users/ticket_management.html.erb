@@ -433,7 +433,7 @@
                         <% end %>
                       </strong>
                       <br>
-                      <small class="text-muted">
+                      <small class="text-muted" data-unit-price="<%= ticket.ticket_template.present? ? ticket.ticket_template.price / ticket.ticket_template.total_count : 0 %>">
                         <% if ticket.ticket_template.present? %>
                           <i class="fas fa-yen-sign me-1"></i><%= number_with_delimiter(ticket.ticket_template.price / ticket.ticket_template.total_count) %>
                         <% else %>
@@ -867,4 +867,7 @@ window.forceCloseModal = function() {
   
   console.log('🚨 Emergency modal close completed');
 };
+
+// バージョン情報
+console.log('🎫 チケット管理ページ JavaScript 読み込み完了 - Version: <%= Time.current.to_i %>');
 </script>
