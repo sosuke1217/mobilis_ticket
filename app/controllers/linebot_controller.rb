@@ -2253,10 +2253,9 @@ class LinebotController < ApplicationController
     if usages.any?
       # リスト形式で12件表示
       list_items = usages.map.with_index(1) do |usage, index|
-        ticket_title = usage.ticket.title.present? ? usage.ticket.title : "チケット"
+        ticket_title = usage.ticket.title.present? ? usage.ticket.title : "回数券"
         course_name = usage.ticket.ticket_template.present? ? usage.ticket.ticket_template.name : "コース未設定"
         date = usage.used_at.strftime('%m/%d')
-        time = usage.used_at.strftime('%H:%M')
         
         {
           type: "box",
@@ -2302,13 +2301,6 @@ class LinebotController < ApplicationController
                   size: "sm",
                   color: "#1976d2",
                   align: "end"
-                },
-                {
-                  type: "text",
-                  text: time,
-                  size: "xs",
-                  color: "#888888",
-                  align: "end"
                 }
               ],
               flex: 0,
@@ -2331,12 +2323,20 @@ class LinebotController < ApplicationController
             layout: "vertical",
             contents: [
               {
-        type: "text",
+                type: "text",
                 text: "🕓 使用履歴（直近12回）",
                 weight: "bold",
                 size: "lg",
                 color: "#1976d2",
                 align: "center"
+              },
+              {
+                type: "text",
+                text: "Usage History (Last 12 times)",
+                size: "sm",
+                color: "#999999",
+                align: "center",
+                margin: "xs"
               }
             ],
             paddingAll: "15px",
@@ -2362,12 +2362,20 @@ class LinebotController < ApplicationController
             layout: "vertical",
             contents: [
               {
-        type: "text",
+                type: "text",
                 text: "🕓 使用履歴",
                 weight: "bold",
                 size: "lg",
                 color: "#1976d2",
                 align: "center"
+              },
+              {
+                type: "text",
+                text: "Usage History",
+                size: "sm",
+                color: "#999999",
+                align: "center",
+                margin: "xs"
               }
             ],
             paddingAll: "15px",
