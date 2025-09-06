@@ -335,6 +335,7 @@ class LinebotController < ApplicationController
       reservation_id = $1.to_i
       Rails.logger.info "❌ Cancelling reservation ID: #{reservation_id} for user: #{user.id}"
       Rails.logger.info "🔍 Postback data: #{postback_data}"
+      Rails.logger.info "🔍 Matched regex pattern: cancel_reservation_#{reservation_id}"
       cancel_reservation(user, reservation_id, reply_token)
 
     when "reviews"
