@@ -444,7 +444,16 @@ document.addEventListener('DOMContentLoaded', function() {
         ユーザー「${userName}」を追加しました！
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
       `;
-      document.querySelector('.container-lg').insertBefore(alertDiv, document.querySelector('.card'));
+      
+      // メッセージを表示する場所を安全に取得
+      const container = document.querySelector('.container-lg');
+      if (container) {
+        // コンテナの最初に追加
+        container.insertBefore(alertDiv, container.firstChild);
+      } else {
+        // フォールバック: bodyの最初に追加
+        document.body.insertBefore(alertDiv, document.body.firstChild);
+      }
       
       // モーダルを閉じる
       hideModal();
