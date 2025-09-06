@@ -1130,7 +1130,24 @@ export default class extends Controller {
       let totalPrice = 0
       rows.forEach((row, index) => {
         const badgeElement = row.querySelector('.badge')
-        const priceElement = row.querySelector('small.text-muted')
+        // より柔軟な価格要素の選択
+        let priceElement = row.querySelector('small.text-muted')
+        if (!priceElement) {
+          // 代替方法1: small要素を探す
+          priceElement = row.querySelector('small')
+        }
+        if (!priceElement) {
+          // 代替方法2: text-mutedクラスを持つ要素を探す
+          priceElement = row.querySelector('.text-muted')
+        }
+        if (!priceElement) {
+          // 代替方法3: 最初のtd内の2番目の要素を探す（価格が表示される場所）
+          const firstTd = row.querySelector('td')
+          if (firstTd) {
+            const allElements = firstTd.querySelectorAll('*')
+            priceElement = allElements.length > 1 ? allElements[1] : null
+          }
+        }
         
         console.log(`行${index + 1}: ${row.innerHTML}`)
         console.log('🔍 行' + (index + 1) + 'の要素:', { 
@@ -1138,6 +1155,8 @@ export default class extends Controller {
           priceElement: priceElement?.textContent,
           priceElementExists: !!priceElement,
           priceElementHTML: priceElement?.innerHTML,
+          priceElementTagName: priceElement?.tagName,
+          priceElementClassName: priceElement?.className,
           rowHTML: row.innerHTML.substring(0, 200) + '...'
         })
         
@@ -1208,6 +1227,21 @@ export default class extends Controller {
               const longestNumber = allNumbers.reduce((a, b) => a.length > b.length ? a : b)
               priceMatch = [null, longestNumber]
               console.log(`🔍 代替抽出: 最長数字 "${longestNumber}"`)
+            }
+          }
+          
+          // 7. 最後の手段：要素全体から数字を抽出
+          if (!priceMatch) {
+            const allNumbersInRow = row.textContent.match(/\d+/g)
+            if (allNumbersInRow && allNumbersInRow.length > 0) {
+              // バッジの数字を除外して価格を探す
+              const badgeNumbers = badgeElement.textContent.match(/\d+/g) || []
+              const nonBadgeNumbers = allNumbersInRow.filter(num => !badgeNumbers.includes(num))
+              if (nonBadgeNumbers.length > 0) {
+                const longestPriceNumber = nonBadgeNumbers.reduce((a, b) => a.length > b.length ? a : b)
+                priceMatch = [null, longestPriceNumber]
+                console.log(`🔍 行全体から抽出: 最長数字 "${longestPriceNumber}"`)
+              }
             }
           }
           
