@@ -292,6 +292,106 @@
     }
   };
   
+  // LINEユーザー同期機能
+  window.syncLineUsers = function() {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    
+    // ボタンを無効化してローディング表示
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>同期中...';
+    
+    // CSRFトークンを取得
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    
+    console.log('🔄 Starting LINE user sync...');
+    
+    fetch('/admin/users/sync_line_users', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-Token': csrfToken
+      }
+    })
+    .then(response => {
+      console.log('Response status:', response.status);
+      
+      if (!response.ok) {
+        return response.text().then(text => {
+          console.log('Response text:', text);
+          try {
+            const data = JSON.parse(text);
+            throw new Error(data.error || 'LINEユーザー同期に失敗しました');
+          } catch (parseError) {
+            throw new Error(`サーバーエラーが発生しました。ステータス: ${response.status}`);
+          }
+        });
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('✅ LINE user sync completed:', data);
+      
+      // 成功メッセージを表示
+      const alertDiv = document.createElement('div');
+      alertDiv.className = 'alert alert-success alert-dismissible fade show';
+      alertDiv.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>
+        LINEユーザーの同期が完了しました！<br>
+        <small class="text-muted">
+          新規ユーザー: ${data.new_users || 0}人 | 
+          更新ユーザー: ${data.updated_users || 0}人 | 
+          エラー: ${data.errors || 0}件
+        </small>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      
+      // メッセージを表示する場所を安全に取得
+      const container = document.querySelector('.container-lg');
+      
+      if (container) {
+        // コンテナの最初に追加
+        container.insertBefore(alertDiv, container.firstChild);
+      } else {
+        // フォールバック: bodyの最初に追加
+        document.body.insertBefore(alertDiv, document.body.firstChild);
+      }
+      
+      // ページをリロード（新しいユーザーを表示するため）
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    })
+    .catch(error => {
+      console.error('❌ Error syncing LINE users:', error);
+      
+      // エラーメッセージを表示
+      const alertDiv = document.createElement('div');
+      alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+      alertDiv.innerHTML = `
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        LINEユーザー同期エラー: ${error.message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      
+      // メッセージを表示する場所を安全に取得
+      const container = document.querySelector('.container-lg');
+      
+      if (container) {
+        // コンテナの最初に追加
+        container.insertBefore(alertDiv, container.firstChild);
+      } else {
+        // フォールバック: bodyの最初に追加
+        document.body.insertBefore(alertDiv, document.body.firstChild);
+      }
+      
+      // ボタンを元に戻す
+      button.disabled = false;
+      button.innerHTML = originalText;
+    });
+  };
+  
   // 初期化関数
   function init() {
     console.log('🔍 Initializing User Management...');
