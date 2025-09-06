@@ -389,7 +389,7 @@ export default class extends Controller {
             <strong>${ticket.ticket_template.name}</strong>
             <br>
             <small class="text-muted">
-              <i class="fas fa-yen-sign me-1"></i>${Math.floor(ticket.ticket_template.price / ticket.ticket_template.total_count).toLocaleString()}
+              ¥${Math.floor(ticket.ticket_template.price / ticket.ticket_template.total_count).toLocaleString()}
             </small>
           </div>
         </td>
@@ -1170,12 +1170,17 @@ export default class extends Controller {
           // 複数の価格形式に対応
           let priceMatch = null
           
-          // 1. 通常の¥記号付き価格
+          // 1. 通常の¥記号付き価格（優先）
           priceMatch = priceText.match(/¥([\d,]+)/)
           
           // 2. カンマ付き数字のみ
           if (!priceMatch) {
             priceMatch = priceText.match(/([\d,]+)/)
+          }
+          
+          // 2.5. ¥記号付き価格（HTMLから）
+          if (!priceMatch) {
+            priceMatch = priceHTML.match(/¥([\d,]+)/)
           }
           
           // 3. 数字のみ
@@ -1219,6 +1224,8 @@ export default class extends Controller {
                 isNaN: isNaN(parseInt(priceMatch[1].replace(/,/g, '')))
               })
             }
+          } else if (priceMatch) {
+            console.log(`⚠️ チケット${index + 1}: 価格は抽出されたが残り回数が0: 価格="${priceMatch[1]}", 残り回数=${remainingCount}`)
           } else if (!priceMatch) {
             console.log(`⚠️ チケット${index + 1}: 価格が見つかりません: "${priceText}"`)
             console.log(`⚠️ チケット${index + 1}: 価格要素の詳細:`, {
