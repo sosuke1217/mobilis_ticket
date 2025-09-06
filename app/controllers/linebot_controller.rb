@@ -2395,6 +2395,15 @@ class LinebotController < ApplicationController
                 align: "center",
                 wrap: true,
                 margin: "md"
+              },
+              {
+                type: "text",
+                text: "No ticket usage history found.",
+                size: "xs",
+                color: "#999999",
+                align: "center",
+                wrap: true,
+                margin: "xs"
               }
             ],
             paddingAll: "20px"
