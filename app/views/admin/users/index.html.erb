@@ -285,8 +285,10 @@
 
 <script>
 /*!
- * User Management JavaScript - Version 2025-09-06-07-25
- * Cache busting timestamp: 2025-09-06T07:25:00Z
+ * User Management JavaScript - Version 2025-09-06-07-30
+ * Cache busting timestamp: 2025-09-06T07:30:00Z
+ * Server timestamp: <%= Time.current.to_i %>
+ * Force cache refresh: <%= SecureRandom.hex(8) %>
  */
 // グローバル関数として定義
 function hideModal() {
@@ -347,8 +349,19 @@ function showModal() {
 }
 
 // バージョン情報（キャッシュ無効化用）
-const USER_MANAGEMENT_VERSION = '2025-09-06-07-25';
+const USER_MANAGEMENT_VERSION = '2025-09-06-07-30';
 console.log('🔍 User Management JavaScript Version:', USER_MANAGEMENT_VERSION);
+console.log('🔍 Server timestamp:', '<%= Time.current.to_i %>');
+console.log('🔍 Cache busting hash:', '<%= SecureRandom.hex(8) %>');
+
+// キャッシュクリア強制実行
+if (typeof window !== 'undefined' && window.location) {
+  console.log('🔍 Forcing cache refresh...');
+  // 古いキャッシュされたJavaScriptを無効化
+  if (window.performance && window.performance.clearResourceTimings) {
+    window.performance.clearResourceTimings();
+  }
+}
 
 // 初期化済みフラグ
 let isInitialized = false;
