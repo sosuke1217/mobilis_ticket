@@ -2168,9 +2168,15 @@ class LinebotController < ApplicationController
                   },
                   {
                     type: "text",
+                    text: "　",
+                    size: "sm",
+                    flex: 0
+                  },
+                  {
+                    type: "text",
                     text: "#{t.remaining_count}回",
                     weight: "bold",
-                    size: "lg",
+                    size: "sm",
                     color: low_remaining ? "#FFA500" : "#1976d2",
                     flex: 0,
                     align: "end"
@@ -2191,8 +2197,14 @@ class LinebotController < ApplicationController
                   },
                   {
                     type: "text",
+                    text: "　",
+                    size: "sm",
+                    flex: 0
+                  },
+                  {
+                    type: "text",
                     text: t.expiry_date.strftime('%m/%d'),
-                    size: "md",
+                    size: "sm",
                     color: expiry_soon ? "#FF5555" : "#888888",
                     flex: 0,
                     align: "end"
