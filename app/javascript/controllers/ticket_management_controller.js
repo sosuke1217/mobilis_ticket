@@ -1,5 +1,6 @@
 // チケット管理ページ専用のJavaScriptコントローラー
 // 重複実行を完全に防ぐための強力なメカニズム
+// Version: 2025-09-06-06-20
 
 import { Controller } from "@hotwired/stimulus"
 
@@ -9,7 +10,7 @@ export default class extends Controller {
   // コントローラーが接続されたときの処理
   connect() {
     try {
-      console.log('🔌 チケット管理コントローラーが接続されました')
+      console.log('🔌 チケット管理コントローラーが接続されました - Version: 2025-09-06-06-20')
       
       // 初期化処理を実行
       this.initialize()
@@ -1225,6 +1226,9 @@ export default class extends Controller {
           if (priceElement.hasAttribute('data-unit-price')) {
             unitPrice = parseInt(priceElement.getAttribute('data-unit-price'))
             console.log(`🔍 data属性から取得: ${unitPrice}`)
+            console.log(`🔍 data属性の値: "${priceElement.getAttribute('data-unit-price')}"`)
+          } else {
+            console.log(`⚠️ data属性が見つかりません: ${priceElement.outerHTML}`)
           }
           
           // 2. data属性がない場合は従来の方法
