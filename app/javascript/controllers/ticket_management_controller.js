@@ -988,8 +988,7 @@ export default class extends Controller {
         throw new Error('CSRFトークンが見つかりません')
       }
       
-      const userId = this.getUserIdFromPage()
-      fetch(`/admin/users/${userId}/tickets/${ticketId}`, {
+      fetch(`/admin/tickets/${ticketId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
