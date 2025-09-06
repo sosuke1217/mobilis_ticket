@@ -649,71 +649,70 @@ function handleTicketFormSubmit(e) {
         submitButton.innerHTML = '<i class="fas fa-plus me-1"></i>発行';
       });
 }
-  
-  // チケット使用ボタンのイベントリスナー
-  document.querySelectorAll('.use-ticket-btn').forEach(button => {
-    button.addEventListener('click', function() {
-      // 重複クリックを防ぐ
-      if (this.disabled) {
-        console.log('🚫 Button already clicked, ignoring');
-        return;
+
+// チケット使用ボタンのイベントリスナー
+document.querySelectorAll('.use-ticket-btn').forEach(button => {
+  button.addEventListener('click', function() {
+    // 重複クリックを防ぐ
+    if (this.disabled) {
+      console.log('🚫 Button already clicked, ignoring');
+      return;
+    }
+    
+    const ticketId = this.dataset.ticketId;
+    const ticketName = this.dataset.ticketName;
+    
+    if (!confirm(`「${ticketName}」を使用しますか？`)) {
+      return;
+    }
+    
+    // ボタンを無効化
+    this.disabled = true;
+    const originalHTML = this.innerHTML;
+    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    
+    // チケット使用のAJAXリクエスト
+    fetch(`/admin/tickets/${ticketId}/use`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+      }
+    })
+    .then(response => {
+      console.log('📡 Use response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      const ticketId = this.dataset.ticketId;
-      const ticketName = this.dataset.ticketName;
+      return response.json();
+    })
+    .then(data => {
+      console.log('📦 Use response data:', data);
       
-      if (!confirm(`「${ticketName}」を使用しますか？`)) {
-        return;
-      }
-      
-      // ボタンを無効化
-      this.disabled = true;
-      const originalHTML = this.innerHTML;
-      this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-      
-      // チケット使用のAJAXリクエスト
-      fetch(`/admin/tickets/${ticketId}/use`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
-        }
-      })
-      .then(response => {
-        console.log('📡 Use response status:', response.status);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        return response.json();
-      })
-      .then(data => {
-        console.log('📦 Use response data:', data);
-        
-        if (data.success) {
-          console.log('✅ Ticket used successfully');
-          // 統計を更新
-          updateStatistics();
-        } else {
-          console.error('❌ Failed to use ticket:', data.error);
-          alert('チケットの使用に失敗しました: ' + (data.error || '不明なエラー'));
-          // エラー時はボタンを元に戻す
-          this.disabled = false;
-          this.innerHTML = originalHTML;
-        }
-      })
-      .catch(error => {
-        console.error('❌ Error using ticket:', error);
-        console.error('❌ Use error details:', {
-          message: error.message,
-          stack: error.stack
-        });
-        alert('チケットの使用中にエラーが発生しました: ' + error.message);
+      if (data.success) {
+        console.log('✅ Ticket used successfully');
+        // 統計を更新
+        updateStatistics();
+      } else {
+        console.error('❌ Failed to use ticket:', data.error);
+        alert('チケットの使用に失敗しました: ' + (data.error || '不明なエラー'));
         // エラー時はボタンを元に戻す
         this.disabled = false;
         this.innerHTML = originalHTML;
+      }
+    })
+    .catch(error => {
+      console.error('❌ Error using ticket:', error);
+      console.error('❌ Use error details:', {
+        message: error.message,
+        stack: error.stack
       });
+      alert('チケットの使用中にエラーが発生しました: ' + error.message);
+      // エラー時はボタンを元に戻す
+      this.disabled = false;
+      this.innerHTML = originalHTML;
     });
   });
 });
