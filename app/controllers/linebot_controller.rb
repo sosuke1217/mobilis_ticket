@@ -2139,16 +2139,16 @@ class LinebotController < ApplicationController
                 type: "text",
                 text: t.title.present? ? t.title : "チケット",
                 weight: "bold",
-                size: "md",
+            size: "md",
                 wrap: true,
                 align: "center"
               },
-              {
-                type: "text",
+          {
+            type: "text",
                 text: t.ticket_template.present? ? t.ticket_template.name : "コース未設定",
-                size: "sm",
+            size: "sm",
                 color: "#666666",
-                margin: "sm",
+            margin: "sm",
                 align: "center"
               },
               {
@@ -2182,7 +2182,7 @@ class LinebotController < ApplicationController
                   },
                   {
                     type: "text",
-                    text: "　　　　",
+                    text: "　　　",
                     size: "sm",
                     flex: 0
                   },
@@ -2203,8 +2203,8 @@ class LinebotController < ApplicationController
                 layout: "horizontal",
                 contents: [
                   {
-                    type: "box",
-                    layout: "vertical",
+            type: "box",
+            layout: "vertical",
                     contents: [
                       {
                         type: "text",
