@@ -3011,7 +3011,7 @@ class LinebotController < ApplicationController
             },
             {
               type: "text",
-              text: "📍 #{reservation.location || '場所未定'}",
+              text: "📍 #{reservation.course || 'コース未設定'}",
               size: "sm",
               color: "#666666",
               margin: "sm"
