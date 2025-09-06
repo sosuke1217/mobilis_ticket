@@ -1193,6 +1193,17 @@ export default class extends Controller {
             priceMatch = priceText.match(/(\d{1,3}(?:,\d{3})*)/)
           }
           
+          // 6. さらに柔軟な抽出：HTML内の数字を探す
+          if (!priceMatch) {
+            const allNumbers = priceHTML.match(/\d+/g)
+            if (allNumbers && allNumbers.length > 0) {
+              // 最も長い数字を選択（価格の可能性が高い）
+              const longestNumber = allNumbers.reduce((a, b) => a.length > b.length ? a : b)
+              priceMatch = [null, longestNumber]
+              console.log(`🔍 代替抽出: 最長数字 "${longestNumber}"`)
+            }
+          }
+          
           if (priceMatch && remainingCount > 0) {
             const unitPrice = parseInt(priceMatch[1].replace(/,/g, ''))
             if (!isNaN(unitPrice)) {
@@ -1201,6 +1212,12 @@ export default class extends Controller {
               console.log(`💰 チケット${index + 1}: 抽出価格="${priceMatch[1]}", 単価=${unitPrice}, 残り回数=${remainingCount}, 価値=${ticketValue}, 累計価格=${totalPrice}`)
             } else {
               console.log(`⚠️ チケット${index + 1}: 価格が数値ではありません: ${priceMatch[1]}`)
+              console.log(`⚠️ チケット${index + 1}: 価格変換詳細:`, {
+                originalMatch: priceMatch[1],
+                afterReplace: priceMatch[1].replace(/,/g, ''),
+                parseIntResult: parseInt(priceMatch[1].replace(/,/g, '')),
+                isNaN: isNaN(parseInt(priceMatch[1].replace(/,/g, '')))
+              })
             }
           } else if (!priceMatch) {
             console.log(`⚠️ チケット${index + 1}: 価格が見つかりません: "${priceText}"`)
