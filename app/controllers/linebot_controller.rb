@@ -327,6 +327,15 @@ class LinebotController < ApplicationController
       Rails.logger.info "📅 User has #{user.reservations.where('start_time > ?', Time.current).count} upcoming reservations"
       send_reservation_check(user, reply_token)
 
+    when "cancel_reservation_menu"
+      Rails.logger.info "❌ Showing cancel reservation menu"
+      send_cancel_reservation_menu(user, reply_token)
+
+    when /^cancel_reservation_(\d+)$/
+      reservation_id = $1.to_i
+      Rails.logger.info "❌ Cancelling reservation ID: #{reservation_id} for user: #{user.id}"
+      cancel_reservation(user, reservation_id, reply_token)
+
     when "reviews"
       Rails.logger.info "⭐ Showing reviews menu"
       send_reviews_menu(reply_token)
@@ -3063,6 +3072,17 @@ class LinebotController < ApplicationController
                 },
                 style: "primary",
                 color: "#FF6B35"
+              },
+              {
+                type: "button",
+                action: {
+                  type: "postback",
+                  label: "予約をキャンセル",
+                  data: "cancel_reservation_menu"
+                },
+                style: "secondary",
+                color: "#6C757D",
+                margin: "sm"
               }
             ],
             paddingAll: "20px"
@@ -3074,5 +3094,240 @@ class LinebotController < ApplicationController
     Rails.logger.info "🔍 Sending reservation check message to user: #{user.id}"
     send_reply(reply_token, message)
     Rails.logger.info "✅ Reservation check message sent successfully"
+  end
+
+  # 🆕 予約キャンセルメニュー送信
+  def send_cancel_reservation_menu(user, reply_token)
+    # ユーザーの今後の予約を取得
+    upcoming_reservations = user.reservations
+                               .where('start_time > ?', Time.current)
+                               .where(status: ['confirmed', 'tentative'])
+                               .order(:start_time)
+                               .limit(5)
+
+    if upcoming_reservations.empty?
+      message = {
+        type: "flex",
+        altText: "予約キャンセル",
+        contents: {
+          type: "bubble",
+          header: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "text",
+                text: "❌ 予約キャンセル",
+                weight: "bold",
+                size: "xl",
+                color: "#DC3545"
+              }
+            ],
+            paddingAll: "20px"
+          },
+          body: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "text",
+                text: "キャンセルできる予約がありません。",
+                size: "md",
+                color: "#666666",
+                wrap: true
+              }
+            ],
+            paddingAll: "20px"
+          },
+          footer: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "button",
+                action: {
+                  type: "postback",
+                  label: "予約確認に戻る",
+                  data: "check_reservations"
+                },
+                style: "secondary",
+                color: "#6C757D"
+              }
+            ],
+            paddingAll: "20px"
+          }
+        }
+      }
+    else
+      # キャンセル可能な予約がある場合
+      reservation_buttons = upcoming_reservations.map do |reservation|
+        {
+          type: "button",
+          action: {
+            type: "postback",
+            label: "#{reservation.start_time.strftime('%m/%d %H:%M')} #{reservation.course}",
+            data: "cancel_reservation_#{reservation.id}"
+          },
+          style: "secondary",
+          color: "#6C757D",
+          margin: "sm"
+        }
+      end
+
+      message = {
+        type: "flex",
+        altText: "予約キャンセル",
+        contents: {
+          type: "bubble",
+          header: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "text",
+                text: "❌ 予約キャンセル",
+                weight: "bold",
+                size: "xl",
+                color: "#DC3545"
+              },
+              {
+                type: "text",
+                text: "キャンセルしたい予約を選択してください",
+                size: "sm",
+                color: "#666666"
+              }
+            ],
+            paddingAll: "20px"
+          },
+          body: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "text",
+                text: "⚠️ キャンセルした予約は復元できません。",
+                size: "sm",
+                color: "#DC3545",
+                margin: "md"
+              }
+            ],
+            paddingAll: "20px"
+          },
+          footer: {
+            type: "box",
+            layout: "vertical",
+            contents: reservation_buttons + [
+              {
+                type: "button",
+                action: {
+                  type: "postback",
+                  label: "予約確認に戻る",
+                  data: "check_reservations"
+                },
+                style: "primary",
+                color: "#FF6B35",
+                margin: "md"
+              }
+            ],
+            paddingAll: "20px"
+          }
+        }
+      }
+    end
+
+    send_reply(reply_token, message)
+  end
+
+  # 🆕 予約キャンセル処理
+  def cancel_reservation(user, reservation_id, reply_token)
+    reservation = user.reservations.find_by(id: reservation_id)
+    
+    unless reservation
+      send_reply(reply_token, {
+        type: "text",
+        text: "❌ 予約が見つかりませんでした。"
+      })
+      return
+    end
+
+    unless ['confirmed', 'tentative'].include?(reservation.status)
+      send_reply(reply_token, {
+        type: "text",
+        text: "❌ この予約はキャンセルできません。（ステータス: #{reservation.status}）"
+      })
+      return
+    end
+
+    # 予約をキャンセル
+    reservation.update!(
+      status: 'cancelled',
+      cancelled_at: Time.current,
+      cancellation_reason: 'ユーザーによるキャンセル'
+    )
+
+    Rails.logger.info "✅ Reservation #{reservation_id} cancelled successfully"
+
+    # キャンセル完了メッセージ
+    message = {
+      type: "flex",
+      altText: "予約キャンセル完了",
+      contents: {
+        type: "bubble",
+        header: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "✅ 予約キャンセル完了",
+              weight: "bold",
+              size: "xl",
+              color: "#28A745"
+            }
+          ],
+          paddingAll: "20px"
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "#{reservation.start_time.strftime('%m月%d日 %H:%M')}の予約をキャンセルしました。",
+              size: "md",
+              color: "#666666",
+              wrap: true
+            },
+            {
+              type: "text",
+              text: "ご利用ありがとうございました。",
+              size: "sm",
+              color: "#999999",
+              margin: "md"
+            }
+          ],
+          paddingAll: "20px"
+        },
+        footer: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "button",
+              action: {
+                type: "postback",
+                label: "予約確認に戻る",
+                data: "check_reservations"
+              },
+              style: "primary",
+              color: "#FF6B35"
+            }
+          ],
+          paddingAll: "20px"
+        }
+      }
+    }
+
+    send_reply(reply_token, message)
   end
 end
