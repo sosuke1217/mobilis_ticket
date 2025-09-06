@@ -438,15 +438,12 @@
                           price = ticket.ticket_template.price
                           # テンプレートのtotal_countがない場合は、チケットのtotal_countを使用
                           total_count = ticket.ticket_template.total_count || ticket.total_count
-                          puts "DEBUG: ticket_id=#{ticket.id}, template_name=#{ticket.ticket_template.name}, price=#{price}, template_total_count=#{ticket.ticket_template.total_count}, ticket_total_count=#{ticket.total_count}, final_total_count=#{total_count}"
                           if price.present? && total_count.present? && total_count > 0
                             (price / total_count).to_i
                           else
-                            puts "DEBUG: Invalid values - price=#{price}, total_count=#{total_count}"
                             0
                           end
                         else
-                          puts "DEBUG: No ticket_template for ticket_id=#{ticket.id}"
                           0
                         end
                       %>">
@@ -894,124 +891,4 @@ window.forceCloseModal = function() {
 // バージョン情報
 console.log('🎫 チケット管理ページ JavaScript 読み込み完了 - Version: <%= Time.current.to_i %>');
 
-// 直接的な価格計算関数を追加
-window.updateTicketCountsDirect = function() {
-  console.log('🔄 直接的な価格計算を開始します');
-  
-  const tbody = document.querySelector('tbody');
-  if (!tbody) {
-    console.error('❌ tbodyが見つかりません');
-    return;
-  }
-  
-  const rows = Array.from(tbody.children);
-  console.log('🔍 現在のtbody状態:', { totalRows: rows.length });
-  
-  // 空の行（"保有チケットがありません"）を除外
-  const ticketRows = rows.filter(row => !row.querySelector('td[colspan]'));
-  console.log('🎫 チケット行数:', ticketRows.length);
-  
-  let remainingTickets = 0;
-  let totalRemainingCount = 0;
-  let totalPrice = 0;
-  
-  ticketRows.forEach((row, index) => {
-    const badgeElement = row.querySelector('.badge');
-    const priceElement = row.querySelector('small[data-unit-price]');
-    
-    console.log(`=== チケット行${index + 1}の詳細分析 ===`);
-    console.log('行のHTML:', row.outerHTML.substring(0, 200) + '...');
-    console.log('バッジ要素:', badgeElement?.textContent);
-    console.log('価格要素:', priceElement?.outerHTML);
-    console.log('data-unit-price属性:', priceElement?.getAttribute('data-unit-price'));
-    
-    if (badgeElement && priceElement) {
-      // 残り回数を取得
-      const badgeText = badgeElement.textContent.trim();
-      console.log('バッジテキスト:', badgeText);
-      
-      const countMatch = badgeText.match(/(\d+)\s*\/\s*(\d+)/);
-      if (countMatch) {
-        const remainingCount = parseInt(countMatch[1]);
-        const totalCount = parseInt(countMatch[2]);
-        
-        console.log('残り回数:', remainingCount, '総回数:', totalCount);
-        
-        if (remainingCount > 0) {
-          remainingTickets++;
-          totalRemainingCount += remainingCount;
-          
-          // 価格を取得
-          const unitPriceStr = priceElement.getAttribute('data-unit-price');
-          const unitPrice = parseInt(unitPriceStr);
-          
-          console.log('価格文字列:', unitPriceStr, '数値:', unitPrice, 'isNaN:', isNaN(unitPrice));
-          
-          if (!isNaN(unitPrice) && unitPrice > 0) {
-            const ticketValue = unitPrice * remainingCount;
-            totalPrice += ticketValue;
-            console.log(`💰 チケット${index + 1}: 単価=${unitPrice}, 残り回数=${remainingCount}, 価値=${ticketValue}, 累計価格=${totalPrice}`);
-          } else {
-            console.log(`⚠️ チケット${index + 1}: 価格が無効です - 文字列:"${unitPriceStr}", 数値:${unitPrice}`);
-          }
-        } else {
-          console.log(`⚠️ チケット${index + 1}: 残り回数が0以下: ${remainingCount}`);
-        }
-      } else {
-        console.log(`⚠️ チケット${index + 1}: バッジから残り回数を抽出できません: "${badgeText}"`);
-      }
-    } else {
-      console.log(`⚠️ チケット${index + 1}: 必要な要素が見つかりません`);
-      console.log('  - バッジ要素:', !!badgeElement);
-      console.log('  - 価格要素:', !!priceElement);
-    }
-  });
-  
-  console.log('💰 最終チケット価格合計:', totalPrice);
-  console.log('📊 残りチケット数:', remainingTickets);
-  console.log('📊 残り回数合計:', totalRemainingCount);
-  
-  // 表示を更新
-  const ticketCountElement = document.querySelector('#remainingTicketCount');
-  const totalPriceElement = document.querySelector('#remainingTicketValue');
-  
-  console.log('表示要素の確認:');
-  console.log('  - 残り回数要素:', !!ticketCountElement);
-  console.log('  - 価値合計要素:', !!totalPriceElement);
-  
-  if (ticketCountElement) {
-    ticketCountElement.textContent = totalRemainingCount;
-    console.log('✅ 残り回数合計表示を更新しました:', totalRemainingCount);
-  } else {
-    console.error('❌ 残り回数合計要素が見つかりません');
-  }
-  
-  if (totalPriceElement) {
-    totalPriceElement.textContent = `¥${totalPrice.toLocaleString()}`;
-    console.log('✅ 残り回数価値合計表示を更新しました:', totalPrice);
-  } else {
-    console.error('❌ 残り回数価値合計要素が見つかりません');
-  }
-};
-
-// ページ読み込み時に実行
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('🎫 直接的な価格計算を初期実行します');
-  setTimeout(window.updateTicketCountsDirect, 100);
-  
-  // 手動で価格計算を実行するボタンを追加
-  const manualUpdateButton = document.createElement('button');
-  manualUpdateButton.textContent = '価格計算を手動実行';
-  manualUpdateButton.className = 'btn btn-warning btn-sm mt-2';
-  manualUpdateButton.style.position = 'fixed';
-  manualUpdateButton.style.top = '10px';
-  manualUpdateButton.style.right = '10px';
-  manualUpdateButton.style.zIndex = '9999';
-  manualUpdateButton.onclick = function() {
-    console.log('🔄 手動で価格計算を実行します');
-    window.updateTicketCountsDirect();
-  };
-  
-  document.body.appendChild(manualUpdateButton);
-});
 </script>
