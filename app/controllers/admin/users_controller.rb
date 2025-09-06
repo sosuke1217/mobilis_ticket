@@ -172,7 +172,7 @@ class Admin::UsersController < ApplicationController
           ticket_usages = TicketUsage.where(user: @user)
             .includes(:ticket)
             .order(created_at: :desc)
-            .limit(20)
+            .limit(10)
           
           Rails.logger.info "🎫 Found #{ticket_usages.count} ticket usages"
           
