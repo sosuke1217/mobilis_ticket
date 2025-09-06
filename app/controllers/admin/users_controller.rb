@@ -569,6 +569,15 @@ class Admin::UsersController < ApplicationController
     end
   end
 
+  # ユーザー統計データAPI
+  def statistics
+    # ユーザーの統計データをJSONで返す
+    render json: {
+      active_ticket_count: @user.active_ticket_count,
+      remaining_ticket_value: @user.remaining_ticket_value
+    }
+  end
+
   private
 
   def set_user
@@ -579,14 +588,6 @@ class Admin::UsersController < ApplicationController
     params.require(:user).permit(
       :name, :kana, :phone_number, :email, :birth_date, :postal_code, :address, :admin_memo
     )
-  end
-
-  def statistics
-    # ユーザーの統計データをJSONで返す
-    render json: {
-      active_ticket_count: @user.active_ticket_count,
-      remaining_ticket_value: @user.remaining_ticket_value
-    }
   end
 
   def get_ticket_status(ticket)
