@@ -3086,7 +3086,7 @@ class LinebotController < ApplicationController
                   data: "cancel_reservation_menu"
                 },
                 style: "secondary",
-                color: "#6C757D",
+                color: "#FF6B35",
                 margin: "sm"
               }
             ],
@@ -3174,7 +3174,7 @@ class LinebotController < ApplicationController
             data: "cancel_reservation_#{reservation.id}"
           },
           style: "secondary",
-          color: "#6C757D",
+          color: "#DC3545",
           margin: "sm"
         }
       end
