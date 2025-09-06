@@ -735,9 +735,9 @@ function showDeleteTicketModal(ticketId, ticketName) {
   console.log('✅ Delete ticket modal shown');
 }
 
-// グローバル関数として定義
+// グローバル関数として定義（Stimulusコントローラーと連携）
 function hideDeleteTicketModal() {
-  console.log('🔍 Hiding delete ticket modal manually');
+  console.log('🔍 Hiding delete ticket modal via global function');
   
   const modalElement = document.getElementById('deleteTicketModal');
   if (!modalElement) {
@@ -745,7 +745,7 @@ function hideDeleteTicketModal() {
     return;
   }
   
-  // 強制的にStimulusコントローラーの状態をリセット
+  // Stimulusコントローラーが存在する場合は、そのメソッドを呼ぶ
   const controller = document.querySelector('[data-controller*="ticket-management"]');
   if (controller) {
     try {
@@ -753,22 +753,24 @@ function hideDeleteTicketModal() {
       const stimulusApp = window.Stimulus || window.Application;
       if (stimulusApp) {
         const controllerInstance = stimulusApp.getControllerForElementAndIdentifier(controller, 'ticket-management');
-        if (controllerInstance) {
-          controllerInstance.isProcessing = false;
-          console.log('✅ Stimulus controller isProcessing reset via Stimulus API');
+        if (controllerInstance && controllerInstance.hideDeleteTicketModal) {
+          console.log('✅ Calling Stimulus controller hideDeleteTicketModal method');
+          controllerInstance.hideDeleteTicketModal();
+          return; // Stimulusコントローラーのメソッドが実行されたので終了
         }
       }
       
       // 直接プロパティアクセスも試す
+      if (controller.stimulusController && controller.stimulusController.hideDeleteTicketModal) {
+        console.log('✅ Calling Stimulus controller hideDeleteTicketModal method via direct access');
+        controller.stimulusController.hideDeleteTicketModal();
+        return; // Stimulusコントローラーのメソッドが実行されたので終了
+      }
+      
+      // フォールバック: 直接isProcessingをリセット
       if (controller.stimulusController) {
         controller.stimulusController.isProcessing = false;
         console.log('✅ Stimulus controller isProcessing reset via direct access');
-      }
-      
-      // クリーンアップメソッドも呼ぶ
-      if (controller.stimulusController && controller.stimulusController.cleanupModalBackground) {
-        controller.stimulusController.cleanupModalBackground();
-        console.log('✅ Stimulus controller cleanup called');
       }
     } catch (error) {
       console.log('⚠️ Stimulus controller manipulation failed:', error);
@@ -902,6 +904,35 @@ document.addEventListener('DOMContentLoaded', function() {
 window.forceCloseModal = function() {
   console.log('🚨 Emergency modal close function called');
   
+  // Stimulusコントローラーが存在する場合は、そのメソッドを呼ぶ
+  const controller = document.querySelector('[data-controller*="ticket-management"]');
+  if (controller) {
+    try {
+      // Stimulusコントローラーのインスタンスを取得
+      const stimulusApp = window.Stimulus || window.Application;
+      if (stimulusApp) {
+        const controllerInstance = stimulusApp.getControllerForElementAndIdentifier(controller, 'ticket-management');
+        if (controllerInstance && controllerInstance.hideDeleteTicketModal) {
+          console.log('🚨 Calling Stimulus controller hideDeleteTicketModal method');
+          controllerInstance.hideDeleteTicketModal();
+          return;
+        }
+      }
+      
+      // 直接プロパティアクセスも試す
+      if (controller.stimulusController && controller.stimulusController.hideDeleteTicketModal) {
+        console.log('🚨 Calling Stimulus controller hideDeleteTicketModal method via direct access');
+        controller.stimulusController.hideDeleteTicketModal();
+        return;
+      }
+    } catch (error) {
+      console.log('⚠️ Stimulus controller emergency call failed:', error);
+    }
+  }
+  
+  // フォールバック: 手動でモーダルを閉じる
+  console.log('🚨 Using fallback manual modal close');
+  
   // すべてのモーダルを強制的に閉じる
   document.querySelectorAll('.modal').forEach(modal => {
     modal.style.display = 'none';
@@ -918,7 +949,6 @@ window.forceCloseModal = function() {
   document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
   
   // Stimulusコントローラーの状態もリセット
-  const controller = document.querySelector('[data-controller*="ticket-management"]');
   if (controller && controller.stimulusController) {
     controller.stimulusController.isProcessing = false;
   }

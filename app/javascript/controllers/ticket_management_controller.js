@@ -955,7 +955,7 @@ export default class extends Controller {
           e.stopPropagation()
           console.log('🔍 削除実行ボタンがクリックされました')
           this.deleteTicket(ticketId)
-          hideDeleteTicketModal()
+          this.hideDeleteTicketModal()
         }
       }
       
@@ -988,7 +988,8 @@ export default class extends Controller {
         throw new Error('CSRFトークンが見つかりません')
       }
       
-      fetch(`/admin/tickets/${ticketId}`, {
+      const userId = this.getUserIdFromPage()
+      fetch(`/admin/users/${userId}/tickets/${ticketId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -1261,6 +1262,86 @@ export default class extends Controller {
     } catch (error) {
       console.error('❌ 背景クリーンアップ中にエラーが発生しました:', error)
     }
+  }
+  
+  // 削除モーダルを閉じる
+  hideDeleteTicketModal() {
+    console.log('🔍 Hiding delete ticket modal from Stimulus controller')
+    
+    const modalElement = document.getElementById('deleteTicketModal')
+    if (!modalElement) {
+      console.error('❌ Delete ticket modal not found')
+      return
+    }
+    
+    // isProcessingフラグをリセット
+    this.isProcessing = false
+    console.log('✅ isProcessing flag reset to false')
+    
+    // 複数の方法でモーダルを閉じる
+    try {
+      // 方法1: BootstrapのモーダルAPIを使用
+      const modal = bootstrap.Modal.getInstance(modalElement)
+      if (modal) {
+        modal.hide()
+        console.log('✅ Modal hidden via Bootstrap API')
+      } else {
+        // 方法2: 新しいBootstrapモーダルインスタンスを作成
+        const newModal = new bootstrap.Modal(modalElement)
+        newModal.hide()
+        console.log('✅ Modal hidden via new Bootstrap instance')
+      }
+    } catch (error) {
+      console.log('⚠️ Bootstrap API failed, using manual method:', error)
+    }
+    
+    // 方法3: 確実に手動で非表示（フォールバック）
+    setTimeout(() => {
+      // モーダル要素を完全にリセット
+      modalElement.style.display = 'none'
+      modalElement.style.position = ''
+      modalElement.style.top = ''
+      modalElement.style.left = ''
+      modalElement.style.width = ''
+      modalElement.style.height = ''
+      modalElement.style.zIndex = ''
+      modalElement.style.backgroundColor = ''
+      modalElement.classList.remove('show')
+      modalElement.setAttribute('aria-hidden', 'true')
+      modalElement.setAttribute('aria-modal', 'false')
+      
+      // bodyの状態を完全にリセット
+      document.body.classList.remove('modal-open')
+      document.body.style.overflow = ''
+      document.body.style.paddingRight = ''
+      document.body.style.position = ''
+      
+      // すべての背景要素を削除
+      const backdrops = document.querySelectorAll('.modal-backdrop')
+      backdrops.forEach(backdrop => backdrop.remove())
+      
+      // 追加のクリーンアップ: すべてのモーダル関連クラスを削除
+      document.querySelectorAll('.modal').forEach(modal => {
+        modal.classList.remove('show')
+        modal.style.display = 'none'
+      })
+      
+      // 背景クリーンアップも実行
+      this.cleanupModalBackground()
+      
+      console.log('✅ Delete ticket modal hidden manually (fallback)')
+      
+      // 最終確認: 1秒後にモーダルがまだ表示されている場合は強制削除
+      setTimeout(() => {
+        if (modalElement.style.display !== 'none' || modalElement.offsetParent !== null) {
+          console.log('🚨 Modal still visible, forcing removal')
+          modalElement.remove()
+          document.body.classList.remove('modal-open')
+          document.body.style.overflow = ''
+          console.log('🚨 Modal forcibly removed')
+        }
+      }, 1000)
+    }, 100)
   }
   
   // クリーンアップ処理
