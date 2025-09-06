@@ -15,11 +15,11 @@
           </button>
           <button type="button" class="btn btn-success" id="addUserBtn">
             <i class="fas fa-user-plus me-1"></i>新規追加
-          </button>
+        </button>
         </div>
       </div>
+      </div>
     </div>
-  </div>
 
   <!-- 検索・フィルターセクション -->
   <div class="card mb-4">
@@ -107,7 +107,7 @@
                   <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
                       <div class="fw-semibold">
-                        <% if user.display_name_or_name.present? %>
+                      <% if user.display_name_or_name.present? %>
                           <%= link_to user.display_name_or_name, admin_user_path(user), class: "text-decoration-none" %>
                         <% else %>
                           <span class="text-muted fst-italic">未登録</span>
@@ -178,7 +178,7 @@
       </div>
     </div>
     <div class="card-footer bg-light">
-      <%= paginate @users %>
+        <%= paginate @users %>
     </div>
   </div>
 </div>
@@ -201,9 +201,9 @@
             <h6 class="text-primary fw-bold mb-3">
               <i class="fas fa-user me-2"></i>基本情報
             </h6>
-            <div class="row">
-              <div class="col-md-6">
-                <div class="mb-3">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
                   <%= form.label :name, "お名前", class: "form-label fw-semibold text-dark" %>
                   <div class="input-group">
                     <span class="input-group-text bg-light">
@@ -215,9 +215,9 @@
                     お名前を入力してください。
                   </div>
                 </div>
-              </div>
-              <div class="col-md-6">
-                <div class="mb-3">
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
                   <%= form.label :display_name, "表示名", class: "form-label fw-semibold text-dark" %>
                   <div class="input-group">
                     <span class="input-group-text bg-light">
@@ -236,9 +236,9 @@
             <h6 class="text-primary fw-bold mb-3">
               <i class="fas fa-address-book me-2"></i>連絡先情報
             </h6>
-            <div class="row">
-              <div class="col-md-6">
-                <div class="mb-3">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
                   <%= form.label :phone_number, "電話番号", class: "form-label fw-semibold text-dark" %>
                   <div class="input-group">
                     <span class="input-group-text bg-light">
@@ -247,9 +247,9 @@
                     <%= form.telephone_field :phone_number, class: "form-control", id: "userPhone", placeholder: "例: 090-1234-5678" %>
                   </div>
                 </div>
-              </div>
-              <div class="col-md-6">
-                <div class="mb-3">
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
                   <%= form.label :email, "メールアドレス", class: "form-label fw-semibold text-dark" %>
                   <div class="input-group">
                     <span class="input-group-text bg-light">
@@ -267,9 +267,9 @@
             <h6 class="text-primary fw-bold mb-3">
               <i class="fas fa-map-marker-alt me-2"></i>住所情報
             </h6>
-            <div class="row">
-              <div class="col-md-4">
-                <div class="mb-3">
+          <div class="row">
+            <div class="col-md-4">
+              <div class="mb-3">
                   <%= form.label :postal_code, "郵便番号", class: "form-label fw-semibold text-dark" %>
                   <div class="input-group">
                     <span class="input-group-text bg-light">
@@ -278,9 +278,9 @@
                     <%= form.text_field :postal_code, class: "form-control", id: "userPostalCode", placeholder: "例: 123-4567" %>
                   </div>
                 </div>
-              </div>
-              <div class="col-md-8">
-                <div class="mb-3">
+            </div>
+            <div class="col-md-8">
+              <div class="mb-3">
                   <%= form.label :address, "住所", class: "form-label fw-semibold text-dark" %>
                   <div class="input-group">
                     <span class="input-group-text bg-light align-items-start pt-3">
@@ -323,7 +323,7 @@
                 </div>
               </div>
             </div>
-            <div class="mb-3">
+          <div class="mb-3">
               <%= form.label :admin_memo, "管理者メモ", class: "form-label fw-semibold text-dark" %>
               <div class="input-group">
                 <span class="input-group-text bg-light align-items-start pt-3">
@@ -334,22 +334,22 @@
               <small class="form-text text-muted">管理者のみが閲覧できるメモです</small>
             </div>
           </div>
-          
+
           <div class="alert alert-info d-flex align-items-center" role="alert">
             <i class="fas fa-info-circle me-2"></i>
             <div>
               <strong>ご注意:</strong> 入力された情報はユーザー管理で使用されます。正確な情報を入力してください。
             </div>
           </div>
-        </div>
-        <div class="modal-footer bg-light border-0 p-4 d-flex justify-content-end">
+      </div>
+        <div class="modal-footer bg-light border-0 p-4 pe-5 d-flex justify-content-end">
           <button type="button" class="btn btn-outline-secondary btn-lg px-4 me-4" onclick="hideModal()">
             <i class="fas fa-times me-2"></i>キャンセル
           </button>
           <button type="submit" class="btn btn-success btn-lg px-4" id="saveUserBtn">
             <i class="fas fa-save me-2"></i>ユーザーを追加
-          </button>
-        </div>
+        </button>
+      </div>
       <% end %>
     </div>
   </div>
