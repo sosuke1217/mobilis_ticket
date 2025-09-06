@@ -102,41 +102,43 @@
     overflow: hidden;
   }
   
-  /* チケットテーブルに余白を追加 */
-  .ticket-table-container {
-    margin-bottom: 3rem;
+  /* ページ全体の高さ調整 */
+  .container-lg {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
   }
   
-  /* チケットが少ない時の余白調整 */
-  .ticket-table-container .table-responsive {
-    padding-bottom: 2rem;
+  /* メインコンテンツエリア */
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
   }
   
-  /* チケットが1枚の時の特別な余白 */
-  .ticket-table-container.single-ticket {
+  /* チケットが少ない時のページ高さ調整 */
+  .container-lg.single-ticket-page {
+    min-height: 80vh;
+  }
+  
+  .container-lg.few-tickets-page {
+    min-height: 85vh;
+  }
+  
+  /* チケットカードの下に余白を追加 */
+  .ticket-card {
+    margin-bottom: 2rem;
+  }
+  
+  /* チケットが1枚の時の余白調整 */
+  .ticket-card.single-ticket {
     margin-bottom: 4rem;
-  }
-  
-  .ticket-table-container.single-ticket .table-responsive {
-    padding-bottom: 3rem;
   }
   
   /* チケットが2枚以下の時の余白調整 */
-  .ticket-table-container.few-tickets {
-    margin-bottom: 3.5rem;
-  }
-  
-  /* フォールバック: CSS :has() セレクター（対応ブラウザのみ） */
-  .ticket-table-container:has(tbody tr:only-child) {
-    margin-bottom: 4rem;
-  }
-  
-  .ticket-table-container:has(tbody tr:only-child) .table-responsive {
-    padding-bottom: 3rem;
-  }
-  
-  .ticket-table-container:has(tbody tr:nth-child(2):last-child) {
-    margin-bottom: 3.5rem;
+  .ticket-card.few-tickets {
+    margin-bottom: 3rem;
   }
   
   .table thead th {
@@ -227,7 +229,7 @@
   }
 </style>
 
-<div class="container-lg my-4" data-controller="ticket-management">
+<div class="container-lg my-4 main-content" data-controller="ticket-management">
   <!-- ヘッダーセクション -->
   <div class="row mb-4">
     <div class="col-12">
@@ -376,7 +378,7 @@
   </div>
 
   <!-- チケット一覧 -->
-  <div class="card border-0 shadow-sm">
+  <div class="card border-0 shadow-sm ticket-card">
     <div class="card-header bg-gradient-info text-white">
       <h5 class="mb-0">
         <i class="fas fa-list me-2"></i>保有チケット一覧
@@ -785,24 +787,28 @@ document.addEventListener('DOMContentLoaded', function() {
   adjustTableSpacing();
 });
 
-// チケット数に応じてテーブルの余白を調整
+// チケット数に応じてページとカードの余白を調整
 function adjustTableSpacing() {
-  const tableContainer = document.querySelector('.ticket-table-container');
+  const container = document.querySelector('.container-lg');
+  const ticketCard = document.querySelector('.ticket-card');
   const ticketRows = document.querySelectorAll('tbody tr');
   const ticketCount = ticketRows.length;
   
-  if (!tableContainer) return;
+  if (!container || !ticketCard) return;
   
   // 既存のクラスを削除
-  tableContainer.classList.remove('single-ticket', 'few-tickets');
+  container.classList.remove('single-ticket-page', 'few-tickets-page');
+  ticketCard.classList.remove('single-ticket', 'few-tickets');
   
   // チケット数に応じてクラスを追加
   if (ticketCount === 1) {
-    tableContainer.classList.add('single-ticket');
-    console.log('🎫 Single ticket detected - adding extra spacing');
+    container.classList.add('single-ticket-page');
+    ticketCard.classList.add('single-ticket');
+    console.log('🎫 Single ticket detected - adjusting page height and card spacing');
   } else if (ticketCount <= 2) {
-    tableContainer.classList.add('few-tickets');
-    console.log('🎫 Few tickets detected - adding moderate spacing');
+    container.classList.add('few-tickets-page');
+    ticketCard.classList.add('few-tickets');
+    console.log('🎫 Few tickets detected - adjusting page height and card spacing');
   }
 }
 
