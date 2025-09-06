@@ -2991,23 +2991,18 @@ class LinebotController < ApplicationController
           layout: "vertical",
           contents: [
             {
-              type: "box",
-              layout: "horizontal",
-              contents: [
-                {
-                  type: "text",
-                  text: "📅 #{reservation.start_time.strftime('%m/%d %H:%M')}",
-                  weight: "bold",
-                  size: "md",
-                  color: "#FF6B35"
-                },
-                {
-                  type: "text",
-                  text: reservation.status == 'confirmed' ? "✅ 確定" : "⏳ 保留",
-                  size: "sm",
-                  color: reservation.status == 'confirmed' ? "#00C851" : "#FF8800"
-                }
-              ]
+              type: "text",
+              text: "📅 #{reservation.start_time.strftime('%m/%d %H:%M')}",
+              weight: "bold",
+              size: "md",
+              color: "#FF6B35"
+            },
+            {
+              type: "text",
+              text: reservation.status == 'confirmed' ? "✅ 確定" : "⏳ 保留",
+              size: "sm",
+              color: reservation.status == 'confirmed' ? "#00C851" : "#FF8800",
+              margin: "sm"
             },
             {
               type: "text",
@@ -3015,14 +3010,6 @@ class LinebotController < ApplicationController
               size: "sm",
               color: "#666666",
               margin: "sm"
-            },
-            {
-              type: "text",
-              text: "💬 #{reservation.note || '特記事項なし'}",
-              size: "sm",
-              color: "#999999",
-              margin: "sm",
-              wrap: true
             }
           ],
           margin: "md",
