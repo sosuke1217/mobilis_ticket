@@ -3064,33 +3064,34 @@ class LinebotController < ApplicationController
             contents: reservation_items,
             paddingAll: "20px"
           },
-          footer: {
-            type: "box",
-            layout: "vertical",
-            contents: [
-              {
-                type: "button",
-                action: {
-                  type: "postback",
-                  label: "新規予約",
-                  data: "booking"
+            footer: {
+              type: "box",
+              layout: "vertical",
+              contents: [
+                {
+                  type: "button",
+                  action: {
+                    type: "postback",
+                    label: "新規予約",
+                    data: "booking"
+                  },
+                  style: "primary",
+                  color: "#28A745"
                 },
-                style: "primary",
-                color: "#FF6B35"
-              },
-              {
-                type: "button",
-                action: {
-                  type: "postback",
-                  label: "予約をキャンセル",
-                  data: "cancel_reservation_menu"
-                },
-                style: "secondary",
-                margin: "sm"
-              }
-            ],
-            paddingAll: "20px"
-          }
+                {
+                  type: "button",
+                  action: {
+                    type: "postback",
+                    label: "予約をキャンセル",
+                    data: "cancel_reservation_menu"
+                  },
+                  style: "secondary",
+                  color: "#FF6B35",
+                  margin: "sm"
+                }
+              ],
+              paddingAll: "20px"
+            }
         }
       }
     end
