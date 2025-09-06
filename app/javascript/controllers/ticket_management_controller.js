@@ -443,7 +443,12 @@ export default class extends Controller {
       
       // チケット数を更新（DOMの更新を待つ）
       setTimeout(() => {
-        this.updateTicketCounts()
+        // 直接的な価格計算関数を呼び出し
+        if (window.updateTicketCountsDirect) {
+          window.updateTicketCountsDirect()
+        } else {
+          this.updateTicketCounts()
+        }
       }, 100)
       
       // 成功メッセージを表示

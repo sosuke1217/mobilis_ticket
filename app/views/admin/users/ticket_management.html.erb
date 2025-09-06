@@ -870,4 +870,78 @@ window.forceCloseModal = function() {
 
 // バージョン情報
 console.log('🎫 チケット管理ページ JavaScript 読み込み完了 - Version: <%= Time.current.to_i %>');
+
+// 直接的な価格計算関数を追加
+window.updateTicketCountsDirect = function() {
+  console.log('🔄 直接的な価格計算を開始します');
+  
+  const tbody = document.querySelector('tbody');
+  if (!tbody) {
+    console.error('❌ tbodyが見つかりません');
+    return;
+  }
+  
+  const rows = Array.from(tbody.children);
+  console.log('🔍 現在のtbody状態:', { totalRows: rows.length });
+  
+  let remainingTickets = 0;
+  let totalRemainingCount = 0;
+  let totalPrice = 0;
+  
+  rows.forEach((row, index) => {
+    const badgeElement = row.querySelector('.badge');
+    const priceElement = row.querySelector('small[data-unit-price]');
+    
+    console.log(`=== 行${index + 1}の分析 ===`);
+    console.log('バッジ要素:', badgeElement?.textContent);
+    console.log('価格要素:', priceElement?.outerHTML);
+    
+    if (badgeElement && priceElement) {
+      // 残り回数を取得
+      const badgeText = badgeElement.textContent.trim();
+      const countMatch = badgeText.match(/(\d+)\s*\/\s*(\d+)/);
+      if (countMatch) {
+        const remainingCount = parseInt(countMatch[1]);
+        const totalCount = parseInt(countMatch[2]);
+        
+        if (remainingCount > 0) {
+          remainingTickets++;
+          totalRemainingCount += remainingCount;
+          
+          // 価格を取得
+          const unitPrice = parseInt(priceElement.getAttribute('data-unit-price'));
+          if (!isNaN(unitPrice)) {
+            const ticketValue = unitPrice * remainingCount;
+            totalPrice += ticketValue;
+            console.log(`💰 チケット${index + 1}: 単価=${unitPrice}, 残り回数=${remainingCount}, 価値=${ticketValue}, 累計価格=${totalPrice}`);
+          } else {
+            console.log(`⚠️ チケット${index + 1}: 価格が数値ではありません: ${priceElement.getAttribute('data-unit-price')}`);
+          }
+        }
+      }
+    }
+  });
+  
+  console.log('💰 最終チケット価格合計:', totalPrice);
+  
+  // 表示を更新
+  const ticketCountElement = document.querySelector('#remainingTicketCount');
+  const totalPriceElement = document.querySelector('#remainingTicketValue');
+  
+  if (ticketCountElement) {
+    ticketCountElement.textContent = totalRemainingCount;
+    console.log('✅ 残り回数合計表示を更新しました:', totalRemainingCount);
+  }
+  
+  if (totalPriceElement) {
+    totalPriceElement.textContent = `¥${totalPrice.toLocaleString()}`;
+    console.log('✅ 残り回数価値合計表示を更新しました:', totalPrice);
+  }
+};
+
+// ページ読み込み時に実行
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🎫 直接的な価格計算を初期実行します');
+  setTimeout(window.updateTicketCountsDirect, 100);
+});
 </script>
