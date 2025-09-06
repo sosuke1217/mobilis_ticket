@@ -3351,7 +3351,7 @@ class LinebotController < ApplicationController
           type: "box",
           layout: "vertical",
           contents: [],
-          paddingAll: "20px"
+          paddingAll: "0px"
         },
           footer: {
             type: "box",
@@ -3366,10 +3366,10 @@ class LinebotController < ApplicationController
                 },
                 style: "primary",
                 color: "#FF9800",
-                margin: "md"
+                margin: "sm"
               }
             ],
-            paddingAll: "20px"
+            paddingAll: "10px"
           }
         }
       }
