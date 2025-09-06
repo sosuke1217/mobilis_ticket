@@ -3347,27 +3347,12 @@ class LinebotController < ApplicationController
             ],
             paddingAll: "20px"
           },
-          body: {
-            type: "box",
-            layout: "vertical",
-            contents: [
-              {
-                type: "text",
-                text: get_message(user, :cancel_warning),
-                size: "sm",
-                color: "#DC3545",
-                margin: "md"
-              },
-              {
-                type: "text",
-                text: get_message(user, :cancel_warning_en),
-                size: "sm",
-                color: "#DC3545",
-                margin: "xs"
-              }
-            ],
-            paddingAll: "20px"
-          },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: [],
+          paddingAll: "20px"
+        },
           footer: {
             type: "box",
             layout: "vertical",
