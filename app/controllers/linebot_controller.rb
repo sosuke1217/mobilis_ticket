@@ -321,6 +321,10 @@ class LinebotController < ApplicationController
       Rails.logger.info "📰 Showing news menu"
       send_news_menu(reply_token)
 
+    when "check_reservations"
+      Rails.logger.info "📅 Showing reservation check"
+      send_reservation_check(user, reply_token)
+
     when "reviews"
       Rails.logger.info "⭐ Showing reviews menu"
       send_reviews_menu(reply_token)
@@ -2902,5 +2906,178 @@ class LinebotController < ApplicationController
   def get_google_business_url
     # 環境変数から取得、なければデフォルトの検索URL
     ENV['GOOGLE_BUSINESS_URL'] || "https://www.google.com/search?q=mobilis+stretch+reviews&tbm=lcl"
+  end
+
+  # 🆕 予約確認メニュー送信
+  def send_reservation_check(user, reply_token)
+    # ユーザーの今後の予約を取得
+    upcoming_reservations = user.reservations
+                               .where('start_time > ?', Time.current)
+                               .order(:start_time)
+                               .limit(5)
+
+    if upcoming_reservations.empty?
+      message = {
+        type: "flex",
+        altText: "予約確認",
+        contents: {
+          type: "bubble",
+          header: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "text",
+                text: "📅 予約確認",
+                weight: "bold",
+                size: "xl",
+                color: "#FF6B35"
+              }
+            ],
+            paddingAll: "20px"
+          },
+          body: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "text",
+                text: "現在、今後の予約はありません。",
+                size: "md",
+                color: "#666666",
+                wrap: true
+              },
+              {
+                type: "text",
+                text: "新しい予約を取りたい場合は、下の「予約」ボタンからお申し込みください。",
+                size: "sm",
+                color: "#999999",
+                wrap: true,
+                margin: "md"
+              }
+            ],
+            paddingAll: "20px"
+          },
+          footer: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "button",
+                action: {
+                  type: "postback",
+                  label: "新規予約",
+                  data: "booking"
+                },
+                style: "primary",
+                color: "#FF6B35"
+              }
+            ],
+            paddingAll: "20px"
+          }
+        }
+      }
+    else
+      # 予約がある場合のFlex Message
+      reservation_items = upcoming_reservations.map do |reservation|
+        {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "box",
+              layout: "horizontal",
+              contents: [
+                {
+                  type: "text",
+                  text: "📅 #{reservation.start_time.strftime('%m/%d %H:%M')}",
+                  weight: "bold",
+                  size: "md",
+                  color: "#FF6B35"
+                },
+                {
+                  type: "text",
+                  text: reservation.status == 'confirmed' ? "✅ 確定" : "⏳ 保留",
+                  size: "sm",
+                  color: reservation.status == 'confirmed' ? "#00C851" : "#FF8800"
+                }
+              ]
+            },
+            {
+              type: "text",
+              text: "📍 #{reservation.location || '場所未定'}",
+              size: "sm",
+              color: "#666666",
+              margin: "sm"
+            },
+            {
+              type: "text",
+              text: "💬 #{reservation.note || '特記事項なし'}",
+              size: "sm",
+              color: "#999999",
+              margin: "sm",
+              wrap: true
+            }
+          ],
+          margin: "md",
+          paddingAll: "12px",
+          backgroundColor: "#F8F9FA",
+          cornerRadius: "8px"
+        }
+      end
+
+      message = {
+        type: "flex",
+        altText: "予約確認",
+        contents: {
+          type: "bubble",
+          header: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "text",
+                text: "📅 予約確認",
+                weight: "bold",
+                size: "xl",
+                color: "#FF6B35"
+              },
+              {
+                type: "text",
+                text: "今後の予約一覧",
+                size: "sm",
+                color: "#666666"
+              }
+            ],
+            paddingAll: "20px"
+          },
+          body: {
+            type: "box",
+            layout: "vertical",
+            contents: reservation_items,
+            paddingAll: "20px"
+          },
+          footer: {
+            type: "box",
+            layout: "vertical",
+            contents: [
+              {
+                type: "button",
+                action: {
+                  type: "postback",
+                  label: "新規予約",
+                  data: "booking"
+                },
+                style: "primary",
+                color: "#FF6B35"
+              }
+            ],
+            paddingAll: "20px"
+          }
+        }
+      }
+    end
+
+    send_reply(reply_token, message)
   end
 end

@@ -40,10 +40,10 @@ class LineRichMenuSetup
           bounds: { x: 834, y: 0, width: 833, height: 843 }, 
           action: { type: "uri", uri: ENV['app_host'] || "https://mobilis-stretch.com" } 
         },
-        # 上段右：最新情報
+        # 上段右：予約の確認
         { 
           bounds: { x: 1667, y: 0, width: 833, height: 843 }, 
-          action: { type: "postback", data: "news" } 
+          action: { type: "postback", data: "check_reservations" } 
         },
         # 下段左：口コミ
         { 
