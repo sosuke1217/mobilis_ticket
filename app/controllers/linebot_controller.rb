@@ -244,6 +244,8 @@ class LinebotController < ApplicationController
       tentative_en: "Pending",
       cancelled: "❌ キャンセル済み",
       cancelled_en: "Cancelled",
+      cancellation_completed: "予約がキャンセルされました",
+      cancellation_completed_en: "Reservation has been cancelled",
       location: "📍"
     }
     
@@ -3103,7 +3105,7 @@ class LinebotController < ApplicationController
             },
             {
               type: "text",
-              text: "📍 #{reservation.course || 'コース未設定'}min",
+              text: "📍 #{(reservation.course || 'コース未設定').to_s.gsub(/分$/, '')}min",
               size: "sm",
               color: "#666666",
               margin: "sm"
@@ -3299,7 +3301,7 @@ class LinebotController < ApplicationController
           type: "button",
           action: {
             type: "postback",
-            label: "#{reservation.start_time.strftime('%m/%d %H:%M')}~ #{reservation.course}min",
+            label: "#{reservation.start_time.strftime('%m/%d %H:%M')}~ #{reservation.course.to_s.gsub(/分$/, '')}min",
             data: "cancel_reservation_#{reservation.id}"
           },
           style: "secondary",

@@ -350,9 +350,24 @@ class LineBookingNotifier
             },
             {
               type: "text",
+              text: "Reservation Cancelled",
+              size: "sm",
+              color: "#999999",
+              margin: "xs"
+            },
+            {
+              type: "text",
               text: "ご予約がキャンセルされました",
               size: "sm",
-              color: "#666666"
+              color: "#666666",
+              margin: "sm"
+            },
+            {
+              type: "text",
+              text: "Your reservation has been cancelled",
+              size: "sm",
+              color: "#999999",
+              margin: "xs"
             }
           ],
           paddingAll: "20px"
