@@ -3272,6 +3272,7 @@ class LinebotController < ApplicationController
     # 予約をキャンセル
     begin
       reservation.skip_time_validation = true
+      reservation.skip_cancellation_notifications = true  # LINE通知をスキップ
       reservation.update!(
         status: 'cancelled',
         cancelled_at: Time.current,

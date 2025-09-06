@@ -34,7 +34,7 @@ class Reservation < ApplicationRecord
   # 管理者用のバリデーションスキップフラグ
   attr_accessor :skip_time_validation, :skip_business_hours_validation, 
                 :skip_advance_booking_validation, :skip_advance_notice_validation,
-                :skip_overlap_validation
+                :skip_overlap_validation, :skip_cancellation_notifications
   
   belongs_to :ticket, optional: true
   belongs_to :user, optional: true
@@ -745,6 +745,8 @@ class Reservation < ApplicationRecord
   end
 
   def send_cancellation_notifications
+    return if skip_cancellation_notifications
+    
     # メール通知
     if user&.email.present?
       begin
