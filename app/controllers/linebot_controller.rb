@@ -2136,74 +2136,66 @@ class LinebotController < ApplicationController
             layout: "vertical",
             contents: [
               {
+                type: "text",
+                text: t.title.present? ? t.title : "チケット",
+                weight: "bold",
+                size: "md",
+                wrap: true,
+                align: "center"
+              },
+              {
+                type: "text",
+                text: t.ticket_template.present? ? t.ticket_template.name : "コース未設定",
+                size: "sm",
+                color: "#666666",
+                margin: "sm",
+                align: "center"
+              },
+              {
+                type: "separator",
+                margin: "md"
+              },
+              {
                 type: "box",
                 layout: "horizontal",
                 contents: [
                   {
-                    type: "box",
-                    layout: "vertical",
-                    contents: [
-                      {
-                        type: "text",
-                        text: t.title.present? ? t.title : "チケット",
-                        weight: "bold",
-            size: "md",
-                        wrap: true,
-                        align: "start"
-                      },
-          {
-            type: "text",
-                        text: t.ticket_template.present? ? t.ticket_template.name : "コース未設定",
-            size: "sm",
-                        color: "#666666",
-                        margin: "xs",
-                        align: "start"
-          }
-                    ],
-                    flex: 1
-                  },
-        {
-            type: "box",
-            layout: "vertical",
-                    contents: [
-                      {
-                        type: "text",
-                        text: "残り回数",
-                        size: "xs",
-                        color: "#666666",
-                        align: "end"
-                      },
-                      {
-                        type: "text",
-                        text: "#{t.remaining_count}回",
-                        weight: "bold",
-                        size: "lg",
-                        color: low_remaining ? "#FFA500" : "#1976d2",
-                        align: "end"
-                      }
-                    ],
+                    type: "text",
+                    text: "残り回数",
+                    size: "sm",
+                    color: "#666666",
                     flex: 0
                   },
                   {
-                    type: "box",
-                    layout: "vertical",
-                    contents: [
-                      {
-                        type: "text",
-                        text: "有効期限",
-                        size: "xs",
-                        color: "#666666",
-                        align: "end"
-                      },
-                      {
-                        type: "text",
-                        text: t.expiry_date.strftime('%m/%d'),
-                        size: "sm",
-                        color: expiry_soon ? "#FF5555" : "#888888",
-                        align: "end"
-                      }
-                    ],
+                    type: "text",
+                    text: "#{t.remaining_count}回",
+                    weight: "bold",
+                    size: "lg",
+                    color: low_remaining ? "#FFA500" : "#1976d2",
+                    flex: 0,
+                    align: "end"
+                  }
+                ],
+                margin: "md"
+              },
+              {
+                type: "box",
+                layout: "horizontal",
+                contents: [
+                  {
+                    type: "text",
+                    text: "有効期限",
+                    size: "sm",
+                    color: "#666666",
                     flex: 0
+                  },
+                  {
+                    type: "text",
+                    text: t.expiry_date.strftime('%m/%d'),
+                    size: "md",
+                    color: expiry_soon ? "#FF5555" : "#888888",
+                    flex: 0,
+                    align: "end"
                   }
                 ],
                 margin: "md"
