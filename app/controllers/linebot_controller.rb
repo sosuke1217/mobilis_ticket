@@ -2513,6 +2513,14 @@ class LinebotController < ApplicationController
               size: "xl",
               color: "#4285F4",
               align: "center"
+            },
+            {
+              type: "text",
+              text: "Google Reviews",
+              size: "sm",
+              color: "#999999",
+              align: "center",
+              margin: "xs"
             }
           ],
           paddingAll: "10px",
@@ -2530,6 +2538,15 @@ class LinebotController < ApplicationController
               color: "#666666",
               wrap: true,
               margin: "md",
+              align: "center"
+            },
+            {
+              type: "text",
+              text: "Please share your feedback and opinions on Google.",
+              size: "xs",
+              color: "#999999",
+              wrap: true,
+              margin: "xs",
               align: "center"
             },
             {
