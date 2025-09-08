@@ -3098,15 +3098,11 @@ class LinebotController < ApplicationController
     
     {
       type: "box",
-      layout: "vertical",
-      contents: [
-    {
-      type: "box",
       layout: "baseline",
       contents: [
         {
           type: "text",
-          text: label,
+          text: "#{label}/#{label_en}",
           size: "sm",
           color: "#666666",
           flex: 2
@@ -3117,34 +3113,9 @@ class LinebotController < ApplicationController
           size: "sm",
           wrap: true,
           flex: 3
-            }
-          ],
-          spacing: "sm"
-        },
-        {
-          type: "box",
-          layout: "baseline",
-          contents: [
-            {
-              type: "text",
-              text: label_en,
-              size: "xs",
-              color: "#999999",
-              flex: 2
-            },
-            {
-              type: "text",
-              text: value.to_s,
-              size: "xs",
-              color: "#999999",
-              wrap: true,
-              flex: 3
-            }
-          ],
-          spacing: "sm",
-          margin: "xs"
         }
       ],
+      spacing: "sm",
       margin: "sm"
     }
   end
