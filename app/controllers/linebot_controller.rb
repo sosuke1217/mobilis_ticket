@@ -1904,7 +1904,7 @@ class LinebotController < ApplicationController
                 margin: "md"
               },
               create_info_row("日時", "#{start_time.strftime('%m/%d (%a) %H:%M')} - #{end_time.strftime('%H:%M')}", user),
-              create_info_row("コース", course, user),
+              create_info_row("コース", course.gsub('_', ' '), user),
               create_info_row("お名前", user.name, user),
               create_info_row("ご住所", get_display_address(user), user),
               {
@@ -3169,9 +3169,9 @@ class LinebotController < ApplicationController
       # レンタルスペースの場合は専用メッセージ
       return "レンタルスペース（手配予定）"
     elsif user.address.present?
-      # 自宅または通常の住所（自宅の場合は「自宅:」プレフィックスを付ける）
+      # 自宅または通常の住所（「自宅:」プレフィックスを削除）
       if user.booking_location == 'home' || user.address.include?("自宅:")
-        return truncate_address("自宅: #{user.address.gsub('自宅: ', '')}")
+        return truncate_address(user.address.gsub('自宅: ', ''))
       else
         return truncate_address(user.address)
       end
