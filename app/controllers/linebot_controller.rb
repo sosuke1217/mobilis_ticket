@@ -1556,7 +1556,7 @@ class LinebotController < ApplicationController
       Rails.logger.info "❌ No available dates found"
       send_reply(reply_token, {
         type: "text",
-        text: "申し訳ございません。現在予約可能な日程がございません。\nお電話でお問い合わせください: 03-1234-5678"
+        text: "申し訳ございません。現在予約可能な日程がございません。"
       })
       return
     end
@@ -1623,7 +1623,7 @@ class LinebotController < ApplicationController
       # フォールバック：シンプルなテキストメッセージを送信
       send_reply(reply_token, {
         type: "text",
-        text: "日程選択画面の表示に問題が発生しました。\n\n利用可能な日程：\n#{available_dates.map { |date| "• #{date.strftime('%m/%d (%a)')}" }.join('\n')}\n\n希望の日程をお電話でお申し込みください: 03-1234-5678"
+        text: "日程選択画面の表示に問題が発生しました。\n\n利用可能な日程：\n#{available_dates.map { |date| "• #{date.strftime('%m/%d (%a)')}" }.join('\n')}\n\n希望の日程をお申し込みください。"
       })
     end
   end
@@ -1851,7 +1851,17 @@ class LinebotController < ApplicationController
       
       # バリデーションをスキップして保存
       reservation.skip_overlap_validation = true
-      reservation.save!
+      
+      if reservation.save
+        Rails.logger.info "✅ Reservation created successfully: #{reservation.id}"
+      else
+        Rails.logger.error "❌ Reservation save failed: #{reservation.errors.full_messages}"
+        send_reply(reply_token, {
+          type: "text",
+          text: "申し訳ございません。予約処理中にエラーが発生いたしました。"
+        })
+        return
+      end
 
       # 予約確認メッセージ
       Rails.logger.info "📝 Creating booking confirmation message"
@@ -1971,7 +1981,7 @@ class LinebotController < ApplicationController
       Rails.logger.error "LINE予約作成エラー: #{e.message}"
       send_reply(reply_token, {
         type: "text",
-        text: "申し訳ございません。予約処理中にエラーが発生いたしました。\nお電話でお問い合わせください: 03-1234-5678"
+        text: "申し訳ございません。予約処理中にエラーが発生いたしました。"
       })
     end
   end
@@ -2229,7 +2239,7 @@ class LinebotController < ApplicationController
       unless reservation.cancellable?
         send_reply(reply_token, {
           type: "text",
-          text: "申し訳ございません。この予約はキャンセルできません。\nお問い合わせ: 03-1234-5678"
+          text: "申し訳ございません。この予約はキャンセルできません。"
         })
         return
       end
@@ -2316,7 +2326,7 @@ class LinebotController < ApplicationController
       Rails.logger.error "LINE予約キャンセルエラー: #{e.message}"
       send_reply(reply_token, {
         type: "text",
-        text: "キャンセル処理中にエラーが発生いたしました。\nお電話でお問い合わせください: 03-1234-5678"
+        text: "キャンセル処理中にエラーが発生いたしました。"
       })
     end
   end
@@ -3332,7 +3342,7 @@ class LinebotController < ApplicationController
       Rails.logger.info "❌ No available dates found"
       push_message(user.line_user_id, {
         type: "text",
-        text: "申し訳ございません。現在予約可能な日程がございません。\nお電話でお問い合わせください: 03-1234-5678"
+        text: "申し訳ございません。現在予約可能な日程がございません。"
       })
       return
     end
