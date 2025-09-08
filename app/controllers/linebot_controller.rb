@@ -3109,9 +3109,9 @@ class LinebotController < ApplicationController
                else label
                end
     
-    # コース名の処理（アンダースコアをスペースに変換、末尾の「分」を削除、minを追加）
+    # コース名の処理（アンダースコアをスペースに変換、末尾の「分」を削除）
     if label == "コース"
-      processed_value = value.to_s.gsub('_', ' ').gsub(/分$/, '') + ' min'
+      processed_value = value.to_s.gsub('_', ' ').gsub(/分$/, '')
     else
       processed_value = value.to_s
     end
@@ -3555,7 +3555,7 @@ class LinebotController < ApplicationController
             },
             {
               type: "text",
-              text: "📍 #{(reservation.course || 'コース未設定').to_s.gsub('_', ' ').gsub(/分$/, '')}",
+              text: "📍 #{(reservation.course || 'コース未設定').to_s.gsub('_', ' ').gsub(/分$/, '')} min",
               size: "sm",
               color: "#666666",
               margin: "sm"
