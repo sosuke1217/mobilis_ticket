@@ -1702,7 +1702,7 @@ class LinebotController < ApplicationController
             },
             {
               type: "text",
-              text: "#{date.strftime('%m/%d (%a)')} - #{course}",
+              text: "#{date.strftime('%m/%d (%a)')} - #{course.gsub('_', ' ')}",
               size: "sm",
               color: "#1976d2"
             }
@@ -3100,54 +3100,27 @@ class LinebotController < ApplicationController
                end
     
     if label == "日時"
-      # 日時の場合は英語ラベルを下に表示
-      {
-        type: "box",
-        layout: "vertical",
-        contents: [
-          {
-            type: "box",
-            layout: "baseline",
-            contents: [
-              {
-                type: "text",
-                text: label,
-                size: "sm",
-                color: "#666666",
-                flex: 2
-              },
-              {
-                type: "text",
-                text: value.to_s,
-                size: "sm",
-                wrap: true,
-                flex: 3
-              }
-            ],
-            spacing: "sm"
-          },
-          {
-            type: "box",
-            layout: "baseline",
-            contents: [
-              {
-                type: "text",
-                text: label_en,
-                size: "xs",
-                color: "#999999",
-                flex: 2
-              },
-              {
-                type: "text",
-                text: " ",
-                size: "xs",
-                flex: 3
-              }
-            ],
-            spacing: "sm",
-            margin: "xs"
-          }
-        ],
+      # 日時の場合は「日時/Time」の形式で表示
+    {
+      type: "box",
+      layout: "baseline",
+      contents: [
+        {
+          type: "text",
+            text: "#{label}/#{label_en}",
+          size: "sm",
+          color: "#666666",
+          flex: 2
+        },
+        {
+          type: "text",
+          text: value.to_s,
+          size: "sm",
+          wrap: true,
+          flex: 3
+        }
+      ],
+        spacing: "sm",
         margin: "sm"
       }
     else
@@ -3172,8 +3145,8 @@ class LinebotController < ApplicationController
           }
         ],
         spacing: "sm",
-        margin: "sm"
-      }
+      margin: "sm"
+    }
     end
   end
 
