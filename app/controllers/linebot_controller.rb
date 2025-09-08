@@ -1934,9 +1934,9 @@ class LinebotController < ApplicationController
     period_buttons = periods.map do |period|
       # 時間帯名の英語表記を取得
       period_en = case period[:name]
-                  when '午前' then get_message(user, :morning_period_en)
-                  when '午後' then get_message(user, :afternoon_period_en)
-                  when '夕方' then get_message(user, :evening_period_en)
+                  when /午前/ then get_message(user, :morning_period_en)
+                  when /午後/ then get_message(user, :afternoon_period_en)
+                  when /夕方/ then get_message(user, :evening_period_en)
                   else period[:name]
                   end
       
