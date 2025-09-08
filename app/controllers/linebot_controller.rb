@@ -1946,9 +1946,17 @@ class LinebotController < ApplicationController
           style: "primary",
           action: {
             type: "postback",
-            label: "#{period[:emoji]} #{period_en} (#{period[:slots].length} slots)",
+            label: "#{period[:emoji]} #{period[:name].gsub(/[🌅☀️🌆\s]/, '')} (#{period[:slots].length}件)",
             data: "select_time_period_#{course.gsub(' ', '_')}_#{date_str}_#{period[:name].gsub(/[🌅☀️🌆\s]/, '').gsub(' ', '_')}"
           }
+        },
+        {
+          type: "text",
+          text: "#{period_en} (#{period[:slots].length} slots)",
+          size: "xs",
+          color: "#999999",
+          align: "center",
+          margin: "xs"
         }
       ]
     end.flatten
