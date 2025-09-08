@@ -7016,8 +7016,15 @@ function showMessage(message, type = 'info') {
                 
                 const statusText = reservation.status === 'confirmed' ? '確定' : reservation.status === 'tentative' ? '仮予約' : reservation.status === 'completed' ? '完了' : (reservation.status || '未定');
                 
-                // コース名をreservation.courseから直接取得
-                const courseName = reservation.course || 'コース未定';
+                // コース名をreservation.courseから直接取得（undefined/null対応）
+                let courseName;
+                if (reservation.course && reservation.course !== 'undefined' && reservation.course !== 'null') {
+                    courseName = reservation.course.replace(/_/g, ' ').replace(/分$/, '') + ' min';
+                } else if (reservation.duration) {
+                    courseName = reservation.duration + ' min';
+                } else {
+                    courseName = 'コース未定';
+                }
                 
                 // デバッグ用：表示される予約の詳細
                 console.log('📋 Displaying reservation:', {
