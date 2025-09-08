@@ -1407,7 +1407,7 @@ class LinebotController < ApplicationController
               text: get_message(user, :home_location_en),
               size: "xs",
               color: "#999999",
-              align: "start",
+              align: "center",
               margin: "xs"
             },
             {
@@ -1425,7 +1425,7 @@ class LinebotController < ApplicationController
               text: get_message(user, :other_location_en),
               size: "xs",
               color: "#999999",
-              align: "start",
+              align: "center",
               margin: "xs"
             },
             {
@@ -1443,7 +1443,7 @@ class LinebotController < ApplicationController
               text: get_message(user, :rental_location_en),
               size: "xs",
               color: "#999999",
-              align: "start",
+              align: "center",
               margin: "xs"
             }
           ]
