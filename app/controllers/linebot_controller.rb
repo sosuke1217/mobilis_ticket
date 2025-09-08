@@ -280,6 +280,12 @@ class LinebotController < ApplicationController
       other_location_en: "Other Location",
       rental_location: "🏢 レンタルスペース",
       rental_location_en: "Rental Space",
+      address_request_final: "ありがとうございます！\n\n最後にご住所を教えてください。\n例: 東京都渋谷区○○1-2-3",
+      address_request_final_en: "Thank you!\n\nFinally, please provide your address.\nExample: 1-2-3 ○○, Shibuya-ku, Tokyo",
+      address_request_home: "ご自宅の住所を教えてください。\n\n例: 東京都渋谷区○○1-2-3",
+      address_request_home_en: "Please provide your home address.\n\nExample: 1-2-3 ○○, Shibuya-ku, Tokyo",
+      address_request_location: "ストレッチを受ける場所の住所を教えてください。\n\n例: 東京都渋谷区○○1-2-3",
+      address_request_location_en: "Please provide the address where you would like to receive the stretch.\n\nExample: 1-2-3 ○○, Shibuya-ku, Tokyo",
       location: "📍"
     }
     
@@ -1238,7 +1244,7 @@ class LinebotController < ApplicationController
       
       send_reply(reply_token, {
         type: "text",
-        text: "ありがとうございます！\n\n最後にご住所を教えてください。\n例: 東京都渋谷区○○1-2-3"
+        text: "#{get_message(user, :address_request_final)}\n\n#{get_message(user, :address_request_final_en)}"
       })
     else
       send_reply(reply_token, {
@@ -1476,7 +1482,7 @@ class LinebotController < ApplicationController
         user.update(booking_state: 'collecting_address', booking_location: 'home')
         send_reply(reply_token, {
           type: "text",
-          text: "ご自宅の住所を教えてください。\n\n例: 東京都渋谷区○○1-2-3"
+          text: "#{get_message(user, :address_request_home)}\n\n#{get_message(user, :address_request_home_en)}"
         })
       end
     when 'other'
@@ -1484,7 +1490,7 @@ class LinebotController < ApplicationController
       user.update(booking_state: 'collecting_address', booking_location: 'other')
       send_reply(reply_token, {
         type: "text",
-        text: "ストレッチを受ける場所の住所を教えてください。\n\n例: 東京都渋谷区○○1-2-3"
+        text: "#{get_message(user, :address_request_location)}\n\n#{get_message(user, :address_request_location_en)}"
       })
     when 'rental'
       # レンタルスペースの場合：こちらから連絡
