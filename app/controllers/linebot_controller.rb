@@ -460,7 +460,24 @@ class LinebotController < ApplicationController
       period = $3
       Rails.logger.info "🔍 Raw postback data: course=#{course}, date=#{date}, period=#{period}"
       Rails.logger.info "🔍 Postback data: #{postback_data}"
-      handle_time_period_selection(user, reply_token, course, date, period)
+      
+      # 簡素化された時間帯選択処理
+      begin
+        course = course.gsub('_', ' ')
+        period = period.gsub('_', '')
+        Rails.logger.info "🔍 Processed: course=#{course}, period=#{period}"
+        
+        send_reply(reply_token, {
+          type: "text",
+          text: "時間帯選択: #{course} - #{period} (#{date})"
+        })
+      rescue => e
+        Rails.logger.error "❌ Time period selection error: #{e.message}"
+        send_reply(reply_token, {
+          type: "text",
+          text: "申し訳ございません。時間帯選択でエラーが発生しました。"
+        })
+      end
 
     when /^start_date_selection_(.+)$/
       Rails.logger.info "📅 Starting date selection for course: #{$1}"
