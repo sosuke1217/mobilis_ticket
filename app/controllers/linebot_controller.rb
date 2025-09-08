@@ -246,6 +246,30 @@ class LinebotController < ApplicationController
       cancelled_en: "Cancelled",
       cancellation_completed: "予約がキャンセルされました",
       cancellation_completed_en: "Reservation has been cancelled",
+      booking_title: "📅 ご予約",
+      booking_title_en: "Reservation",
+      booking_subtitle: "ご希望のコースをお選びください",
+      booking_subtitle_en: "Please select your preferred course",
+      today_availability_title: "📅 今日の空き状況",
+      today_availability_title_en: "Today's Availability",
+      tomorrow_availability_title: "📅 明日の空き状況",
+      tomorrow_availability_title_en: "Tomorrow's Availability",
+      no_availability_today: "❌ 本日は予約可能な時間がございません",
+      no_availability_today_en: "No available slots today",
+      consider_tomorrow: "明日以降の予約をご検討ください",
+      consider_tomorrow_en: "Please consider booking for tomorrow or later",
+      check_tomorrow: "明日の空きを確認",
+      check_tomorrow_en: "Check Tomorrow",
+      available_times: "✅ 以下の時間が予約可能です",
+      available_times_en: "Available time slots",
+      course_60min: "60分コースで予約可能な時間",
+      course_60min_en: "Available times for 60min course",
+      price_note: "※料金は出張費込み\n※広尾エリア専門",
+      price_note_en: "※Price includes travel fee\n※Hiroo area only",
+      no_availability_tomorrow: "❌ 明日は予約可能な時間がございません",
+      no_availability_tomorrow_en: "No available slots tomorrow",
+      consider_other_dates: "他の日付をご検討ください",
+      consider_other_dates_en: "Please consider other dates",
       location: "📍"
     }
     
@@ -496,16 +520,32 @@ class LinebotController < ApplicationController
           contents: [
             {
               type: "text",
-              text: "📅 ご予約",
+              text: get_message(user, :booking_title),
               weight: "bold",
               size: "xl",
               color: "#1976d2"
             },
             {
               type: "text",
-              text: "ご希望のコースをお選びください",
+              text: get_message(user, :booking_title_en),
+              size: "sm",
+              color: "#999999",
+              align: "center",
+              margin: "xs"
+            },
+            {
+              type: "text",
+              text: get_message(user, :booking_subtitle),
               size: "sm",
               color: "#666666"
+            },
+            {
+              type: "text",
+              text: get_message(user, :booking_subtitle_en),
+              size: "xs",
+              color: "#999999",
+              align: "center",
+              margin: "xs"
             }
           ],
           paddingAll: "20px"
@@ -526,10 +566,18 @@ class LinebotController < ApplicationController
           contents: [
             {
               type: "text",
-              text: "※料金は出張費込み\n※広尾エリア専門",
+              text: get_message(user, :price_note),
               size: "xs",
               color: "#999999",
               wrap: true
+            },
+            {
+              type: "text",
+              text: get_message(user, :price_note_en),
+              size: "xs",
+              color: "#cccccc",
+              wrap: true,
+              margin: "xs"
             }
           ]
         }
@@ -556,9 +604,17 @@ class LinebotController < ApplicationController
             contents: [
               {
                 type: "text",
-                text: "📅 今日の空き状況",
+                text: get_message(user, :today_availability_title),
                 weight: "bold",
                 size: "lg"
+              },
+              {
+                type: "text",
+                text: get_message(user, :today_availability_title_en),
+                size: "sm",
+                color: "#999999",
+                align: "center",
+                margin: "xs"
               },
               {
                 type: "text",
@@ -574,16 +630,32 @@ class LinebotController < ApplicationController
             contents: [
               {
                 type: "text",
-                text: "❌ 本日は予約可能な時間がございません",
+                text: get_message(user, :no_availability_today),
                 color: "#dc3545",
                 weight: "bold"
               },
               {
                 type: "text",
-                text: "明日以降の予約をご検討ください",
+                text: get_message(user, :no_availability_today_en),
+                size: "sm",
+                color: "#999999",
+                align: "center",
+                margin: "xs"
+              },
+              {
+                type: "text",
+                text: get_message(user, :consider_tomorrow),
                 size: "sm",
                 color: "#666666",
                 margin: "md"
+              },
+              {
+                type: "text",
+                text: get_message(user, :consider_tomorrow_en),
+                size: "xs",
+                color: "#999999",
+                align: "center",
+                margin: "xs"
               }
             ]
           },
@@ -596,9 +668,17 @@ class LinebotController < ApplicationController
                 style: "primary",
                 action: {
                   type: "postback",
-                  label: "明日の空きを確認",
+                  label: get_message(user, :check_tomorrow),
                   data: "check_tomorrow_availability"
                 }
+              },
+              {
+                type: "text",
+                text: get_message(user, :check_tomorrow_en),
+                size: "xs",
+                color: "#999999",
+                align: "center",
+                margin: "xs"
               }
             ]
           }
@@ -628,9 +708,17 @@ class LinebotController < ApplicationController
             contents: [
               {
                 type: "text",
-                text: "📅 今日の空き状況",
+                text: get_message(user, :today_availability_title),
                 weight: "bold",
                 size: "lg"
+              },
+              {
+                type: "text",
+                text: get_message(user, :today_availability_title_en),
+                size: "sm",
+                color: "#999999",
+                align: "center",
+                margin: "xs"
               },
               {
                 type: "text",
@@ -646,16 +734,32 @@ class LinebotController < ApplicationController
             contents: [
               {
                 type: "text",
-                text: "✅ 以下の時間が予約可能です",
+                text: get_message(user, :available_times),
                 color: "#28a745",
                 weight: "bold"
               },
               {
                 type: "text",
-                text: "60分コースで予約可能な時間",
+                text: get_message(user, :available_times_en),
+                size: "sm",
+                color: "#999999",
+                align: "center",
+                margin: "xs"
+              },
+              {
+                type: "text",
+                text: get_message(user, :course_60min),
                 size: "sm",
                 color: "#666666",
                 margin: "md"
+              },
+              {
+                type: "text",
+                text: get_message(user, :course_60min_en),
+                size: "xs",
+                color: "#999999",
+                align: "center",
+                margin: "xs"
               }
             ]
           },
@@ -687,10 +791,18 @@ class LinebotController < ApplicationController
             layout: "vertical",
             contents: [
               {
-        type: "text",
-                text: "📅 明日の空き状況",
+                type: "text",
+                text: get_message(user, :tomorrow_availability_title),
                 weight: "bold",
                 size: "lg"
+              },
+              {
+                type: "text",
+                text: get_message(user, :tomorrow_availability_title_en),
+                size: "sm",
+                color: "#999999",
+                align: "center",
+                margin: "xs"
               },
               {
                 type: "text",
@@ -706,16 +818,32 @@ class LinebotController < ApplicationController
             contents: [
               {
                 type: "text",
-                text: "❌ 明日は予約可能な時間がございません",
+                text: get_message(user, :no_availability_tomorrow),
                 color: "#dc3545",
                 weight: "bold"
               },
               {
                 type: "text",
-                text: "他の日付をご検討ください",
+                text: get_message(user, :no_availability_tomorrow_en),
+                size: "sm",
+                color: "#999999",
+                align: "center",
+                margin: "xs"
+              },
+              {
+                type: "text",
+                text: get_message(user, :consider_other_dates),
                 size: "sm",
                 color: "#666666",
                 margin: "md"
+              },
+              {
+                type: "text",
+                text: get_message(user, :consider_other_dates_en),
+                size: "xs",
+                color: "#999999",
+                align: "center",
+                margin: "xs"
               }
             ]
           },
