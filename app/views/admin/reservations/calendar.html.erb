@@ -2941,6 +2941,15 @@
             if (!durationInMinutes) {
                 durationInMinutes = 60;
             }
+            
+            // デバッグ用ログ
+            console.log('📅 Calendar reservation debug:', {
+                id: reservation.id,
+                course: reservation.course,
+                duration: reservation.duration,
+                durationInMinutes: durationInMinutes,
+                customer: reservation.customer
+            });
             // 休憩の場合は準備時間なし（システムデフォルト15分を使用）
             const preparationTime = (reservation.effective_interval_minutes ?? 15); // システムデフォルト15分
             const totalTime = durationInMinutes + preparationTime;
@@ -3008,7 +3017,7 @@
                         ${statusIcon[reservation.status] || ''} ${reservation.customer}
       </div>
                     <div style="font-size: 10px; opacity: 0.9; background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 10px; display: inline-block; backdrop-filter: blur(2px); margin-bottom: 4px;">
-                        ${reservation.course ? reservation.course.replace(/_/g, ' ').replace(/分$/, '') : 'コース未定'}
+                        ${reservation.course ? reservation.course.replace(/_/g, ' ').replace(/分$/, '') + ' min' : 'コース未定'}
     </div>
                     <div style="font-size: 9px; opacity: 0.8; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 8px; display: inline-block; backdrop-filter: blur(1px);">
                         ${startTime} - ${endTime}
