@@ -2269,7 +2269,7 @@ class LinebotController < ApplicationController
                 margin: "md"
               },
               create_info_row("日時", "#{reservation.start_time.strftime('%m/%d (%a) %H:%M')} - #{reservation.end_time.strftime('%H:%M')}"),
-              create_info_row("コース", reservation.course.gsub('_', ' ')),
+              create_info_row("コース", reservation.course),
               {
                 type: "separator",
                 margin: "md"
@@ -3099,6 +3099,13 @@ class LinebotController < ApplicationController
                else label
                end
     
+    # コース名の処理（アンダースコアをスペースに変換、末尾の「分」を削除）
+    if label == "コース"
+      processed_value = value.to_s.gsub('_', ' ').gsub(/分$/, '')
+    else
+      processed_value = value.to_s
+    end
+    
     if label == "日時"
       # 日時の場合は「日時/Time」の形式で表示
     {
@@ -3114,7 +3121,7 @@ class LinebotController < ApplicationController
         },
         {
           type: "text",
-          text: value.to_s,
+          text: processed_value,
           size: "sm",
           wrap: true,
           flex: 3
@@ -3132,18 +3139,18 @@ class LinebotController < ApplicationController
           {
             type: "text",
             text: "#{label}/#{label_en}",
-            size: "sm",
-            color: "#666666",
-            flex: 2
-          },
-          {
-            type: "text",
-            text: value.to_s,
-            size: "sm",
-            wrap: true,
-            flex: 3
-          }
-        ],
+          size: "sm",
+          color: "#666666",
+          flex: 2
+        },
+        {
+          type: "text",
+          text: processed_value,
+          size: "sm",
+          wrap: true,
+          flex: 3
+        }
+      ],
         spacing: "sm",
       margin: "sm"
     }

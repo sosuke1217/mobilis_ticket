@@ -2997,7 +2997,7 @@
                         ${statusIcon[reservation.status] || ''} ${reservation.customer}
       </div>
                     <div style="font-size: 10px; opacity: 0.9; background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 10px; display: inline-block; backdrop-filter: blur(2px); margin-bottom: 4px;">
-                        ${reservation.duration}分
+                        ${reservation.course || 'コース未定'}
     </div>
                     <div style="font-size: 9px; opacity: 0.8; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 8px; display: inline-block; backdrop-filter: blur(1px);">
                         ${startTime} - ${endTime}
@@ -6994,8 +6994,8 @@ function showMessage(message, type = 'info') {
                 
                 const statusText = reservation.status === 'confirmed' ? '確定' : reservation.status === 'tentative' ? '仮予約' : reservation.status === 'completed' ? '完了' : (reservation.status || '未定');
                 
-                // コース名をdurationから生成
-                const courseName = reservation.duration ? `${reservation.duration}分コース` : (reservation.course || 'コース未定');
+                // コース名をreservation.courseから直接取得
+                const courseName = reservation.course || 'コース未定';
                 
                 // デバッグ用：表示される予約の詳細
                 console.log('📋 Displaying reservation:', {
