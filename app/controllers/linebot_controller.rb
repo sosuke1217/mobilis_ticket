@@ -311,7 +311,7 @@ class LinebotController < ApplicationController
       confirmation_notice: "24時間以内に確認のご連絡をいたします。\nしばらくお待ちください。",
       confirmation_notice_en: "We will contact you within 24 hours to confirm your reservation.\nPlease wait for our response.",
       date_time_label: "日時",
-      date_time_label_en: "Date & Time",
+      date_time_label_en: "Time",
       course_label: "コース",
       course_label_en: "Course",
       name_label: "お名前",
@@ -3092,7 +3092,7 @@ class LinebotController < ApplicationController
 
   def create_info_row(label, value, user = nil)
     label_en = case label
-               when "日時" then user ? get_message(user, :date_time_label_en) : "Date & Time"
+               when "日時" then user ? get_message(user, :date_time_label_en) : "Time"
                when "コース" then user ? get_message(user, :course_label_en) : "Course"
                when "お名前" then user ? get_message(user, :name_label_en) : "Name"
                when "ご住所" then user ? get_message(user, :address_label_en) : "Address"
