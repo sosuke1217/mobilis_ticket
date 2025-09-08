@@ -1624,22 +1624,7 @@ class LinebotController < ApplicationController
     }
     
     Rails.logger.info "📤 Sending date selection message"
-    begin
-      # まずシンプルなテキストメッセージでテスト
-      send_reply(reply_token, {
-        type: "text",
-        text: "日程選択画面を表示します。\n\n利用可能な日程：\n#{available_dates.map { |date| "• #{date.strftime('%m/%d (%a)')}" }.join(' ')}"
-      })
-      Rails.logger.info "✅ Date selection message sent successfully"
-    rescue => e
-      Rails.logger.error "❌ Error sending date selection message: #{e.message}"
-      Rails.logger.error "❌ Error backtrace: #{e.backtrace.first(5).join('\n')}"
-      # フォールバック：シンプルなテキストメッセージを送信
-      send_reply(reply_token, {
-        type: "text",
-        text: "日程選択画面の表示に問題が発生しました。\n\n利用可能な日程：\n#{available_dates.map { |date| "• #{date.strftime('%m/%d (%a)')}" }.join(' ')}\n\n希望の日程をお申し込みください。"
-      })
-    end
+    send_reply(reply_token, message)
   end
 
   # 🆕 利用可能な時間を送信
