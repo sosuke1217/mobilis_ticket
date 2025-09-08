@@ -1948,12 +1948,12 @@ class LinebotController < ApplicationController
                   end
       
       [
-      {
-        type: "button",
-        style: "primary",
-        action: {
-          type: "postback",
-          label: "#{period[:emoji]} #{period[:name]} (#{period[:slots].length}件)",
+        {
+          type: "button",
+          style: "primary",
+          action: {
+            type: "postback",
+            label: "#{period[:emoji]} #{period[:name]} (#{period[:slots].length}件)",
             data: "select_time_period_#{course.gsub(' ', '_')}_#{date_str}_#{period[:name].gsub(/[🌅☀️🌆\s]/, '')}"
           }
         },
