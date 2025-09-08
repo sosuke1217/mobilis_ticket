@@ -426,6 +426,11 @@ class LinebotController < ApplicationController
       Rails.logger.info "📊 Showing usage history"
       send_usage_history(user, reply_token)
 
+    when /^back_to_date_selection_(.+)$/
+      Rails.logger.info "📅 Going back to date selection for course: #{$1}"
+      course = $1.gsub('_', ' ')
+      start_date_selection(user, reply_token, course)
+
     when "start_booking"
       Rails.logger.info "📅 Starting booking flow"
       send_booking_options(user, reply_token)
@@ -2106,7 +2111,7 @@ class LinebotController < ApplicationController
               action: {
                 type: "postback",
                 label: "🔙 日程選択に戻る",
-                data: "start_booking"
+                data: "back_to_date_selection_#{course.gsub(' ', '_')}"
               }
             }
           ]
