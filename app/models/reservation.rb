@@ -684,15 +684,26 @@ class Reservation < ApplicationRecord
     Rails.logger.info "🔄 start_time: #{start_time} (#{start_time.class})"
     
     duration = get_duration_minutes
-    # Only set end_time to course duration, interval is handled separately
     Rails.logger.info "🔄 set_end_time processing: course=#{course}, duration=#{duration}, individual_interval=#{individual_interval_minutes}, effective_interval=#{effective_interval_minutes}"
     
     if start_time.is_a?(Time) || start_time.is_a?(DateTime)
-      self.end_time = start_time + duration.minutes
-      Rails.logger.info "✅ end_time set to: #{self.end_time}"
+      # 終了時間を計算
+      calculated_end_time = start_time + duration.minutes
+      
+      # 15分刻みに調整（15分刻みバリデーション対応）
+      self.end_time = round_to_15_minutes(calculated_end_time)
+      
+      Rails.logger.info "✅ end_time set to: #{self.end_time} (rounded from #{calculated_end_time})"
     else
       Rails.logger.error "❌ start_time is not a valid time object: #{start_time.class} - #{start_time}"
     end
+  end
+
+  # 時間を15分刻みに丸める
+  def round_to_15_minutes(time)
+    minutes = time.min
+    rounded_minutes = (minutes / 15.0).round * 15
+    time.change(min: rounded_minutes, sec: 0)
   end
 
   def schedule_confirmation_email
