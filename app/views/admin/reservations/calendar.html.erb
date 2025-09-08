@@ -12,6 +12,9 @@
           <p class="text-muted mb-0">週間スケジュール管理と予約作成</p>
         </div>
         <div class="d-flex gap-2">
+          <button class="btn btn-outline-primary" onclick="refreshCalendar()">
+            <i class="fas fa-sync-alt me-1"></i>カレンダー更新
+          </button>
           <a href="<%= admin_reservations_path %>" class="btn btn-outline-secondary">
             <i class="fas fa-list me-1"></i>予約一覧
           </a>
@@ -8857,6 +8860,57 @@ function showMessage(message, type = 'info') {
         window.updateTimeSlot = updateTimeSlot;
         window.saveReservationChanges = saveReservationChanges;
         window.updateMiniCalendarFromSelector = updateMiniCalendarFromSelector;
+        
+        // カレンダー更新関数
+        function refreshCalendar() {
+            console.log('🔄 Refreshing calendar...');
+            
+            // ボタンを無効化してローディング状態にする
+            const refreshBtn = document.querySelector('button[onclick="refreshCalendar()"]');
+            const originalText = refreshBtn.innerHTML;
+            refreshBtn.disabled = true;
+            refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>更新中...';
+            
+            // 現在の週のデータを再読み込み
+            const weekStartStr = formatDateKey(currentWeekStart);
+            
+            Promise.all([
+                fetch(`/admin/reservations/load_reservations?week_start_date=${weekStartStr}`)
+                    .then(response => response.json()),
+                fetch(`/admin/reservations/load_shift_settings?week_start_date=${weekStartStr}`)
+                    .then(response => response.json())
+            ]).then(([reservationsData, shiftData]) => {
+                console.log('📅 Refreshed reservations:', reservationsData);
+                console.log('📅 Refreshed shift settings:', shiftData);
+                
+                // 予約データを更新
+                if (reservationsData.success) {
+                    for (const [dateKey, newReservations] of Object.entries(reservationsData.reservations)) {
+                        reservations[dateKey] = newReservations;
+                    }
+                }
+                
+                // シフト設定を更新
+                if (shiftData.success) {
+                    shiftSettings = shiftData.shift_settings || {};
+                }
+                
+                // カレンダーを再描画
+                renderCalendar();
+                
+                console.log('✅ Calendar refreshed successfully');
+            }).catch(error => {
+                console.error('❌ Error refreshing calendar:', error);
+                alert('カレンダーの更新に失敗しました。ページを再読み込みしてください。');
+            }).finally(() => {
+                // ボタンを元に戻す
+                refreshBtn.disabled = false;
+                refreshBtn.innerHTML = originalText;
+            });
+        }
+        
+        // グローバル関数として公開
+        window.refreshCalendar = refreshCalendar;
         
         console.log('✅ All global functions exposed for onclick attributes');
         })(); // IIFEを閉じる
