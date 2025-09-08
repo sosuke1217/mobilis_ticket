@@ -310,6 +310,14 @@ class LinebotController < ApplicationController
       booking_request_received_en: "We have received your booking request with the following details:",
       confirmation_notice: "24時間以内に確認のご連絡をいたします。\nしばらくお待ちください。",
       confirmation_notice_en: "We will contact you within 24 hours to confirm your reservation.\nPlease wait for our response.",
+      date_time_label: "日時",
+      date_time_label_en: "Date & Time",
+      course_label: "コース",
+      course_label_en: "Course",
+      name_label: "お名前",
+      name_label_en: "Name",
+      address_label: "ご住所",
+      address_label_en: "Address",
       location: "📍"
     }
     
@@ -1894,10 +1902,10 @@ class LinebotController < ApplicationController
                 type: "separator",
                 margin: "md"
               },
-              create_info_row("日時", "#{start_time.strftime('%m/%d (%a) %H:%M')} - #{end_time.strftime('%H:%M')}"),
-              create_info_row("コース", course),
-              create_info_row("お名前", user.name),
-              create_info_row("ご住所", get_display_address(user)),
+              create_info_row("日時", "#{start_time.strftime('%m/%d (%a) %H:%M')} - #{end_time.strftime('%H:%M')}", user),
+              create_info_row("コース", course, user),
+              create_info_row("お名前", user.name, user),
+              create_info_row("ご住所", get_display_address(user), user),
               {
                 type: "separator",
                 margin: "md"
@@ -3079,7 +3087,19 @@ class LinebotController < ApplicationController
     }
   end
 
-  def create_info_row(label, value)
+  def create_info_row(label, value, user = nil)
+    label_en = case label
+               when "日時" then get_message(user, :date_time_label_en)
+               when "コース" then get_message(user, :course_label_en)
+               when "お名前" then get_message(user, :name_label_en)
+               when "ご住所" then get_message(user, :address_label_en)
+               else label
+               end
+    
+    {
+      type: "box",
+      layout: "vertical",
+      contents: [
     {
       type: "box",
       layout: "baseline",
@@ -3097,6 +3117,32 @@ class LinebotController < ApplicationController
           size: "sm",
           wrap: true,
           flex: 3
+            }
+          ],
+          spacing: "sm"
+        },
+        {
+          type: "box",
+          layout: "baseline",
+          contents: [
+            {
+              type: "text",
+              text: label_en,
+              size: "xs",
+              color: "#999999",
+              flex: 2
+            },
+            {
+              type: "text",
+              text: value.to_s,
+              size: "xs",
+              color: "#999999",
+              wrap: true,
+              flex: 3
+            }
+          ],
+          spacing: "sm",
+          margin: "xs"
         }
       ],
       margin: "sm"
