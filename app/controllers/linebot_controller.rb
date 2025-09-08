@@ -2183,6 +2183,7 @@ class LinebotController < ApplicationController
         type: "text",
         text: "申し訳ございません。時間帯選択でエラーが発生しました。"
       })
+    end
   end
 
   # 🆕 予約キャンセル処理
