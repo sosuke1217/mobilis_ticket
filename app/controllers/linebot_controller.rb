@@ -515,6 +515,11 @@ class LinebotController < ApplicationController
       course = "#{$1} min"
       start_booking_flow(user, reply_token, course)
 
+    when /^book_(\d+)_min$/
+      Rails.logger.info "📅 Starting booking flow for #{$1}min course (underscore format)"
+      course = "#{$1} min"
+      start_booking_flow(user, reply_token, course)
+
     when /^cancel_booking_(\d+)$/
       Rails.logger.info "❌ Cancelling booking"
       reservation_id = $1.to_i
