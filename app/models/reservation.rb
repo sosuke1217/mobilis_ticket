@@ -167,12 +167,20 @@ class Reservation < ApplicationRecord
     return 60 unless course.present? # デフォルト
     
     case course.to_s.strip
-    when "40分", "40分コース" then 40
-    when "60分", "60分コース" then 60
-    when "80分", "80分コース" then 80
+    when "40分", "40分コース", "40 min", "40" then 40
+    when "60分", "60分コース", "60 min", "60" then 60
+    when "80分", "80分コース", "80 min", "80" then 80
     when /(\d+)分/ # 数字+分の形式
       duration = $1.to_i
       Rails.logger.info "🔍 Extracted duration from regex: #{duration} minutes"
+      duration
+    when /(\d+)\s*min/ # 数字+minの形式
+      duration = $1.to_i
+      Rails.logger.info "🔍 Extracted duration from min regex: #{duration} minutes"
+      duration
+    when /^(\d+)$/ # 数字のみの形式
+      duration = $1.to_i
+      Rails.logger.info "🔍 Extracted duration from number only: #{duration} minutes"
       duration
     else
       Rails.logger.warn "⚠️ Unknown course format: '#{course}', defaulting to 60 minutes"
