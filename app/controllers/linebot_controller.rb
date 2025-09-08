@@ -458,26 +458,7 @@ class LinebotController < ApplicationController
       course = $1
       date = $2
       period = $3
-      Rails.logger.info "🔍 Raw postback data: course=#{course}, date=#{date}, period=#{period}"
-      Rails.logger.info "🔍 Postback data: #{data}"
-      
-      # 簡素化された時間帯選択処理
-      begin
-        course = course.gsub('_', ' ')
-        period = period.gsub('_', '')
-        Rails.logger.info "🔍 Processed: course=#{course}, period=#{period}"
-        
-        send_reply(reply_token, {
-          type: "text",
-          text: "時間帯選択: #{course} - #{period} (#{date})"
-        })
-      rescue => e
-        Rails.logger.error "❌ Time period selection error: #{e.message}"
-        send_reply(reply_token, {
-          type: "text",
-          text: "申し訳ございません。時間帯選択でエラーが発生しました。"
-        })
-      end
+      handle_time_period_selection(user, reply_token, course, date, period)
 
     when /^start_date_selection_(.+)$/
       Rails.logger.info "📅 Starting date selection for course: #{$1}"
@@ -547,12 +528,6 @@ class LinebotController < ApplicationController
 
     else
       Rails.logger.error "⚠️ Unknown postback action: #{data}"
-      Rails.logger.info "🔍 Postback data details:"
-      Rails.logger.info "  - Data: #{data}"
-      Rails.logger.info "  - Data type: #{data.class}"
-      Rails.logger.info "  - Data length: #{data.length}"
-      Rails.logger.info "  - Data encoding: #{data.encoding}"
-      Rails.logger.info "  - Contains select_time_period: #{data.include?('select_time_period')}"
       send_reply(reply_token, {
         type: "text",
         text: "⚠️ 未知のアクション: #{data}"
@@ -1971,17 +1946,9 @@ class LinebotController < ApplicationController
           style: "primary",
           action: {
             type: "postback",
-            label: "#{period[:emoji]} #{period[:name]} (#{period[:slots].length}件)",
-            data: "select_time_period_#{course.gsub(' ', '_')}_#{date_str}_#{period[:name].gsub(/[🌅☀️🌆\s]/, '')}"
+            label: "#{period[:emoji]} #{period_en} (#{period[:slots].length} slots)",
+            data: "select_time_period_#{course.gsub(' ', '_')}_#{date_str}_#{period[:name].gsub(/[🌅☀️🌆\s]/, '').gsub(' ', '_')}"
           }
-        },
-        {
-          type: "text",
-          text: "#{period_en} (#{period[:slots].length} slots)",
-          size: "xs",
-          color: "#999999",
-          align: "center",
-          margin: "xs"
         }
       ]
     end.flatten
@@ -2011,17 +1978,9 @@ class LinebotController < ApplicationController
             },
             {
               type: "text",
-              text: "#{date.strftime('%m/%d (%a)')} - #{course}",
+              text: "#{date.strftime('%m/%d (%a)')} - #{course.gsub('_', ' ')}",
               size: "sm",
               color: "#1976d2"
-            },
-            {
-              type: "text",
-              text: "#{date.strftime('%m/%d (%a)')} - #{course}",
-              size: "xs",
-              color: "#999999",
-              align: "start",
-              margin: "xs"
             },
             {
               type: "text",
@@ -2084,24 +2043,11 @@ class LinebotController < ApplicationController
 
   # 時間帯が選択された場合の処理
   def handle_time_period_selection(user, reply_token, course, date_str, period_name)
-    begin
-      Rails.logger.info "🔍 Debug: course=#{course}, period_name=#{period_name}"
-      date = Date.parse(date_str)
-      # コース名を復元（60_min -> 60 min）
-      course = course.gsub('_', ' ')
-      # 時間帯名を復元（午前_ -> 午前）
-      period_name = period_name.gsub('_', '')
-      
-      # 時間帯名のマッピング（念のため）
-      period_mapping = {
-        'morning' => '午前',
-        'afternoon' => '午後', 
-        'evening' => '夕方'
-      }
-      period_name = period_mapping[period_name] || period_name
-      Rails.logger.info "🔍 Debug after: course=#{course}, period_name=#{period_name}"
-      duration = get_duration_from_course(course)
-      available_slots = get_available_time_slots(date, duration)
+    date = Date.parse(date_str)
+    # コース名を復元（60_min -> 60 min）
+    course = course.gsub('_', ' ')
+    duration = get_duration_from_course(course)
+    available_slots = get_available_time_slots(date, duration)
     
     # 選択された時間帯でフィルタリング
     filtered_slots = case period_name
@@ -2193,14 +2139,6 @@ class LinebotController < ApplicationController
     }
 
     send_reply(reply_token, message)
-    rescue => e
-      Rails.logger.error "❌ Time period selection error: #{e.message}"
-      Rails.logger.error "❌ Backtrace: #{e.backtrace.first(5).join('\n')}"
-      send_reply(reply_token, {
-        type: "text",
-        text: "申し訳ございません。時間帯選択でエラーが発生しました。"
-      })
-    end
   end
 
   # 🆕 予約キャンセル処理
