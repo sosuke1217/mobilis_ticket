@@ -2929,7 +2929,18 @@
             };
             
             // 予約の継続時間に基づいて高さを計算
-            const durationInMinutes = reservation.duration;
+            // reservation.courseから時間を抽出（例：「40 min」→ 40）
+            let durationInMinutes = reservation.duration;
+            if (!durationInMinutes && reservation.course) {
+                const courseMatch = reservation.course.match(/(\d+)/);
+                if (courseMatch) {
+                    durationInMinutes = parseInt(courseMatch[1]);
+                }
+            }
+            // デフォルト値として60分を設定
+            if (!durationInMinutes) {
+                durationInMinutes = 60;
+            }
             // 休憩の場合は準備時間なし（システムデフォルト15分を使用）
             const preparationTime = (reservation.effective_interval_minutes ?? 15); // システムデフォルト15分
             const totalTime = durationInMinutes + preparationTime;
@@ -2997,7 +3008,7 @@
                         ${statusIcon[reservation.status] || ''} ${reservation.customer}
       </div>
                     <div style="font-size: 10px; opacity: 0.9; background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 10px; display: inline-block; backdrop-filter: blur(2px); margin-bottom: 4px;">
-                        ${reservation.course || 'コース未定'}
+                        ${reservation.course ? reservation.course.replace(/_/g, ' ').replace(/分$/, '') : 'コース未定'}
     </div>
                     <div style="font-size: 9px; opacity: 0.8; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 8px; display: inline-block; backdrop-filter: blur(1px);">
                         ${startTime} - ${endTime}
