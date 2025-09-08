@@ -3545,7 +3545,7 @@ class LinebotController < ApplicationController
             },
             {
               type: "text",
-              text: "📍 #{(reservation.course || 'コース未設定').to_s.gsub(/分$/, '').gsub('_', ' ')}min",
+              text: "📍 #{(reservation.course || 'コース未設定').to_s.gsub('_', ' ').gsub(/分$/, '')}",
               size: "sm",
               color: "#666666",
               margin: "sm"
@@ -3741,7 +3741,7 @@ class LinebotController < ApplicationController
           type: "button",
           action: {
             type: "postback",
-            label: "#{reservation.start_time.strftime('%m/%d %H:%M')}~ #{reservation.course.to_s.gsub(/分$/, '').gsub('_', ' ')}min",
+            label: "#{reservation.start_time.strftime('%m/%d %H:%M')}~ #{reservation.course.to_s.gsub('_', ' ').gsub(/分$/, '')}",
             data: "cancel_reservation_#{reservation.id}"
           },
           style: "secondary",
