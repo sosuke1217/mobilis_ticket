@@ -298,6 +298,12 @@ class LinebotController < ApplicationController
       afternoon_period_en: "Afternoon",
       evening_period: "夕方",
       evening_period_en: "Evening",
+      time_period_slots_title: "の空き時間",
+      time_period_slots_title_en: "Available Time Slots",
+      no_slots_in_period: "申し訳ございません。選択された時間帯には空きがございません。",
+      no_slots_in_period_en: "Sorry, there are no available slots in the selected time period.",
+      return_to_time_period: "🔙 時間帯選択に戻る",
+      return_to_time_period_en: "Back to Time Period Selection",
       location: "📍"
     }
     
@@ -2072,7 +2078,7 @@ class LinebotController < ApplicationController
     if filtered_slots.empty?
       send_reply(reply_token, {
         type: "text",
-        text: "申し訳ございません。選択された時間帯には空きがございません。"
+        text: "#{get_message(user, :no_slots_in_period)}\n\n#{get_message(user, :no_slots_in_period_en)}"
       })
       return
     end
@@ -2099,6 +2105,13 @@ class LinebotController < ApplicationController
     else '🕐'
     end
 
+    period_en = case period_name
+    when '午前' then get_message(user, :morning_period_en)
+    when '午後' then get_message(user, :afternoon_period_en)
+    when '夕方' then get_message(user, :evening_period_en)
+    else period_name
+    end
+
     message = {
       type: "flex",
       altText: "#{period_name}の利用可能時間",
@@ -2110,9 +2123,17 @@ class LinebotController < ApplicationController
           contents: [
             {
               type: "text",
-              text: "#{period_emoji} #{period_name}の空き時間",
+              text: "#{period_emoji} #{period_name}#{get_message(user, :time_period_slots_title)}",
               weight: "bold",
               size: "lg"
+            },
+            {
+              type: "text",
+              text: "#{period_en} #{get_message(user, :time_period_slots_title_en)}",
+              size: "sm",
+              color: "#999999",
+              align: "start",
+              margin: "xs"
             },
             {
               type: "text",
@@ -2137,9 +2158,17 @@ class LinebotController < ApplicationController
               style: "secondary",
               action: {
                 type: "postback",
-                label: "🔙 時間帯選択に戻る",
+                label: get_message(user, :return_to_time_period),
                 data: "select_date_#{course}_#{date_str}"
               }
+            },
+            {
+              type: "text",
+              text: get_message(user, :return_to_time_period_en),
+              size: "xs",
+              color: "#999999",
+              align: "center",
+              margin: "xs"
             }
           ]
         }
