@@ -2942,14 +2942,8 @@
                 durationInMinutes = 60;
             }
             
-            // デバッグ用ログ
-            console.log('📅 Calendar reservation debug:', {
-                id: reservation.id,
-                course: reservation.course,
-                duration: reservation.duration,
-                durationInMinutes: durationInMinutes,
-                customer: reservation.customer
-            });
+            // デバッグ用ログ（簡潔版）
+            console.log(`📅 ID:${reservation.id} Course:${reservation.course} Duration:${durationInMinutes}min`);
             // 休憩の場合は準備時間なし（システムデフォルト15分を使用）
             const preparationTime = (reservation.effective_interval_minutes ?? 15); // システムデフォルト15分
             const totalTime = durationInMinutes + preparationTime;
