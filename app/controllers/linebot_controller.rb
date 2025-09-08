@@ -2269,7 +2269,7 @@ class LinebotController < ApplicationController
                 margin: "md"
               },
               create_info_row("日時", "#{reservation.start_time.strftime('%m/%d (%a) %H:%M')} - #{reservation.end_time.strftime('%H:%M')}"),
-              create_info_row("コース", reservation.course),
+              create_info_row("コース", reservation.course.gsub('_', ' ')),
               {
                 type: "separator",
                 margin: "md"
@@ -3538,7 +3538,7 @@ class LinebotController < ApplicationController
             },
             {
               type: "text",
-              text: "📍 #{(reservation.course || 'コース未設定').to_s.gsub(/分$/, '')}min",
+              text: "📍 #{(reservation.course || 'コース未設定').to_s.gsub(/分$/, '').gsub('_', ' ')}min",
               size: "sm",
               color: "#666666",
               margin: "sm"
@@ -3734,7 +3734,7 @@ class LinebotController < ApplicationController
           type: "button",
           action: {
             type: "postback",
-            label: "#{reservation.start_time.strftime('%m/%d %H:%M')}~ #{reservation.course.to_s.gsub(/分$/, '')}min",
+            label: "#{reservation.start_time.strftime('%m/%d %H:%M')}~ #{reservation.course.to_s.gsub(/分$/, '').gsub('_', ' ')}min",
             data: "cancel_reservation_#{reservation.id}"
           },
           style: "secondary",
