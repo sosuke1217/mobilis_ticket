@@ -426,6 +426,10 @@ class LinebotController < ApplicationController
       Rails.logger.info "📊 Showing usage history"
       send_usage_history(user, reply_token)
 
+    when "start_booking"
+      Rails.logger.info "📅 Starting booking flow"
+      send_booking_options(user, reply_token)
+
     when "booking"
       Rails.logger.info "📅 Showing booking options"
       send_booking_options(user, reply_token)
@@ -2097,7 +2101,7 @@ class LinebotController < ApplicationController
               action: {
                 type: "postback",
                 label: "🔙 日程選択に戻る",
-                data: "book_#{course.gsub('min', 'min')}"
+                data: "start_booking"
               }
             }
           ]
