@@ -270,6 +270,16 @@ class LinebotController < ApplicationController
       no_availability_tomorrow_en: "No available slots tomorrow",
       consider_other_dates: "他の日付をご検討ください",
       consider_other_dates_en: "Please consider other dates",
+      stretch_location_title: "🏠 ストレッチ場所",
+      stretch_location_title_en: "Stretch Location",
+      stretch_location_subtitle: "ストレッチを受ける場所を選択してください：",
+      stretch_location_subtitle_en: "Please select where you would like to receive the stretch:",
+      home_location: "🏠 自宅",
+      home_location_en: "Home",
+      other_location: "📍 別の場所",
+      other_location_en: "Other Location",
+      rental_location: "🏢 レンタルスペース",
+      rental_location_en: "Rental Space",
       location: "📍"
     }
     
@@ -1344,10 +1354,18 @@ class LinebotController < ApplicationController
           contents: [
             {
               type: "text",
-              text: "🏠 ストレッチ場所",
+              text: get_message(user, :stretch_location_title),
               weight: "bold",
               size: "lg",
               color: "#1976d2"
+            },
+            {
+              type: "text",
+              text: get_message(user, :stretch_location_title_en),
+              size: "sm",
+              color: "#999999",
+              align: "center",
+              margin: "xs"
             }
           ]
         },
@@ -1357,8 +1375,16 @@ class LinebotController < ApplicationController
           contents: [
             {
               type: "text",
-              text: "ストレッチを受ける場所を選択してください：",
+              text: get_message(user, :stretch_location_subtitle),
               wrap: true
+            },
+            {
+              type: "text",
+              text: get_message(user, :stretch_location_subtitle_en),
+              size: "sm",
+              color: "#999999",
+              wrap: true,
+              margin: "xs"
             }
           ]
         },
@@ -1371,29 +1397,53 @@ class LinebotController < ApplicationController
               style: "primary",
               action: {
                 type: "postback",
-                label: "🏠 自宅",
+                label: get_message(user, :home_location),
                 data: "select_location_home"
               }
+            },
+            {
+              type: "text",
+              text: get_message(user, :home_location_en),
+              size: "xs",
+              color: "#999999",
+              align: "center",
+              margin: "xs"
             },
             {
               type: "button",
               style: "secondary",
               action: {
                 type: "postback",
-                label: "📍 別の場所",
+                label: get_message(user, :other_location),
                 data: "select_location_other"
               },
               margin: "sm"
             },
             {
+              type: "text",
+              text: get_message(user, :other_location_en),
+              size: "xs",
+              color: "#999999",
+              align: "center",
+              margin: "xs"
+            },
+            {
               type: "button",
               style: "secondary",
               action: {
                 type: "postback",
-                label: "🏢 レンタルスペース",
+                label: get_message(user, :rental_location),
                 data: "select_location_rental"
               },
               margin: "sm"
+            },
+            {
+              type: "text",
+              text: get_message(user, :rental_location_en),
+              size: "xs",
+              color: "#999999",
+              align: "center",
+              margin: "xs"
             }
           ]
         }
