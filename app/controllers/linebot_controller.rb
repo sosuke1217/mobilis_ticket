@@ -2057,6 +2057,14 @@ class LinebotController < ApplicationController
     course = course.gsub('_', ' ')
     # 時間帯名を復元（午前_ -> 午前）
     period_name = period_name.gsub('_', '')
+    
+    # 時間帯名のマッピング（念のため）
+    period_mapping = {
+      'morning' => '午前',
+      'afternoon' => '午後', 
+      'evening' => '夕方'
+    }
+    period_name = period_mapping[period_name] || period_name
     Rails.logger.info "🔍 Debug after: course=#{course}, period_name=#{period_name}"
     duration = get_duration_from_course(course)
     available_slots = get_available_time_slots(date, duration)
