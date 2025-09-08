@@ -304,6 +304,12 @@ class LinebotController < ApplicationController
       no_slots_in_period_en: "Sorry, there are no available slots in the selected time period.",
       return_to_time_period: "🔙 時間帯選択に戻る",
       return_to_time_period_en: "Back to Time Period Selection",
+      booking_request_completed: "✅ 予約リクエスト完了",
+      booking_request_completed_en: "Booking Request Completed",
+      booking_request_received: "以下の内容で予約リクエストを承りました：",
+      booking_request_received_en: "We have received your booking request with the following details:",
+      confirmation_notice: "24時間以内に確認のご連絡をいたします。\nしばらくお待ちください。",
+      confirmation_notice_en: "We will contact you within 24 hours to confirm your reservation.\nPlease wait for our response.",
       location: "📍"
     }
     
@@ -1851,10 +1857,18 @@ class LinebotController < ApplicationController
             contents: [
               {
                 type: "text",
-                text: "✅ 予約リクエスト完了",
+                text: get_message(user, :booking_request_completed),
                 weight: "bold",
                 size: "lg",
                 color: "#28a745"
+              },
+              {
+                type: "text",
+                text: get_message(user, :booking_request_completed_en),
+                size: "sm",
+                color: "#999999",
+                align: "start",
+                margin: "xs"
               }
             ]
           },
@@ -1864,8 +1878,17 @@ class LinebotController < ApplicationController
             contents: [
               {
                 type: "text",
-                text: "以下の内容で予約リクエストを承りました：",
+                text: get_message(user, :booking_request_received),
                 wrap: true
+              },
+              {
+                type: "text",
+                text: get_message(user, :booking_request_received_en),
+                size: "sm",
+                color: "#999999",
+                wrap: true,
+                margin: "xs",
+                align: "start"
               },
               {
                 type: "separator",
@@ -1881,11 +1904,20 @@ class LinebotController < ApplicationController
               },
               {
                 type: "text",
-                text: "24時間以内に確認のご連絡をいたします。\nしばらくお待ちください。",
+                text: get_message(user, :confirmation_notice),
                 size: "sm",
                 color: "#666666",
                 wrap: true,
                 margin: "md"
+              },
+              {
+                type: "text",
+                text: get_message(user, :confirmation_notice_en),
+                size: "xs",
+                color: "#999999",
+                wrap: true,
+                margin: "xs",
+                align: "start"
               }
             ]
           }
@@ -1947,11 +1979,11 @@ class LinebotController < ApplicationController
                   end
       
       [
-        {
-          type: "button",
-          style: "primary",
-          action: {
-            type: "postback",
+      {
+        type: "button",
+        style: "primary",
+        action: {
+          type: "postback",
             label: "#{period[:emoji]} #{period[:name].gsub(/[🌅☀️🌆\s]/, '')} (#{period[:slots].length}件)",
             data: "select_time_period_#{course.gsub(' ', '_')}_#{date_str}_#{period[:name].gsub(/[🌅☀️🌆\s]/, '').gsub(' ', '_')}"
           }
