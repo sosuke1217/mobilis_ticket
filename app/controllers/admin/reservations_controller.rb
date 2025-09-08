@@ -104,14 +104,15 @@ class Admin::ReservationsController < ApplicationController
               colors = get_status_colors(reservation.status)
               
               # 🎯 重要：イベントオブジェクトを作成（正確な時間データ付き）
-              Rails.logger.info "📅 Creating event for reservation #{reservation.id}:"
-              Rails.logger.info "  course: #{reservation.course.inspect}"
-              Rails.logger.info "  duration: #{reservation.duration.inspect}"
-              Rails.logger.info "  course_duration_minutes: #{course_duration_minutes}"
+            Rails.logger.info "📅 Creating event for reservation #{reservation.id}:"
+            Rails.logger.info "  course: #{reservation.course.inspect}"
+            Rails.logger.info "  duration: #{reservation.duration.inspect}"
+            Rails.logger.info "  course_duration_minutes: #{course_duration_minutes}"
+            Rails.logger.info "  customer_name: #{customer_name.inspect}"
               
               event = {
                 id: reservation.id.to_s,
-                title: "#{customer_name} - #{reservation.course}",
+                title: "#{customer_name} - #{reservation.course || 'コース未定'}",
                 start: start_iso,
                 end: end_iso,  # 📅 計算された正確な終了時間
                 backgroundColor: colors[:bg],
@@ -121,7 +122,7 @@ class Admin::ReservationsController < ApplicationController
                       extendedProps: {
                   type: 'reservation',
                   customer_name: customer_name,
-                  course: reservation.course,
+                  course: reservation.course || 'コース未定',
                   duration: reservation.duration,
                   course_duration: course_duration_minutes,
                   interval_duration: interval_duration_minutes,
