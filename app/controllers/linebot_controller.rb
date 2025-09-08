@@ -458,6 +458,7 @@ class LinebotController < ApplicationController
       course = $1
       date = $2
       period = $3
+      Rails.logger.info "🔍 Raw postback data: course=#{course}, date=#{date}, period=#{period}"
       handle_time_period_selection(user, reply_token, course, date, period)
 
     when /^start_date_selection_(.+)$/
@@ -1989,6 +1990,14 @@ class LinebotController < ApplicationController
               text: "#{date.strftime('%m/%d (%a)')} - #{course}",
               size: "sm",
               color: "#1976d2"
+            },
+            {
+              type: "text",
+              text: "#{date.strftime('%m/%d (%a)')} - #{course}",
+              size: "xs",
+              color: "#999999",
+              align: "start",
+              margin: "xs"
             },
             {
               type: "text",
