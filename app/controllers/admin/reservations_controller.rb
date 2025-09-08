@@ -104,6 +104,11 @@ class Admin::ReservationsController < ApplicationController
               colors = get_status_colors(reservation.status)
               
               # 🎯 重要：イベントオブジェクトを作成（正確な時間データ付き）
+              Rails.logger.info "📅 Creating event for reservation #{reservation.id}:"
+              Rails.logger.info "  course: #{reservation.course.inspect}"
+              Rails.logger.info "  duration: #{reservation.duration.inspect}"
+              Rails.logger.info "  course_duration_minutes: #{course_duration_minutes}"
+              
               event = {
                 id: reservation.id.to_s,
                 title: "#{customer_name} - #{reservation.course}",
@@ -117,6 +122,7 @@ class Admin::ReservationsController < ApplicationController
                   type: 'reservation',
                   customer_name: customer_name,
                   course: reservation.course,
+                  duration: reservation.duration,
                   course_duration: course_duration_minutes,
                   interval_duration: interval_duration_minutes,
                   total_duration: total_duration_minutes,
