@@ -1628,7 +1628,7 @@ class LinebotController < ApplicationController
       # まずシンプルなテキストメッセージでテスト
       send_reply(reply_token, {
         type: "text",
-        text: "日程選択画面を表示します。\n\n利用可能な日程：\n#{available_dates.map { |date| "• #{date.strftime('%m/%d (%a)')}" }.join('\n')}"
+        text: "日程選択画面を表示します。\n\n利用可能な日程：\n#{available_dates.map { |date| "• #{date.strftime('%m/%d (%a)')}" }.join(' ')}"
       })
       Rails.logger.info "✅ Date selection message sent successfully"
     rescue => e
@@ -1637,7 +1637,7 @@ class LinebotController < ApplicationController
       # フォールバック：シンプルなテキストメッセージを送信
       send_reply(reply_token, {
         type: "text",
-        text: "日程選択画面の表示に問題が発生しました。\n\n利用可能な日程：\n#{available_dates.map { |date| "• #{date.strftime('%m/%d (%a)')}" }.join('\n')}\n\n希望の日程をお申し込みください。"
+        text: "日程選択画面の表示に問題が発生しました。\n\n利用可能な日程：\n#{available_dates.map { |date| "• #{date.strftime('%m/%d (%a)')}" }.join(' ')}\n\n希望の日程をお申し込みください。"
       })
     end
   end
