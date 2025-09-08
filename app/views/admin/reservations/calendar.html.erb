@@ -2942,8 +2942,9 @@
                 durationInMinutes = 60;
             }
             
-            // デバッグ用ログ（簡潔版）
+            // デバッグ用ログ（詳細版）
             console.log(`📅 ID:${reservation.id} Course:${reservation.course} Duration:${durationInMinutes}min`);
+            console.log(`📅 Raw reservation data:`, reservation);
             // 休憩の場合は準備時間なし（システムデフォルト15分を使用）
             const preparationTime = (reservation.effective_interval_minutes ?? 15); // システムデフォルト15分
             const totalTime = durationInMinutes + preparationTime;
