@@ -262,7 +262,7 @@ class LinebotController < ApplicationController
       check_tomorrow_en: "Check Tomorrow",
       available_times: "✅ 以下の時間が予約可能です",
       available_times_en: "Available time slots",
-      course_60min: "60minコースで予約可能な時間",
+      course_60min: "60minで予約可能な時間",
       course_60min_en: "Available times for 60min course",
       price_note: "※料金は出張費込み\n※広尾エリア専門",
       price_note_en: "※Price includes travel fee\n※Hiroo area only",
@@ -322,13 +322,13 @@ class LinebotController < ApplicationController
       send_booking_options(user, reply_token)
 
     when /40min|40minコース/i
-      start_booking_flow(user, reply_token, "40minコース")
+      start_booking_flow(user, reply_token, "40min")
 
     when /60min|60minコース/i
-      start_booking_flow(user, reply_token, "60minコース")
+      start_booking_flow(user, reply_token, "60min")
 
     when /80min|80minコース/i
-      start_booking_flow(user, reply_token, "80minコース")
+      start_booking_flow(user, reply_token, "80min")
 
     when /今日|きょう|today/i
       send_today_availability(user, reply_token)
@@ -423,7 +423,7 @@ class LinebotController < ApplicationController
       Rails.logger.info "⚡ Quick booking 60min"
       date_str = $1
       time_str = $2
-      create_booking(user, reply_token, "60minコース", date_str, time_str)
+      create_booking(user, reply_token, "60min", date_str, time_str)
 
     when /^select_time_period_(.+)_(.+)_(.+)$/
       Rails.logger.info "⏰ Selecting time period"
@@ -437,10 +437,10 @@ class LinebotController < ApplicationController
       course_safe = $1
       # コース名を復元
       course = case course_safe
-               when "60" then "60minコース"
-               when "40" then "40minコース"
-               when "80" then "80minコース"
-               else "60minコース" # デフォルト
+               when "60" then "60min"
+               when "40" then "40min"
+               when "80" then "80min"
+               else "60min" # デフォルト
                end
       start_date_selection(user, reply_token, course)
 
@@ -460,7 +460,7 @@ class LinebotController < ApplicationController
 
     when /^book_(\d+)min$/
       Rails.logger.info "📅 Starting booking flow for #{$1}min course"
-      course = "#{$1}minコース"
+      course = "#{$1}min"
       start_booking_flow(user, reply_token, course)
 
     when /^cancel_booking_(\d+)$/
@@ -554,9 +554,9 @@ class LinebotController < ApplicationController
           type: "box",
           layout: "vertical",
           contents: [
-            create_course_button("40minコース", "¥8,000", "book_40min"),
-            create_course_button("60minコース", "¥12,000", "book_60min"),
-            create_course_button("80minコース", "¥16,000", "book_80min")
+            create_course_button("40min", "¥8,000", "book_40min"),
+            create_course_button("60min", "¥12,000", "book_60min"),
+            create_course_button("80min", "¥16,000", "book_80min")
           ],
           spacing: "md"
         },
@@ -574,7 +574,7 @@ class LinebotController < ApplicationController
   # 🆕 今日の空き状況を表示
   def send_today_availability(user, reply_token)
     today = Date.current
-    available_slots = get_available_time_slots(today, 60) # 60minコースを基準
+    available_slots = get_available_time_slots(today, 60) # 60minを基準
     
     if available_slots.empty?
       message = {
@@ -762,7 +762,7 @@ class LinebotController < ApplicationController
   # 🆕 明日の空き状況を表示
   def send_tomorrow_availability(user, reply_token)
     tomorrow = Date.current + 1.day
-    available_slots = get_available_time_slots(tomorrow, 60) # 60minコースを基準
+    available_slots = get_available_time_slots(tomorrow, 60) # 60minを基準
     
     if available_slots.empty?
       message = {
@@ -896,7 +896,7 @@ class LinebotController < ApplicationController
               },
               {
                 type: "text",
-                text: "60minコースで予約可能な時間",
+                text: "60minで予約可能な時間",
                 size: "sm",
                 color: "#666666",
                 margin: "md"
@@ -1927,7 +1927,7 @@ class LinebotController < ApplicationController
               action: {
                 type: "postback",
                 label: "🔙 日程選択に戻る",
-                data: "book_#{course.gsub('minコース', 'min')}"
+                data: "book_#{course.gsub('min', 'min')}"
               }
             }
           ]
@@ -2961,9 +2961,9 @@ class LinebotController < ApplicationController
 
   def get_duration_from_course(course)
     case course
-    when "40minコース" then 40
-    when "60minコース" then 60
-    when "80minコース" then 80
+    when "40min" then 40
+    when "60min" then 60
+    when "80min" then 80
     else 60
     end
   end
