@@ -291,7 +291,13 @@ class LinebotController < ApplicationController
       time_period_selection_subtitle: "ご希望の時間帯をお選びください",
       time_period_selection_subtitle_en: "Please select your preferred time period",
       available_slots: "利用可能",
-      available_slots_en: "Available",
+      available_slots_en: "Availability",
+      morning_period: "午前",
+      morning_period_en: "Morning",
+      afternoon_period: "午後", 
+      afternoon_period_en: "Afternoon",
+      evening_period: "夕方",
+      evening_period_en: "Evening",
       location: "📍"
     }
     
@@ -1926,16 +1932,34 @@ class LinebotController < ApplicationController
     date = Date.parse(date_str)
     
     period_buttons = periods.map do |period|
+      # 時間帯名の英語表記を取得
+      period_en = case period[:name]
+                  when '午前' then get_message(user, :morning_period_en)
+                  when '午後' then get_message(user, :afternoon_period_en)
+                  when '夕方' then get_message(user, :evening_period_en)
+                  else period[:name]
+                  end
+      
+      [
       {
         type: "button",
         style: "primary",
         action: {
           type: "postback",
           label: "#{period[:emoji]} #{period[:name]} (#{period[:slots].length}件)",
-          data: "select_time_period_#{course.gsub(' ', '_')}_#{date_str}_#{period[:name].gsub(/[🌅☀️🌆\s]/, '').gsub(' ', '_')}"
+            data: "select_time_period_#{course.gsub(' ', '_')}_#{date_str}_#{period[:name].gsub(/[🌅☀️🌆\s]/, '').gsub(' ', '_')}"
+          }
+        },
+        {
+          type: "text",
+          text: "#{period_en} (#{period[:slots].length} slots)",
+          size: "xs",
+          color: "#999999",
+          align: "center",
+          margin: "xs"
         }
-      }
-    end
+      ]
+    end.flatten
 
     message = {
       type: "flex",
@@ -2028,6 +2052,8 @@ class LinebotController < ApplicationController
   # 時間帯が選択された場合の処理
   def handle_time_period_selection(user, reply_token, course, date_str, period_name)
     date = Date.parse(date_str)
+    # コース名を復元（60_min -> 60 min）
+    course = course.gsub('_', ' ')
     duration = get_duration_from_course(course)
     available_slots = get_available_time_slots(date, duration)
     
