@@ -459,6 +459,7 @@ class LinebotController < ApplicationController
       date = $2
       period = $3
       Rails.logger.info "🔍 Raw postback data: course=#{course}, date=#{date}, period=#{period}"
+      Rails.logger.info "🔍 Postback data: #{postback_data}"
       handle_time_period_selection(user, reply_token, course, date, period)
 
     when /^start_date_selection_(.+)$/
