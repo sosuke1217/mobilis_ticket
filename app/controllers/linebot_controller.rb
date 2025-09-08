@@ -529,6 +529,12 @@ class LinebotController < ApplicationController
 
     else
       Rails.logger.error "⚠️ Unknown postback action: #{data}"
+      Rails.logger.info "🔍 Postback data details:"
+      Rails.logger.info "  - Data: #{data}"
+      Rails.logger.info "  - Data type: #{data.class}"
+      Rails.logger.info "  - Data length: #{data.length}"
+      Rails.logger.info "  - Data encoding: #{data.encoding}"
+      Rails.logger.info "  - Contains select_time_period: #{data.include?('select_time_period')}"
       send_reply(reply_token, {
         type: "text",
         text: "⚠️ 未知のアクション: #{data}"
