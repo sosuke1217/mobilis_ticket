@@ -3089,10 +3089,10 @@ class LinebotController < ApplicationController
 
   def create_info_row(label, value, user = nil)
     label_en = case label
-               when "日時" then get_message(user, :date_time_label_en)
-               when "コース" then get_message(user, :course_label_en)
-               when "お名前" then get_message(user, :name_label_en)
-               when "ご住所" then get_message(user, :address_label_en)
+               when "日時" then user ? get_message(user, :date_time_label_en) : "Date & Time"
+               when "コース" then user ? get_message(user, :course_label_en) : "Course"
+               when "お名前" then user ? get_message(user, :name_label_en) : "Name"
+               when "ご住所" then user ? get_message(user, :address_label_en) : "Address"
                else label
                end
     
