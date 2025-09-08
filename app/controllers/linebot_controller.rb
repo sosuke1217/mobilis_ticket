@@ -530,7 +530,7 @@ class LinebotController < ApplicationController
               text: get_message(user, :booking_title_en),
               size: "sm",
               color: "#999999",
-              align: "center",
+              align: "start",
               margin: "xs"
             },
             {
@@ -544,7 +544,7 @@ class LinebotController < ApplicationController
               text: get_message(user, :booking_subtitle_en),
               size: "xs",
               color: "#999999",
-              align: "center",
+              align: "start",
               margin: "xs"
             }
           ],
@@ -563,23 +563,7 @@ class LinebotController < ApplicationController
         footer: {
           type: "box",
           layout: "vertical",
-          contents: [
-            {
-              type: "text",
-              text: get_message(user, :price_note),
-              size: "xs",
-              color: "#999999",
-              wrap: true
-            },
-            {
-              type: "text",
-              text: get_message(user, :price_note_en),
-              size: "xs",
-              color: "#cccccc",
-              wrap: true,
-              margin: "xs"
-            }
-          ]
+          contents: []
         }
       }
     }
@@ -2915,7 +2899,7 @@ class LinebotController < ApplicationController
       style: "secondary",
       action: {
         type: "postback",
-        label: "#{course_name} #{price}",
+        label: course_name,
         data: data
       }
     }
