@@ -3096,28 +3096,82 @@ class LinebotController < ApplicationController
                else label
                end
     
-    {
-      type: "box",
-      layout: "baseline",
-      contents: [
-        {
-          type: "text",
-          text: "#{label}/#{label_en}",
-          size: "sm",
-          color: "#666666",
-          flex: 2
-        },
-        {
-          type: "text",
-          text: value.to_s,
-          size: "sm",
-          wrap: true,
-          flex: 3
-        }
-      ],
-      spacing: "sm",
-      margin: "sm"
-    }
+    if label == "日時"
+      # 日時の場合は英語ラベルを下に表示
+      {
+        type: "box",
+        layout: "vertical",
+        contents: [
+          {
+            type: "box",
+            layout: "baseline",
+            contents: [
+              {
+                type: "text",
+                text: label,
+                size: "sm",
+                color: "#666666",
+                flex: 2
+              },
+              {
+                type: "text",
+                text: value.to_s,
+                size: "sm",
+                wrap: true,
+                flex: 3
+              }
+            ],
+            spacing: "sm"
+          },
+          {
+            type: "box",
+            layout: "baseline",
+            contents: [
+              {
+                type: "text",
+                text: label_en,
+                size: "xs",
+                color: "#999999",
+                flex: 2
+              },
+              {
+                type: "text",
+                text: "",
+                size: "xs",
+                flex: 3
+              }
+            ],
+            spacing: "sm",
+            margin: "xs"
+          }
+        ],
+        margin: "sm"
+      }
+    else
+      # その他の場合は通常の形式
+      {
+        type: "box",
+        layout: "baseline",
+        contents: [
+          {
+            type: "text",
+            text: "#{label}/#{label_en}",
+            size: "sm",
+            color: "#666666",
+            flex: 2
+          },
+          {
+            type: "text",
+            text: value.to_s,
+            size: "sm",
+            wrap: true,
+            flex: 3
+          }
+        ],
+        spacing: "sm",
+        margin: "sm"
+      }
+    end
   end
 
   def truncate_address(address)
