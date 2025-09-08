@@ -3139,7 +3139,7 @@ class LinebotController < ApplicationController
               },
               {
                 type: "text",
-                text: "",
+                text: " ",
                 size: "xs",
                 flex: 3
               }
