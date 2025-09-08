@@ -3109,9 +3109,9 @@ class LinebotController < ApplicationController
                else label
                end
     
-    # コース名の処理（アンダースコアをスペースに変換、末尾の「分」を削除）
+    # コース名の処理（アンダースコアをスペースに変換、末尾の「分」を削除、minを追加）
     if label == "コース"
-      processed_value = value.to_s.gsub('_', ' ').gsub(/分$/, '')
+      processed_value = value.to_s.gsub('_', ' ').gsub(/分$/, '') + ' min'
     else
       processed_value = value.to_s
     end
