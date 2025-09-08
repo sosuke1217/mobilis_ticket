@@ -1854,6 +1854,7 @@ class LinebotController < ApplicationController
       reservation.save!
 
       # 予約確認メッセージ
+      Rails.logger.info "📝 Creating booking confirmation message"
       message = {
         type: "flex",
         altText: "予約完了",
@@ -1932,7 +1933,9 @@ class LinebotController < ApplicationController
         }
       }
 
+      Rails.logger.info "📝 Sending booking confirmation message"
       send_reply(reply_token, message)
+      Rails.logger.info "📝 Booking confirmation message sent successfully"
 
       # 管理者に通知
       AdminNotificationJob.perform_later(reservation) rescue nil
