@@ -2269,7 +2269,7 @@ class LinebotController < ApplicationController
                 margin: "md"
               },
               create_info_row("日時", "#{reservation.start_time.strftime('%m/%d (%a) %H:%M')} - #{reservation.end_time.strftime('%H:%M')}"),
-              create_info_row("コース", reservation.course),
+              create_info_row("コース", reservation.course.to_s.gsub('_', ' ').gsub(/分$/, '').gsub(/min$/, '')),
               {
                 type: "separator",
                 margin: "md"
