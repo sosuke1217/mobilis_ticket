@@ -397,8 +397,50 @@ class LineBookingNotifier
               type: "box",
               layout: "vertical",
               contents: [
-                create_info_row("日時", reservation.start_time.strftime('%m/%d(%a) %H:%M〜')),
-                create_info_row("コース", reservation.course.to_s.gsub(/分$/, '') + "min")
+                {
+                  type: "box",
+                  layout: "baseline",
+                  contents: [
+                    {
+                      type: "text",
+                      text: "日時/Time",
+                      size: "sm",
+                      color: "#666666",
+                      flex: 2
+                    },
+                    {
+                      type: "text",
+                      text: reservation.start_time.strftime('%m/%d(%a) %H:%M〜'),
+                      size: "sm",
+                      wrap: true,
+                      flex: 3
+                    }
+                  ],
+                  spacing: "sm",
+                  margin: "sm"
+                },
+                {
+                  type: "box",
+                  layout: "baseline",
+                  contents: [
+                    {
+                      type: "text",
+                      text: "コース/Course",
+                      size: "sm",
+                      color: "#666666",
+                      flex: 2
+                    },
+                    {
+                      type: "text",
+                      text: reservation.course.to_s.gsub('_', ' ').gsub(/分$/, '').gsub(/min$/, ''),
+                      size: "sm",
+                      wrap: true,
+                      flex: 3
+                    }
+                  ],
+                  spacing: "sm",
+                  margin: "sm"
+                }
               ],
               margin: "md"
             },
