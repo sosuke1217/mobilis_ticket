@@ -459,7 +459,7 @@ class LinebotController < ApplicationController
       date = $2
       period = $3
       Rails.logger.info "🔍 Raw postback data: course=#{course}, date=#{date}, period=#{period}"
-      Rails.logger.info "🔍 Postback data: #{postback_data}"
+      Rails.logger.info "🔍 Postback data: #{data}"
       
       # 簡素化された時間帯選択処理
       begin
