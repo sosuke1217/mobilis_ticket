@@ -1364,7 +1364,7 @@ class LinebotController < ApplicationController
               text: get_message(user, :stretch_location_title_en),
               size: "sm",
               color: "#999999",
-              align: "center",
+              align: "start",
               margin: "xs"
             }
           ]
@@ -1384,7 +1384,8 @@ class LinebotController < ApplicationController
               size: "sm",
               color: "#999999",
               wrap: true,
-              margin: "xs"
+              margin: "xs",
+              align: "start"
             }
           ]
         },
@@ -1406,7 +1407,7 @@ class LinebotController < ApplicationController
               text: get_message(user, :home_location_en),
               size: "xs",
               color: "#999999",
-              align: "center",
+              align: "start",
               margin: "xs"
             },
             {
@@ -1424,7 +1425,7 @@ class LinebotController < ApplicationController
               text: get_message(user, :other_location_en),
               size: "xs",
               color: "#999999",
-              align: "center",
+              align: "start",
               margin: "xs"
             },
             {
@@ -1442,7 +1443,7 @@ class LinebotController < ApplicationController
               text: get_message(user, :rental_location_en),
               size: "xs",
               color: "#999999",
-              align: "center",
+              align: "start",
               margin: "xs"
             }
           ]
