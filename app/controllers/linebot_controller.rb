@@ -1947,7 +1947,7 @@ class LinebotController < ApplicationController
         action: {
           type: "postback",
           label: "#{period[:emoji]} #{period[:name]} (#{period[:slots].length}件)",
-            data: "select_time_period_#{course.gsub(' ', '_')}_#{date_str}_#{period[:name].gsub(/[🌅☀️🌆\s]/, '').gsub(' ', '_')}"
+            data: "select_time_period_#{course.gsub(' ', '_')}_#{date_str}_#{period[:name].gsub(/[🌅☀️🌆\s]/, '')}"
           }
         },
         {
@@ -2051,9 +2051,13 @@ class LinebotController < ApplicationController
 
   # 時間帯が選択された場合の処理
   def handle_time_period_selection(user, reply_token, course, date_str, period_name)
+    Rails.logger.info "🔍 Debug: course=#{course}, period_name=#{period_name}"
     date = Date.parse(date_str)
     # コース名を復元（60_min -> 60 min）
     course = course.gsub('_', ' ')
+    # 時間帯名を復元（午前_ -> 午前）
+    period_name = period_name.gsub('_', '')
+    Rails.logger.info "🔍 Debug after: course=#{course}, period_name=#{period_name}"
     duration = get_duration_from_course(course)
     available_slots = get_available_time_slots(date, duration)
     
