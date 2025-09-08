@@ -286,6 +286,12 @@ class LinebotController < ApplicationController
       address_request_home_en: "Please provide your home address.\n\nExample: 1-2-3 ○○, Shibuya-ku, Tokyo",
       address_request_location: "ストレッチを受ける場所の住所を教えてください。\n\n例: 東京都渋谷区○○1-2-3",
       address_request_location_en: "Please provide the address where you would like to receive the stretch.\n\nExample: 1-2-3 ○○, Shibuya-ku, Tokyo",
+      time_period_selection_title: "⏰ 時間帯選択",
+      time_period_selection_title_en: "Time Period Selection",
+      time_period_selection_subtitle: "ご希望の時間帯をお選びください",
+      time_period_selection_subtitle_en: "Please select your preferred time period",
+      available_slots: "利用可能",
+      available_slots_en: "Available",
       location: "📍"
     }
     
@@ -1926,7 +1932,7 @@ class LinebotController < ApplicationController
         action: {
           type: "postback",
           label: "#{period[:emoji]} #{period[:name]} (#{period[:slots].length}件)",
-          data: "select_time_period_#{course}_#{date_str}_#{period[:name].gsub(/[🌅☀️🌆\s]/, '')}"
+          data: "select_time_period_#{course.gsub(' ', '_')}_#{date_str}_#{period[:name].gsub(/[🌅☀️🌆\s]/, '').gsub(' ', '_')}"
         }
       }
     end
@@ -1942,9 +1948,17 @@ class LinebotController < ApplicationController
           contents: [
             {
               type: "text",
-              text: "⏰ 時間帯選択",
+              text: get_message(user, :time_period_selection_title),
               weight: "bold",
               size: "lg"
+            },
+            {
+              type: "text",
+              text: get_message(user, :time_period_selection_title_en),
+              size: "sm",
+              color: "#999999",
+              align: "start",
+              margin: "xs"
             },
             {
               type: "text",
@@ -1954,10 +1968,17 @@ class LinebotController < ApplicationController
             },
             {
               type: "text",
-              text: "利用可能: #{periods.sum { |p| p[:slots].length }}件",
+              text: "#{get_message(user, :available_slots)}: #{periods.sum { |p| p[:slots].length }}件",
               size: "xs",
               color: "#28a745",
               margin: "sm"
+            },
+            {
+              type: "text",
+              text: "#{get_message(user, :available_slots_en)}: #{periods.sum { |p| p[:slots].length }} slots",
+              size: "xs",
+              color: "#999999",
+              margin: "xs"
             }
           ]
         },
@@ -1967,9 +1988,18 @@ class LinebotController < ApplicationController
           contents: [
             {
               type: "text",
-              text: "ご希望の時間帯をお選びください",
+              text: get_message(user, :time_period_selection_subtitle),
               wrap: true,
               margin: "md"
+            },
+            {
+              type: "text",
+              text: get_message(user, :time_period_selection_subtitle_en),
+              size: "sm",
+              color: "#999999",
+              wrap: true,
+              margin: "xs",
+              align: "start"
             }
           ] + period_buttons,
           spacing: "md"
