@@ -2977,11 +2977,19 @@ class LinebotController < ApplicationController
           contents: [
             {
               type: "text",
-              text: "上記内容に同意しますか？\nDo you agree to the above terms?",
+              text: "上記内容に同意しますか？",
               size: "sm",
               weight: "bold",
               align: "center",
               margin: "md"
+            },
+            {
+              type: "text",
+              text: "Do you agree to the above terms?",
+              size: "xs",
+              color: "#999999",
+              align: "center",
+              margin: "xs"
             },
             {
               type: "box",
