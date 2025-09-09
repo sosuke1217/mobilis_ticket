@@ -1647,7 +1647,7 @@ class Admin::ReservationsController < ApplicationController
 
   # 75分インターバルを考慮した空きチェック
   def time_slot_available_with_75min_interval?(start_time, end_time)
-    # 75分のインターバル時間を考慮
+    # 75分のインターバル時間を考慮（次の予約の前に75分の準備時間）
     interval_minutes = 75
     
     # 同じ日付の予約のみを対象とする
@@ -1655,29 +1655,21 @@ class Admin::ReservationsController < ApplicationController
     
     Rails.logger.info "🔍 Checking 75min interval availability for: #{start_time.strftime('%H:%M')} - #{end_time.strftime('%H:%M')} on #{date}"
     
-    # 既存の予約との重複チェック（同じ日付のみ）
-    existing_reservations = Reservation.where('DATE(start_time) = ?', date)
-                                       .where.not(status: :cancelled)
-                                       .order(:start_time)
+    # 既存の予約との重複チェック（次の予約の前に75分の準備時間を確保）
+    overlapping_reservations = Reservation.where('DATE(start_time) = ?', date)
+                                         .where.not(status: :cancelled)
+                                         .where('start_time < ? AND (end_time + INTERVAL ? MINUTE) > ?',
+                                                end_time + interval_minutes.minutes, interval_minutes, start_time)
     
-    existing_reservations.each do |existing_res|
-      # 既存予約の占有終了時間（予約時間 + 75分インターバル）
-      existing_interval = existing_res.individual_interval_minutes.presence || 75
-      existing_occupied_end = existing_res.end_time + existing_interval.minutes
-      
-      # 新規予約の占有終了時間（75分インターバル）
-      new_end_with_interval = start_time + interval_minutes.minutes
-      
-      Rails.logger.info "  -> Comparing with existing reservation: #{existing_res.start_time.strftime('%H:%M')} - #{existing_res.end_time.strftime('%H:%M')} (occupied until #{existing_occupied_end.strftime('%H:%M')} incl. #{existing_interval} min interval)"
-      
-      # 重複チェック: 新規予約の開始時間 < 既存予約の占有終了時間 AND 新規予約の占有終了時間 > 既存予約の開始時間
-      if start_time < existing_occupied_end && new_end_with_interval > existing_res.start_time
-        Rails.logger.info "  ❌ CONFLICT: New reservation conflicts with existing reservation"
-        return false
+    if overlapping_reservations.exists?
+      Rails.logger.info "  ❌ CONFLICT: Found overlapping reservations"
+      overlapping_reservations.each do |res|
+        Rails.logger.info "    - #{res.start_time.strftime('%H:%M')} - #{res.end_time.strftime('%H:%M')}"
       end
+      return false
     end
     
-    Rails.logger.info "  ✅ AVAILABLE: No conflicts found"
+    Rails.logger.info "  ✅ No conflicts found"
     true
   end
 

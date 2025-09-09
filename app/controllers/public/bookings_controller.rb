@@ -155,13 +155,13 @@ class Public::BookingsController < ApplicationController
 
   # 75分インターバルを考慮した空きチェック
   def time_slot_available_with_75min_interval?(start_time, end_time)
-    # 75分のインターバル時間を考慮
+    # 75分のインターバル時間を考慮（次の予約の前に75分の準備時間）
     interval_minutes = 75
     
-    # 既存の予約との重複チェック（75分インターバル考慮）
+    # 既存の予約との重複チェック（次の予約の前に75分の準備時間を確保）
     overlapping_reservations = Reservation.active.where(
-      '(start_time - INTERVAL ? MINUTE) < ? AND (end_time + INTERVAL ? MINUTE) > ?',
-      interval_minutes, end_time, interval_minutes, start_time
+      'start_time < ? AND (end_time + INTERVAL ? MINUTE) > ?',
+      end_time + interval_minutes.minutes, interval_minutes, start_time
     )
     
     overlapping_reservations.empty?
