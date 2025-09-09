@@ -1614,24 +1614,24 @@ class Admin::ReservationsController < ApplicationController
       Rails.logger.info "  - #{reservation.start_time.strftime('%H:%M')} - #{reservation.end_time.strftime('%H:%M')} (#{reservation.course})"
     end
     
-    # インターバル時間を取得（60分）
+    # インターバル時間を取得（75分）
     interval_minutes = Reservation.interval_minutes
     Rails.logger.info "⏱️ Interval minutes: #{interval_minutes}"
     
-    # 60分+20分インターバルに対応したスロット間隔（80分刻み）
-    slot_interval = (duration + interval_minutes).minutes
+    # 75分インターバルに対応したスロット間隔（80分刻み）
+    slot_interval = 80.minutes
     available_slots = []
     
     current_time = opening_time
     while current_time + duration.minutes <= closing_time
       end_time = current_time + duration.minutes
       
-      # 60分+20分インターバルを考慮した空きチェック
-      if time_slot_available_with_60min_interval?(current_time, end_time)
+      # 75分インターバルを考慮した空きチェック
+      if time_slot_available_with_75min_interval?(current_time, end_time)
         available_slots << {
           start_time: current_time,
           end_time: end_time,
-          interval_info: "（60分+20分準備時間含む）"
+          interval_info: "（75分準備時間含む）"
         }
         Rails.logger.info "✅ Available slot: #{current_time.strftime('%H:%M')} - #{end_time.strftime('%H:%M')}"
       else
@@ -1645,15 +1645,15 @@ class Admin::ReservationsController < ApplicationController
     available_slots
   end
 
-  # 60分+20分インターバルを考慮した空きチェック
-  def time_slot_available_with_60min_interval?(start_time, end_time)
-    # 60分の予約時間 + 20分のインターバル = 80分の占有時間
-    total_occupation_minutes = 60 + 20
+  # 75分インターバルを考慮した空きチェック
+  def time_slot_available_with_75min_interval?(start_time, end_time)
+    # 75分のインターバル時間を考慮
+    interval_minutes = 75
     
     # 同じ日付の予約のみを対象とする
     date = start_time.to_date
     
-    Rails.logger.info "🔍 Checking 60min+20min availability for: #{start_time.strftime('%H:%M')} - #{end_time.strftime('%H:%M')} on #{date}"
+    Rails.logger.info "🔍 Checking 75min interval availability for: #{start_time.strftime('%H:%M')} - #{end_time.strftime('%H:%M')} on #{date}"
     
     # 既存の予約との重複チェック（同じ日付のみ）
     existing_reservations = Reservation.where('DATE(start_time) = ?', date)
@@ -1661,12 +1661,12 @@ class Admin::ReservationsController < ApplicationController
                                        .order(:start_time)
     
     existing_reservations.each do |existing_res|
-      # 既存予約の占有終了時間（予約時間 + 20分インターバル）
-      existing_interval = existing_res.individual_interval_minutes.presence || 20
+      # 既存予約の占有終了時間（予約時間 + 75分インターバル）
+      existing_interval = existing_res.individual_interval_minutes.presence || 75
       existing_occupied_end = existing_res.end_time + existing_interval.minutes
       
-      # 新規予約の占有終了時間（60分 + 20分インターバル）
-      new_end_with_interval = start_time + total_occupation_minutes.minutes
+      # 新規予約の占有終了時間（75分インターバル）
+      new_end_with_interval = start_time + interval_minutes.minutes
       
       Rails.logger.info "  -> Comparing with existing reservation: #{existing_res.start_time.strftime('%H:%M')} - #{existing_res.end_time.strftime('%H:%M')} (occupied until #{existing_occupied_end.strftime('%H:%M')} incl. #{existing_interval} min interval)"
       

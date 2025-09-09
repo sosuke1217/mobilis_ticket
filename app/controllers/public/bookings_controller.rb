@@ -101,23 +101,23 @@ class Public::BookingsController < ApplicationController
     opening_time = Time.zone.parse("#{date} 10:00")
     closing_time = Time.zone.parse("#{date} 19:00")
     
-    # インターバル時間を取得（60分）
+    # インターバル時間を取得（75分）
     interval_minutes = Reservation.interval_minutes
     
-    # 60分+20分インターバルに対応したスロット間隔（80分刻み）
-    slot_interval = (duration + interval_minutes).minutes
+    # 75分インターバルに対応したスロット間隔（80分刻み）
+    slot_interval = 80.minutes
     available_slots = []
     
     current_time = opening_time
     while current_time + duration.minutes <= closing_time
       end_time = current_time + duration.minutes
       
-      # 60分+20分インターバルを考慮した空きチェック
-      if time_slot_available_with_60min_interval?(current_time, end_time)
+      # 75分インターバルを考慮した空きチェック
+      if time_slot_available_with_75min_interval?(current_time, end_time)
         available_slots << {
           start_time: current_time,
           end_time: end_time,
-          interval_info: "（60分+20分準備時間含む）"
+          interval_info: "（75分準備時間含む）"
         }
       end
       
@@ -145,6 +145,20 @@ class Public::BookingsController < ApplicationController
     interval_minutes = 60
     
     # 既存の予約との重複チェック（60分インターバル考慮）
+    overlapping_reservations = Reservation.active.where(
+      '(start_time - INTERVAL ? MINUTE) < ? AND (end_time + INTERVAL ? MINUTE) > ?',
+      interval_minutes, end_time, interval_minutes, start_time
+    )
+    
+    overlapping_reservations.empty?
+  end
+
+  # 75分インターバルを考慮した空きチェック
+  def time_slot_available_with_75min_interval?(start_time, end_time)
+    # 75分のインターバル時間を考慮
+    interval_minutes = 75
+    
+    # 既存の予約との重複チェック（75分インターバル考慮）
     overlapping_reservations = Reservation.active.where(
       '(start_time - INTERVAL ? MINUTE) < ? AND (end_time + INTERVAL ? MINUTE) > ?',
       interval_minutes, end_time, interval_minutes, start_time

@@ -26,7 +26,7 @@ class ApplicationSetting < ApplicationRecord
   # デフォルト設定を作成
   def self.create_default!
     create!(
-      reservation_interval_minutes: 20,
+      reservation_interval_minutes: 75,
       business_hours_start: 10,
       business_hours_end: 20,
       slot_interval_minutes: 30,
@@ -38,7 +38,7 @@ class ApplicationSetting < ApplicationRecord
     Rails.logger.error "❌ Failed to create default ApplicationSetting: #{e.message}"
     # フォールバック用のオブジェクトを返す
     new(
-      reservation_interval_minutes: 20,
+      reservation_interval_minutes: 75,
       business_hours_start: 10,
       business_hours_end: 20,
       slot_interval_minutes: 30,
