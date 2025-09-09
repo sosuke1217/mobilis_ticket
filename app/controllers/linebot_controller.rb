@@ -2956,14 +2956,14 @@ class LinebotController < ApplicationController
             },
             {
               type: "text",
-              text: "• 予約枠には限りがあります\n• 予約確定後、指定日時に提供\n• 規約は予告なく変更される場合があります\n• 事業者：Mobilis（吉田壮祐）",
+              text: "• 予約枠には限りがあります\n• 予約確定後、指定日時に提供\n• 規約は予告なく変更される場合があります\n• 事業者：Mobilis（吉田壮祐）\n• ベッド設置に2m×1mのスペースが必要\n• 動きやすい服装をご用意ください",
               size: "sm",
               wrap: true,
               margin: "sm"
             },
             {
               type: "text",
-              text: "• Session availability is limited\n• Provided at scheduled date/time after confirmation\n• Terms may be updated without notice\n• Business: Mobilis (Sosuke Yoshida)",
+              text: "• Session availability is limited\n• Provided at scheduled date/time after confirmation\n• Terms may be updated without notice\n• Business: Mobilis (Sosuke Yoshida)\n• 2m×1m space required for bed setup\n• Please prepare comfortable clothing",
               size: "xs",
               color: "#999999",
               wrap: true,
