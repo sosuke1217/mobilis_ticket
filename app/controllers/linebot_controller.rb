@@ -2878,14 +2878,14 @@ class LinebotController < ApplicationController
             },
             {
               type: "text",
-              text: "• 完全予約制です\n• キャンセルは24時間前まで\n• 当日キャンセルは1回分消化\n• 出張サービス（自宅・レンタルスペース）",
+              text: "• 完全予約制です\n• キャンセルは24時間前まで\n• 当日キャンセルは1回分消化\n• 出張サービス（自宅・レンタルスペース）\n• 支払い：現金・クレジットカード・PayPay",
               size: "sm",
               wrap: true,
               margin: "sm"
             },
             {
               type: "text",
-              text: "• All sessions require prior booking\n• Cancel at least 24 hours in advance\n• Same-day cancellation counts as one session\n• Home visit service (home/rental space)",
+              text: "• All sessions require prior booking\n• Cancel at least 24 hours in advance\n• Same-day cancellation counts as one session\n• Home visit service (home/rental space)\n• Payment: Cash, Credit Card, PayPay",
               size: "xs",
               color: "#999999",
               wrap: true,
@@ -2904,14 +2904,14 @@ class LinebotController < ApplicationController
             },
             {
               type: "text",
-              text: "• 医療行為ではありません\n• 体調不安時は医療機関をご利用ください\n• 無断録音・録画は禁止です",
+              text: "• 医療行為ではありません\n• 体調不安時は医療機関をご利用ください\n• 無断録音・録画は禁止です\n• 広尾エリア外は出張費が発生する場合があります\n• レンタルスペース使用料は実費ご負担",
               size: "sm",
               wrap: true,
               margin: "sm"
             },
             {
               type: "text",
-              text: "• This is not a medical service\n• Consult a medical professional for health concerns\n• Unauthorized recording is prohibited",
+              text: "• This is not a medical service\n• Consult a medical professional for health concerns\n• Unauthorized recording is prohibited\n• Travel fees may apply outside Hiroo area\n• Rental space fees are charged separately",
               size: "xs",
               color: "#999999",
               wrap: true,
