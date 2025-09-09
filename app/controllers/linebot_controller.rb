@@ -2942,6 +2942,32 @@ class LinebotController < ApplicationController
               color: "#999999",
               wrap: true,
               margin: "xs"
+            },
+            {
+              type: "separator",
+              margin: "md"
+            },
+            {
+              type: "text",
+              text: "【その他 / Additional Information】",
+              weight: "bold",
+              size: "sm",
+              margin: "md"
+            },
+            {
+              type: "text",
+              text: "• 予約枠には限りがあります\n• 予約確定後、指定日時に提供\n• 規約は予告なく変更される場合があります\n• 事業者：Mobilis（吉田壮祐）",
+              size: "sm",
+              wrap: true,
+              margin: "sm"
+            },
+            {
+              type: "text",
+              text: "• Session availability is limited\n• Provided at scheduled date/time after confirmation\n• Terms may be updated without notice\n• Business: Mobilis (Sosuke Yoshida)",
+              size: "xs",
+              color: "#999999",
+              wrap: true,
+              margin: "xs"
             }
           ]
         },
