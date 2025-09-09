@@ -2878,14 +2878,14 @@ class LinebotController < ApplicationController
             },
             {
               type: "text",
-              text: "• 予約時間の変更・キャンセルは前日まで\n• 無断キャンセルはチケット1回分消費\n• 個人情報は適切に管理されます",
+              text: "• 完全予約制です\n• キャンセルは24時間前まで\n• 当日キャンセルは1回分消化\n• 出張サービス（自宅・レンタルスペース）",
               size: "sm",
               wrap: true,
               margin: "sm"
             },
             {
               type: "text",
-              text: "• Reservation changes/cancellations must be made by the day before\n• No-show will consume 1 ticket\n• Personal information is properly managed",
+              text: "• All sessions require prior booking\n• Cancel at least 24 hours in advance\n• Same-day cancellation counts as one session\n• Home visit service (home/rental space)",
               size: "xs",
               color: "#999999",
               wrap: true,
@@ -2904,14 +2904,40 @@ class LinebotController < ApplicationController
             },
             {
               type: "text",
-              text: "• 怪我・事故等の責任は利用者にあります\n• サービス内容は予告なく変更される場合があります",
+              text: "• 医療行為ではありません\n• 体調不安時は医療機関をご利用ください\n• 無断録音・録画は禁止です",
               size: "sm",
               wrap: true,
               margin: "sm"
             },
             {
               type: "text",
-              text: "• Users are responsible for injuries and accidents\n• Service content may be changed without notice",
+              text: "• This is not a medical service\n• Consult a medical professional for health concerns\n• Unauthorized recording is prohibited",
+              size: "xs",
+              color: "#999999",
+              wrap: true,
+              margin: "xs"
+            },
+            {
+              type: "separator",
+              margin: "md"
+            },
+            {
+              type: "text",
+              text: "【個人情報 / Privacy】",
+              weight: "bold",
+              size: "sm",
+              margin: "md"
+            },
+            {
+              type: "text",
+              text: "• 予約管理・サービス向上目的のみ使用\n• 適切に管理・保護いたします",
+              size: "sm",
+              wrap: true,
+              margin: "sm"
+            },
+            {
+              type: "text",
+              text: "• Used only for appointment management and service improvement\n• Properly managed and protected",
               size: "xs",
               color: "#999999",
               wrap: true,
