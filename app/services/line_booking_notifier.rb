@@ -89,6 +89,22 @@ class LineBookingNotifier
     Rails.logger.info "[LINE BOOKING] キャンセル通知送信: #{response.code}"
   end
 
+  # 🆕 管理者通知送信
+  def self.send_admin_notification(reservation)
+    admin_line_user_id = ENV['ADMIN_LINE_USER_ID']
+    return unless admin_line_user_id.present?
+
+    client = Line::Bot::Client.new do |config|
+      config.channel_secret = ENV['LINE_CHANNEL_SECRET']
+      config.channel_token = ENV['LINE_CHANNEL_TOKEN']
+    end
+
+    message = build_admin_notification_message(reservation)
+    
+    response = client.push_message(admin_line_user_id, message)
+    Rails.logger.info "[LINE BOOKING] 管理者通知送信: #{response.code}"
+  end
+
   private
 
   def self.build_booking_request_message(reservation)
@@ -537,6 +553,168 @@ class LineBookingNotifier
   def self.send_email_fallback(reservation)
     ReservationMailer.confirmation(reservation).deliver_later
     Rails.logger.info "Sent email fallback for reservation #{reservation.id}"
+  end
+
+  def self.build_admin_notification_message(reservation)
+    user = reservation.user
+    course_display = reservation.course.to_s.gsub('_', ' ').gsub(/分$/, '').gsub(/min$/, '') + ' min'
+    
+    {
+      type: "flex",
+      altText: "新規予約通知 - #{user.name}様",
+      contents: {
+        type: "bubble",
+        header: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "🔔 新規予約通知",
+              weight: "bold",
+              size: "lg",
+              color: "#1976d2"
+            },
+            {
+              type: "text",
+              text: "New Reservation Notification",
+              size: "sm",
+              color: "#999999",
+              margin: "xs"
+            }
+          ]
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "box",
+              layout: "baseline",
+              contents: [
+                {
+                  type: "text",
+                  text: "お客様名",
+                  size: "sm",
+                  color: "#666666",
+                  flex: 2
+                },
+                {
+                  type: "text",
+                  text: user.name,
+                  size: "sm",
+                  weight: "bold",
+                  flex: 3
+                }
+              ],
+              spacing: "sm",
+              margin: "sm"
+            },
+            {
+              type: "box",
+              layout: "baseline",
+              contents: [
+                {
+                  type: "text",
+                  text: "日時",
+                  size: "sm",
+                  color: "#666666",
+                  flex: 2
+                },
+                {
+                  type: "text",
+                  text: reservation.start_time.strftime('%m/%d(%a) %H:%M〜'),
+                  size: "sm",
+                  flex: 3
+                }
+              ],
+              spacing: "sm",
+              margin: "sm"
+            },
+            {
+              type: "box",
+              layout: "baseline",
+              contents: [
+                {
+                  type: "text",
+                  text: "コース",
+                  size: "sm",
+                  color: "#666666",
+                  flex: 2
+                },
+                {
+                  type: "text",
+                  text: course_display,
+                  size: "sm",
+                  flex: 3
+                }
+              ],
+              spacing: "sm",
+              margin: "sm"
+            },
+            {
+              type: "box",
+              layout: "baseline",
+              contents: [
+                {
+                  type: "text",
+                  text: "場所",
+                  size: "sm",
+                  color: "#666666",
+                  flex: 2
+                },
+                {
+                  type: "text",
+                  text: reservation.note&.include?("ストレッチ場所:") ? reservation.note.split("ストレッチ場所: ")[1]&.split(" |")&.first || "未設定" : "未設定",
+                  size: "sm",
+                  flex: 3,
+                  wrap: true
+                }
+              ],
+              spacing: "sm",
+              margin: "sm"
+            },
+            {
+              type: "box",
+              layout: "baseline",
+              contents: [
+                {
+                  type: "text",
+                  text: "ステータス",
+                  size: "sm",
+                  color: "#666666",
+                  flex: 2
+                },
+                {
+                  type: "text",
+                  text: "仮予約",
+                  size: "sm",
+                  color: "#ff9800",
+                  weight: "bold",
+                  flex: 3
+                }
+              ],
+              spacing: "sm",
+              margin: "sm"
+            }
+          ]
+        },
+        footer: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "管理画面で確認・確定してください",
+              size: "xs",
+              color: "#999999",
+              align: "center",
+              margin: "md"
+            }
+          ]
+        }
+      }
+    }
   end
   
 end

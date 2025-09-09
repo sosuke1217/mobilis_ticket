@@ -1853,6 +1853,14 @@ class LinebotController < ApplicationController
       
       if reservation.save
         Rails.logger.info "✅ Reservation created successfully: #{reservation.id}"
+        
+        # 管理者に通知を送信
+        begin
+          LineBookingNotifier.send_admin_notification(reservation)
+          Rails.logger.info "📱 Admin notification sent for reservation #{reservation.id}"
+        rescue => e
+          Rails.logger.error "❌ Failed to send admin notification: #{e.message}"
+        end
       else
         Rails.logger.error "❌ Reservation save failed: #{reservation.errors.full_messages}"
         send_reply(reply_token, {
