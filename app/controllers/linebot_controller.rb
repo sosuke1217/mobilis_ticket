@@ -367,6 +367,7 @@ class LinebotController < ApplicationController
       })
 
     when /予約|booking|ご予約|予約したい|予約お願い/i
+      return unless check_consent(user, reply_token)
       send_booking_options(user, reply_token)
 
     when /40 min|40min|40minコース/i
@@ -417,9 +418,28 @@ class LinebotController < ApplicationController
     Rails.logger.info "🔍 Postback data length: #{data.length}"
     
     case data
+    when "consent_accept"
+      Rails.logger.info "✅ User accepted consent: #{user.id} (#{user.name})"
+      user.update!(
+        consent_accepted: true,
+        consent_accepted_at: Time.current
+      )
+      send_reply(reply_token, {
+        type: "text",
+        text: "✅ 同意いただきありがとうございます！\nThank you for your consent!\n\nこれでサービスをご利用いただけます。\nYou can now use our services."
+      })
+      
+    when "consent_reject"
+      Rails.logger.info "❌ User rejected consent: #{user.id} (#{user.name})"
+      send_reply(reply_token, {
+        type: "text",
+        text: "❌ 同意いただけない場合は、サービスをご利用いただけません。\nWithout consent, you cannot use our services.\n\n同意いただける場合は、再度「予約」と送信してください。\nIf you agree, please send \"予約\" again."
+      })
+      
     when "check_tickets"
       Rails.logger.info "📋 Checking tickets for user: #{user.id} (#{user.name})"
       Rails.logger.info "📋 User line_user_id: #{user.line_user_id}"
+      return unless check_consent(user, reply_token)
       send_ticket_status(user, reply_token)
 
     when "usage_history"
@@ -437,6 +457,7 @@ class LinebotController < ApplicationController
 
     when "booking"
       Rails.logger.info "📅 Showing booking options"
+      return unless check_consent(user, reply_token)
       send_booking_options(user, reply_token)
 
     when "news"
@@ -2805,6 +2826,143 @@ class LinebotController < ApplicationController
             "または下のメニューからもご利用いただけます。\n" \
             "You can also use the menu below."
     })
+  end
+
+  # 同意チェック
+  def check_consent(user, reply_token)
+    unless user.consent_accepted?
+      Rails.logger.info "📋 User #{user.id} (#{user.name}) has not consented yet"
+      send_consent_message(reply_token, user)
+      return false
+    end
+    true
+  end
+
+  # 同意書メッセージを送信
+  def send_consent_message(reply_token, user)
+    message = {
+      type: "flex",
+      altText: "サービス利用同意書",
+      contents: {
+        type: "bubble",
+        header: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "📋 サービス利用同意書",
+              weight: "bold",
+              size: "lg",
+              color: "#1976d2"
+            },
+            {
+              type: "text",
+              text: "Service Agreement",
+              size: "sm",
+              color: "#999999",
+              margin: "xs"
+            }
+          ]
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "【利用規約 / Terms of Service】",
+              weight: "bold",
+              size: "sm",
+              margin: "md"
+            },
+            {
+              type: "text",
+              text: "• 予約時間の変更・キャンセルは前日まで\n• 無断キャンセルはチケット1回分消費\n• 個人情報は適切に管理されます",
+              size: "sm",
+              wrap: true,
+              margin: "sm"
+            },
+            {
+              type: "text",
+              text: "• Reservation changes/cancellations must be made by the day before\n• No-show will consume 1 ticket\n• Personal information is properly managed",
+              size: "xs",
+              color: "#999999",
+              wrap: true,
+              margin: "xs"
+            },
+            {
+              type: "separator",
+              margin: "md"
+            },
+            {
+              type: "text",
+              text: "【免責事項 / Disclaimer】",
+              weight: "bold",
+              size: "sm",
+              margin: "md"
+            },
+            {
+              type: "text",
+              text: "• 怪我・事故等の責任は利用者にあります\n• サービス内容は予告なく変更される場合があります",
+              size: "sm",
+              wrap: true,
+              margin: "sm"
+            },
+            {
+              type: "text",
+              text: "• Users are responsible for injuries and accidents\n• Service content may be changed without notice",
+              size: "xs",
+              color: "#999999",
+              wrap: true,
+              margin: "xs"
+            }
+          ]
+        },
+        footer: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "上記内容に同意しますか？\nDo you agree to the above terms?",
+              size: "sm",
+              weight: "bold",
+              align: "center",
+              margin: "md"
+            },
+            {
+              type: "box",
+              layout: "horizontal",
+              contents: [
+                {
+                  type: "button",
+                  style: "primary",
+                  action: {
+                    type: "postback",
+                    label: "✅ 同意する",
+                    data: "consent_accept"
+                  }
+                },
+                {
+                  type: "button",
+                  style: "secondary",
+                  action: {
+                    type: "postback",
+                    label: "❌ 同意しない",
+                    data: "consent_reject"
+                  }
+                }
+              ],
+              spacing: "sm",
+              margin: "md"
+            }
+          ]
+        }
+      }
+    }
+    
+    send_reply(reply_token, message)
   end
 
   # 🆕 Googleレビューメニュー送信
