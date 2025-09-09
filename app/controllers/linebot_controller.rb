@@ -2994,20 +2994,20 @@ class LinebotController < ApplicationController
             {
               type: "box",
               layout: "horizontal",
-              contents: [
-                {
-                  type: "button",
-                  style: "primary",
-                  action: {
+          contents: [
+            {
+              type: "button",
+              style: "primary",
+              action: {
                     type: "postback",
                     label: "✅ 同意する",
                     data: "consent_accept"
-                  }
-                },
-                {
-                  type: "button",
-                  style: "secondary",
-                  action: {
+              }
+            },
+            {
+              type: "button",
+              style: "secondary",
+              action: {
                     type: "postback",
                     label: "❌ 同意しない",
                     data: "consent_reject"
