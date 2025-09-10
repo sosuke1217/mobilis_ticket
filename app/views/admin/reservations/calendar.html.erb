@@ -30,8 +30,8 @@
         <div class="card-header bg-light">
           <div class="d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-3">
-              <!-- 週ナビゲーション -->
-              <div class="d-flex align-items-center gap-2">
+              <!-- 表示モード切り替え（デスクトップのみ表示） -->
+              <div class="d-none d-md-flex align-items-center gap-2">
                 <button class="btn btn-outline-primary btn-sm" onclick="previousWeek()">
                   <i class="fas fa-chevron-left"></i>
                 </button>
@@ -39,7 +39,18 @@
                 <button class="btn btn-outline-primary btn-sm" onclick="nextWeek()">
                   <i class="fas fa-chevron-right"></i>
                 </button>
-                </div>
+              </div>
+              
+              <!-- 携帯用日付ナビゲーション -->
+              <div class="d-md-none d-flex align-items-center gap-2">
+                <button class="btn btn-outline-primary btn-sm" onclick="previousDay()">
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+                <div class="fw-semibold" id="currentDay">読み込み中...</div>
+                <button class="btn btn-outline-primary btn-sm" onclick="nextDay()">
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
               
               <!-- ミニカレンダー -->
               <div class="position-relative">
@@ -121,7 +132,8 @@
         <!-- スケジュールコンテナ -->
         <div class="card-body p-0">
         <div class="schedule-container">
-            <div class="schedule-header">
+            <!-- デスクトップ用の週表示ヘッダー -->
+            <div class="schedule-header d-none d-md-flex">
                 <div class="time-column-header">時刻</div>
                 <div class="day-header sunday">日<br><span style="font-size: 12px;">8/10</span></div>
                 <div class="day-header">月<br><span style="font-size: 12px;">8/11</span></div>
@@ -130,6 +142,12 @@
                 <div class="day-header">木<br><span style="font-size: 12px;">8/14</span></div>
                 <div class="day-header">金<br><span style="font-size: 12px;">8/15</span></div>
                 <div class="day-header saturday">土<br><span style="font-size: 12px;">8/16</span></div>
+            </div>
+            
+            <!-- 携帯用の日表示ヘッダー -->
+            <div class="schedule-header d-md-none">
+                <div class="time-column-header">時刻</div>
+                <div class="day-header">今日</div>
             </div>
             
             <div class="schedule-body" id="scheduleBody">
@@ -603,6 +621,9 @@
             let globalCurrentDate = new Date();
             let currentWeekStart = new Date(globalCurrentDate);
             currentWeekStart.setDate(globalCurrentDate.getDate() - globalCurrentDate.getDay()); // 日曜日に設定
+            
+            // 携帯用の現在日付
+            let currentDay = new Date(globalCurrentDate);
             let weeklySchedules = {}; // 週別スケジュール（週のキーで保存）
             let defaultSchedule = {}; // デフォルトスケジュール
             let reservations = {}; // 予約データ
@@ -694,6 +715,55 @@
         // カレンダー初期化フラグ
         let calendarInitialized = false;
         
+        // 携帯かどうかを判定
+        function isMobile() {
+            return window.innerWidth < 768; // Bootstrapのmdブレークポイント
+        }
+
+        // 週表示の更新
+        function updateWeekDisplay() {
+            const weekEnd = new Date(currentWeekStart);
+            weekEnd.setDate(currentWeekStart.getDate() + 6);
+            
+            const weekElement = document.getElementById('currentWeek');
+            if (weekElement) {
+                weekElement.textContent = `${formatDate(currentWeekStart)} - ${formatDate(weekEnd)}`;
+            }
+        }
+
+        // 日表示の更新
+        function updateDayDisplay() {
+            const dayElement = document.getElementById('currentDay');
+            if (dayElement) {
+                dayElement.textContent = formatDate(currentDay);
+            }
+        }
+
+        // 日付フォーマット
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            const dayName = dayNames[date.getDay()];
+            return `${year}/${month}/${day} (${dayName})`;
+        }
+
+        // イベントリスナーを設定
+        function setupEventListeners() {
+            // ウィンドウリサイズ時の処理
+            window.addEventListener('resize', () => {
+                if (calendarInitialized) {
+                    if (isMobile()) {
+                        renderDayView();
+                        updateDayDisplay();
+                    } else {
+                        renderWeekView();
+                        updateWeekDisplay();
+                    }
+                }
+            });
+        }
+
         // 初期化
         function init() {
             // 既に初期化済みの場合はスキップ
@@ -711,7 +781,13 @@
                 loadShiftSettingsFromBackend(),
                 loadReservationsFromBackend()
             ]).then(() => {
-                renderWeekView();
+                if (isMobile()) {
+                    renderDayView();
+                    updateDayDisplay();
+                } else {
+                    renderWeekView();
+                    updateWeekDisplay();
+                }
                 renderDaySettings();
                 renderMiniCalendar();
                 showDragHint();
@@ -2410,6 +2486,20 @@
             };
         }
 
+        // 日表示を描画（携帯用）
+        function renderDayView() {
+            console.log('📱 Rendering day view for:', currentDay);
+            
+            // デフォルトスケジュールが最新であることを確認
+            if (!defaultSchedule || Object.keys(defaultSchedule).length === 0) {
+                console.log('🔄 Default schedule not found, initializing...');
+                initializeDefaultSchedule();
+            }
+            
+            updateDayHeader();
+            generateDayTimeSlots();
+        }
+
         // 週表示を描画
         function renderWeekView() {
             // デフォルトスケジュールが最新であることを確認
@@ -2420,6 +2510,39 @@
             
             updateWeekHeader();
             generateTimeSlots();
+        }
+
+        // 日のヘッダーを更新（携帯用）
+        function updateDayHeader() {
+            const dayName = dayNames[currentDay.getDay()];
+            const dateStr = `${currentDay.getMonth() + 1}/${currentDay.getDate()}`;
+            
+            // 今日かどうかをチェック
+            const today = new Date();
+            const isToday = currentDay.toDateString() === today.toDateString();
+            
+            // 日付ヘッダーを更新
+            const header = document.querySelector('.day-header');
+            if (header) {
+                header.innerHTML = `
+                    <div class="day-name ${isToday ? 'today' : ''}">${dayName}</div>
+                    <div class="day-date">${dateStr}</div>
+                `;
+                
+                // CSSクラスをリセット
+                header.classList.remove('sunday', 'saturday', 'today');
+                
+                // 正しいCSSクラスを追加
+                if (currentDay.getDay() === 0) {
+                    header.classList.add('sunday');
+                } else if (currentDay.getDay() === 6) {
+                    header.classList.add('saturday');
+                }
+                
+                if (isToday) {
+                    header.classList.add('today');
+                }
+            }
         }
 
         // 週のヘッダーを更新
@@ -2463,6 +2586,87 @@
                 }
                 
                 headers[i].innerHTML = `${dayName}<br><span style="font-size: 12px;">${dateStr}</span>`;
+            }
+        }
+
+        // 日表示用のタイムスロットを生成（携帯用）
+        function generateDayTimeSlots() {
+            console.log('📱 Generating day time slots for:', currentDay);
+            
+            // デフォルトスケジュールが最新であることを確認
+            if (!defaultSchedule || Object.keys(defaultSchedule).length === 0) {
+                console.log('🔄 Default schedule not found in generateDayTimeSlots, initializing...');
+                initializeDefaultSchedule();
+            }
+            
+            const scheduleBody = document.getElementById('scheduleBody');
+            scheduleBody.innerHTML = '';
+            
+            const dayOfWeek = currentDay.getDay();
+            const daySchedule = defaultSchedule[dayOfWeek] || { enabled: false, times: [] };
+            
+            if (!daySchedule.enabled) {
+                scheduleBody.innerHTML = '<div class="text-center text-muted py-4">この日は営業していません</div>';
+                return;
+            }
+            
+            // 営業時間内の時間スロットを生成
+            for (let hour = 8; hour <= 21; hour++) {
+                for (let minute = 0; minute < 60; minute += 10) {
+                    if (hour === 21 && minute > 0) break; // 21:00で終了
+                    
+                    const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+                    
+                    // 営業時間内かチェック
+                    const isWithinBusinessHours = daySchedule.times.some(timeRange => {
+                        return timeStr >= timeRange.start && timeStr < timeRange.end;
+                    });
+                    
+                    if (!isWithinBusinessHours) continue;
+                    
+                    // 行コンテナを作成
+                    const row = document.createElement('div');
+                    row.className = 'schedule-row';
+                    
+                    // 行全体のスタイルを追加
+                    if (minute === 0) {
+                        row.classList.add('hour-row');
+                    } else if (minute === 30) {
+                        row.classList.add('half-hour-row');
+                    }
+                    
+                    // 時間ラベル
+                    const timeLabel = document.createElement('div');
+                    timeLabel.className = 'time-label';
+                    timeLabel.textContent = timeStr;
+                    row.appendChild(timeLabel);
+                    
+                    // 予約スロット
+                    const slot = document.createElement('div');
+                    slot.className = 'time-slot';
+                    slot.dataset.time = timeStr;
+                    slot.dataset.date = formatDateKey(currentDay);
+                    
+                    // 既存の予約をチェック
+                    const dateKey = formatDateKey(currentDay);
+                    const existingReservation = reservations[dateKey]?.find(r => r.time === timeStr);
+                    
+                    if (existingReservation) {
+                        slot.classList.add('reserved');
+                        slot.innerHTML = `
+                            <div class="reservation-block" data-reservation-id="${existingReservation.id}">
+                                <div class="reservation-time">${existingReservation.time}</div>
+                                <div class="reservation-customer">${existingReservation.customer}</div>
+                                <div class="reservation-status status-${existingReservation.status}">${existingReservation.status}</div>
+                            </div>
+                        `;
+                    } else {
+                        slot.addEventListener('click', () => createReservation(timeStr, currentDay));
+                    }
+                    
+                    row.appendChild(slot);
+                    scheduleBody.appendChild(row);
+                }
             }
         }
 
@@ -3707,6 +3911,26 @@
                 console.error('❌ Error saving shift settings:', error);
                 showMessage('シフト設定の保存中にエラーが発生しました', 'error');
             });
+        }
+
+        // 前日へ（携帯用）
+        function previousDay() {
+            console.log('🔄 Previous day clicked - current day before:', currentDay);
+            currentDay.setDate(currentDay.getDate() - 1);
+            console.log('🔄 Previous day clicked - current day after:', currentDay);
+            
+            renderDayView();
+            updateDayDisplay();
+        }
+
+        // 次日へ（携帯用）
+        function nextDay() {
+            console.log('🔄 Next day clicked - current day before:', currentDay);
+            currentDay.setDate(currentDay.getDate() + 1);
+            console.log('🔄 Next day clicked - current day after:', currentDay);
+            
+            renderDayView();
+            updateDayDisplay();
         }
 
         // 前週へ
@@ -8871,13 +9095,13 @@ function showMessage(message, type = 'info') {
             refreshBtn.disabled = true;
             refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>更新中...';
             
-            // 現在の週のデータを再読み込み
-            const weekStartStr = formatDateKey(currentWeekStart);
+            // 携帯の場合は日付、デスクトップの場合は週のデータを再読み込み
+            const dateStr = isMobile() ? formatDateKey(currentDay) : formatDateKey(currentWeekStart);
             
             Promise.all([
-                fetch(`/admin/reservations/load_reservations?week_start_date=${weekStartStr}`)
+                fetch(`/admin/reservations/load_reservations?week_start_date=${dateStr}`)
                     .then(response => response.json()),
-                fetch(`/admin/reservations/load_shift_settings?week_start_date=${weekStartStr}`)
+                fetch(`/admin/reservations/load_shift_settings?week_start_date=${dateStr}`)
                     .then(response => response.json())
             ]).then(([reservationsData, shiftData]) => {
                 console.log('📅 Refreshed reservations:', reservationsData);
@@ -8896,7 +9120,13 @@ function showMessage(message, type = 'info') {
                 }
                 
                 // カレンダーを再描画
-                renderWeekView();
+                if (isMobile()) {
+                    renderDayView();
+                    updateDayDisplay();
+                } else {
+                    renderWeekView();
+                    updateWeekDisplay();
+                }
                 
                 console.log('✅ Calendar refreshed successfully');
             }).catch(error => {
@@ -8917,6 +9147,60 @@ function showMessage(message, type = 'info') {
 </script>
 
 <style>
+/* 携帯用のスタイル */
+@media (max-width: 767.98px) {
+    .schedule-container {
+        font-size: 14px;
+    }
+    
+    .schedule-header {
+        grid-template-columns: 60px 1fr;
+    }
+    
+    .schedule-row {
+        grid-template-columns: 60px 1fr;
+    }
+    
+    .time-label {
+        font-size: 12px;
+        padding: 8px 4px;
+    }
+    
+    .time-slot {
+        min-height: 40px;
+        padding: 4px;
+    }
+    
+    .reservation-block {
+        font-size: 12px;
+        padding: 4px;
+    }
+    
+    .reservation-customer {
+        font-size: 11px;
+        margin-top: 2px;
+    }
+    
+    .reservation-status {
+        font-size: 10px;
+        margin-top: 2px;
+    }
+    
+    .day-header {
+        font-size: 14px;
+        padding: 8px 4px;
+    }
+    
+    .day-name {
+        font-weight: bold;
+    }
+    
+    .day-date {
+        font-size: 12px;
+        color: #666;
+    }
+}
+
 /* スケジュールコンテナ */
 .schedule-container {
   border: 1px solid #dee2e6;
