@@ -46,12 +46,12 @@
               </div>
               
               <!-- 携帯用日付ナビゲーション -->
-              <div class="d-md-none d-flex align-items-center gap-3">
-                <button class="btn btn-outline-primary btn-lg" onclick="previousDay()">
+              <div class="d-md-none d-flex align-items-center gap-2 w-100 justify-content-center">
+                <button class="btn btn-outline-primary btn-lg px-3" onclick="previousDay()">
                   <i class="fas fa-chevron-left"></i>
                 </button>
-                <div class="fw-semibold fs-5" id="currentDay">読み込み中...</div>
-                <button class="btn btn-outline-primary btn-lg" onclick="nextDay()">
+                <div class="fw-semibold fs-6 text-center flex-grow-1" id="currentDay">読み込み中...</div>
+                <button class="btn btn-outline-primary btn-lg px-3" onclick="nextDay()">
                   <i class="fas fa-chevron-right"></i>
                 </button>
               </div>
@@ -118,15 +118,15 @@
             </div>
             
             <!-- 携帯用のアクションボタン -->
-            <div class="d-md-none d-flex gap-2 justify-content-center">
-              <button class="btn btn-primary btn-sm" onclick="openBulkReservationModal()">
-                <i class="fas fa-calendar-plus"></i>
+            <div class="d-md-none d-flex gap-2 justify-content-center mt-2">
+              <button class="btn btn-primary btn-sm px-3" onclick="openBulkReservationModal()" title="一括予約作成">
+                <i class="fas fa-calendar-plus me-1"></i>予約
               </button>
-              <button id="showCancellationsBtn" onclick="toggleCancellationDisplay()" class="btn btn-outline-warning btn-sm">
-                <i class="fas fa-times"></i>
+              <button id="showCancellationsBtn" onclick="toggleCancellationDisplay()" class="btn btn-outline-warning btn-sm px-3" title="キャンセル履歴">
+                <i class="fas fa-times me-1"></i>キャンセル
               </button>
-              <button class="btn btn-outline-secondary btn-sm" onclick="openSettingsModal()">
-                <i class="fas fa-cog"></i>
+              <button class="btn btn-outline-secondary btn-sm px-3" onclick="openSettingsModal()" title="設定">
+                <i class="fas fa-cog me-1"></i>設定
               </button>
             </div>
             </div>
@@ -164,10 +164,10 @@
             
             <!-- 携帯用の日表示ヘッダー -->
             <div class="schedule-header d-md-none">
-                <div class="time-column-header">時刻</div>
-                <div class="day-header">
-                    <div class="day-name">今日</div>
-                    <div class="day-date">2024/12/31</div>
+                <div class="time-column-header-mobile">時刻</div>
+                <div class="day-header-mobile">
+                    <div class="day-name-mobile">今日</div>
+                    <div class="day-date-mobile">2024/12/31</div>
                 </div>
             </div>
             
@@ -2681,6 +2681,11 @@
                                 <div class="reservation-status status-${existingReservation.status}">${existingReservation.status}</div>
                             </div>
                         `;
+                        // 予約ブロックにクリックイベントを追加
+                        slot.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            showReservationDetails(existingReservation);
+                        });
                     } else {
                         slot.addEventListener('click', () => createReservation(timeStr, currentDay));
                     }
@@ -9040,6 +9045,90 @@ function showMessage(message, type = 'info') {
             }, 100);
         }
         
+        // 携帯用の日表示機能
+        let currentDayIndex = 0;
+        let weekDays = [];
+
+        function previousDay() {
+            if (currentDayIndex > 0) {
+                currentDayIndex--;
+                renderMobileDayView();
+            }
+        }
+
+        function nextDay() {
+            if (currentDayIndex < weekDays.length - 1) {
+                currentDayIndex++;
+                renderMobileDayView();
+            }
+        }
+
+        function renderMobileDayView() {
+            if (weekDays.length === 0) return;
+            
+            const currentDay = weekDays[currentDayIndex];
+            const dayNameElement = document.querySelector('.day-name-mobile');
+            const dayDateElement = document.querySelector('.day-date-mobile');
+            
+            if (dayNameElement && dayDateElement) {
+                dayNameElement.textContent = currentDay.name;
+                dayDateElement.textContent = currentDay.date;
+            }
+            
+            // 携帯用のスケジュール表示
+            renderMobileSchedule(currentDay);
+        }
+
+        function renderMobileSchedule(day) {
+            const scheduleBody = document.getElementById('scheduleBody');
+            if (!scheduleBody) return;
+            
+            scheduleBody.innerHTML = '';
+            
+            // 時間スロットを生成
+            for (let hour = 10; hour < 20; hour++) {
+                for (let minute = 0; minute < 60; minute += 30) {
+                    const timeSlot = document.createElement('div');
+                    timeSlot.className = 'time-slot-mobile';
+                    
+                    const timeLabel = document.createElement('div');
+                    timeLabel.className = 'time-label-mobile';
+                    timeLabel.textContent = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                    
+                    const dayColumn = document.createElement('div');
+                    dayColumn.className = 'day-column-mobile';
+                    
+                    // その時間帯の予約を検索
+                    const slotTime = new Date(day.date);
+                    slotTime.setHours(hour, minute, 0, 0);
+                    const slotEndTime = new Date(slotTime);
+                    slotEndTime.setMinutes(slotEndTime.getMinutes() + 30);
+                    
+                    const reservations = reservations[day.dateKey] || [];
+                    const slotReservation = reservations.find(res => {
+                        const resStart = new Date(res.start_time);
+                        const resEnd = new Date(res.end_time);
+                        return resStart < slotEndTime && resEnd > slotTime;
+                    });
+                    
+                    if (slotReservation) {
+                        const reservationBlock = document.createElement('div');
+                        reservationBlock.className = `reservation-block-mobile ${slotReservation.status}`;
+                        reservationBlock.innerHTML = `
+                            <div style="font-weight: 600;">${slotReservation.customer_name}</div>
+                            <div style="font-size: 10px;">${slotReservation.course}</div>
+                        `;
+                        reservationBlock.onclick = () => showReservationDetails(slotReservation);
+                        dayColumn.appendChild(reservationBlock);
+                    }
+                    
+                    timeSlot.appendChild(timeLabel);
+                    timeSlot.appendChild(dayColumn);
+                    scheduleBody.appendChild(timeSlot);
+                }
+            }
+        }
+
         // 初期化実行
         init();
         
@@ -9218,14 +9307,35 @@ function showMessage(message, type = 'info') {
     /* 予約ブロックの大幅改善 */
     .reservation-block {
         font-size: 14px;
-        padding: 12px;
+        padding: 8px;
         border-radius: 8px;
         width: 100%;
-        min-height: 50px;
+        height: 100%;
+        min-height: 60px;
         display: flex;
         flex-direction: column;
         justify-content: center;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+        z-index: 10;
+    }
+    
+    .reservation-block:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    /* 予約済みスロットの改善 */
+    .time-slot.reserved {
+        padding: 0;
+        background: transparent;
+        border: none;
+    }
+    
+    .time-slot.reserved:hover {
+        background: transparent;
     }
     
     .reservation-time {
