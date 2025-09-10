@@ -2818,13 +2818,10 @@ class LinebotController < ApplicationController
   def send_default_help(reply_token)
     send_reply(reply_token, {
       type: "text",
-      text: "以下のコマンドをお試しください：\n" \
-            "Please try the following commands:\n\n" \
-            "📅「予約」→ 新規予約 / New Reservation\n" \
-            "🎫「チケット」→ チケット残数確認 / Check Tickets\n" \
-            "🔔「通知オン/オフ」→ 通知設定 / Notification Settings\n\n" \
-            "または下のメニューからもご利用いただけます。\n" \
-            "You can also use the menu below."
+      text: "📅「予約」で新規予約\n" \
+            "🎫「チケット」で残数確認\n" \
+            "🔔「通知オン/オフ」で通知設定\n\n" \
+            "または下のメニューからもご利用いただけます。"
     })
   end
 
