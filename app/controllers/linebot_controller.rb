@@ -213,24 +213,6 @@ class LinebotController < ApplicationController
 
   private
 
-  # ヘルプを表示すべきかどうかを判定
-  def should_show_help?(message_text)
-    # ヘルプを表示する条件
-    help_keywords = [
-      /ヘルプ|help|使い方|どうやって|how to/i,
-      /コマンド|command|命令/i,
-      /何ができる|what can|できること/i,
-      /メニュー|menu|一覧/i,
-      /教えて|tell me|説明/i
-    ]
-    
-    # 長いメッセージ（質問や相談の可能性）
-    is_long_message = message_text.length > 20
-    
-    # ヘルプキーワードが含まれているか、長いメッセージの場合
-    help_keywords.any? { |pattern| message_text.match?(pattern) } || is_long_message
-  end
-
   # 多言語対応のヘルパーメソッド
   def get_message(user, key, **options)
     messages = {
@@ -409,21 +391,8 @@ class LinebotController < ApplicationController
     when /メニュー|menu/i
       send_main_menu(reply_token)
 
-    when /ヘルプ|help|使い方/i
-      send_help_message(reply_token)
-
-    # 挨拶や短いメッセージの処理
-    when /こんにちは|こんばんは|おはよう|hello|hi|hey/i
-      send_reply(reply_token, {
-        type: "text",
-        text: "こんにちは！\nHello!\n\nMobilisストレッチサービスへようこそ！\nWelcome to Mobilis Stretch Service!\n\n「予約」「チケット」など、お気軽にお声がけください。\nFeel free to say \"booking\" or \"tickets\"."
-      })
-
-    when /ありがとう|thank you|thanks/i
-      send_reply(reply_token, {
-        type: "text",
-        text: "どういたしまして！\nYou're welcome!\n\n他にご質問がございましたら、お気軽にお声がけください。\nIf you have any other questions, feel free to ask."
-      })
+    when /^ヘルプ$|^help$/i
+      send_default_help(reply_token)
 
     when /日程選択開始|日付選択開始|date selection/i
       # ユーザーのbooking_courseを確認
@@ -439,16 +408,8 @@ class LinebotController < ApplicationController
       end
 
     else
-      # 認識されないメッセージの場合、ヘルプを表示する条件を限定
-      if should_show_help?(message_text)
-        send_default_help(reply_token)
-      else
-        # 短いメッセージや挨拶の場合は簡潔に応答
-        send_reply(reply_token, {
-          type: "text",
-          text: "こんにちは！\nHello!\n\n「予約」「チケット」「ヘルプ」など、お気軽にお声がけください。\nFeel free to say \"booking\", \"tickets\", or \"help\"."
-        })
-      end
+      # 認識されないメッセージの場合は何も送信しない
+      Rails.logger.info "🔍 Unrecognized message: '#{message_text}' - no response sent"
     end
   end
 
