@@ -213,6 +213,24 @@ class LinebotController < ApplicationController
 
   private
 
+  # ヘルプを表示すべきかどうかを判定
+  def should_show_help?(message_text)
+    # ヘルプを表示する条件
+    help_keywords = [
+      /ヘルプ|help|使い方|どうやって|how to/i,
+      /コマンド|command|命令/i,
+      /何ができる|what can|できること/i,
+      /メニュー|menu|一覧/i,
+      /教えて|tell me|説明/i
+    ]
+    
+    # 長いメッセージ（質問や相談の可能性）
+    is_long_message = message_text.length > 20
+    
+    # ヘルプキーワードが含まれているか、長いメッセージの場合
+    help_keywords.any? { |pattern| message_text.match?(pattern) } || is_long_message
+  end
+
   # 多言語対応のヘルパーメソッド
   def get_message(user, key, **options)
     messages = {
@@ -394,6 +412,19 @@ class LinebotController < ApplicationController
     when /ヘルプ|help|使い方/i
       send_help_message(reply_token)
 
+    # 挨拶や短いメッセージの処理
+    when /こんにちは|こんばんは|おはよう|hello|hi|hey/i
+      send_reply(reply_token, {
+        type: "text",
+        text: "こんにちは！\nHello!\n\nMobilisストレッチサービスへようこそ！\nWelcome to Mobilis Stretch Service!\n\n「予約」「チケット」など、お気軽にお声がけください。\nFeel free to say \"booking\" or \"tickets\"."
+      })
+
+    when /ありがとう|thank you|thanks/i
+      send_reply(reply_token, {
+        type: "text",
+        text: "どういたしまして！\nYou're welcome!\n\n他にご質問がございましたら、お気軽にお声がけください。\nIf you have any other questions, feel free to ask."
+      })
+
     when /日程選択開始|日付選択開始|date selection/i
       # ユーザーのbooking_courseを確認
       if user.booking_course.present?
@@ -408,7 +439,16 @@ class LinebotController < ApplicationController
       end
 
     else
-      send_default_help(reply_token)
+      # 認識されないメッセージの場合、ヘルプを表示する条件を限定
+      if should_show_help?(message_text)
+        send_default_help(reply_token)
+      else
+        # 短いメッセージや挨拶の場合は簡潔に応答
+        send_reply(reply_token, {
+          type: "text",
+          text: "こんにちは！\nHello!\n\n「予約」「チケット」「ヘルプ」など、お気軽にお声がけください。\nFeel free to say \"booking\", \"tickets\", or \"help\"."
+        })
+      end
     end
   end
 
@@ -2818,10 +2858,13 @@ class LinebotController < ApplicationController
   def send_default_help(reply_token)
     send_reply(reply_token, {
       type: "text",
-      text: "📅「予約」で新規予約\n" \
-            "🎫「チケット」で残数確認\n" \
-            "🔔「通知オン/オフ」で通知設定\n\n" \
-            "または下のメニューからもご利用いただけます。"
+      text: "以下のコマンドをお試しください：\n" \
+            "Please try the following commands:\n\n" \
+            "📅「予約」→ 新規予約 / New Reservation\n" \
+            "🎫「チケット」→ チケット残数確認 / Check Tickets\n" \
+            "🔔「通知オン/オフ」→ 通知設定 / Notification Settings\n\n" \
+            "または下のメニューからもご利用いただけます。\n" \
+            "You can also use the menu below."
     })
   end
 
