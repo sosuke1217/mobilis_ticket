@@ -12,12 +12,16 @@
           <p class="text-muted mb-0">週間スケジュール管理と予約作成</p>
         </div>
         <div class="d-flex gap-2">
-          <button class="btn btn-outline-primary" onclick="refreshCalendar()">
+          <button class="btn btn-outline-primary d-none d-md-inline-flex" onclick="refreshCalendar()">
             <i class="fas fa-sync-alt me-1"></i>カレンダー更新
           </button>
-          <a href="<%= admin_reservations_path %>" class="btn btn-outline-secondary">
+          <a href="<%= admin_reservations_path %>" class="btn btn-outline-secondary d-none d-md-inline-flex">
             <i class="fas fa-list me-1"></i>予約一覧
           </a>
+          <!-- 携帯用の簡易ボタン -->
+          <button class="btn btn-primary d-md-none" onclick="refreshCalendar()">
+            <i class="fas fa-sync-alt"></i>
+          </button>
         </div>
       </div>
         </div>
@@ -42,12 +46,12 @@
               </div>
               
               <!-- 携帯用日付ナビゲーション -->
-              <div class="d-md-none d-flex align-items-center gap-2">
-                <button class="btn btn-outline-primary btn-sm" onclick="previousDay()">
+              <div class="d-md-none d-flex align-items-center gap-3">
+                <button class="btn btn-outline-primary btn-lg" onclick="previousDay()">
                   <i class="fas fa-chevron-left"></i>
                 </button>
-                <div class="fw-semibold" id="currentDay">読み込み中...</div>
-                <button class="btn btn-outline-primary btn-sm" onclick="nextDay()">
+                <div class="fw-semibold fs-5" id="currentDay">読み込み中...</div>
+                <button class="btn btn-outline-primary btn-lg" onclick="nextDay()">
                   <i class="fas fa-chevron-right"></i>
                 </button>
               </div>
@@ -100,7 +104,8 @@
                 </div>
             </div>
             
-            <div class="d-flex gap-2">
+            <!-- デスクトップ用のアクションボタン -->
+            <div class="d-none d-md-flex gap-2">
               <button class="btn btn-primary btn-sm" onclick="openBulkReservationModal()">
                 <i class="fas fa-calendar-plus me-1"></i>一括予約作成
                 </button>
@@ -110,6 +115,19 @@
               <button class="btn btn-outline-secondary btn-sm" onclick="openSettingsModal()">
                 <i class="fas fa-cog me-1"></i>予約可能日時を編集
                 </button>
+            </div>
+            
+            <!-- 携帯用のアクションボタン -->
+            <div class="d-md-none d-flex gap-2 justify-content-center">
+              <button class="btn btn-primary btn-sm" onclick="openBulkReservationModal()">
+                <i class="fas fa-calendar-plus"></i>
+              </button>
+              <button id="showCancellationsBtn" onclick="toggleCancellationDisplay()" class="btn btn-outline-warning btn-sm">
+                <i class="fas fa-times"></i>
+              </button>
+              <button class="btn btn-outline-secondary btn-sm" onclick="openSettingsModal()">
+                <i class="fas fa-cog"></i>
+              </button>
             </div>
             </div>
         </div>
@@ -147,7 +165,10 @@
             <!-- 携帯用の日表示ヘッダー -->
             <div class="schedule-header d-md-none">
                 <div class="time-column-header">時刻</div>
-                <div class="day-header">今日</div>
+                <div class="day-header">
+                    <div class="day-name">今日</div>
+                    <div class="day-date">2024/12/31</div>
+                </div>
             </div>
             
             <div class="schedule-body" id="scheduleBody">
@@ -9149,55 +9170,210 @@ function showMessage(message, type = 'info') {
 <style>
 /* 携帯用のスタイル */
 @media (max-width: 767.98px) {
+    /* 全体のフォントサイズを大きく */
     .schedule-container {
-        font-size: 14px;
+        font-size: 16px;
     }
     
+    /* ヘッダーの改善 */
     .schedule-header {
-        grid-template-columns: 60px 1fr;
+        grid-template-columns: 80px 1fr;
+        padding: 12px 8px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     }
     
+    /* 行の高さを大きく */
     .schedule-row {
-        grid-template-columns: 60px 1fr;
+        grid-template-columns: 80px 1fr;
+        min-height: 60px;
+        border-bottom: 1px solid #e9ecef;
     }
     
+    /* 時間ラベルの改善 */
     .time-label {
-        font-size: 12px;
-        padding: 8px 4px;
+        font-size: 14px;
+        font-weight: 600;
+        padding: 16px 8px;
+        background: #f8f9fa;
+        border-right: 2px solid #dee2e6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
+    /* 時間スロットの改善 */
     .time-slot {
-        min-height: 40px;
-        padding: 4px;
+        min-height: 60px;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
     }
     
+    .time-slot:hover {
+        background-color: #f8f9fa;
+    }
+    
+    /* 予約ブロックの大幅改善 */
     .reservation-block {
-        font-size: 12px;
-        padding: 4px;
+        font-size: 14px;
+        padding: 12px;
+        border-radius: 8px;
+        width: 100%;
+        min-height: 50px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .reservation-time {
+        font-size: 16px;
+        font-weight: bold;
+        margin-bottom: 4px;
     }
     
     .reservation-customer {
-        font-size: 11px;
-        margin-top: 2px;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 4px;
+        color: #333;
     }
     
     .reservation-status {
-        font-size: 10px;
-        margin-top: 2px;
+        font-size: 12px;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-weight: 600;
+        text-align: center;
     }
     
+    /* ステータス別の色 */
+    .status-confirmed {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    
+    .status-cancelled {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    /* 日付ヘッダーの改善 */
     .day-header {
-        font-size: 14px;
-        padding: 8px 4px;
+        font-size: 16px;
+        padding: 12px 8px;
+        text-align: center;
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        color: white;
+        border-radius: 8px;
+        margin: 4px;
     }
     
     .day-name {
         font-weight: bold;
+        font-size: 18px;
+        margin-bottom: 4px;
     }
     
     .day-date {
+        font-size: 14px;
+        opacity: 0.9;
+    }
+    
+    /* 時間列ヘッダーの改善 */
+    .time-column-header {
+        font-size: 16px;
+        font-weight: bold;
+        padding: 12px 8px;
+        background: #f8f9fa;
+        border-right: 2px solid #dee2e6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* 空きスロットの改善 */
+    .time-slot:not(.reserved) {
+        background-color: #f8f9fa;
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        margin: 4px;
+        position: relative;
+    }
+    
+    .time-slot:not(.reserved)::after {
+        content: "タップして予約";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
         font-size: 12px;
-        color: #666;
+        color: #6c757d;
+        font-weight: 500;
+    }
+    
+    /* ボタンの改善 */
+    .btn-sm {
+        padding: 8px 16px;
+        font-size: 14px;
+        border-radius: 8px;
+    }
+    
+    /* ナビゲーションボタンの改善 */
+    .btn-outline-primary {
+        padding: 12px 16px;
+        font-size: 16px;
+        border-radius: 12px;
+        border-width: 2px;
+    }
+    
+    /* 日付ナビゲーションの改善 */
+    .btn-lg {
+        padding: 16px 20px;
+        font-size: 18px;
+        border-radius: 16px;
+        min-width: 50px;
+        min-height: 50px;
+    }
+    
+    /* 日付表示の改善 */
+    .fs-5 {
+        font-size: 1.25rem !important;
+        font-weight: 600;
+        color: #007bff;
+    }
+    
+    /* アクションボタンの改善 */
+    .btn-sm {
+        padding: 12px 16px;
+        font-size: 16px;
+        border-radius: 12px;
+        min-width: 50px;
+        min-height: 50px;
+    }
+    
+    /* 全体の余白調整 */
+    .container-lg {
+        padding: 8px;
+    }
+    
+    .card {
+        margin-bottom: 8px;
+    }
+    
+    .card-header {
+        padding: 12px 16px;
+    }
+    
+    .card-body {
+        padding: 8px;
     }
 }
 
