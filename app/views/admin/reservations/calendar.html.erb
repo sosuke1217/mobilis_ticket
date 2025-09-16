@@ -1331,31 +1331,30 @@
                         }
                     }
                     
-                    // Apply visual feedback - use individual cell highlights
+                    // Apply visual feedback - create unified block instead of individual cells
                     if (allCellsValid && cellsToCheck.length === cellsToOccupy) {
-                        cellsToCheck.forEach((c, index) => {
-                            c.classList.remove('course-drag-over', 'course-drag-over-invalid');
-                            if (index === 0) {
-                                c.classList.add('course-drag-over-first');
-                            } else if (index === cellsToCheck.length - 1) {
-                                c.classList.add('course-drag-over-last');
-                            } else {
-                                c.classList.add('course-drag-over');
-                            }
+                        console.log('🎯 Creating valid highlight for', cellsToCheck.length, 'cells');
+                        
+                        // Remove individual cell highlights
+                        cellsToCheck.forEach(c => {
+                            c.classList.remove('course-drag-over');
                         });
+                        
+                        // Create unified highlight block
+                        createUnifiedHighlight(cellsToCheck, 'course-drag-over');
                     } else {
+                        console.log('🎯 Creating invalid highlight for', cellsToCheck.length, 'cells (expected:', cellsToOccupy, ')');
+                        
                         // Show invalid drop effect and visual feedback
                         e.dataTransfer.dropEffect = 'none';
-                        cellsToCheck.forEach((c, index) => {
-                            c.classList.remove('course-drag-over', 'course-drag-over-invalid');
-                            if (index === 0) {
-                                c.classList.add('course-drag-over-invalid-first');
-                            } else if (index === cellsToCheck.length - 1) {
-                                c.classList.add('course-drag-over-invalid-last');
-                            } else {
-                                c.classList.add('course-drag-over-invalid');
-                            }
+                        
+                        // Remove individual cell highlights
+                        cellsToCheck.forEach(c => {
+                            c.classList.remove('course-drag-over-invalid');
                         });
+                        
+                        // Create unified highlight block for invalid
+                        createUnifiedHighlight(cellsToCheck, 'course-drag-over-invalid');
                     }
                 }
             }
@@ -1372,10 +1371,12 @@
             
             // ドラッグオーバークラスを削除
             document.querySelectorAll('.schedule-cell').forEach(cell => {
-                cell.classList.remove('course-drag-over', 'course-drag-over-invalid',
-                                    'course-drag-over-first', 'course-drag-over-last',
-                                    'course-drag-over-invalid-first', 'course-drag-over-invalid-last');
+                cell.classList.remove('course-drag-over');
+                cell.classList.remove('course-drag-over-invalid');
             });
+            
+            // 統一されたハイライトブロックを削除
+            removeExistingHighlight();
             
             const date = scheduleCell.dataset.date;
             const time = scheduleCell.dataset.time;
@@ -1396,14 +1397,96 @@
             // 視覚的フィードバックをリセット
             e.target.style.opacity = '1';
             document.querySelectorAll('.schedule-cell').forEach(cell => {
-                cell.classList.remove('course-drag-over', 'course-drag-over-invalid',
-                                    'course-drag-over-first', 'course-drag-over-last',
-                                    'course-drag-over-invalid-first', 'course-drag-over-invalid-last');
+                cell.classList.remove('course-drag-over');
+                cell.classList.remove('course-drag-over-invalid');
             });
+            
+            // 統一されたハイライトブロックを削除
+            removeExistingHighlight();
             
             console.log('🎯 Course drag ended');
         }
 
+        // 統一されたハイライトブロックを作成
+        function createUnifiedHighlight(cells, className) {
+            if (cells.length === 0) return;
+            
+            console.log('🎯 Creating unified highlight for', cells.length, 'cells');
+            
+            // 既存のハイライトブロックを削除
+            removeExistingHighlight();
+            
+            // 最初と最後のセルを取得
+            const firstCell = cells[0];
+            const lastCell = cells[cells.length - 1];
+            
+            console.log('🎯 First cell:', firstCell, 'Last cell:', lastCell);
+            
+            // ハイライトブロックを作成
+            const highlightBlock = document.createElement('div');
+            highlightBlock.className = `unified-highlight ${className}`;
+            highlightBlock.id = 'unified-course-highlight';
+            
+            // 位置とサイズを計算
+            const firstCellRect = firstCell.getBoundingClientRect();
+            const lastCellRect = lastCell.getBoundingClientRect();
+            
+            console.log('🎯 First cell rect:', firstCellRect);
+            console.log('🎯 Last cell rect:', lastCellRect);
+            
+            // カレンダーコンテナを検索（scheduleBodyの親要素を使用）
+            const scheduleBody = document.getElementById('scheduleBody');
+            const calendarContainer = scheduleBody ? scheduleBody.parentElement : 
+                                    document.querySelector('.calendar-container') || 
+                                    document.querySelector('.calendar-grid') || 
+                                    document.querySelector('.calendar') ||
+                                    document.querySelector('.week-view') ||
+                                    document.querySelector('.calendar-week') ||
+                                    document.body;
+            
+            console.log('🎯 Schedule body:', scheduleBody);
+            console.log('🎯 Calendar container:', calendarContainer);
+            
+            if (calendarContainer && scheduleBody) {
+                const calendarRect = calendarContainer.getBoundingClientRect();
+                const scheduleBodyRect = scheduleBody.getBoundingClientRect();
+                console.log('🎯 Calendar rect:', calendarRect);
+                console.log('🎯 Schedule body rect:', scheduleBodyRect);
+                
+                // 相対位置を計算（scheduleBodyを基準に）
+                const top = firstCellRect.top - scheduleBodyRect.top;
+                const left = firstCellRect.left - scheduleBodyRect.left;
+                const width = lastCellRect.right - firstCellRect.left;
+                const height = lastCellRect.bottom - firstCellRect.top;
+                
+                console.log('🎯 Calculated dimensions:', { top, left, width, height });
+                
+                // スタイルを適用
+                highlightBlock.style.position = 'absolute';
+                highlightBlock.style.top = `${top}px`;
+                highlightBlock.style.left = `${left}px`;
+                highlightBlock.style.width = `${width}px`;
+                highlightBlock.style.height = `${height}px`;
+                highlightBlock.style.pointerEvents = 'none';
+                highlightBlock.style.zIndex = '10';
+                
+                // scheduleBodyに追加（相対位置指定）
+                scheduleBody.style.position = 'relative';
+                scheduleBody.appendChild(highlightBlock);
+                
+                console.log('🎯 Highlight block created and added to scheduleBody');
+            } else {
+                console.error('❌ No suitable container found');
+            }
+        }
+        
+        // 既存のハイライトブロックを削除
+        function removeExistingHighlight() {
+            const existingHighlight = document.getElementById('unified-course-highlight');
+            if (existingHighlight) {
+                existingHighlight.remove();
+            }
+        }
 
         // ドラッグから予約を作成
         function createReservationFromDrag(date, time, course, duration) {
@@ -8145,6 +8228,9 @@ function showMessage(message, type = 'info') {
                 cell.classList.remove('drag-over-invalid');
             });
             
+            // Remove unified highlight block
+            removeExistingHighlight();
+            
                             // 少し遅延してからフラグをリセット（誤クリックを防ぐ）
                 setTimeout(() => {
                     isDragging = false;
@@ -8209,17 +8295,26 @@ function showMessage(message, type = 'info') {
                         }
                     }
                     
-                    // Only highlight if all cells are valid
+                    // Only highlight if all cells are valid - use unified highlight
                     if (allCellsValid) {
+                        // Remove individual cell highlights
                         for (let checkCell of cellsToCheck) {
-                            checkCell.classList.add('drag-over');
+                            checkCell.classList.remove('drag-over');
                         }
+                        
+                        // Create unified highlight block for reservation drag
+                        createUnifiedHighlight(cellsToCheck, 'drag-over');
                     } else {
                         // Show invalid drop effect and visual feedback
                         e.dataTransfer.dropEffect = 'none';
+                        
+                        // Remove individual cell highlights
                         for (let checkCell of cellsToCheck) {
-                            checkCell.classList.add('drag-over-invalid');
+                            checkCell.classList.remove('drag-over-invalid');
                         }
+                        
+                        // Create unified highlight block for invalid
+                        createUnifiedHighlight(cellsToCheck, 'drag-over-invalid');
                     }
                 } else {
                     // If no dragged data, check if current cell is within business hours
@@ -8227,7 +8322,11 @@ function showMessage(message, type = 'info') {
                     const timeStr = cell.dataset.time;
                     
                     if (isBusinessHour(dayOfWeek, timeStr)) {
-                        cell.classList.add('drag-over');
+                        // Remove individual cell highlight
+                        cell.classList.remove('drag-over');
+                        
+                        // Create unified highlight for single cell
+                        createUnifiedHighlight([cell], 'drag-over');
                     } else {
                         e.dataTransfer.dropEffect = 'none';
                     }
@@ -8238,13 +8337,18 @@ function showMessage(message, type = 'info') {
         function handleDragEnter(e) {
             e.preventDefault();
             if (e.target.classList.contains('schedule-cell')) {
-                e.target.classList.add('drag-over');
+                // Remove individual cell highlight
+                e.target.classList.remove('drag-over');
+                
+                // Create unified highlight for single cell
+                createUnifiedHighlight([e.target], 'drag-over');
             }
         }
 
         function handleDragLeave(e) {
             if (e.target.classList.contains('schedule-cell')) {
-                e.target.classList.remove('drag-over');
+                // Remove unified highlight
+                removeExistingHighlight();
             }
         }
 
@@ -8257,6 +8361,9 @@ function showMessage(message, type = 'info') {
                 cell.classList.remove('drag-over');
                 cell.classList.remove('drag-over-invalid');
             });
+            
+            // Remove unified highlight block
+            removeExistingHighlight();
             
             const cell = e.target.closest('.schedule-cell');
             if (!cell) return;
@@ -9457,30 +9564,6 @@ function showMessage(message, type = 'info') {
 .schedule-cell.course-drag-over {
   background-color: #e8f5e8 !important;
   border: 2px solid #28a745 !important;
-  border-right: 1px solid #28a745 !important;
-  border-left: 1px solid #28a745 !important;
-  transform: scale(1.02);
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.schedule-cell.course-drag-over-first {
-  background-color: #e8f5e8 !important;
-  border: 2px solid #28a745 !important;
-  border-right: 1px solid #28a745 !important;
-  border-bottom-left-radius: 4px;
-  border-top-left-radius: 4px;
-  transform: scale(1.02);
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.schedule-cell.course-drag-over-last {
-  background-color: #e8f5e8 !important;
-  border: 2px solid #28a745 !important;
-  border-left: 1px solid #28a745 !important;
-  border-bottom-right-radius: 4px;
-  border-top-right-radius: 4px;
   transform: scale(1.02);
   transition: all 0.2s ease;
   position: relative;
@@ -9489,30 +9572,6 @@ function showMessage(message, type = 'info') {
 .schedule-cell.course-drag-over-invalid {
   background-color: #f8d7da !important;
   border: 2px solid #dc3545 !important;
-  border-right: 1px solid #dc3545 !important;
-  border-left: 1px solid #dc3545 !important;
-  transform: scale(1.02);
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.schedule-cell.course-drag-over-invalid-first {
-  background-color: #f8d7da !important;
-  border: 2px solid #dc3545 !important;
-  border-right: 1px solid #dc3545 !important;
-  border-bottom-left-radius: 4px;
-  border-top-left-radius: 4px;
-  transform: scale(1.02);
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.schedule-cell.course-drag-over-invalid-last {
-  background-color: #f8d7da !important;
-  border: 2px solid #dc3545 !important;
-  border-left: 1px solid #dc3545 !important;
-  border-bottom-right-radius: 4px;
-  border-top-right-radius: 4px;
   transform: scale(1.02);
   transition: all 0.2s ease;
   position: relative;
@@ -9535,6 +9594,39 @@ function showMessage(message, type = 'info') {
   position: relative;
 }
 
+/* 統一されたハイライトブロック */
+.unified-highlight.course-drag-over {
+  background-color: rgba(40, 167, 69, 0.2) !important;
+  border: 2px solid #28a745 !important;
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(40, 167, 69, 0.3);
+  transition: all 0.2s ease;
+}
+
+.unified-highlight.course-drag-over-invalid {
+  background-color: rgba(220, 53, 69, 0.2) !important;
+  border: 2px solid #dc3545 !important;
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(220, 53, 69, 0.3);
+  transition: all 0.2s ease;
+}
+
+/* 予約変更ドラッグ用の統一されたハイライトブロック */
+.unified-highlight.drag-over {
+  background-color: rgba(40, 167, 69, 0.2) !important;
+  border: 2px solid #28a745 !important;
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(40, 167, 69, 0.3);
+  transition: all 0.2s ease;
+}
+
+.unified-highlight.drag-over-invalid {
+  background-color: rgba(220, 53, 69, 0.2) !important;
+  border: 2px solid #dc3545 !important;
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(220, 53, 69, 0.3);
+  transition: all 0.2s ease;
+}
 
 
 /* ドロップダウンメニューのスタイル改善 */
