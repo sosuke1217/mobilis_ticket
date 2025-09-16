@@ -9593,7 +9593,38 @@ function handleNewReservationDrop(e) {
   console.log('🎯 Parsed hour:', hour, 'minute:', minute);
   
   // 週の開始日を取得
-  const weekStart = new Date(currentWeekStart);
+  let weekStart;
+  if (typeof currentWeekStart !== 'undefined' && currentWeekStart) {
+    weekStart = new Date(currentWeekStart);
+    console.log('🎯 Using currentWeekStart:', weekStart);
+  } else {
+    // フォールバック1: カレンダーヘッダーから日付を取得
+    const weekHeader = document.getElementById('currentWeek');
+    if (weekHeader && weekHeader.textContent) {
+      const headerText = weekHeader.textContent;
+      const yearMatch = headerText.match(/(\d{4})年/);
+      const dateMatch = headerText.match(/(\d{1,2})\/(\d{1,2})/);
+      
+      if (yearMatch && dateMatch) {
+        const year = parseInt(yearMatch[1]);
+        const month = parseInt(dateMatch[1]) - 1; // JavaScriptの月は0ベース
+        const day = parseInt(dateMatch[2]);
+        weekStart = new Date(year, month, day);
+        console.log('🎯 Using week header date:', weekStart);
+      }
+    }
+    
+    // フォールバック2: 現在の日付から週の開始日を計算
+    if (!weekStart) {
+      const today = new Date();
+      const dayOfWeek = today.getDay(); // 0 = Sunday
+      weekStart = new Date(today);
+      weekStart.setDate(today.getDate() - dayOfWeek);
+      weekStart.setHours(0, 0, 0, 0);
+      console.log('🎯 Using fallback week start:', weekStart);
+    }
+  }
+  
   const targetDate = new Date(weekStart);
   targetDate.setDate(weekStart.getDate() + dayIndex);
   targetDate.setHours(hour, minute, 0, 0);
