@@ -9314,7 +9314,7 @@ function showMessage(message, type = 'info') {
   border-left: 1px solid #dee2e6;
   box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
   z-index: 1050;
-  transition: right 0.3s ease;
+  transition: right 0.2s ease;
   overflow-y: auto;
 }
 
@@ -9356,7 +9356,7 @@ function showMessage(message, type = 'info') {
   border: 2px solid #e9ecef;
   border-radius: 8px;
   cursor: grab;
-  transition: all 0.2s ease;
+  transition: all 0.1s ease;
   user-select: none;
 }
 
@@ -9365,6 +9365,7 @@ function showMessage(message, type = 'info') {
   border-color: #007bff;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 123, 255, 0.15);
+  transition: all 0.1s ease;
 }
 
 .course-option:active {
@@ -9426,10 +9427,34 @@ function showMessage(message, type = 'info') {
   background-color: #e3f2fd !important;
   border: 2px dashed #2196f3 !important;
   transform: scale(1.02);
-  transition: all 0.2s ease;
+  transition: all 0.1s ease;
 }
 
 .time-slot.drag-over::before {
+  content: "📅 ここにドロップ";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(33, 150, 243, 0.9);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.schedule-cell.drag-over {
+  background-color: #e3f2fd !important;
+  border: 2px dashed #2196f3 !important;
+  transform: scale(1.02);
+  transition: all 0.1s ease;
+  position: relative;
+}
+
+.schedule-cell.drag-over::before {
   content: "📅 ここにドロップ";
   position: absolute;
   top: 50%;
@@ -9454,7 +9479,7 @@ function showMessage(message, type = 'info') {
 
 .dropdown-item {
   padding: 8px 16px;
-  transition: all 0.2s ease;
+  transition: all 0.1s ease;
 }
 
 .dropdown-item:hover {
