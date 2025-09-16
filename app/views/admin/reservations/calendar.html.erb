@@ -9112,76 +9112,126 @@ function showMessage(message, type = 'info') {
   }
 }
 
-/* 右からスライドする予約タブのスタイル */
-.reservation-slide-tab {
-  position: fixed;
-  top: 0;
-  right: -400px;
-  width: 400px;
-  height: 100vh;
+/* 予約タブコンテナのスタイル */
+.reservation-tabs-container {
   background: white;
-  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-  z-index: 1050;
-  transition: right 0.3s ease-in-out;
-  border-left: 1px solid #dee2e6;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #dee2e6;
+  margin-bottom: 2rem;
+  overflow: hidden;
 }
 
-.reservation-slide-tab.open {
-  right: 0;
+/* タブナビゲーション */
+.reservation-tabs {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-bottom: 2px solid #dee2e6;
+  margin: 0;
+  padding: 0.5rem;
 }
 
-.slide-tab-content {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+.reservation-tabs .nav-item {
+  margin: 0 0.25rem;
 }
 
-.slide-tab-header {
-  padding: 1rem;
+.reservation-tabs .nav-link {
+  border: none;
+  background: transparent;
+  color: #6c757d;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.reservation-tabs .nav-link:hover {
+  background: rgba(0, 123, 255, 0.1);
+  color: #007bff;
+  transform: translateY(-2px);
+}
+
+.reservation-tabs .nav-link.active {
+  background: #007bff;
+  color: white;
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.reservation-tabs .nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid white;
+}
+
+/* タブコンテンツ */
+.reservation-tab-content {
+  min-height: 500px;
+}
+
+.tab-pane-header {
+  padding: 1.5rem 1.5rem 1rem;
+  background: linear-gradient(135deg, #f8f9fa, #ffffff);
   border-bottom: 1px solid #dee2e6;
-  background: #f8f9fa;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
-.slide-tab-body {
-  flex: 1;
-  padding: 1rem;
+.tab-pane-body {
+  padding: 1.5rem;
+  max-height: 600px;
   overflow-y: auto;
 }
 
-.slide-tab-trigger {
-  position: fixed;
-  top: 50%;
-  right: 20px;
-  transform: translateY(-50%);
-  background: #007bff;
-  color: white;
-  padding: 1rem 0.5rem;
-  border-radius: 8px 0 0 8px;
-  cursor: pointer;
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  font-size: 0.875rem;
-  font-weight: 600;
-  box-shadow: -2px 0 8px rgba(0, 123, 255, 0.3);
+/* タブ内のフォームスタイル */
+.reservation-tab-content .form-label {
+  color: #495057;
+  margin-bottom: 0.5rem;
+}
+
+.reservation-tab-content .form-control,
+.reservation-tab-content .form-select {
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
   transition: all 0.3s ease;
-  z-index: 1040;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
 }
 
-.slide-tab-trigger:hover {
-  background: #0056b3;
-  transform: translateY(-50%) translateX(-5px);
-  box-shadow: -4px 0 12px rgba(0, 123, 255, 0.4);
+.reservation-tab-content .form-control:focus,
+.reservation-tab-content .form-select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
-.slide-tab-trigger i {
-  font-size: 1.25rem;
+.reservation-tab-content .btn {
+  border-radius: 8px;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.reservation-tab-content .btn-primary {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  border: none;
+}
+
+.reservation-tab-content .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+}
+
+.reservation-tab-content .btn-outline-primary {
+  border: 2px solid #007bff;
+  color: #007bff;
+}
+
+.reservation-tab-content .btn-outline-primary:hover {
+  background: #007bff;
+  transform: translateY(-2px);
 }
 
 /* ドラッグ&ドロップ用のスタイル */
@@ -9249,14 +9299,23 @@ function showMessage(message, type = 'info') {
 <script>
 // 既存の関数はそのまま維持（previousWeek, nextWeek, toggleMiniCalendar等）
 
-// スライドタブの管理
-function openReservationTab() {
-  document.getElementById('reservationSlideTab').classList.add('open');
-  loadUsersForQuickReservation();
+// タブの管理
+function openReservationTab(tabName = 'quick-reservation') {
+  // 指定されたタブをアクティブにする
+  const tabButton = document.getElementById(`${tabName}-tab`);
+  if (tabButton) {
+    tabButton.click();
+  }
+  
+  // 新規予約タブの場合はユーザー一覧を読み込む
+  if (tabName === 'quick-reservation') {
+    loadUsersForQuickReservation();
+  }
 }
 
 function closeReservationTab() {
-  document.getElementById('reservationSlideTab').classList.remove('open');
+  // タブ形式では閉じる必要がない（タブを切り替えるだけ）
+  console.log('Tab closed');
 }
 
 // ユーザー一覧の読み込み
@@ -9454,7 +9513,7 @@ function resetQuickReservation() {
   document.getElementById('quickCourse').value = '';
   document.getElementById('quickUser').value = '';
   document.getElementById('quickNote').value = '';
-  document.getElementById('quickDateTime').innerHTML = '<i class="fas fa-calendar-plus me-2"></i><span>カレンダーにドラッグ&ドロップ</span>';
+  document.getElementById('quickDateTime').innerHTML = '<i class="fas fa-hand-paper me-2"></i><span>カレンダーの空き時間にドラッグ&ドロップしてください</span>';
   updateCreateButton();
 }
 
@@ -9508,77 +9567,331 @@ function createQuickReservation() {
   // 手動で日時を選択する必要があることを案内
   alert('カレンダーの空き時間に日時選択フィールドをドラッグ&ドロップしてください');
 }
+
+// 予約一覧の読み込み
+function loadReservationList() {
+  const content = document.getElementById('reservationListContent');
+  content.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x text-muted mb-3"></i><p class="text-muted">予約データを読み込み中...</p></div>';
+  
+  // 現在の週の予約データを取得
+  const weekStartStr = formatDateKey(getCurrentWeekStart());
+  
+  fetch(`/admin/reservations/load_reservations?week_start_date=${weekStartStr}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        displayReservationList(data.reservations);
+      } else {
+        content.innerHTML = '<div class="text-center py-4"><i class="fas fa-exclamation-triangle fa-2x text-warning mb-3"></i><p class="text-muted">予約データの読み込みに失敗しました</p></div>';
+      }
+    })
+    .catch(error => {
+      console.error('Error loading reservations:', error);
+      content.innerHTML = '<div class="text-center py-4"><i class="fas fa-exclamation-triangle fa-2x text-danger mb-3"></i><p class="text-muted">エラーが発生しました</p></div>';
+    });
+}
+
+// 予約一覧の表示
+function displayReservationList(reservations) {
+  const content = document.getElementById('reservationListContent');
+  
+  if (!reservations || Object.keys(reservations).length === 0) {
+    content.innerHTML = '<div class="text-center py-4"><i class="fas fa-calendar-times fa-2x text-muted mb-3"></i><p class="text-muted">今週の予約はありません</p></div>';
+    return;
+  }
+  
+  let html = '<div class="row g-3">';
+  
+  Object.entries(reservations).forEach(([dateKey, dayReservations]) => {
+    if (dayReservations && dayReservations.length > 0) {
+      const date = new Date(dateKey);
+      const dayName = ['日', '月', '火', '水', '木', '金', '土'][date.getDay()];
+      
+      html += `
+        <div class="col-12">
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white">
+              <h6 class="mb-0">
+                <i class="fas fa-calendar-day me-2"></i>
+                ${date.getMonth() + 1}/${date.getDate()} (${dayName})
+              </h6>
+            </div>
+            <div class="card-body p-0">
+      `;
+      
+      dayReservations.forEach(reservation => {
+        const startTime = new Date(reservation.start_time);
+        const endTime = new Date(reservation.end_time);
+        const timeStr = `${startTime.getHours().toString().padStart(2, '0')}:${startTime.getMinutes().toString().padStart(2, '0')}-${endTime.getHours().toString().padStart(2, '0')}:${endTime.getMinutes().toString().padStart(2, '0')}`;
+        
+        html += `
+          <div class="border-bottom p-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="mb-1">${reservation.user_name || 'ユーザー名なし'}</h6>
+                <p class="mb-1 text-muted">
+                  <i class="fas fa-clock me-1"></i>${timeStr}
+                  <span class="ms-3">
+                    <i class="fas fa-dumbbell me-1"></i>${reservation.course || 'コース未定'}
+                  </span>
+                </p>
+                ${reservation.note ? `<p class="mb-0 text-muted small"><i class="fas fa-sticky-note me-1"></i>${reservation.note}</p>` : ''}
+              </div>
+              <div>
+                <span class="badge bg-${reservation.status === 'confirmed' ? 'success' : reservation.status === 'cancelled' ? 'danger' : 'warning'}">
+                  ${reservation.status === 'confirmed' ? '確定' : reservation.status === 'cancelled' ? 'キャンセル' : '仮予約'}
+                </span>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      
+      html += `
+            </div>
+          </div>
+        </div>
+      `;
+    }
+  });
+  
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+// ユーザー検索
+function searchUsers() {
+  const query = document.getElementById('userSearchInput').value.trim();
+  const content = document.getElementById('userListContent');
+  
+  if (!query) {
+    content.innerHTML = '<div class="text-center py-4"><i class="fas fa-users fa-2x text-muted mb-3"></i><p class="text-muted">ユーザーを検索してください</p></div>';
+    return;
+  }
+  
+  content.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x text-muted mb-3"></i><p class="text-muted">検索中...</p></div>';
+  
+  fetch(`/admin/users/search?q=${encodeURIComponent(query)}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.users && data.users.length > 0) {
+        displayUserList(data.users);
+      } else {
+        content.innerHTML = '<div class="text-center py-4"><i class="fas fa-user-slash fa-2x text-muted mb-3"></i><p class="text-muted">該当するユーザーが見つかりませんでした</p></div>';
+      }
+    })
+    .catch(error => {
+      console.error('Error searching users:', error);
+      content.innerHTML = '<div class="text-center py-4"><i class="fas fa-exclamation-triangle fa-2x text-danger mb-3"></i><p class="text-muted">エラーが発生しました</p></div>';
+    });
+}
+
+// ユーザー一覧の表示
+function displayUserList(users) {
+  const content = document.getElementById('userListContent');
+  
+  let html = '<div class="row g-3">';
+  
+  users.forEach(user => {
+    html += `
+      <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <h6 class="mb-0">${user.name}</h6>
+              <span class="badge bg-primary">ID: ${user.id}</span>
+            </div>
+            <p class="mb-1 text-muted small">
+              <i class="fas fa-phone me-1"></i>${user.phone_number || '電話番号なし'}
+            </p>
+            <p class="mb-1 text-muted small">
+              <i class="fas fa-envelope me-1"></i>${user.email || 'メールアドレスなし'}
+            </p>
+            <div class="mt-2">
+              <button class="btn btn-sm btn-outline-primary" onclick="selectUserForReservation(${user.id})">
+                <i class="fas fa-plus me-1"></i>予約に追加
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+// ユーザーを予約フォームに選択
+function selectUserForReservation(userId) {
+  const userSelect = document.getElementById('quickUser');
+  userSelect.value = userId;
+  updateCreateButton();
+  
+  // 新規予約タブに切り替え
+  openReservationTab('quick-reservation');
+}
+
+// タブイベントリスナー
+document.addEventListener('DOMContentLoaded', function() {
+  // 予約一覧タブがクリックされたとき
+  document.getElementById('reservation-list-tab').addEventListener('click', function() {
+    setTimeout(loadReservationList, 100);
+  });
+  
+  // ユーザー検索のEnterキー対応
+  document.getElementById('userSearchInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      searchUsers();
+    }
+  });
+});
 </script>
 
-<!-- 右からスライドする予約タブ -->
-<div id="reservationSlideTab" class="reservation-slide-tab">
-  <div class="slide-tab-content">
-    <div class="slide-tab-header">
-      <h5 class="mb-0">
+<!-- 予約タブ -->
+<div class="reservation-tabs-container">
+  <!-- タブナビゲーション -->
+  <ul class="nav nav-tabs reservation-tabs" id="reservationTabNav" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="quick-reservation-tab" data-bs-toggle="tab" data-bs-target="#quick-reservation" type="button" role="tab" aria-controls="quick-reservation" aria-selected="true">
         <i class="fas fa-plus-circle me-2"></i>新規予約
-      </h5>
-      <button type="button" class="btn-close" onclick="closeReservationTab()"></button>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="reservation-list-tab" data-bs-toggle="tab" data-bs-target="#reservation-list" type="button" role="tab" aria-controls="reservation-list" aria-selected="false">
+        <i class="fas fa-list me-2"></i>予約一覧
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="user-management-tab" data-bs-toggle="tab" data-bs-target="#user-management" type="button" role="tab" aria-controls="user-management" aria-selected="false">
+        <i class="fas fa-users me-2"></i>ユーザー管理
+      </button>
+    </li>
+  </ul>
+  
+  <!-- タブコンテンツ -->
+  <div class="tab-content reservation-tab-content" id="reservationTabContent">
+    <!-- 新規予約タブ -->
+    <div class="tab-pane fade show active" id="quick-reservation" role="tabpanel" aria-labelledby="quick-reservation-tab">
+      <div class="tab-pane-header">
+        <h5 class="mb-0">
+          <i class="fas fa-plus-circle me-2 text-primary"></i>新規予約作成
+        </h5>
+        <p class="text-muted mb-0">ドラッグ&ドロップで簡単に予約を作成できます</p>
+      </div>
+      
+      <div class="tab-pane-body">
+        <form id="quickReservationForm">
+          <!-- コース選択 -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">
+              <i class="fas fa-clock me-2"></i>コース
+            </label>
+            <select class="form-select" id="quickCourse" name="course" required>
+              <option value="">コースを選択してください</option>
+              <option value="40 min">40分 - ¥8,000</option>
+              <option value="60 min">60分 - ¥12,000</option>
+              <option value="80 min">80分 - ¥15,000</option>
+            </select>
+          </div>
+          
+          <!-- ユーザー選択 -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">
+              <i class="fas fa-user me-2"></i>お客様
+            </label>
+            <div class="d-flex gap-2">
+              <select class="form-select" id="quickUser" name="user_id">
+                <option value="">既存ユーザーを選択</option>
+              </select>
+              <button type="button" class="btn btn-outline-primary btn-sm" onclick="openNewUserModal()" title="新規ユーザー追加">
+                <i class="fas fa-plus"></i>
+              </button>
+            </div>
+          </div>
+          
+          <!-- 日時選択（ドラッグ&ドロップ用） -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">
+              <i class="fas fa-calendar-plus me-2"></i>日時
+            </label>
+            <div class="form-control" id="quickDateTime" style="min-height: 50px; display: flex; align-items: center; color: #6c757d; cursor: grab;">
+              <i class="fas fa-hand-paper me-2"></i>
+              <span>カレンダーの空き時間にドラッグ&ドロップしてください</span>
+            </div>
+            <small class="form-text text-muted">
+              <i class="fas fa-info-circle me-1"></i>
+              日時フィールドをカレンダーの空き時間にドラッグして予約を作成
+            </small>
+          </div>
+          
+          <!-- 備考 -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">
+              <i class="fas fa-sticky-note me-2"></i>備考
+            </label>
+            <textarea class="form-control" id="quickNote" name="note" rows="3" placeholder="特記事項があれば記入してください"></textarea>
+          </div>
+          
+          <!-- アクションボタン -->
+          <div class="d-grid gap-2">
+            <button type="button" class="btn btn-primary btn-lg" onclick="createQuickReservation()" disabled id="createReservationBtn">
+              <i class="fas fa-save me-2"></i>予約を作成
+            </button>
+            <button type="button" class="btn btn-outline-secondary" onclick="resetQuickReservation()">
+              <i class="fas fa-undo me-2"></i>リセット
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
     
-    <div class="slide-tab-body">
-      <form id="quickReservationForm">
-        <!-- コース選択 -->
-        <div class="mb-3">
-          <label class="form-label fw-semibold">コース</label>
-          <select class="form-select" id="quickCourse" name="course" required>
-            <option value="">コースを選択</option>
-            <option value="40 min">40分 - ¥8,000</option>
-            <option value="60 min">60分 - ¥12,000</option>
-            <option value="80 min">80分 - ¥15,000</option>
-          </select>
+    <!-- 予約一覧タブ -->
+    <div class="tab-pane fade" id="reservation-list" role="tabpanel" aria-labelledby="reservation-list-tab">
+      <div class="tab-pane-header">
+        <h5 class="mb-0">
+          <i class="fas fa-list me-2 text-primary"></i>予約一覧
+        </h5>
+        <p class="text-muted mb-0">現在の週の予約一覧を表示します</p>
+      </div>
+      
+      <div class="tab-pane-body">
+        <div id="reservationListContent">
+          <div class="text-center py-4">
+            <i class="fas fa-spinner fa-spin fa-2x text-muted mb-3"></i>
+            <p class="text-muted">予約データを読み込み中...</p>
+          </div>
         </div>
-        
-        <!-- ユーザー選択 -->
+      </div>
+    </div>
+    
+    <!-- ユーザー管理タブ -->
+    <div class="tab-pane fade" id="user-management" role="tabpanel" aria-labelledby="user-management-tab">
+      <div class="tab-pane-header">
+        <h5 class="mb-0">
+          <i class="fas fa-users me-2 text-primary"></i>ユーザー管理
+        </h5>
+        <p class="text-muted mb-0">ユーザーの検索と管理を行います</p>
+      </div>
+      
+      <div class="tab-pane-body">
         <div class="mb-3">
-          <label class="form-label fw-semibold">お客様</label>
-          <div class="d-flex gap-2">
-            <select class="form-select" id="quickUser" name="user_id">
-              <option value="">既存ユーザー</option>
-            </select>
-            <button type="button" class="btn btn-outline-primary btn-sm" onclick="openNewUserModal()">
-              <i class="fas fa-plus"></i>
+          <div class="input-group">
+            <input type="text" class="form-control" id="userSearchInput" placeholder="ユーザー名、電話番号、メールアドレスで検索">
+            <button class="btn btn-outline-primary" type="button" onclick="searchUsers()">
+              <i class="fas fa-search"></i>
             </button>
           </div>
         </div>
         
-        <!-- 日時選択（ドラッグ&ドロップ用） -->
-        <div class="mb-3">
-          <label class="form-label fw-semibold">日時</label>
-          <div class="form-control" id="quickDateTime" style="min-height: 40px; display: flex; align-items: center; color: #6c757d;">
-            <i class="fas fa-calendar-plus me-2"></i>
-            <span>カレンダーにドラッグ&ドロップ</span>
+        <div id="userListContent">
+          <div class="text-center py-4">
+            <i class="fas fa-users fa-2x text-muted mb-3"></i>
+            <p class="text-muted">ユーザーを検索してください</p>
           </div>
-          <small class="form-text text-muted">カレンダーの空き時間にドラッグして予約を作成</small>
         </div>
-        
-        <!-- 備考 -->
-        <div class="mb-3">
-          <label class="form-label fw-semibold">備考</label>
-          <textarea class="form-control" id="quickNote" name="note" rows="2" placeholder="特記事項があれば記入"></textarea>
-        </div>
-        
-        <!-- アクションボタン -->
-        <div class="d-grid gap-2">
-          <button type="button" class="btn btn-primary" onclick="createQuickReservation()" disabled id="createReservationBtn">
-            <i class="fas fa-save me-2"></i>予約を作成
-          </button>
-          <button type="button" class="btn btn-outline-secondary" onclick="resetQuickReservation()">
-            <i class="fas fa-undo me-2"></i>リセット
-          </button>
-        </div>
-      </form>
+      </div>
     </div>
-  </div>
-  
-  <!-- タブを開くボタン -->
-  <div class="slide-tab-trigger" onclick="openReservationTab()">
-    <i class="fas fa-plus"></i>
-    <span>新規予約</span>
   </div>
 </div>
 
