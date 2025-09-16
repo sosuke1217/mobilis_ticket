@@ -569,6 +569,34 @@ class Admin::UsersController < ApplicationController
     end
   end
 
+  # 最近の顧客API
+  def recent
+    respond_to do |format|
+      format.json do
+        # 最近の予約があった顧客を取得（管理者以外）
+        recent_users = User.where(admin: false)
+          .joins(:reservations)
+          .where('reservations.start_time >= ?', 30.days.ago)
+          .distinct
+          .order('reservations.start_time DESC')
+          .limit(10)
+        
+        user_data = recent_users.map do |user|
+          {
+            id: user.id,
+            name: user.name,
+            phone_number: user.phone_number,
+            email: user.email,
+            active_tickets: user.tickets.where("remaining_count > 0").count,
+            last_visit: user.reservations.order(start_time: :desc).limit(1).pluck(:start_time).first&.strftime('%Y-%m-%d')
+          }
+        end
+        
+        render json: { success: true, users: user_data }
+      end
+    end
+  end
+
   # ユーザー統計データAPI
   def statistics
     # ユーザーの統計データをJSONで返す
