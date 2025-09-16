@@ -7968,6 +7968,13 @@ function showMessage(message, type = 'info') {
             const reservationId = e.dataTransfer.getData('text/plain');
             console.log('🎯 Drop detected for reservation:', reservationId, 'at cell:', cell.dataset.day, cell.dataset.time);
             
+            // 新規予約のドロップかどうかをチェック
+            if (reservationId && (reservationId.includes('course-block-drag') || reservationId.startsWith('{'))) {
+                console.log('🎯 New reservation drop detected, redirecting to new reservation handler');
+                handleNewReservationDrop.call(cell, e);
+                return;
+            }
+            
             if (!reservationId || reservationId.trim() === '') {
                 console.log('❌ Empty reservation ID, ignoring drop');
                 return;
@@ -9596,8 +9603,8 @@ function attachDropListeners() {
       // ドロップされた要素を特定
       const timeSlot = e.target.closest('.time-slot');
       if (timeSlot && window.draggedCourseData) {
-        console.log('🎯 Redirecting to time slot drop handler');
-        handleDrop.call(timeSlot, e);
+        console.log('🎯 Redirecting to new reservation drop handler');
+        handleNewReservationDrop.call(timeSlot, e);
       } else {
         console.log('🎯 No valid drop target found:', {
           timeSlot: timeSlot,
@@ -9630,8 +9637,97 @@ function handleDragLeave(e) {
   this.classList.remove('drop-zone');
 }
 
+// 新規予約専用のドロップハンドラー
+function handleNewReservationDrop(e) {
+  console.log('🎯 New reservation drop event triggered!');
+  e.preventDefault();
+  e.stopPropagation();
+  
+  const timeSlot = e.target.closest('.time-slot');
+  if (!timeSlot) {
+    console.log('❌ No time slot found');
+    return;
+  }
+  
+  timeSlot.classList.remove('drop-zone');
+  
+  console.log('🎯 DataTransfer types:', e.dataTransfer.types);
+  console.log('🎯 draggedCourseData:', draggedCourseData);
+  console.log('🎯 window.draggedCourseData:', window.draggedCourseData);
+  
+  // 複数の方法でデータを取得
+  let courseData = draggedCourseData || window.draggedCourseData;
+  
+  // dataTransferからもデータを取得を試行
+  if (!courseData && e.dataTransfer) {
+    try {
+      const jsonData = e.dataTransfer.getData('application/json');
+      if (jsonData) {
+        courseData = JSON.parse(jsonData);
+        console.log('🎯 Course data from dataTransfer JSON:', courseData);
+      }
+    } catch (error) {
+      console.log('🎯 Failed to parse JSON from dataTransfer:', error);
+    }
+    
+    // プレーンテキストからも取得を試行
+    if (!courseData) {
+      const textData = e.dataTransfer.getData('text/plain');
+      if (textData && textData !== 'course-block-drag') {
+        try {
+          courseData = JSON.parse(textData);
+          console.log('🎯 Course data from dataTransfer text:', courseData);
+        } catch (error) {
+          console.log('🎯 Failed to parse text from dataTransfer:', error);
+        }
+      }
+    }
+  }
+  
+  if (courseData) {
+    console.log('Dropped on time slot:', timeSlot);
+    
+    // スロットの位置を正確に取得
+    const dayColumn = timeSlot.closest('.day-column');
+    const dayIndex = Array.from(dayColumn.parentNode.children).indexOf(dayColumn);
+    const timeSlotIndex = Array.from(dayColumn.children).indexOf(timeSlot);
+    
+    console.log('Day index:', dayIndex, 'Time slot index:', timeSlotIndex);
+    
+    // 日時を計算
+    const startTime = calculateDateTimeFromSlot(timeSlotIndex, dayIndex);
+    const endTime = new Date(startTime.getTime() + courseData.duration * 60000);
+    
+    console.log('Calculated start time:', startTime);
+    console.log('Calculated end time:', endTime);
+    
+    // 現在の予約データを保存
+    currentReservationData = {
+      start_time: startTime,
+      end_time: endTime,
+      course: courseData.course,
+      duration: courseData.duration,
+      price: courseData.price,
+      status: 'tentative'
+    };
+    
+    console.log('Current reservation data:', currentReservationData);
+    
+    // 予約詳細フォームを表示
+    showReservationDetailsForm();
+    
+    // ドロップ成功後にデータをクリア
+    draggedCourseData = null;
+    window.draggedCourseData = null;
+    console.log('Drag data cleared after successful drop');
+  } else {
+    console.log('❌ No dragged course data found');
+  }
+}
+
+// 既存の予約移動用のドロップハンドラー（元の機能を復元）
 function handleDrop(e) {
-  console.log('🎯 Drop event triggered!');
+  console.log('🎯 Existing reservation drop event triggered!');
   e.preventDefault();
   e.stopPropagation();
   
