@@ -2715,9 +2715,6 @@
                     timeSlot.className = 'time-slot';
                     
                     // ドラッグアンドドロップ用のデータ属性を追加
-                    const currentDate = new Date(currentWeekStart);
-                    currentDate.setDate(currentWeekStart.getDate() + day);
-                    timeSlot.dataset.date = currentDate.toISOString().split('T')[0];
                     timeSlot.dataset.time = timeStr;
                     
                     // 今日の日付かどうかをチェック
