@@ -2540,7 +2540,7 @@
                         cell.dataset.day = day;
                         cell.dataset.time = timeStr;
                         
-                        // ドロップゾーンとして設定
+                        // ドロップゾーンとして設定（既存予約移動用）
                         cell.addEventListener('dragover', handleDragOver);
                         cell.addEventListener('drop', handleDrop);
                         cell.addEventListener('dragenter', handleDragEnter);
@@ -2879,6 +2879,19 @@
                 console.log('🎯 予約ブロックがクリックされました:', reservation);
                 console.log('🔍 予約ID:', reservation.id);
                 openReservationDetailModal(reservation);
+            });
+            
+            // ドラッグ開始イベントを追加（既存予約移動用）
+            block.addEventListener('dragstart', function(e) {
+                console.log('🎯 Existing reservation drag started:', reservation.id);
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', reservation.id);
+                this.classList.add('dragging');
+            });
+            
+            block.addEventListener('dragend', function(e) {
+                console.log('🎯 Existing reservation drag ended:', reservation.id);
+                this.classList.remove('dragging');
             });
             
             const statusIcon = {
@@ -9767,86 +9780,120 @@ function handleDrop(e) {
   e.preventDefault();
   e.stopPropagation();
   
-  const timeSlot = e.target.closest('.time-slot');
-  if (!timeSlot) {
-    console.log('❌ No time slot found');
+  // ドラッグオーバー状態をクリア
+  document.querySelectorAll('.schedule-cell').forEach(cell => {
+    cell.classList.remove('drag-over');
+    cell.classList.remove('drag-over-invalid');
+  });
+  
+  const cell = e.target.closest('.schedule-cell');
+  if (!cell) {
+    console.log('❌ No schedule cell found');
     return;
   }
   
-  timeSlot.classList.remove('drop-zone');
+  const reservationId = e.dataTransfer.getData('text/plain');
+  console.log('🎯 Drop detected for reservation:', reservationId, 'at cell:', cell.dataset.day, cell.dataset.time);
   
-  console.log('🎯 DataTransfer types:', e.dataTransfer.types);
-  console.log('🎯 draggedCourseData:', draggedCourseData);
-  console.log('🎯 window.draggedCourseData:', window.draggedCourseData);
+  if (!reservationId || reservationId.trim() === '') {
+    console.log('❌ Empty reservation ID, ignoring drop');
+    return;
+  }
   
-  // 複数の方法でデータを取得
-  let courseData = draggedCourseData || window.draggedCourseData;
+  const reservationBlock = document.querySelector(`[data-reservation-id="${reservationId}"]`);
   
-  // dataTransferからもデータを取得を試行
-  if (!courseData && e.dataTransfer) {
-    try {
-      const jsonData = e.dataTransfer.getData('application/json');
-      if (jsonData) {
-        courseData = JSON.parse(jsonData);
-        console.log('🎯 Course data from dataTransfer JSON:', courseData);
-      }
-    } catch (error) {
-      console.log('🎯 Failed to parse JSON from dataTransfer:', error);
+  if (!reservationBlock) {
+    console.log('❌ Reservation block not found for ID:', reservationId);
+    return;
+  }
+  
+  const reservationData = JSON.parse(reservationBlock.dataset.reservationData);
+  const newDay = parseInt(cell.dataset.day);
+  const newTime = cell.dataset.time;
+  
+  // Check if the target time slot is within business hours
+  if (!isBusinessHour(newDay, newTime)) {
+    showMessage('営業時間外のため、この時間に予約を移動できません。', 'error');
+    return;
+  }
+  
+  // Check if all required time slots for the reservation are within business hours
+  const duration = reservationData.duration || 60;
+  const interval = reservationData.effective_interval_minutes ?? 10;
+  const totalDuration = duration + interval;
+  const cellsToOccupy = Math.ceil(totalDuration / 10);
+  
+  let currentCell = cell;
+  let canMove = true;
+  
+  // Check if all required cells are available
+  for (let i = 0; i < cellsToOccupy; i++) {
+    if (!currentCell || !isBusinessHour(parseInt(currentCell.dataset.day), currentCell.dataset.time)) {
+      canMove = false;
+      break;
     }
     
-    // プレーンテキストからも取得を試行
-    if (!courseData) {
-      const textData = e.dataTransfer.getData('text/plain');
-      if (textData && textData !== 'course-block-drag') {
-        try {
-          courseData = JSON.parse(textData);
-          console.log('🎯 Course data from dataTransfer text:', courseData);
-        } catch (error) {
-          console.log('🎯 Failed to parse text from dataTransfer:', error);
+    // Check if cell is occupied by another reservation
+    const existingReservations = currentCell.querySelectorAll('.reservation-block');
+    if (existingReservations.length > 0) {
+      // Check if any of these reservations are not the one being moved
+      for (let block of existingReservations) {
+        if (block.dataset.reservationId !== reservationId) {
+          canMove = false;
+          break;
         }
       }
     }
+    
+    if (!canMove) break;
+    
+    // Move to next cell
+    currentCell = currentCell.nextElementSibling;
   }
   
-  if (courseData) {
-    console.log('Dropped on time slot:', timeSlot);
-    
-    // スロットの位置を正確に取得
-    const dayColumn = timeSlot.closest('.day-column');
-    const dayIndex = Array.from(dayColumn.parentNode.children).indexOf(dayColumn);
-    const timeSlotIndex = Array.from(dayColumn.children).indexOf(timeSlot);
-    
-    console.log('Day index:', dayIndex, 'Time slot index:', timeSlotIndex);
-    
-    // 日時を計算
-    const startTime = calculateDateTimeFromSlot(timeSlotIndex, dayIndex);
-    const endTime = new Date(startTime.getTime() + courseData.duration * 60000);
-    
-    console.log('Calculated start time:', startTime);
-    console.log('Calculated end time:', endTime);
-    
-    // 現在の予約データを保存
-    currentReservationData = {
-      start_time: startTime,
-      end_time: endTime,
-      course: courseData.course,
-      duration: courseData.duration,
-      price: courseData.price,
-      status: 'tentative'
-    };
-    
-    console.log('Current reservation data:', currentReservationData);
-    
-    // 予約詳細フォームを表示
-    showReservationDetailsForm();
-    
-    // ドロップ成功後にデータをクリア
-    draggedCourseData = null;
-    window.draggedCourseData = null;
-    console.log('Drag data cleared after successful drop');
-  } else {
-    console.log('❌ No dragged course data found');
+  if (!canMove) {
+    showMessage('この時間には他の予約があるため、移動できません。', 'error');
+    return;
   }
+  
+  // Calculate new start time
+  const scheduleDate = new Date(currentWeekStart);
+  scheduleDate.setDate(scheduleDate.getDate() + newDay);
+  const [hours, minutes] = newTime.split(':').map(Number);
+  scheduleDate.setHours(hours, minutes, 0, 0);
+  
+  const newEndTime = new Date(scheduleDate.getTime() + duration * 60000);
+  
+  // Update reservation
+  const updateData = {
+    start_time: scheduleDate.toISOString(),
+    end_time: newEndTime.toISOString()
+  };
+  
+  console.log('🎯 Updating reservation:', reservationId, 'to new time:', updateData);
+  
+  fetch(`/admin/reservations/${reservationId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+    },
+    body: JSON.stringify({ reservation: updateData })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      showMessage('予約を移動しました。', 'success');
+      // Refresh the calendar
+      renderWeekView();
+    } else {
+      showMessage(data.message || '予約の移動に失敗しました。', 'error');
+    }
+  })
+  .catch(error => {
+    console.error('Error updating reservation:', error);
+    showMessage('予約の移動中にエラーが発生しました。', 'error');
+  });
 }
 
 // 現在の週の開始日を取得
