@@ -1241,18 +1241,18 @@
         function initializeDragAndDrop() {
             // コース選択オプションのイベントリスナー
             document.querySelectorAll('.course-option, .break-option').forEach(option => {
-                option.addEventListener('dragstart', handleCourseDragStart);
+                option.addEventListener('dragstart', handleDragStart);
                 option.draggable = true;
             });
 
             // カレンダーの時間スロットにドロップイベントを追加
-            document.addEventListener('dragover', handleCourseDragOver);
-            document.addEventListener('drop', handleCourseDrop);
-            document.addEventListener('dragend', handleCourseDragEnd);
+            document.addEventListener('dragover', handleDragOver);
+            document.addEventListener('drop', handleDrop);
+            document.addEventListener('dragend', handleDragEnd);
         }
 
-        // コース選択のドラッグ開始
-        function handleCourseDragStart(e) {
+        // ドラッグ開始
+        function handleDragStart(e) {
             draggedCourse = e.target.dataset.course;
             draggedDuration = parseInt(e.target.dataset.duration);
             isDragging = true;
@@ -1263,129 +1263,97 @@
             // ドラッグ中の視覚的フィードバック
             e.target.style.opacity = '0.5';
             
-            console.log('🎯 Course drag started:', { course: draggedCourse, duration: draggedDuration });
+            console.log('🎯 Drag started:', { course: draggedCourse, duration: draggedDuration });
         }
 
-        // コース選択のドラッグオーバー
-        function handleCourseDragOver(e) {
+        // ドラッグオーバー
+        function handleDragOver(e) {
             if (!isDragging) return;
             
             e.preventDefault();
             e.dataTransfer.dropEffect = 'copy';
             
-            const cell = e.target.closest('.schedule-cell');
-            if (cell) {
-                // Clear all previous drag-over states
-                document.querySelectorAll('.schedule-cell').forEach(c => {
-                    c.classList.remove('course-drag-over');
-                    c.classList.remove('course-drag-over-invalid');
-                });
-                
-                if (draggedCourse && draggedDuration) {
-                    const duration = draggedDuration;
-                    const interval = 15; // 15分インターバル
-                    const totalDuration = duration + interval;
-                    
-                    // Calculate how many cells this reservation would occupy (10-minute slots)
-                    const cellsToOccupy = Math.ceil(totalDuration / 10);
-                    
-                    // Check if all required cells are within business hours
-                    let currentCell = cell;
-                    let allCellsValid = true;
-                    let cellsToCheck = [];
-                    
-                    // First, collect all cells that would be occupied
-                    for (let i = 0; i < cellsToOccupy && currentCell; i++) {
-                        cellsToCheck.push(currentCell);
-                        
-                        // Check if this cell is occupied
-                        if (currentCell.classList.contains('occupied') || 
-                            currentCell.querySelector('.reservation-block, .reservation-item')) {
-                            allCellsValid = false;
-                            break;
-                        }
-                        
-                        // Move to the next row (next time slot) in the same day column
-                        const currentRow = currentCell.parentElement;
-                        const nextRow = currentRow.nextElementSibling;
-                        if (nextRow) {
-                            const nextCell = nextRow.querySelector(`[data-day="${currentCell.dataset.day}"]`);
-                            if (nextCell && nextCell.classList.contains('schedule-cell')) {
-                                currentCell = nextCell;
-                            } else {
-                                break; // No more cells in this day column
-                            }
-                        } else {
-                            break; // No more rows
-                        }
-                    }
-                    
-                    // Check if all cells are within business hours
-                    for (let checkCell of cellsToCheck) {
-                        const dayOfWeek = parseInt(checkCell.dataset.day);
-                        const timeStr = checkCell.dataset.time;
-                        
-                        if (!isBusinessHour(dayOfWeek, timeStr)) {
-                            allCellsValid = false;
-                            break;
-                        }
-                    }
-                    
-                    // Apply visual feedback
-                    if (allCellsValid && cellsToCheck.length === cellsToOccupy) {
-                        cellsToCheck.forEach(c => {
-                            c.classList.add('course-drag-over');
-                        });
-                    } else {
-                        // Show invalid drop effect and visual feedback
-                        e.dataTransfer.dropEffect = 'none';
-                        cellsToCheck.forEach(c => {
-                            c.classList.add('course-drag-over-invalid');
-                        });
-                    }
-                }
+            const timeSlot = e.target.closest('.time-slot');
+            const scheduleCell = e.target.closest('.schedule-cell');
+            
+            // 既存のドラッグオーバークラスをクリア
+            document.querySelectorAll('.time-slot').forEach(slot => {
+                slot.classList.remove('drag-over');
+            });
+            document.querySelectorAll('.schedule-cell').forEach(cell => {
+                cell.classList.remove('drag-over');
+            });
+            
+            if (scheduleCell && !scheduleCell.classList.contains('occupied')) {
+                scheduleCell.classList.add('drag-over');
+            } else if (timeSlot) {
+                timeSlot.classList.add('drag-over');
             }
         }
 
-        // コース選択のドロップ
-        function handleCourseDrop(e) {
+        // ドロップ
+        function handleDrop(e) {
             e.preventDefault();
             
             if (!isDragging || !draggedCourse || !draggedDuration) return;
             
+            const timeSlot = e.target.closest('.time-slot');
             const scheduleCell = e.target.closest('.schedule-cell');
-            if (!scheduleCell) return;
+            
+            if (!timeSlot && !scheduleCell) return;
             
             // ドラッグオーバークラスを削除
-            document.querySelectorAll('.schedule-cell').forEach(cell => {
-                cell.classList.remove('course-drag-over');
-                cell.classList.remove('course-drag-over-invalid');
+            document.querySelectorAll('.time-slot').forEach(slot => {
+                slot.classList.remove('drag-over');
             });
             
-            const date = scheduleCell.dataset.date;
-            const time = scheduleCell.dataset.time;
+            let date, time;
             
-            if (date && time && !scheduleCell.classList.contains('occupied')) {
-                createReservationFromDrag(date, time, draggedCourse, draggedDuration);
+            if (scheduleCell) {
+                // セルからドロップした場合
+                date = scheduleCell.dataset.date;
+                time = scheduleCell.dataset.time;
+            } else if (timeSlot) {
+                // 時刻ラベルからドロップした場合（日曜日として扱う）
+                date = new Date(currentWeekStart).toISOString().split('T')[0];
+                time = timeSlot.dataset.time;
             }
             
-            console.log('🎯 Course drop completed:', { date, time, course: draggedCourse, duration: draggedDuration });
+            console.log('🎯 Drop processing:', { 
+                date, 
+                time, 
+                course: draggedCourse, 
+                duration: draggedDuration,
+                timeSlot: !!timeSlot,
+                scheduleCell: !!scheduleCell
+            });
+            
+            if (date && time) {
+                console.log('🎯 Calling createReservationFromDrag...');
+                createReservationFromDrag(date, time, draggedCourse, draggedDuration);
+            } else {
+                console.log('❌ Missing date or time:', { date, time });
+            }
+            
+            console.log('🎯 Drop completed:', { date, time, course: draggedCourse, duration: draggedDuration });
         }
 
-        // コース選択のドラッグ終了
-        function handleCourseDragEnd(e) {
+        // ドラッグ終了
+        function handleDragEnd(e) {
             isDragging = false;
             draggedCourse = null;
             draggedDuration = null;
             
             // 視覚的フィードバックをリセット
             e.target.style.opacity = '1';
+            document.querySelectorAll('.time-slot').forEach(slot => {
+                slot.classList.remove('drag-over');
+            });
             document.querySelectorAll('.schedule-cell').forEach(cell => {
-                cell.classList.remove('course-drag-over');
-                cell.classList.remove('course-drag-over-invalid');
+                cell.classList.remove('drag-over');
             });
             
-            console.log('🎯 Course drag ended');
+            console.log('🎯 Drag ended');
         }
 
         // ドラッグから予約を作成
@@ -1393,24 +1361,24 @@
             const startTime = new Date(`${date}T${time}:00`);
             const endTime = new Date(startTime.getTime() + duration * 60000);
             
-            // 予約データを作成
-            const reservationData = {
-                date: date,
-                time: time,
-                start_time: startTime.toISOString(),
-                end_time: endTime.toISOString(),
-                course: course,
-                duration: duration,
-                customer: '新規顧客', // デフォルト値
-                phone: '',
-                email: '',
-                note: '',
-                status: 'tentative',
-                is_break: course === '休憩'
-            };
+            console.log('🎯 Creating reservation from drag:', { date, time, course, duration });
             
             // 予約作成モーダルを開く
-            openBookingModal(reservationData);
+            openBookingModal(startTime, time);
+            
+            // モーダルが開いた後にコースと時間を設定
+            setTimeout(() => {
+                const courseSelect = document.getElementById('bookingDuration');
+                if (courseSelect) {
+                    // コース選択肢を探して選択
+                    for (let option of courseSelect.options) {
+                        if (option.value === duration.toString()) {
+                            courseSelect.value = duration.toString();
+                            break;
+                        }
+                    }
+                }
+            }, 100);
         }
 
         // スライドパネルの初期化
@@ -9437,39 +9405,28 @@ function showMessage(message, type = 'info') {
   cursor: grabbing;
 }
 
-.schedule-cell.course-drag-over {
-  background-color: #e8f5e8 !important;
-  border: 2px solid #28a745 !important;
+.time-slot.drag-over {
+  background-color: #e3f2fd !important;
+  border: 2px dashed #2196f3 !important;
   transform: scale(1.02);
   transition: all 0.2s ease;
-  position: relative;
 }
 
-.schedule-cell.course-drag-over-invalid {
-  background-color: #f8d7da !important;
-  border: 2px solid #dc3545 !important;
-  transform: scale(1.02);
-  transition: all 0.2s ease;
-  position: relative;
+.time-slot.drag-over::before {
+  content: "📅 ここにドロップ";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(33, 150, 243, 0.9);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  z-index: 10;
+  pointer-events: none;
 }
-
-/* 予約変更ドラッグと同じスタイル */
-.schedule-cell.drag-over {
-  background-color: #e8f5e8 !important;
-  border: 2px solid #28a745 !important;
-  transform: scale(1.02);
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.schedule-cell.drag-over-invalid {
-  background-color: #f8d7da !important;
-  border: 2px solid #dc3545 !important;
-  transform: scale(1.02);
-  transition: all 0.2s ease;
-  position: relative;
-}
-
 
 /* ドロップダウンメニューのスタイル改善 */
 .dropdown-menu {
