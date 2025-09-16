@@ -26,7 +26,7 @@
             <!-- カレンダーコンテナ -->
   <div class="row">
     <div class="col-12">
-      <div class="card border-0 shadow-sm">
+      <div class="card border-0 shadow-sm position-relative">
         <div class="card-header bg-light">
           <div class="d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-3">
@@ -90,27 +90,6 @@
             </div>
             
             <div class="d-flex gap-2">
-              <!-- コース選択ドロップダウン -->
-              <div class="dropdown">
-                <button class="btn btn-success btn-sm dropdown-toggle" type="button" id="courseDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                  <i class="fas fa-plus me-1"></i>ドラッグ予約作成
-                </button>
-                <ul class="dropdown-menu" aria-labelledby="courseDropdown">
-                  <li><a class="dropdown-item course-option" href="#" data-course="40 min" data-duration="40">
-                    <i class="fas fa-clock me-2"></i>40分コース
-                  </a></li>
-                  <li><a class="dropdown-item course-option" href="#" data-course="60 min" data-duration="60">
-                    <i class="fas fa-clock me-2"></i>60分コース
-                  </a></li>
-                  <li><a class="dropdown-item course-option" href="#" data-course="80 min" data-duration="80">
-                    <i class="fas fa-clock me-2"></i>80分コース
-                  </a></li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item course-option" href="#" data-course="休憩" data-duration="60">
-                    <i class="fas fa-pause me-2"></i>休憩60分
-                  </a></li>
-                </ul>
-              </div>
               <button class="btn btn-primary btn-sm" onclick="openBulkReservationModal()">
                 <i class="fas fa-calendar-plus me-1"></i>一括予約作成
                 </button>
@@ -119,7 +98,7 @@
               </button>
               <button class="btn btn-outline-secondary btn-sm" onclick="openSettingsModal()">
                 <i class="fas fa-cog me-1"></i>予約可能日時を編集
-              </button>
+                </button>
             </div>
             </div>
         </div>
@@ -159,6 +138,72 @@
           </div>
         </div>
       </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 右側スライドパネル -->
+    <div id="slidePanel" class="slide-panel">
+      <div class="slide-panel-tab" id="slidePanelTab">
+        <i class="fas fa-plus"></i>
+      </div>
+      <div class="slide-panel-content" id="slidePanelContent">
+        <div class="slide-panel-header">
+          <h5 class="mb-0">
+            <i class="fas fa-calendar-plus me-2"></i>予約作成
+          </h5>
+          <button class="btn-close" onclick="closeSlidePanel()"></button>
+        </div>
+        <div class="slide-panel-body">
+          <p class="text-muted mb-3">コースを選択してカレンダーにドラッグしてください</p>
+          
+          <div class="course-options">
+            <div class="course-option-card" data-course="40 min" data-duration="40" draggable="true">
+              <div class="course-icon">
+                <i class="fas fa-clock"></i>
+              </div>
+              <div class="course-info">
+                <h6 class="mb-1">40分コース</h6>
+                <small class="text-muted">40分間のセッション</small>
+              </div>
+            </div>
+            
+            <div class="course-option-card" data-course="60 min" data-duration="60" draggable="true">
+              <div class="course-icon">
+                <i class="fas fa-clock"></i>
+              </div>
+              <div class="course-info">
+                <h6 class="mb-1">60分コース</h6>
+                <small class="text-muted">60分間のセッション</small>
+              </div>
+            </div>
+            
+            <div class="course-option-card" data-course="80 min" data-duration="80" draggable="true">
+              <div class="course-icon">
+                <i class="fas fa-clock"></i>
+              </div>
+              <div class="course-info">
+                <h6 class="mb-1">80分コース</h6>
+                <small class="text-muted">80分間のセッション</small>
+              </div>
+            </div>
+            
+            <div class="course-option-card" data-course="休憩" data-duration="60" draggable="true">
+              <div class="course-icon">
+                <i class="fas fa-pause"></i>
+              </div>
+              <div class="course-info">
+                <h6 class="mb-1">休憩60分</h6>
+                <small class="text-muted">休憩時間の設定</small>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-4">
+            <button class="btn btn-outline-secondary btn-sm w-100" onclick="resetCourseSelection()">
+              <i class="fas fa-undo me-1"></i>選択をリセット
+            </button>
+          </div>
             </div>
         </div>
     </div>
@@ -9116,6 +9161,139 @@ function showMessage(message, type = 'info') {
   box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
 }
 
+/* 右側スライドパネル */
+.slide-panel {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+.slide-panel-tab {
+  width: 50px;
+  height: 120px;
+  background: linear-gradient(135deg, #28a745, #20c997);
+  border-radius: 10px 0 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.slide-panel-tab:hover {
+  width: 60px;
+  background: linear-gradient(135deg, #218838, #1aa179);
+  box-shadow: -3px 0 15px rgba(0, 0, 0, 0.15);
+}
+
+.slide-panel-tab i {
+  color: white;
+  font-size: 20px;
+  transition: transform 0.3s ease;
+}
+
+.slide-panel-tab:hover i {
+  transform: scale(1.1);
+}
+
+.slide-panel-content {
+  position: absolute;
+  top: 0;
+  right: 50px;
+  width: 300px;
+  height: 500px;
+  background: white;
+  border-radius: 10px 0 0 10px;
+  box-shadow: -5px 0 20px rgba(0, 0, 0, 0.15);
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  overflow: hidden;
+}
+
+.slide-panel.show .slide-panel-content {
+  transform: translateX(0);
+}
+
+.slide-panel-header {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  padding: 1rem;
+  border-bottom: 1px solid #dee2e6;
+  display: flex;
+  justify-content: between;
+  align-items: center;
+}
+
+.slide-panel-body {
+  padding: 1rem;
+  height: calc(100% - 80px);
+  overflow-y: auto;
+}
+
+/* コース選択カード */
+.course-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.course-option-card {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  cursor: grab;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.course-option-card:hover {
+  border-color: #28a745;
+  background: rgba(40, 167, 69, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.15);
+}
+
+.course-option-card:active {
+  cursor: grabbing;
+  transform: scale(0.98);
+}
+
+.course-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #28a745, #20c997);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.course-icon i {
+  color: white;
+  font-size: 16px;
+}
+
+.course-info {
+  flex: 1;
+}
+
+.course-info h6 {
+  margin: 0;
+  color: #333;
+  font-weight: 600;
+}
+
+.course-info small {
+  color: #6c757d;
+}
+
 /* ドラッグアンドドロップ用スタイル */
 .schedule-cell.droppable {
   transition: all 0.2s ease;
@@ -9131,21 +9309,6 @@ function showMessage(message, type = 'info') {
   background-color: rgba(40, 167, 69, 0.3) !important;
   border: 2px solid #28a745;
   transform: scale(1.02);
-}
-
-/* コース選択ドロップダウンのスタイル */
-.course-option {
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.course-option:hover {
-  background-color: rgba(40, 167, 69, 0.1);
-}
-
-.course-option i {
-  width: 16px;
-  text-align: center;
 }
 
 /* ドロップ可能なセルのインジケーター */
@@ -9164,6 +9327,12 @@ function showMessage(message, type = 'info') {
 
 .schedule-cell.droppable:hover::after {
   opacity: 1;
+}
+
+/* ドラッグ中のスタイル */
+.course-option-card.dragging {
+  opacity: 0.5;
+  transform: rotate(5deg);
 }
 
 /* レスポンシブ対応 */
@@ -9190,31 +9359,66 @@ function showMessage(message, type = 'info') {
 </style>
 
 <script>
-// ドラッグアンドドロップ機能
+// スライドパネル機能
 let selectedCourse = null;
 let selectedDuration = null;
-let draggedElement = null;
+let isDragging = false;
 
-// コース選択の処理
+// ページ読み込み時の初期化
 document.addEventListener('DOMContentLoaded', function() {
-  // コース選択ドロップダウンのイベントリスナー
-  document.querySelectorAll('.course-option').forEach(option => {
-    option.addEventListener('click', function(e) {
-      e.preventDefault();
-      selectedCourse = this.dataset.course;
-      selectedDuration = parseInt(this.dataset.duration);
-      
-      // ボタンのテキストを更新
-      const dropdownButton = document.getElementById('courseDropdown');
-      dropdownButton.innerHTML = `<i class="fas fa-plus me-1"></i>${selectedCourse} をドラッグ`;
-      
-      // カレンダーセルにドロップ可能なスタイルを追加
-      makeScheduleCellsDroppable();
-      
-      console.log(`Selected course: ${selectedCourse}, Duration: ${selectedDuration} minutes`);
-    });
-  });
+  initializeSlidePanel();
+  initializeDragAndDrop();
 });
+
+// スライドパネルの初期化
+function initializeSlidePanel() {
+  const slidePanel = document.getElementById('slidePanel');
+  const slidePanelTab = document.getElementById('slidePanelTab');
+  
+  // タブクリックでパネルを開く
+  slidePanelTab.addEventListener('click', function() {
+    slidePanel.classList.toggle('show');
+  });
+  
+  // パネル外クリックで閉じる
+  document.addEventListener('click', function(e) {
+    if (!slidePanel.contains(e.target) && slidePanel.classList.contains('show')) {
+      slidePanel.classList.remove('show');
+    }
+  });
+}
+
+// ドラッグアンドドロップの初期化
+function initializeDragAndDrop() {
+  const courseCards = document.querySelectorAll('.course-option-card');
+  
+  courseCards.forEach(card => {
+    card.addEventListener('dragstart', handleDragStart);
+    card.addEventListener('dragend', handleDragEnd);
+  });
+  
+  // スケジュールセルをドロップ可能にする
+  makeScheduleCellsDroppable();
+}
+
+// ドラッグ開始
+function handleDragStart(e) {
+  isDragging = true;
+  selectedCourse = e.target.dataset.course;
+  selectedDuration = parseInt(e.target.dataset.duration);
+  
+  e.target.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'copy';
+  e.dataTransfer.setData('text/plain', selectedCourse);
+  
+  console.log(`Dragging course: ${selectedCourse}, Duration: ${selectedDuration} minutes`);
+}
+
+// ドラッグ終了
+function handleDragEnd(e) {
+  isDragging = false;
+  e.target.classList.remove('dragging');
+}
 
 // スケジュールセルをドロップ可能にする
 function makeScheduleCellsDroppable() {
@@ -9226,15 +9430,16 @@ function makeScheduleCellsDroppable() {
     cell.removeEventListener('drop', handleDrop);
     cell.removeEventListener('dragenter', handleDragEnter);
     cell.removeEventListener('dragleave', handleDragLeave);
+    cell.removeEventListener('click', handleCellClick);
     
     // 新しいイベントリスナーを追加
     cell.addEventListener('dragover', handleDragOver);
     cell.addEventListener('drop', handleDrop);
     cell.addEventListener('dragenter', handleDragEnter);
     cell.addEventListener('dragleave', handleDragLeave);
+    cell.addEventListener('click', handleCellClick);
     
     // ドロップ可能なスタイルを追加
-    cell.style.cursor = 'pointer';
     cell.classList.add('droppable');
   });
 }
@@ -9248,9 +9453,8 @@ function handleDragOver(e) {
 // ドラッグエンター時の処理
 function handleDragEnter(e) {
   e.preventDefault();
-  if (selectedCourse) {
+  if (isDragging) {
     e.target.classList.add('drag-over');
-    e.target.style.backgroundColor = 'rgba(40, 167, 69, 0.2)';
   }
 }
 
@@ -9258,17 +9462,15 @@ function handleDragEnter(e) {
 function handleDragLeave(e) {
   e.preventDefault();
   e.target.classList.remove('drag-over');
-  e.target.style.backgroundColor = '';
 }
 
 // ドロップ時の処理
 function handleDrop(e) {
   e.preventDefault();
   e.target.classList.remove('drag-over');
-  e.target.style.backgroundColor = '';
   
   if (!selectedCourse || !selectedDuration) {
-    alert('まずコースを選択してください。');
+    alert('コースを選択してください。');
     return;
   }
   
@@ -9282,8 +9484,80 @@ function handleDrop(e) {
     return;
   }
   
+  createReservationFromCell(cell, selectedCourse, selectedDuration);
+}
+
+// セルクリック時の処理（ドラッグなしでも予約作成可能）
+function handleCellClick(e) {
+  // ドラッグ中でない場合のみクリック処理
+  if (isDragging) return;
+  
+  // スライドパネルが開いている場合のみ処理
+  const slidePanel = document.getElementById('slidePanel');
+  if (!slidePanel.classList.contains('show')) return;
+  
+  const cell = e.target;
+  const dayIndex = cell.dataset.dayIndex;
+  const timeSlot = cell.dataset.timeSlot;
+  
+  if (!dayIndex || !timeSlot) return;
+  
+  // コース選択モーダルを表示
+  showCourseSelectionModal(cell);
+}
+
+// コース選択モーダルを表示
+function showCourseSelectionModal(cell) {
+  const courses = [
+    { name: '40分コース', value: '40 min', duration: 40 },
+    { name: '60分コース', value: '60 min', duration: 60 },
+    { name: '80分コース', value: '80 min', duration: 80 },
+    { name: '休憩60分', value: '休憩', duration: 60 }
+  ];
+  
+  let optionsHtml = courses.map(course => 
+    `<button class="btn btn-outline-primary btn-sm me-2 mb-2" onclick="createReservationFromCell(this.closest('.schedule-cell'), '${course.value}', ${course.duration})">${course.name}</button>`
+  ).join('');
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal fade show';
+  modal.style.display = 'block';
+  modal.innerHTML = `
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">コースを選択</h5>
+          <button type="button" class="btn-close" onclick="this.closest('.modal').remove()"></button>
+        </div>
+        <div class="modal-body">
+          ${optionsHtml}
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // モーダル外クリックで閉じる
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+}
+
+// セルから予約を作成
+function createReservationFromCell(cell, course, duration) {
+  const dayIndex = cell.dataset.dayIndex;
+  const timeSlot = cell.dataset.timeSlot;
+  
+  if (!dayIndex || !timeSlot) {
+    alert('無効なセルです。');
+    return;
+  }
+  
   // 日付と時間を計算
-  const currentWeekStart = new Date(currentWeekStart);
+  const currentWeekStart = new Date(window.currentWeekStart);
   const dayDate = new Date(currentWeekStart);
   dayDate.setDate(currentWeekStart.getDate() + parseInt(dayIndex));
   
@@ -9292,16 +9566,16 @@ function handleDrop(e) {
   startTime.setHours(hours, minutes, 0, 0);
   
   const endTime = new Date(startTime);
-  endTime.setMinutes(endTime.getMinutes() + selectedDuration);
+  endTime.setMinutes(endTime.getMinutes() + duration);
   
   // 予約作成の確認
   const confirmMessage = `以下の予約を作成しますか？\n\n` +
     `日時: ${startTime.toLocaleString('ja-JP')}\n` +
-    `コース: ${selectedCourse}\n` +
-    `時間: ${selectedDuration}分`;
+    `コース: ${course}\n` +
+    `時間: ${duration}分`;
   
   if (confirm(confirmMessage)) {
-    createReservationFromDrop(startTime, endTime, selectedCourse);
+    createReservationFromDrop(startTime, endTime, course);
   }
 }
 
@@ -9356,20 +9630,20 @@ function createReservationFromDrop(startTime, endTime, course) {
   });
 }
 
+// スライドパネルを閉じる
+function closeSlidePanel() {
+  const slidePanel = document.getElementById('slidePanel');
+  slidePanel.classList.remove('show');
+}
+
 // コース選択をリセット
 function resetCourseSelection() {
   selectedCourse = null;
   selectedDuration = null;
   
-  const dropdownButton = document.getElementById('courseDropdown');
-  dropdownButton.innerHTML = '<i class="fas fa-plus me-1"></i>ドラッグ予約作成';
-  
-  // ドロップ可能なスタイルを削除
-  const scheduleCells = document.querySelectorAll('.schedule-cell');
-  scheduleCells.forEach(cell => {
-    cell.style.cursor = '';
-    cell.classList.remove('droppable');
-  });
+  // モーダルを削除
+  const modals = document.querySelectorAll('.modal');
+  modals.forEach(modal => modal.remove());
 }
 
 // 既存の関数はそのまま維持（previousWeek, nextWeek, toggleMiniCalendar等）
