@@ -26,6 +26,63 @@
             <!-- カレンダーコンテナ -->
   <div class="row">
     <div class="col-12">
+      <!-- 右側スライドパネル -->
+      <div id="courseSliderPanel" class="course-slider-panel">
+        <div class="course-slider-header">
+          <h5 class="mb-0">
+            <i class="fas fa-plus-circle me-2 text-success"></i>コース選択
+          </h5>
+          <button class="btn-close" id="courseSliderClose"></button>
+                </div>
+        <div class="course-slider-body">
+          <div class="course-options">
+            <div class="course-option" data-course="40 min" data-duration="40">
+              <div class="course-icon">
+                <i class="fas fa-clock text-info"></i>
+                </div>
+              <div class="course-info">
+                <div class="course-name">40分コース</div>
+                <div class="course-price">¥8,000</div>
+              </div>
+            </div>
+            <div class="course-option" data-course="60 min" data-duration="60">
+              <div class="course-icon">
+                <i class="fas fa-clock text-primary"></i>
+              </div>
+              <div class="course-info">
+                <div class="course-name">60分コース</div>
+                <div class="course-price">¥12,000</div>
+              </div>
+            </div>
+            <div class="course-option" data-course="80 min" data-duration="80">
+              <div class="course-icon">
+                <i class="fas fa-clock text-warning"></i>
+              </div>
+              <div class="course-info">
+                <div class="course-name">80分コース</div>
+                <div class="course-price">¥15,000</div>
+              </div>
+            </div>
+            <div class="course-divider"></div>
+            <div class="course-option break-option" data-course="休憩" data-duration="75">
+              <div class="course-icon">
+                <i class="fas fa-pause text-secondary"></i>
+              </div>
+              <div class="course-info">
+                <div class="course-name">休憩時間</div>
+                <div class="course-price">75分</div>
+              </div>
+            </div>
+          </div>
+          <div class="course-slider-footer">
+            <small class="text-muted">
+              <i class="fas fa-info-circle me-1"></i>
+              コースをドラッグしてカレンダーにドロップしてください
+            </small>
+          </div>
+        </div>
+      </div>
+      
       <div class="card border-0 shadow-sm">
         <div class="card-header bg-light">
           <div class="d-flex justify-content-between align-items-center">
@@ -34,34 +91,17 @@
               <div class="d-flex align-items-center gap-2">
                 <button class="btn btn-outline-primary btn-sm" onclick="previousWeek()">
                   <i class="fas fa-chevron-left"></i>
-                </button>
+                    </button>
                 <div class="fw-semibold" id="currentWeek">読み込み中...</div>
                 <button class="btn btn-outline-primary btn-sm" onclick="nextWeek()">
                   <i class="fas fa-chevron-right"></i>
                 </button>
-                </div>
+                        </div>
               
-              <!-- コース選択ドロップダウン -->
-              <div class="dropdown">
-                <button class="btn btn-success btn-sm dropdown-toggle" type="button" id="courseDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                  <i class="fas fa-plus me-1"></i>コース選択
-                </button>
-                <ul class="dropdown-menu" aria-labelledby="courseDropdown">
-                  <li><a class="dropdown-item course-option" href="#" data-course="40 min" data-duration="40">
-                    <i class="fas fa-clock me-2 text-info"></i>40分コース (¥8,000)
-                  </a></li>
-                  <li><a class="dropdown-item course-option" href="#" data-course="60 min" data-duration="60">
-                    <i class="fas fa-clock me-2 text-primary"></i>60分コース (¥12,000)
-                  </a></li>
-                  <li><a class="dropdown-item course-option" href="#" data-course="80 min" data-duration="80">
-                    <i class="fas fa-clock me-2 text-warning"></i>80分コース (¥15,000)
-                  </a></li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item break-option" href="#" data-course="休憩" data-duration="75">
-                    <i class="fas fa-pause me-2 text-secondary"></i>休憩時間 (75分)
-                  </a></li>
-                </ul>
-              </div>
+              <!-- コース選択スライダーボタン -->
+              <button class="btn btn-outline-success btn-sm" id="courseSliderToggle">
+                <i class="fas fa-chevron-left me-1"></i>コース選択
+                    </button>
               
               <!-- ミニカレンダー -->
               <div class="position-relative">
@@ -1187,6 +1227,9 @@
             
             // ドラッグアンドドロップ機能の初期化
             initializeDragAndDrop();
+            
+            // スライドパネルの初期化
+            initializeCourseSlider();
         });
 
         // ドラッグアンドドロップ機能の変数
@@ -1298,6 +1341,42 @@
             
             // 予約作成モーダルを開く
             openBookingModal(reservationData);
+        }
+
+        // スライドパネルの初期化
+        function initializeCourseSlider() {
+            const sliderToggle = document.getElementById('courseSliderToggle');
+            const sliderPanel = document.getElementById('courseSliderPanel');
+            const sliderClose = document.getElementById('courseSliderClose');
+            
+            if (sliderToggle) {
+                sliderToggle.addEventListener('click', function() {
+                    sliderPanel.classList.toggle('show');
+                    const icon = sliderToggle.querySelector('i');
+                    if (sliderPanel.classList.contains('show')) {
+                        icon.className = 'fas fa-chevron-right me-1';
+                    } else {
+                        icon.className = 'fas fa-chevron-left me-1';
+                    }
+                });
+            }
+            
+            if (sliderClose) {
+                sliderClose.addEventListener('click', function() {
+                    sliderPanel.classList.remove('show');
+                    const icon = sliderToggle.querySelector('i');
+                    icon.className = 'fas fa-chevron-left me-1';
+                });
+            }
+            
+            // パネル外をクリックしたら閉じる
+            document.addEventListener('click', function(e) {
+                if (!sliderPanel.contains(e.target) && !sliderToggle.contains(e.target)) {
+                    sliderPanel.classList.remove('show');
+                    const icon = sliderToggle.querySelector('i');
+                    icon.className = 'fas fa-chevron-left me-1';
+                }
+            });
         }
 
         // Fixed updateIntervalOnChange function for calendar.html.erb
@@ -2682,11 +2761,6 @@
                         cell.dataset.day = day;
                         cell.dataset.time = timeStr;
                         
-                        // ドラッグアンドドロップ用のデータ属性を追加
-                        const scheduleDate = new Date(currentWeekStart);
-                        scheduleDate.setDate(currentWeekStart.getDate() + day);
-                        cell.dataset.date = scheduleDate.toISOString().split('T')[0];
-                        
                         // ドロップゾーンとして設定
                         cell.addEventListener('dragover', handleDragOver);
                         cell.addEventListener('drop', handleDrop);
@@ -2696,6 +2770,9 @@
                         const scheduleDate = new Date(currentWeekStart);
                         scheduleDate.setDate(scheduleDate.getDate() + day);
                         const dateKey = formatDateKey(scheduleDate);
+                        
+                        // ドラッグアンドドロップ用のデータ属性を追加
+                        cell.dataset.date = scheduleDate.toISOString().split('T')[0];
                         
                         // 今日の日付かどうかをチェック
                         const today = new Date();
@@ -9173,6 +9250,110 @@ function showMessage(message, type = 'info') {
   color: white;
   border-color: #28a745;
   font-weight: 600;
+}
+
+/* 右側スライドパネル用スタイル */
+.course-slider-panel {
+  position: fixed;
+  top: 0;
+  right: -320px;
+  width: 320px;
+  height: 100vh;
+  background: white;
+  border-left: 1px solid #dee2e6;
+  box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
+  z-index: 1050;
+  transition: right 0.3s ease;
+  overflow-y: auto;
+}
+
+.course-slider-panel.show {
+  right: 0;
+}
+
+.course-slider-header {
+  padding: 1rem;
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.course-slider-body {
+  padding: 1rem;
+}
+
+.course-slider-footer {
+  padding: 1rem;
+  background: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+  text-align: center;
+}
+
+.course-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.course-option {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  background: white;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  cursor: grab;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.course-option:hover {
+  background: #f8f9fa;
+  border-color: #007bff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.15);
+}
+
+.course-option:active {
+  cursor: grabbing;
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
+}
+
+.course-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border-radius: 50%;
+  margin-right: 1rem;
+  font-size: 1.2rem;
+}
+
+.course-info {
+  flex: 1;
+}
+
+.course-name {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #212529;
+  margin-bottom: 0.25rem;
+}
+
+.course-price {
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.course-divider {
+  height: 1px;
+  background: #dee2e6;
+  margin: 0.5rem 0;
 }
 
 /* ドラッグアンドドロップ用スタイル */
