@@ -9411,7 +9411,7 @@ function loadUsersForQuickReservation() {
 
 // タイムスロットにドロップイベントリスナーを設定
 function setupNewReservationDropListeners() {
-  const timeSlots = document.querySelectorAll('.time-slot');
+  const timeSlots = document.querySelectorAll('.time-slot:not(.hour-marker)');
   console.log('Setting up new reservation drop listeners for', timeSlots.length, 'time slots');
   
   timeSlots.forEach((slot, index) => {
@@ -9432,6 +9432,35 @@ function setupNewReservationDropListeners() {
       console.log(`Slot ${index} setup complete:`, {
         element: slot,
         classes: slot.className,
+        hasDropListener: true
+      });
+    }
+  });
+  
+  // セルにもドロップイベントリスナーを設定
+  const cells = document.querySelectorAll('.schedule-cell');
+  console.log('Setting up drop listeners for', cells.length, 'schedule cells');
+  
+  cells.forEach((cell, index) => {
+    // 既存のイベントリスナーを削除
+    cell.removeEventListener('dragover', handleDragOver);
+    cell.removeEventListener('dragenter', handleDragEnter);
+    cell.removeEventListener('dragleave', handleDragLeave);
+    cell.removeEventListener('drop', handleNewReservationDrop);
+    
+    // 新しいイベントリスナーを追加
+    cell.addEventListener('dragover', handleDragOver, { passive: false });
+    cell.addEventListener('dragenter', handleDragEnter, { passive: false });
+    cell.addEventListener('dragleave', handleDragLeave, { passive: false });
+    cell.addEventListener('drop', handleNewReservationDrop, { passive: false });
+    
+    // デバッグ用：最初の数個のセルの状態を確認
+    if (index < 3) {
+      console.log(`Cell ${index} setup complete:`, {
+        element: cell,
+        classes: cell.className,
+        day: cell.dataset.day,
+        time: cell.dataset.time,
         hasDropListener: true
       });
     }
@@ -9529,10 +9558,9 @@ function handleNewReservationDrop(e) {
   e.preventDefault();
   e.stopPropagation();
   
-  const timeSlot = e.currentTarget;
-  console.log('🎯 Time slot element:', timeSlot);
-  
-  timeSlot.classList.remove('drop-zone');
+  // ドロップゾーンをクリア
+  const targetElement = e.currentTarget;
+  targetElement.classList.remove('drop-zone');
   
   if (!draggedCourseData) {
     console.log('❌ No dragged course data found');
@@ -9541,9 +9569,13 @@ function handleNewReservationDrop(e) {
   
   console.log('🎯 Dropped course data:', draggedCourseData);
   
-  // セルから日時情報を取得
-  const cell = timeSlot.closest('.schedule-cell');
-  if (!cell) {
+  // セルを取得（タイムスロットまたはセル自体から）
+  let cell = targetElement;
+  if (targetElement.classList.contains('time-slot')) {
+    cell = targetElement.closest('.schedule-cell');
+  }
+  
+  if (!cell || !cell.classList.contains('schedule-cell')) {
     console.log('❌ No schedule cell found');
     return;
   }
