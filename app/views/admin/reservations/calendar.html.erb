@@ -9502,15 +9502,24 @@ document.addEventListener('DOMContentLoaded', function() {
       }, 100);
     });
     
-    block.addEventListener('dragend', function() {
-      console.log('Drag ended');
+    block.addEventListener('dragend', function(e) {
+      console.log('🎯 Drag ended, dropEffect:', e.dataTransfer.dropEffect);
       this.classList.remove('dragging');
-      // ドロップイベントの後にデータをクリアするため、少し遅延させる
-      setTimeout(() => {
+      
+      // ドロップが成功した場合のみデータをクリア（dropEffect が 'copy' の場合）
+      if (e.dataTransfer.dropEffect === 'copy') {
+        console.log('🎯 Drop was successful, clearing data');
         draggedCourseData = null;
         window.draggedCourseData = null;
-        console.log('Drag data cleared');
-      }, 100);
+      } else {
+        // ドロップが失敗した場合は少し遅延してクリア
+        console.log('🎯 Drop may have failed, delaying data clear');
+        setTimeout(() => {
+          draggedCourseData = null;
+          window.draggedCourseData = null;
+          console.log('🎯 Drag data cleared after delay');
+        }, 500);
+      }
     });
   });
   
@@ -9570,6 +9579,15 @@ function attachDropListeners() {
   // カレンダー全体にもドロップイベントを設定（フォールバック用）
   const calendarContainer = document.querySelector('.schedule-body') || document.querySelector('.calendar-container');
   if (calendarContainer) {
+    calendarContainer.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = 'copy';
+      }
+      console.log('🎯 Calendar container drag over');
+    }, { passive: false });
+    
     calendarContainer.addEventListener('drop', function(e) {
       console.log('🎯 Calendar container drop event triggered');
       e.preventDefault();
@@ -9580,6 +9598,12 @@ function attachDropListeners() {
       if (timeSlot && window.draggedCourseData) {
         console.log('🎯 Redirecting to time slot drop handler');
         handleDrop.call(timeSlot, e);
+      } else {
+        console.log('🎯 No valid drop target found:', {
+          timeSlot: timeSlot,
+          hasData: !!window.draggedCourseData,
+          target: e.target
+        });
       }
     }, { passive: false });
   }
@@ -9587,14 +9611,18 @@ function attachDropListeners() {
 
 function handleDragOver(e) {
   e.preventDefault();
+  e.stopPropagation();
   if (e.dataTransfer) {
     e.dataTransfer.dropEffect = 'copy';
   }
+  console.log('🎯 Drag over detected');
 }
 
 function handleDragEnter(e) {
   e.preventDefault();
+  e.stopPropagation();
   this.classList.add('drop-zone');
+  console.log('🎯 Drag enter detected on:', this);
 }
 
 function handleDragLeave(e) {
