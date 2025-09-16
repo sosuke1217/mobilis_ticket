@@ -9607,6 +9607,23 @@ function handleDrop(e) {
   }
 }
 
+// 現在の週の開始日を取得
+function getCurrentWeekStart() {
+  if (typeof currentWeekStart !== 'undefined' && currentWeekStart) {
+    return new Date(currentWeekStart);
+  }
+  
+  // フォールバック: 現在の日付から週の開始日を計算
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0 = Sunday
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - dayOfWeek);
+  weekStart.setHours(0, 0, 0, 0);
+  
+  console.log('Fallback week start calculated:', weekStart);
+  return weekStart;
+}
+
 // スロットから日時を計算
 function calculateDateTimeFromSlot(timeSlotIndex, dayIndex) {
   const currentWeekStart = getCurrentWeekStart();
