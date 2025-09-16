@@ -9456,6 +9456,9 @@ function loadUsersForQuickReservation() {
 let draggedCourseData = null;
 let currentReservationData = null;
 
+// グローバルアクセス用
+window.draggedCourseData = draggedCourseData;
+
 // コースブロックのドラッグ開始
 document.addEventListener('DOMContentLoaded', function() {
   const courseBlocks = document.querySelectorAll('.course-block');
@@ -9469,6 +9472,9 @@ document.addEventListener('DOMContentLoaded', function() {
         duration: parseInt(this.dataset.duration),
         price: parseInt(this.dataset.price)
       };
+      
+      // グローバルアクセス用に更新
+      window.draggedCourseData = draggedCourseData;
       
       console.log('Dragged course data set:', draggedCourseData);
       
@@ -9484,6 +9490,7 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log('Drag ended');
       this.classList.remove('dragging');
       draggedCourseData = null;
+      window.draggedCourseData = null;
     });
   });
   
