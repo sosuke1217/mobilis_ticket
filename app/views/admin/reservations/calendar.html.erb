@@ -7865,130 +7865,115 @@ function showMessage(message, type = 'info') {
 
         // ユーザー検索結果表示関数
         function displayUserSearchResultsForModal(users) {
-                                for (const dateKey of Object.keys(reservations)) {
-                                    const dayReservations = reservations[dateKey];
-                                    const foundReservation = dayReservations.find(r => r.id === parseInt(reservationId));
-                                                                    if (foundReservation) {
-                                    currentReservation = foundReservation;
-                                    console.log('🔄 Updated currentReservation from reservations data:', {
-                                        time: currentReservation.time,
-                                        date: currentReservation.date,
-                                        dateKey: currentReservation.dateKey,
-                                        start_time: currentReservation.start_time
-                                    });
-                                    console.log('🔄 currentReservation object after update:', currentReservation);
-                                    console.log('🔄 Found reservation details:', foundReservation);
-                                    console.log('🔄 Updated currentReservation successfully');
-                                    break;
-                                } else {
-                                    console.log('🔍 No matching reservation found in dayReservations for ID:', reservationId);
-                                    console.log('🔍 Available reservations in this day:', dayReservations.map(r => ({ id: r.id, time: r.time, date: r.date })));
-                                }
-                                }
-                            } else {
-                                console.log('🔍 Modal is not open, skipping currentReservation update');
-                                console.log('🔍 Modal display value:', modal ? modal.style.display : 'N/A');
-                            }
-                        }
-                    }
-                    
-                    // カレンダーを再描画
-                    console.log('🔄 Regenerating calendar after reservation move');
-                    try {
-                        generateTimeSlots();
-                        console.log('✅ Calendar regenerated successfully');
-                    } catch (error) {
-                        console.error('❌ Error regenerating calendar:', error);
-                    }
-                    
-                    showMessage('予約時間が更新されました。', 'success');
-                } else {
-                    console.error('❌ Update failed:', data.message);
-                    showMessage(`予約の更新に失敗しました: ${data.message}`, 'error');
-                }
-                
-                // Reset updating flag
-                const reservationBlock = document.querySelector(`[data-reservation-id="${reservationId}"]`);
-                if (reservationBlock) {
-                    reservationBlock.dataset.updating = 'false';
-                    console.log('✅ Updating flag reset to false');
-                } else {
-                    console.warn('⚠️ Reservation block element not found for updating flag reset');
-                }
-            })
-            .catch(error => {
-                console.error('❌ Error updating reservation:', error);
-                console.error('❌ Error details:', error.message);
-                console.error('❌ Error stack:', error.stack);
-                showMessage('予約の更新中にエラーが発生しました。', 'error');
-                
-                // Reset updating flag on error
-                const reservationBlock = document.querySelector(`[data-reservation-id="${reservationId}"]`);
-                if (reservationBlock) {
-                    reservationBlock.dataset.updating = 'false';
-                    console.log('✅ Updating flag reset to false after error');
-                } else {
-                    console.warn('⚠️ Reservation block element not found for updating flag reset after error');
-                }
-            });
-        }
-
-        // ローカル予約データを更新
-        function updateLocalReservationData(reservationId, newDateKey, newTime) {
-            console.log('🔄 Updating local reservation data:', {
-                reservationId: reservationId,
-                newDateKey: newDateKey,
-                newTime: newTime
-            });
-            console.log('🔄 Current reservations object:', reservations);
-            
-            // 元の予約データを取得
-            let originalReservationData = null;
-            let originalDateKey = null;
-            
-            console.log('🔍 Searching for original reservation in reservations object');
-            // 元の予約を見つけて削除
-            for (const dateKey of Object.keys(reservations)) {
-                const reservationIndex = reservations[dateKey].findIndex(r => r.id === parseInt(reservationId));
-                if (reservationIndex !== -1) {
-                    originalReservationData = { ...reservations[dateKey][reservationIndex] };
-                    originalDateKey = dateKey;
-                    console.log('🔍 Found original reservation:', originalReservationData);
-                    console.log('🔍 Original date key:', originalDateKey);
-                    
-                    reservations[dateKey].splice(reservationIndex, 1);
-                    
-                    // 空の配列の場合は日付キーを削除
-                    if (reservations[dateKey].length === 0) {
-                        delete reservations[dateKey];
-                    }
-                    break;
-                }
-            }
-            
-            if (!originalReservationData) {
-                console.error('❌ Original reservation data not found for ID:', reservationId);
+            console.log('🔍 displayUserSearchResultsForModal called with users:', users);
+            const resultsContainer = document.getElementById('userSelectionSearchResults');
+            if (!resultsContainer) {
+                console.error('❌ userSelectionSearchResults element not found');
                 return;
             }
             
-            // 新しい場所に予約を追加
-            if (!reservations[newDateKey]) {
-                reservations[newDateKey] = [];
+            if (users.length === 0) {
+                resultsContainer.innerHTML = '<div class="user-search-item">該当するユーザーが見つかりません</div>';
+                resultsContainer.style.display = 'block';
+                return;
             }
             
-            // 予約データを更新
-            const updatedReservationData = {
-                ...originalReservationData,
-                time: newTime,
-                date: newDateKey,
-                dateKey: newDateKey,
-                // start_timeも更新
-                start_time: new Date(`${newDateKey}T${newTime}:00+09:00`).toISOString()
-            };
+            const resultsHTML = users.map(user => `
+                <div class="user-search-item" onclick="selectUserForModal(${JSON.stringify(user).replace(/"/g, '&quot;')})">
+                    <div class="user-name">${user.name}</div>
+                    <div class="user-details">
+                        📞 ${user.phone_number || '未設定'} | 📧 ${user.email || '未設定'}
+                        ${user.active_tickets > 0 ? `<span class="user-tickets"> | 🎫 残${user.active_tickets}枚</span>` : ''}
+                        ${user.last_visit !== 'なし' ? ` | 📅 最終来店: ${user.last_visit}` : ''}
+                    </div>
+                </div>
+            `).join('');
             
-            console.log('🔄 Updated reservation data:', updatedReservationData);
-            reservations[newDateKey].push(updatedReservationData);
+            resultsContainer.innerHTML = resultsHTML;
+            resultsContainer.style.display = 'block';
+            console.log('🔍 Search results displayed:', users.length, 'users');
+        }
+
+        // ユーザー選択関数
+        function selectUserForModal(userData) {
+            console.log('🔍 selectUserForModal called with:', userData);
             
+            // ユーザー情報をフォームに設定
+            document.getElementById('customerSelect').value = userData.id;
+            
+            // 選択されたユーザーをグローバル変数に保存
+            window.selectedUser = userData;
+            console.log('✅ Set window.selectedUser:', window.selectedUser);
+            
+            // Hide search results and enable save button
+            hideUserSearchResults();
+            document.getElementById('saveUserBtn').disabled = false;
+        }
+
+        // ユーザー検索結果を隠す関数
+        function hideUserSearchResults() {
+            console.log('🔍 hideUserSearchResults called');
+            const resultsContainer = document.getElementById('userSelectionSearchResults');
+            resultsContainer.style.display = 'none';
+            resultsContainer.innerHTML = '';
+            console.log('🔍 Search results hidden and cleared');
+        }
+
+        // ユーザー検索を処理
+        function handleUserSearch(query) {
+            console.log('🔍 handleUserSearch called with query:', query);
+            
+            if (query.length < 2) {
+                hideUserSearchResults();
+                return;
+            }
+            
+            // Clear previous timeout
+            clearTimeout(window.searchTimeout);
+            window.searchTimeout = setTimeout(() => {
+                console.log('🔍 Calling searchUsersForModal with:', query);
+                searchUsersForModal(query);
+            }, 300);
+        }
+
+        // ユーザー検索関数
+        function searchUsersForModal(query) {
+            console.log('🔍 searchUsersForModal called with query:', query);
+            
+            fetch(`/admin/users/search?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayUserSearchResultsForModal(data.users);
+                    } else {
+                        console.error('❌ Search failed:', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Search error:', error);
+                });
+        }
+
+        // 新規予約作成時のユーザー読み込み
+        function loadUsersForQuickReservation() {
+            console.log('🔍 Loading users for quick reservation...');
+            
+            fetch('/admin/users')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const customerSelect = document.getElementById('customerSelect');
+                        if (customerSelect) {
+                            customerSelect.innerHTML = '<option value="">顧客を選択してください</option>' +
+                                data.users.map(user => `<option value="${user.id}">${user.name}</option>`).join('');
+                            console.log('✅ Loaded users for quick reservation:', data.users.length);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Error loading users:', error);
+                });
+        }
             // DOM要素のデータ属性も更新
             const reservationBlock = document.querySelector(`[data-reservation-id="${reservationId}"]`);
             if (reservationBlock) {
