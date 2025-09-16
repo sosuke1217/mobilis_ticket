@@ -9489,8 +9489,12 @@ document.addEventListener('DOMContentLoaded', function() {
     block.addEventListener('dragend', function() {
       console.log('Drag ended');
       this.classList.remove('dragging');
-      draggedCourseData = null;
-      window.draggedCourseData = null;
+      // ドロップイベントの後にデータをクリアするため、少し遅延させる
+      setTimeout(() => {
+        draggedCourseData = null;
+        window.draggedCourseData = null;
+        console.log('Drag data cleared');
+      }, 100);
     });
   });
   
@@ -9560,8 +9564,10 @@ function handleDrop(e) {
   this.classList.remove('drop-zone');
   
   console.log('draggedCourseData:', draggedCourseData);
+  console.log('window.draggedCourseData:', window.draggedCourseData);
   
-  if (draggedCourseData) {
+  const courseData = draggedCourseData || window.draggedCourseData;
+  if (courseData) {
     const timeSlot = this;
     console.log('Dropped on time slot:', timeSlot);
     
@@ -9572,7 +9578,7 @@ function handleDrop(e) {
     
     // 日時を計算
     const startTime = calculateDateTimeFromSlot(timeSlotIndex, dayIndex);
-    const endTime = new Date(startTime.getTime() + draggedCourseData.duration * 60000);
+    const endTime = new Date(startTime.getTime() + courseData.duration * 60000);
     
     console.log('Calculated start time:', startTime);
     console.log('Calculated end time:', endTime);
@@ -9581,9 +9587,9 @@ function handleDrop(e) {
     currentReservationData = {
       start_time: startTime,
       end_time: endTime,
-      course: draggedCourseData.course,
-      duration: draggedCourseData.duration,
-      price: draggedCourseData.price,
+      course: courseData.course,
+      duration: courseData.duration,
+      price: courseData.price,
       status: 'tentative'
     };
     
@@ -9591,6 +9597,11 @@ function handleDrop(e) {
     
     // 予約詳細フォームを表示
     showReservationDetailsForm();
+    
+    // ドロップ成功後にデータをクリア
+    draggedCourseData = null;
+    window.draggedCourseData = null;
+    console.log('Drag data cleared after successful drop');
   } else {
     console.log('No dragged course data found');
   }
