@@ -1305,13 +1305,27 @@
                             break;
                         }
                         
-                        // Move to next cell (same row, next day)
-                        const nextRow = currentCell.parentElement;
-                        const currentDayIndex = parseInt(currentCell.dataset.day);
-                        const nextDayCell = nextRow.children[currentDayIndex + 1];
-                        if (nextDayCell && nextDayCell.classList.contains('schedule-cell')) {
-                            currentCell = nextDayCell;
+                        // Move to the next row (next time slot) in the same day column
+                        const currentRow = currentCell.parentElement;
+                        const nextRow = currentRow.nextElementSibling;
+                        if (nextRow) {
+                            const nextCell = nextRow.querySelector(`[data-day="${currentCell.dataset.day}"]`);
+                            if (nextCell && nextCell.classList.contains('schedule-cell')) {
+                                currentCell = nextCell;
+                            } else {
+                                break; // No more cells in this day column
+                            }
                         } else {
+                            break; // No more rows
+                        }
+                    }
+                    
+                    // Check if all cells are within business hours
+                    for (let checkCell of cellsToCheck) {
+                        const dayOfWeek = parseInt(checkCell.dataset.day);
+                        const timeStr = checkCell.dataset.time;
+                        
+                        if (!isBusinessHour(dayOfWeek, timeStr)) {
                             allCellsValid = false;
                             break;
                         }
@@ -1323,6 +1337,8 @@
                             c.classList.add('course-drag-over');
                         });
                     } else {
+                        // Show invalid drop effect and visual feedback
+                        e.dataTransfer.dropEffect = 'none';
                         cellsToCheck.forEach(c => {
                             c.classList.add('course-drag-over-invalid');
                         });
