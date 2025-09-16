@@ -1273,9 +1273,61 @@
             e.preventDefault();
             e.dataTransfer.dropEffect = 'copy';
             
-            const scheduleCell = e.target.closest('.schedule-cell');
-            if (scheduleCell && !scheduleCell.classList.contains('occupied')) {
-                scheduleCell.classList.add('course-drag-over');
+            const cell = e.target.closest('.schedule-cell');
+            if (cell) {
+                // Clear all previous drag-over states
+                document.querySelectorAll('.schedule-cell').forEach(c => {
+                    c.classList.remove('course-drag-over');
+                    c.classList.remove('course-drag-over-invalid');
+                });
+                
+                if (draggedCourse && draggedDuration) {
+                    const duration = draggedDuration;
+                    const interval = 75; // 75分インターバル
+                    const totalDuration = duration + interval;
+                    
+                    // Calculate how many cells this reservation would occupy (10-minute slots)
+                    const cellsToOccupy = Math.ceil(totalDuration / 10);
+                    
+                    // Check if all required cells are within business hours
+                    let currentCell = cell;
+                    let allCellsValid = true;
+                    let cellsToCheck = [];
+                    
+                    // First, collect all cells that would be occupied
+                    for (let i = 0; i < cellsToOccupy && currentCell; i++) {
+                        cellsToCheck.push(currentCell);
+                        
+                        // Check if this cell is occupied
+                        if (currentCell.classList.contains('occupied') || 
+                            currentCell.querySelector('.reservation-block, .reservation-item')) {
+                            allCellsValid = false;
+                            break;
+                        }
+                        
+                        // Move to next cell (same row, next day)
+                        const nextRow = currentCell.parentElement;
+                        const currentDayIndex = parseInt(currentCell.dataset.day);
+                        const nextDayCell = nextRow.children[currentDayIndex + 1];
+                        if (nextDayCell && nextDayCell.classList.contains('schedule-cell')) {
+                            currentCell = nextDayCell;
+                        } else {
+                            allCellsValid = false;
+                            break;
+                        }
+                    }
+                    
+                    // Apply visual feedback
+                    if (allCellsValid && cellsToCheck.length === cellsToOccupy) {
+                        cellsToCheck.forEach(c => {
+                            c.classList.add('course-drag-over');
+                        });
+                    } else {
+                        cellsToCheck.forEach(c => {
+                            c.classList.add('course-drag-over-invalid');
+                        });
+                    }
+                }
             }
         }
 
@@ -1291,6 +1343,7 @@
             // ドラッグオーバークラスを削除
             document.querySelectorAll('.schedule-cell').forEach(cell => {
                 cell.classList.remove('course-drag-over');
+                cell.classList.remove('course-drag-over-invalid');
             });
             
             const date = scheduleCell.dataset.date;
@@ -1313,6 +1366,7 @@
             e.target.style.opacity = '1';
             document.querySelectorAll('.schedule-cell').forEach(cell => {
                 cell.classList.remove('course-drag-over');
+                cell.classList.remove('course-drag-over-invalid');
             });
             
             console.log('🎯 Course drag ended');
@@ -9375,21 +9429,14 @@ function showMessage(message, type = 'info') {
   position: relative;
 }
 
-.schedule-cell.course-drag-over::before {
-  content: "✓ ここにドロップ";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(40, 167, 69, 0.9);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  z-index: 10;
-  pointer-events: none;
+.schedule-cell.course-drag-over-invalid {
+  background-color: #f8d7da !important;
+  border: 2px solid #dc3545 !important;
+  transform: scale(1.02);
+  transition: all 0.2s ease;
+  position: relative;
 }
+
 
 /* ドロップダウンメニューのスタイル改善 */
 .dropdown-menu {
