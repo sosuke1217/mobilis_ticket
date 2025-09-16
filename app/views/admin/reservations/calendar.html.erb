@@ -3725,6 +3725,9 @@
                 console.log('🔄 Previous week - data loaded, rendering week view');
                 renderWeekView();
                 updateCancellationDisplay(); // キャンセル履歴を更新
+                
+                // ドロップゾーンを再設定
+                setTimeout(attachDropListeners, 100);
             }).catch(error => {
                 console.error('❌ Error loading data for previous week:', error);
             });
@@ -3746,6 +3749,9 @@
                 console.log('🔄 Next week - data loaded, rendering week view');
                 renderWeekView();
                 updateCancellationDisplay(); // キャンセル履歴を更新
+                
+                // ドロップゾーンを再設定
+                setTimeout(attachDropListeners, 100);
             }).catch(error => {
                 console.error('❌ Error loading data for next week:', error);
             });
@@ -8898,6 +8904,9 @@ function showMessage(message, type = 'info') {
                 // カレンダーを再描画
                 renderWeekView();
                 
+                // ドロップゾーンを再設定
+                setTimeout(attachDropListeners, 100);
+                
                 console.log('✅ Calendar refreshed successfully');
             }).catch(error => {
                 console.error('❌ Error refreshing calendar:', error);
@@ -9398,6 +9407,9 @@ function showMessage(message, type = 'info') {
 function openReservationPanel() {
   document.getElementById('reservationPanel').classList.add('open');
   loadUsersForQuickReservation();
+  
+  // パネルを開いたときにドロップゾーンを再設定
+  setTimeout(attachDropListeners, 100);
 }
 
 function closeReservationPanel() {
@@ -9445,11 +9457,15 @@ document.addEventListener('DOMContentLoaded', function() {
   
   courseBlocks.forEach(block => {
     block.addEventListener('dragstart', function(e) {
+      console.log('Drag started for block:', this);
+      
       draggedCourseData = {
         course: this.dataset.course,
         duration: parseInt(this.dataset.duration),
         price: parseInt(this.dataset.price)
       };
+      
+      console.log('Dragged course data set:', draggedCourseData);
       
       this.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'copy';
@@ -9460,6 +9476,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     block.addEventListener('dragend', function() {
+      console.log('Drag ended');
       this.classList.remove('dragging');
       draggedCourseData = null;
     });
@@ -9471,20 +9488,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ドロップゾーンの設定
 function setupDropZones() {
-  // 既存の予約がない時間スロットをドロップゾーンとして設定
-  document.addEventListener('click', function() {
-    setTimeout(() => {
-      const timeSlots = document.querySelectorAll('.time-slot');
-      timeSlots.forEach(slot => {
-        // 既存の予約がない空きスロットのみドロップゾーンにする
-        if (!slot.querySelector('.reservation-block') && !slot.classList.contains('drop-zone')) {
-          slot.addEventListener('dragover', handleDragOver);
-          slot.addEventListener('dragenter', handleDragEnter);
-          slot.addEventListener('dragleave', handleDragLeave);
-          slot.addEventListener('drop', handleDrop);
-        }
-      });
-    }, 100);
+  // カレンダーが更新されるたびにドロップゾーンを再設定
+  const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      if (mutation.type === 'childList') {
+        attachDropListeners();
+      }
+    });
+  });
+  
+  // カレンダーコンテナを監視
+  const calendarContainer = document.querySelector('.schedule-body') || document.querySelector('.calendar-container');
+  if (calendarContainer) {
+    observer.observe(calendarContainer, { childList: true, subtree: true });
+  }
+  
+  // 初期設定
+  setTimeout(attachDropListeners, 500);
+}
+
+// ドロップリスナーをアタッチ
+function attachDropListeners() {
+  const timeSlots = document.querySelectorAll('.time-slot');
+  console.log('Setting up drop zones for', timeSlots.length, 'time slots');
+  
+  timeSlots.forEach(slot => {
+    // 既存のイベントリスナーを削除
+    slot.removeEventListener('dragover', handleDragOver);
+    slot.removeEventListener('dragenter', handleDragEnter);
+    slot.removeEventListener('dragleave', handleDragLeave);
+    slot.removeEventListener('drop', handleDrop);
+    
+    // 新しいイベントリスナーを追加
+    slot.addEventListener('dragover', handleDragOver);
+    slot.addEventListener('dragenter', handleDragEnter);
+    slot.addEventListener('dragleave', handleDragLeave);
+    slot.addEventListener('drop', handleDrop);
   });
 }
 
@@ -9504,17 +9543,27 @@ function handleDragLeave(e) {
 }
 
 function handleDrop(e) {
+  console.log('Drop event triggered!');
   e.preventDefault();
   this.classList.remove('drop-zone');
   
+  console.log('draggedCourseData:', draggedCourseData);
+  
   if (draggedCourseData) {
     const timeSlot = this;
+    console.log('Dropped on time slot:', timeSlot);
+    
     const dayIndex = Array.from(timeSlot.parentNode.children).indexOf(timeSlot);
     const timeSlotIndex = Array.from(timeSlot.parentNode.parentNode.children).indexOf(timeSlot.parentNode);
+    
+    console.log('Day index:', dayIndex, 'Time slot index:', timeSlotIndex);
     
     // 日時を計算
     const startTime = calculateDateTimeFromSlot(timeSlotIndex, dayIndex);
     const endTime = new Date(startTime.getTime() + draggedCourseData.duration * 60000);
+    
+    console.log('Calculated start time:', startTime);
+    console.log('Calculated end time:', endTime);
     
     // 現在の予約データを保存
     currentReservationData = {
@@ -9526,8 +9575,12 @@ function handleDrop(e) {
       status: 'tentative'
     };
     
+    console.log('Current reservation data:', currentReservationData);
+    
     // 予約詳細フォームを表示
     showReservationDetailsForm();
+  } else {
+    console.log('No dragged course data found');
   }
 }
 
