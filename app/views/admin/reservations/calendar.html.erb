@@ -2685,10 +2685,13 @@
                 // 指定された日付の週のスケジュールを取得
                 const dateKey = specificDate.toISOString().split('T')[0];
                 console.log(`🔍 Using schedule for specific date: ${dateKey}`);
-                currentWeekSchedule = getCurrentWeekSchedule(specificDate);
+                // 無限ループを避けるため、直接週のスケジュールを取得
+                const weekKey = formatDateKey(getWeekStart(specificDate));
+                currentWeekSchedule = weeklySchedules[weekKey] || defaultSchedule;
             } else {
                 // 現在の週のスケジュールを使用
-                currentWeekSchedule = getCurrentWeekSchedule();
+                const weekKey = formatDateKey(currentWeekStart);
+                currentWeekSchedule = weeklySchedules[weekKey] || defaultSchedule;
             }
             
             const currentSchedule = currentWeekSchedule[dayOfWeek];
@@ -2787,10 +2790,12 @@
         window.isBusinessHour = isBusinessHour;
         
         // デバッグ用：土曜日のスケジュールを確認
+        const weekKey = formatDateKey(currentWeekStart);
+        const currentWeekSchedule = weeklySchedules[weekKey] || defaultSchedule;
         console.log('🔍 Saturday schedule debug:', {
             dayOfWeek: 6,
-            currentWeekSchedule: getCurrentWeekSchedule(),
-            saturdaySchedule: getCurrentWeekSchedule()[6]
+            currentWeekSchedule: currentWeekSchedule,
+            saturdaySchedule: currentWeekSchedule[6]
         });
   
         // 予約を検索
@@ -3354,7 +3359,7 @@
             }
             
             try {
-            const schedule = isRecurring ? defaultSchedule[day] : getCurrentWeekSchedule()[day];
+            const schedule = isRecurring ? defaultSchedule[day] : (weeklySchedules[formatDateKey(currentWeekStart)] || defaultSchedule)[day];
             const dayDiv = document.createElement('div');
             dayDiv.className = 'day-setting';
             
@@ -3425,7 +3430,7 @@
         async function toggleDay(day, isRecurring) {
             console.log(`Toggling day ${day} (${dayNamesLong[day]}) for recurring: ${isRecurring}`);
             
-            const currentSchedule = isRecurring ? defaultSchedule[day] : getCurrentWeekSchedule()[day];
+            const currentSchedule = isRecurring ? defaultSchedule[day] : (weeklySchedules[formatDateKey(currentWeekStart)] || defaultSchedule)[day];
             const wouldBeDisabled = currentSchedule.enabled; // If currently enabled, it would become disabled
             
             // Check for existing reservations if trying to disable the day
@@ -3477,7 +3482,7 @@
             const toggle = document.querySelector(`[onclick="toggleDay(${day}, ${isRecurring})"]`);
             const timeSlotsContainer = toggle.parentElement.nextElementSibling;
             
-            const schedule = isRecurring ? defaultSchedule[day] : getCurrentWeekSchedule()[day];
+            const schedule = isRecurring ? defaultSchedule[day] : (weeklySchedules[formatDateKey(currentWeekStart)] || defaultSchedule)[day];
             
             if (schedule.enabled) {
                 toggle.classList.add('active');
@@ -3518,7 +3523,7 @@
             // 現在のタブのコンテナのみ更新
             const slotsContainer = document.getElementById(`timeSlots-${day}-${isRecurring}`);
             if (slotsContainer) {
-                const schedule = isRecurring ? defaultSchedule[day] : getCurrentWeekSchedule()[day];
+                const schedule = isRecurring ? defaultSchedule[day] : (weeklySchedules[formatDateKey(currentWeekStart)] || defaultSchedule)[day];
                 slotsContainer.innerHTML = renderTimeSlots(day, schedule.times, isRecurring);
             }
         }
@@ -3540,7 +3545,7 @@
             // 現在のタブのコンテナのみ更新
             const slotsContainer = document.getElementById(`timeSlots-${day}-${isRecurring}`);
             if (slotsContainer) {
-                const schedule = isRecurring ? defaultSchedule[day] : getCurrentWeekSchedule()[day];
+                const schedule = isRecurring ? defaultSchedule[day] : (weeklySchedules[formatDateKey(currentWeekStart)] || defaultSchedule)[day];
                 slotsContainer.innerHTML = renderTimeSlots(day, schedule.times, isRecurring);
             }
         }
@@ -3662,7 +3667,7 @@
             const activeTab = document.querySelector('.tab-button.active');
             const isRecurring = activeTab && activeTab.textContent.includes('定期的なスケジュール');
             
-            const scheduleData = isRecurring ? defaultSchedule : getCurrentWeekSchedule();
+            const scheduleData = isRecurring ? defaultSchedule : (weeklySchedules[formatDateKey(currentWeekStart)] || defaultSchedule);
             const weekStartStr = formatDateKey(currentWeekStart);
             
             console.log('🔄 Saving shift settings:', {
