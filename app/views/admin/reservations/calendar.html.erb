@@ -9455,7 +9455,12 @@ function setupCalendarDropListener() {
 // カレンダー全体のドロップハンドラー
 function handleCalendarDrop(e) {
   console.log('🎯 Calendar drop event triggered');
+  console.log('🎯 Event target:', e.target);
+  console.log('🎯 Event currentTarget:', e.currentTarget);
+  console.log('🎯 DataTransfer types:', e.dataTransfer.types);
+  
   const reservationId = e.dataTransfer.getData('text/plain');
+  console.log('🎯 Reservation ID from dataTransfer:', reservationId);
   
   if (reservationId === 'new-course-block') {
     console.log('🎯 New course block dropped on calendar');
@@ -9464,12 +9469,16 @@ function handleCalendarDrop(e) {
     
     // 最も近いタイムスロットを見つける
     const timeSlot = e.target.closest('.time-slot');
+    console.log('🎯 Closest time slot:', timeSlot);
+    
     if (timeSlot) {
       console.log('🎯 Found time slot, calling new reservation handler');
       handleNewReservationDrop.call(timeSlot, e);
     } else {
       console.log('❌ No time slot found in calendar drop');
     }
+  } else {
+    console.log('🎯 Not a new course block drop, reservation ID:', reservationId);
   }
 }
 
@@ -9512,6 +9521,11 @@ function handleNewReservationDrop(e) {
   console.log('🎯 New reservation drop event triggered!');
   console.log('🎯 Event target:', e.target);
   console.log('🎯 Current target:', e.currentTarget);
+  console.log('🎯 DataTransfer types:', e.dataTransfer.types);
+  
+  const reservationId = e.dataTransfer.getData('text/plain');
+  console.log('🎯 Reservation ID from dataTransfer:', reservationId);
+  
   e.preventDefault();
   e.stopPropagation();
   
@@ -9699,6 +9713,7 @@ function handleDragOver(e) {
       
       // 現在のスロットをドロップゾーンに
       timeSlot.classList.add('drop-zone');
+      console.log('🎯 Drag over - added drop zone to:', timeSlot);
     }
     
     if (e.dataTransfer) {
@@ -9725,6 +9740,7 @@ function handleDragLeave(e) {
   // 新規予約のドラッグの場合のみドロップゾーンをクリア
   if (draggedCourseData) {
     this.classList.remove('drop-zone');
+    console.log('🎯 Drag leave detected on:', this);
   }
 }
 
