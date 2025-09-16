@@ -1331,17 +1331,26 @@
                         }
                     }
                     
-                    // Apply visual feedback
+                    // Apply visual feedback - create unified block instead of individual cells
                     if (allCellsValid && cellsToCheck.length === cellsToOccupy) {
+                        // Remove individual cell highlights
                         cellsToCheck.forEach(c => {
-                            c.classList.add('course-drag-over');
+                            c.classList.remove('course-drag-over');
                         });
+                        
+                        // Create unified highlight block
+                        createUnifiedHighlight(cellsToCheck, 'course-drag-over');
                     } else {
                         // Show invalid drop effect and visual feedback
                         e.dataTransfer.dropEffect = 'none';
+                        
+                        // Remove individual cell highlights
                         cellsToCheck.forEach(c => {
-                            c.classList.add('course-drag-over-invalid');
+                            c.classList.remove('course-drag-over-invalid');
                         });
+                        
+                        // Create unified highlight block for invalid
+                        createUnifiedHighlight(cellsToCheck, 'course-drag-over-invalid');
                     }
                 }
             }
@@ -1361,6 +1370,9 @@
                 cell.classList.remove('course-drag-over');
                 cell.classList.remove('course-drag-over-invalid');
             });
+            
+            // 統一されたハイライトブロックを削除
+            removeExistingHighlight();
             
             const date = scheduleCell.dataset.date;
             const time = scheduleCell.dataset.time;
@@ -1385,7 +1397,68 @@
                 cell.classList.remove('course-drag-over-invalid');
             });
             
+            // 統一されたハイライトブロックを削除
+            removeExistingHighlight();
+            
             console.log('🎯 Course drag ended');
+        }
+
+        // 統一されたハイライトブロックを作成
+        function createUnifiedHighlight(cells, className) {
+            if (cells.length === 0) return;
+            
+            // 既存のハイライトブロックを削除
+            removeExistingHighlight();
+            
+            // 最初と最後のセルを取得
+            const firstCell = cells[0];
+            const lastCell = cells[cells.length - 1];
+            
+            // 親要素（時間行）を取得
+            const firstRow = firstCell.parentElement;
+            const lastRow = lastCell.parentElement;
+            
+            // ハイライトブロックを作成
+            const highlightBlock = document.createElement('div');
+            highlightBlock.className = `unified-highlight ${className}`;
+            highlightBlock.id = 'unified-course-highlight';
+            
+            // 位置とサイズを計算
+            const firstCellRect = firstCell.getBoundingClientRect();
+            const lastCellRect = lastCell.getBoundingClientRect();
+            const calendarRect = document.querySelector('.calendar-container').getBoundingClientRect();
+            
+            // 相対位置を計算
+            const top = firstCellRect.top - calendarRect.top;
+            const left = firstCellRect.left - calendarRect.left;
+            const width = lastCellRect.right - firstCellRect.left;
+            const height = lastCellRect.bottom - firstCellRect.top;
+            
+            // スタイルを適用
+            highlightBlock.style.position = 'absolute';
+            highlightBlock.style.top = `${top}px`;
+            highlightBlock.style.left = `${left}px`;
+            highlightBlock.style.width = `${width}px`;
+            highlightBlock.style.height = `${height}px`;
+            highlightBlock.style.pointerEvents = 'none';
+            highlightBlock.style.zIndex = '10';
+            
+            // カレンダーコンテナに追加
+            const calendarContainer = document.querySelector('.calendar-container') || 
+                                    document.querySelector('.calendar-grid') || 
+                                    document.querySelector('.calendar') ||
+                                    document.body;
+            if (calendarContainer) {
+                calendarContainer.appendChild(highlightBlock);
+            }
+        }
+        
+        // 既存のハイライトブロックを削除
+        function removeExistingHighlight() {
+            const existingHighlight = document.getElementById('unified-course-highlight');
+            if (existingHighlight) {
+                existingHighlight.remove();
+            }
         }
 
         // ドラッグから予約を作成
@@ -9438,44 +9511,53 @@ function showMessage(message, type = 'info') {
 }
 
 .schedule-cell.course-drag-over {
-  background-color: #d4edda !important;
-  border: 3px solid #155724 !important;
+  background-color: #e8f5e8 !important;
+  border: 2px solid #28a745 !important;
   transform: scale(1.02);
   transition: all 0.2s ease;
   position: relative;
-  margin: -1px !important;
-  z-index: 10;
 }
 
 .schedule-cell.course-drag-over-invalid {
   background-color: #f8d7da !important;
-  border: 3px solid #721c24 !important;
+  border: 2px solid #dc3545 !important;
   transform: scale(1.02);
   transition: all 0.2s ease;
   position: relative;
-  margin: -1px !important;
-  z-index: 10;
 }
 
 /* 予約変更ドラッグと同じスタイル */
 .schedule-cell.drag-over {
-  background-color: #d4edda !important;
-  border: 3px solid #155724 !important;
+  background-color: #e8f5e8 !important;
+  border: 2px solid #28a745 !important;
   transform: scale(1.02);
   transition: all 0.2s ease;
   position: relative;
-  margin: -1px !important;
-  z-index: 10;
 }
 
 .schedule-cell.drag-over-invalid {
   background-color: #f8d7da !important;
-  border: 3px solid #721c24 !important;
+  border: 2px solid #dc3545 !important;
   transform: scale(1.02);
   transition: all 0.2s ease;
   position: relative;
-  margin: -1px !important;
-  z-index: 10;
+}
+
+/* 統一されたハイライトブロック */
+.unified-highlight.course-drag-over {
+  background-color: rgba(40, 167, 69, 0.2) !important;
+  border: 2px solid #28a745 !important;
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(40, 167, 69, 0.3);
+  transition: all 0.2s ease;
+}
+
+.unified-highlight.course-drag-over-invalid {
+  background-color: rgba(220, 53, 69, 0.2) !important;
+  border: 2px solid #dc3545 !important;
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(220, 53, 69, 0.3);
+  transition: all 0.2s ease;
 }
 
 
