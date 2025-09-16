@@ -8408,7 +8408,13 @@ function showMessage(message, type = 'info') {
             console.log('🔄 Is break: false (休憩機能は無効化)');
             console.log('🔄 Course string being sent:', updateData.reservation.course);
             
-            fetch(`/admin/reservations/${reservationId}/update_booking`, {
+            // 現在のページのベースURLを取得
+            const baseUrl = window.location.origin;
+            const updateUrl = `${baseUrl}/admin/reservations/${reservationId}/update_booking`;
+            
+            console.log('🔄 Making request to:', updateUrl);
+            
+            fetch(updateUrl, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -8556,7 +8562,18 @@ function showMessage(message, type = 'info') {
                 console.error('❌ Error updating reservation:', error);
                 console.error('❌ Error details:', error.message);
                 console.error('❌ Error stack:', error.stack);
-                showMessage('予約の更新中にエラーが発生しました。', 'error');
+                
+                // ネットワークエラーの詳細を表示
+                let errorMessage = '予約の更新中にエラーが発生しました。';
+                if (error.message.includes('Failed to fetch') || error.message.includes('ERR_NAME_NOT_RESOLVED')) {
+                    errorMessage = 'ネットワークエラーが発生しました。インターネット接続を確認してください。';
+                } else if (error.message.includes('404')) {
+                    errorMessage = '予約データが見つかりませんでした。';
+                } else if (error.message.includes('500')) {
+                    errorMessage = 'サーバーエラーが発生しました。しばらく時間をおいて再試行してください。';
+                }
+                
+                showMessage(errorMessage, 'error');
                 
                 // Reset updating flag on error
                 const reservationBlock = document.querySelector(`[data-reservation-id="${reservationId}"]`);
