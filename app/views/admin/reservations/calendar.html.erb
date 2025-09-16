@@ -41,6 +41,28 @@
                 </button>
                 </div>
               
+              <!-- コース選択ドロップダウン -->
+              <div class="dropdown">
+                <button class="btn btn-success btn-sm dropdown-toggle" type="button" id="courseDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="fas fa-plus me-1"></i>コース選択
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="courseDropdown">
+                  <li><a class="dropdown-item course-option" href="#" data-course="40 min" data-duration="40">
+                    <i class="fas fa-clock me-2 text-info"></i>40分コース (¥8,000)
+                  </a></li>
+                  <li><a class="dropdown-item course-option" href="#" data-course="60 min" data-duration="60">
+                    <i class="fas fa-clock me-2 text-primary"></i>60分コース (¥12,000)
+                  </a></li>
+                  <li><a class="dropdown-item course-option" href="#" data-course="80 min" data-duration="80">
+                    <i class="fas fa-clock me-2 text-warning"></i>80分コース (¥15,000)
+                  </a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item break-option" href="#" data-course="休憩" data-duration="75">
+                    <i class="fas fa-pause me-2 text-secondary"></i>休憩時間 (75分)
+                  </a></li>
+                </ul>
+              </div>
+              
               <!-- ミニカレンダー -->
               <div class="position-relative">
                 <button class="btn btn-outline-secondary btn-sm" onclick="toggleMiniCalendar()">
@@ -1162,7 +1184,121 @@
                     updateModalUpdatedAt(currentTime);
                 }
             });
+            
+            // ドラッグアンドドロップ機能の初期化
+            initializeDragAndDrop();
         });
+
+        // ドラッグアンドドロップ機能の変数
+        let draggedCourse = null;
+        let draggedDuration = null;
+        let isDragging = false;
+
+        // ドラッグアンドドロップ機能の初期化
+        function initializeDragAndDrop() {
+            // コース選択オプションのイベントリスナー
+            document.querySelectorAll('.course-option, .break-option').forEach(option => {
+                option.addEventListener('dragstart', handleDragStart);
+                option.draggable = true;
+            });
+
+            // カレンダーの時間スロットにドロップイベントを追加
+            document.addEventListener('dragover', handleDragOver);
+            document.addEventListener('drop', handleDrop);
+            document.addEventListener('dragend', handleDragEnd);
+        }
+
+        // ドラッグ開始
+        function handleDragStart(e) {
+            draggedCourse = e.target.dataset.course;
+            draggedDuration = parseInt(e.target.dataset.duration);
+            isDragging = true;
+            
+            e.dataTransfer.effectAllowed = 'copy';
+            e.dataTransfer.setData('text/plain', draggedCourse);
+            
+            // ドラッグ中の視覚的フィードバック
+            e.target.style.opacity = '0.5';
+            
+            console.log('🎯 Drag started:', { course: draggedCourse, duration: draggedDuration });
+        }
+
+        // ドラッグオーバー
+        function handleDragOver(e) {
+            if (!isDragging) return;
+            
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+            
+            const timeSlot = e.target.closest('.time-slot');
+            if (timeSlot && !timeSlot.classList.contains('occupied')) {
+                timeSlot.classList.add('drag-over');
+            }
+        }
+
+        // ドロップ
+        function handleDrop(e) {
+            e.preventDefault();
+            
+            if (!isDragging || !draggedCourse || !draggedDuration) return;
+            
+            const timeSlot = e.target.closest('.time-slot');
+            if (!timeSlot) return;
+            
+            // ドラッグオーバークラスを削除
+            document.querySelectorAll('.time-slot').forEach(slot => {
+                slot.classList.remove('drag-over');
+            });
+            
+            const date = timeSlot.dataset.date;
+            const time = timeSlot.dataset.time;
+            
+            if (date && time && !timeSlot.classList.contains('occupied')) {
+                createReservationFromDrag(date, time, draggedCourse, draggedDuration);
+            }
+            
+            console.log('🎯 Drop completed:', { date, time, course: draggedCourse, duration: draggedDuration });
+        }
+
+        // ドラッグ終了
+        function handleDragEnd(e) {
+            isDragging = false;
+            draggedCourse = null;
+            draggedDuration = null;
+            
+            // 視覚的フィードバックをリセット
+            e.target.style.opacity = '1';
+            document.querySelectorAll('.time-slot').forEach(slot => {
+                slot.classList.remove('drag-over');
+            });
+            
+            console.log('🎯 Drag ended');
+        }
+
+        // ドラッグから予約を作成
+        function createReservationFromDrag(date, time, course, duration) {
+            const startTime = new Date(`${date}T${time}:00`);
+            const endTime = new Date(startTime.getTime() + duration * 60000);
+            
+            // 予約データを作成
+            const reservationData = {
+                date: date,
+                time: time,
+                start_time: startTime.toISOString(),
+                end_time: endTime.toISOString(),
+                course: course,
+                duration: duration,
+                customer: '新規顧客', // デフォルト値
+                phone: '',
+                email: '',
+                note: '',
+                status: 'tentative',
+                is_break: course === '休憩'
+            };
+            
+            // 予約作成モーダルを開く
+            openBookingModal(reservationData);
+        }
 
         // Fixed updateIntervalOnChange function for calendar.html.erb
         // Replace the existing updateIntervalOnChange function around line 703 with this version
@@ -2499,6 +2635,12 @@
                     const timeSlot = document.createElement('div');
                     timeSlot.className = 'time-slot';
                     
+                    // ドラッグアンドドロップ用のデータ属性を追加
+                    const currentDate = new Date(currentWeekStart);
+                    currentDate.setDate(currentWeekStart.getDate() + day);
+                    timeSlot.dataset.date = currentDate.toISOString().split('T')[0];
+                    timeSlot.dataset.time = timeStr;
+                    
                     // 今日の日付かどうかをチェック
                     const today = new Date();
                     const todayDateKey = formatDateKey(today);
@@ -2539,6 +2681,11 @@
                         cell.className = 'schedule-cell';
                         cell.dataset.day = day;
                         cell.dataset.time = timeStr;
+                        
+                        // ドラッグアンドドロップ用のデータ属性を追加
+                        const scheduleDate = new Date(currentWeekStart);
+                        scheduleDate.setDate(currentWeekStart.getDate() + day);
+                        cell.dataset.date = scheduleDate.toISOString().split('T')[0];
                         
                         // ドロップゾーンとして設定
                         cell.addEventListener('dragover', handleDragOver);
@@ -9026,6 +9173,66 @@ function showMessage(message, type = 'info') {
   color: white;
   border-color: #28a745;
   font-weight: 600;
+}
+
+/* ドラッグアンドドロップ用スタイル */
+.course-option, .break-option {
+  cursor: grab;
+  transition: all 0.2s ease;
+}
+
+.course-option:hover, .break-option:hover {
+  background-color: #f8f9fa;
+  transform: translateX(2px);
+}
+
+.course-option:active, .break-option:active {
+  cursor: grabbing;
+}
+
+.time-slot.drag-over {
+  background-color: #e3f2fd !important;
+  border: 2px dashed #2196f3 !important;
+  transform: scale(1.02);
+  transition: all 0.2s ease;
+}
+
+.time-slot.drag-over::before {
+  content: "📅 ここにドロップ";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(33, 150, 243, 0.9);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* ドロップダウンメニューのスタイル改善 */
+.dropdown-menu {
+  border: 1px solid #dee2e6;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.dropdown-item {
+  padding: 8px 16px;
+  transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+  transform: translateX(2px);
+}
+
+.dropdown-item i {
+  width: 20px;
+  text-align: center;
 }
 
 .mini-calendar-day.other-month {
