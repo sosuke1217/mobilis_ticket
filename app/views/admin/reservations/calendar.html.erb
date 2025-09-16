@@ -2159,9 +2159,21 @@
         function closeUserSelectionModal() {
             document.getElementById('userSelectionModal').style.display = 'none';
         }
+
+        function openNewUserModal() {
+          // 新規ユーザー作成モーダルを開く
+          const newUserModal = document.getElementById('newUserModal');
+          if (newUserModal) {
+            newUserModal.style.display = 'block';
+          } else {
+            // モーダルが存在しない場合は、新規ユーザー作成ページに遷移
+            window.open('/admin/users/new', '_blank');
+          }
+        }
         
         // グローバル関数として公開
         window.closeUserSelectionModal = closeUserSelectionModal;
+        window.openNewUserModal = openNewUserModal;
 
         // ユーザー選択を保存
         function saveUserSelection() {
