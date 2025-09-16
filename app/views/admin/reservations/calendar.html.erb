@@ -9571,7 +9571,7 @@ function attachDropListeners() {
     slot.addEventListener('dragover', handleDragOver, { passive: false });
     slot.addEventListener('dragenter', handleDragEnter, { passive: false });
     slot.addEventListener('dragleave', handleDragLeave, { passive: false });
-    slot.addEventListener('drop', handleDrop, { passive: false });
+    slot.addEventListener('drop', handleNewReservationDrop, { passive: false });
     
     // デバッグ用：最初の数個のスロットの状態を確認
     if (index < 3) {
@@ -9643,9 +9643,22 @@ function handleNewReservationDrop(e) {
   e.preventDefault();
   e.stopPropagation();
   
-  const timeSlot = e.target.closest('.time-slot');
+  // ターゲット要素を特定（複数のクラスを試行）
+  let timeSlot = e.target.closest('.time-slot');
   if (!timeSlot) {
-    console.log('❌ No time slot found');
+    timeSlot = e.target.closest('.schedule-cell');
+  }
+  if (!timeSlot) {
+    timeSlot = e.target.closest('[data-time]');
+  }
+  if (!timeSlot) {
+    timeSlot = e.target;
+  }
+  
+  console.log('🎯 Target element:', timeSlot, 'Classes:', timeSlot.className);
+  
+  if (!timeSlot) {
+    console.log('❌ No valid target element found');
     return;
   }
   
@@ -9687,10 +9700,33 @@ function handleNewReservationDrop(e) {
   if (courseData) {
     console.log('Dropped on time slot:', timeSlot);
     
-    // スロットの位置を正確に取得
-    const dayColumn = timeSlot.closest('.day-column');
-    const dayIndex = Array.from(dayColumn.parentNode.children).indexOf(dayColumn);
-    const timeSlotIndex = Array.from(dayColumn.children).indexOf(timeSlot);
+    // スロットの位置を正確に取得（複数の方法を試行）
+    let dayColumn = timeSlot.closest('.day-column');
+    if (!dayColumn) {
+      dayColumn = timeSlot.closest('.day');
+    }
+    if (!dayColumn) {
+      dayColumn = timeSlot.closest('[data-day]');
+    }
+    
+    let dayIndex = 0;
+    let timeSlotIndex = 0;
+    
+    if (dayColumn && dayColumn.parentNode) {
+      dayIndex = Array.from(dayColumn.parentNode.children).indexOf(dayColumn);
+      timeSlotIndex = Array.from(dayColumn.children).indexOf(timeSlot);
+    } else {
+      // フォールバック: 直接属性から取得
+      if (timeSlot.dataset.day) {
+        dayIndex = parseInt(timeSlot.dataset.day);
+      }
+      if (timeSlot.dataset.time) {
+        const timeStr = timeSlot.dataset.time;
+        const hour = parseInt(timeStr.split(':')[0]);
+        const minute = parseInt(timeStr.split(':')[1]);
+        timeSlotIndex = ((hour - 10) * 2) + (minute / 30);
+      }
+    }
     
     console.log('Day index:', dayIndex, 'Time slot index:', timeSlotIndex);
     
