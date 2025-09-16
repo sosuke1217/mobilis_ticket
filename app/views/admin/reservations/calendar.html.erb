@@ -1407,6 +1407,8 @@
         function createUnifiedHighlight(cells, className) {
             if (cells.length === 0) return;
             
+            console.log('🎯 Creating unified highlight for', cells.length, 'cells');
+            
             // 既存のハイライトブロックを削除
             removeExistingHighlight();
             
@@ -1414,9 +1416,7 @@
             const firstCell = cells[0];
             const lastCell = cells[cells.length - 1];
             
-            // 親要素（時間行）を取得
-            const firstRow = firstCell.parentElement;
-            const lastRow = lastCell.parentElement;
+            console.log('🎯 First cell:', firstCell, 'Last cell:', lastCell);
             
             // ハイライトブロックを作成
             const highlightBlock = document.createElement('div');
@@ -1426,30 +1426,53 @@
             // 位置とサイズを計算
             const firstCellRect = firstCell.getBoundingClientRect();
             const lastCellRect = lastCell.getBoundingClientRect();
-            const calendarRect = document.querySelector('.calendar-container').getBoundingClientRect();
             
-            // 相対位置を計算
-            const top = firstCellRect.top - calendarRect.top;
-            const left = firstCellRect.left - calendarRect.left;
-            const width = lastCellRect.right - firstCellRect.left;
-            const height = lastCellRect.bottom - firstCellRect.top;
+            console.log('🎯 First cell rect:', firstCellRect);
+            console.log('🎯 Last cell rect:', lastCellRect);
             
-            // スタイルを適用
-            highlightBlock.style.position = 'absolute';
-            highlightBlock.style.top = `${top}px`;
-            highlightBlock.style.left = `${left}px`;
-            highlightBlock.style.width = `${width}px`;
-            highlightBlock.style.height = `${height}px`;
-            highlightBlock.style.pointerEvents = 'none';
-            highlightBlock.style.zIndex = '10';
-            
-            // カレンダーコンテナに追加
-            const calendarContainer = document.querySelector('.calendar-container') || 
+            // カレンダーコンテナを検索（scheduleBodyの親要素を使用）
+            const scheduleBody = document.getElementById('scheduleBody');
+            const calendarContainer = scheduleBody ? scheduleBody.parentElement : 
+                                    document.querySelector('.calendar-container') || 
                                     document.querySelector('.calendar-grid') || 
                                     document.querySelector('.calendar') ||
+                                    document.querySelector('.week-view') ||
+                                    document.querySelector('.calendar-week') ||
                                     document.body;
-            if (calendarContainer) {
-                calendarContainer.appendChild(highlightBlock);
+            
+            console.log('🎯 Schedule body:', scheduleBody);
+            console.log('🎯 Calendar container:', calendarContainer);
+            
+            if (calendarContainer && scheduleBody) {
+                const calendarRect = calendarContainer.getBoundingClientRect();
+                const scheduleBodyRect = scheduleBody.getBoundingClientRect();
+                console.log('🎯 Calendar rect:', calendarRect);
+                console.log('🎯 Schedule body rect:', scheduleBodyRect);
+                
+                // 相対位置を計算（scheduleBodyを基準に）
+                const top = firstCellRect.top - scheduleBodyRect.top;
+                const left = firstCellRect.left - scheduleBodyRect.left;
+                const width = lastCellRect.right - firstCellRect.left;
+                const height = lastCellRect.bottom - firstCellRect.top;
+                
+                console.log('🎯 Calculated dimensions:', { top, left, width, height });
+                
+                // スタイルを適用
+                highlightBlock.style.position = 'absolute';
+                highlightBlock.style.top = `${top}px`;
+                highlightBlock.style.left = `${left}px`;
+                highlightBlock.style.width = `${width}px`;
+                highlightBlock.style.height = `${height}px`;
+                highlightBlock.style.pointerEvents = 'none';
+                highlightBlock.style.zIndex = '10';
+                
+                // scheduleBodyに追加（相対位置指定）
+                scheduleBody.style.position = 'relative';
+                scheduleBody.appendChild(highlightBlock);
+                
+                console.log('🎯 Highlight block created and added to scheduleBody');
+            } else {
+                console.error('❌ No suitable container found');
             }
         }
         
