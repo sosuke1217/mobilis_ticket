@@ -9465,7 +9465,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   courseBlocks.forEach(block => {
     block.addEventListener('dragstart', function(e) {
-      console.log('Drag started for block:', this);
+      console.log('🎯 Drag started for block:', this);
       
       draggedCourseData = {
         course: this.dataset.course,
@@ -9476,14 +9476,30 @@ document.addEventListener('DOMContentLoaded', function() {
       // グローバルアクセス用に更新
       window.draggedCourseData = draggedCourseData;
       
-      console.log('Dragged course data set:', draggedCourseData);
+      console.log('🎯 Dragged course data set:', draggedCourseData);
+      console.log('🎯 Global dragged data set:', window.draggedCourseData);
       
       this.classList.add('dragging');
+      
+      // データ転送の設定を改善
       e.dataTransfer.effectAllowed = 'copy';
-      e.dataTransfer.setData('text/plain', 'course-block-drag');
+      e.dataTransfer.dropEffect = 'copy';
+      
+      // 複数のデータ形式を設定
+      e.dataTransfer.setData('text/plain', JSON.stringify(draggedCourseData));
+      e.dataTransfer.setData('application/json', JSON.stringify(draggedCourseData));
+      e.dataTransfer.setData('text/course-block', 'true');
       
       // ドラッグ中の視覚効果
       e.dataTransfer.setDragImage(this, 0, 0);
+      
+      // ドラッグ開始を確認するためのログ
+      setTimeout(() => {
+        console.log('🎯 Drag data still available:', {
+          draggedCourseData: draggedCourseData,
+          windowDraggedData: window.draggedCourseData
+        });
+      }, 100);
     });
     
     block.addEventListener('dragend', function() {
@@ -9528,19 +9544,45 @@ function attachDropListeners() {
   const timeSlots = document.querySelectorAll('.time-slot');
   console.log('Setting up drop zones for', timeSlots.length, 'time slots');
   
-  timeSlots.forEach(slot => {
+  timeSlots.forEach((slot, index) => {
     // 既存のイベントリスナーを削除
     slot.removeEventListener('dragover', handleDragOver);
     slot.removeEventListener('dragenter', handleDragEnter);
     slot.removeEventListener('dragleave', handleDragLeave);
     slot.removeEventListener('drop', handleDrop);
     
-    // 新しいイベントリスナーを追加
-    slot.addEventListener('dragover', handleDragOver);
-    slot.addEventListener('dragenter', handleDragEnter);
-    slot.addEventListener('dragleave', handleDragLeave);
-    slot.addEventListener('drop', handleDrop);
+    // 新しいイベントリスナーを追加（passive: false で追加）
+    slot.addEventListener('dragover', handleDragOver, { passive: false });
+    slot.addEventListener('dragenter', handleDragEnter, { passive: false });
+    slot.addEventListener('dragleave', handleDragLeave, { passive: false });
+    slot.addEventListener('drop', handleDrop, { passive: false });
+    
+    // デバッグ用：最初の数個のスロットの状態を確認
+    if (index < 3) {
+      console.log(`Slot ${index} setup complete:`, {
+        element: slot,
+        classes: slot.className,
+        hasDropListener: true
+      });
+    }
   });
+  
+  // カレンダー全体にもドロップイベントを設定（フォールバック用）
+  const calendarContainer = document.querySelector('.schedule-body') || document.querySelector('.calendar-container');
+  if (calendarContainer) {
+    calendarContainer.addEventListener('drop', function(e) {
+      console.log('🎯 Calendar container drop event triggered');
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // ドロップされた要素を特定
+      const timeSlot = e.target.closest('.time-slot');
+      if (timeSlot && window.draggedCourseData) {
+        console.log('🎯 Redirecting to time slot drop handler');
+        handleDrop.call(timeSlot, e);
+      }
+    }, { passive: false });
+  }
 }
 
 function handleDragOver(e) {
@@ -9561,20 +9603,58 @@ function handleDragLeave(e) {
 }
 
 function handleDrop(e) {
-  console.log('Drop event triggered!');
+  console.log('🎯 Drop event triggered!');
   e.preventDefault();
-  this.classList.remove('drop-zone');
+  e.stopPropagation();
   
-  console.log('draggedCourseData:', draggedCourseData);
-  console.log('window.draggedCourseData:', window.draggedCourseData);
+  const timeSlot = e.target.closest('.time-slot');
+  if (!timeSlot) {
+    console.log('❌ No time slot found');
+    return;
+  }
   
-  const courseData = draggedCourseData || window.draggedCourseData;
+  timeSlot.classList.remove('drop-zone');
+  
+  console.log('🎯 DataTransfer types:', e.dataTransfer.types);
+  console.log('🎯 draggedCourseData:', draggedCourseData);
+  console.log('🎯 window.draggedCourseData:', window.draggedCourseData);
+  
+  // 複数の方法でデータを取得
+  let courseData = draggedCourseData || window.draggedCourseData;
+  
+  // dataTransferからもデータを取得を試行
+  if (!courseData && e.dataTransfer) {
+    try {
+      const jsonData = e.dataTransfer.getData('application/json');
+      if (jsonData) {
+        courseData = JSON.parse(jsonData);
+        console.log('🎯 Course data from dataTransfer JSON:', courseData);
+      }
+    } catch (error) {
+      console.log('🎯 Failed to parse JSON from dataTransfer:', error);
+    }
+    
+    // プレーンテキストからも取得を試行
+    if (!courseData) {
+      const textData = e.dataTransfer.getData('text/plain');
+      if (textData && textData !== 'course-block-drag') {
+        try {
+          courseData = JSON.parse(textData);
+          console.log('🎯 Course data from dataTransfer text:', courseData);
+        } catch (error) {
+          console.log('🎯 Failed to parse text from dataTransfer:', error);
+        }
+      }
+    }
+  }
+  
   if (courseData) {
-    const timeSlot = this;
     console.log('Dropped on time slot:', timeSlot);
     
-    const dayIndex = Array.from(timeSlot.parentNode.children).indexOf(timeSlot);
-    const timeSlotIndex = Array.from(timeSlot.parentNode.parentNode.children).indexOf(timeSlot.parentNode);
+    // スロットの位置を正確に取得
+    const dayColumn = timeSlot.closest('.day-column');
+    const dayIndex = Array.from(dayColumn.parentNode.children).indexOf(dayColumn);
+    const timeSlotIndex = Array.from(dayColumn.children).indexOf(timeSlot);
     
     console.log('Day index:', dayIndex, 'Time slot index:', timeSlotIndex);
     
@@ -9605,7 +9685,7 @@ function handleDrop(e) {
     window.draggedCourseData = null;
     console.log('Drag data cleared after successful drop');
   } else {
-    console.log('No dragged course data found');
+    console.log('❌ No dragged course data found');
   }
 }
 
