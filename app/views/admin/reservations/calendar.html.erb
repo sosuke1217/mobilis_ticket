@@ -7813,136 +7813,58 @@ function showMessage(message, type = 'info') {
 
         // 古い関数群は削除（新しいものが既に定義済み）
 
-        // 古いupdateReservationTime関数は削除（新しいhandleDrop関数内で直接処理）
-            // 元の予約データを取得
-            const originalDateKey = document.querySelector(`[data-reservation-id="${reservationId}"]`)?.dataset.originalDateKey;
-            const originalTimeStr = document.querySelector(`[data-reservation-id="${reservationId}"]`)?.dataset.originalTimeStr;
-            
-            if (!originalDateKey || !originalTimeStr) {
-                showMessage('予約データの取得に失敗しました。', 'error');
+        // 古い関数群は完全に削除（新しいhandleDrop関数内で直接処理）
+        // 古い関数の残り部分は削除
+        // 古い関数の残り部分を完全に削除
+
+        // ローカル予約データを更新
+        function updateLocalReservationData(reservationId, newDateKey, newTime) {
+            console.log('🔄 Updating local reservation data:', {
+                reservationId: reservationId,
+                newDateKey: newDateKey,
+                newTime: newTime
+            });
+            console.log('🔄 Current reservations object:', reservations);
+        }
+
+        // キャンセル表示エリアに予約を追加
+        function addToCancellationDisplay(reservation) {
+            if (!reservation) {
+                console.error('❌ Reservation is null or undefined');
                 return;
             }
             
-            // 新しい開始時間をISO形式で作成
-            const newStartTime = `${newDateKey}T${newTime}`;
+            // 予約の実際の日付を特定
+            let actualReservationDate = null;
             
-            // バックエンドに更新リクエストを送信
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            // 予約の実際の日付を特定
+            if (reservation.date) {
+                actualReservationDate = new Date(reservation.date);
+            } else if (reservation.start_time) {
+                actualReservationDate = new Date(reservation.start_time);
+                    } else {
+                // 見つからない場合はcreatedAtから計算
+                actualReservationDate = new Date(reservation.createdAt);
+            }
             
-            // 予約データを取得してコース情報も含める
-            const reservationBlock = document.querySelector(`[data-reservation-id="${reservationId}"]`);
-            const reservationData = reservationBlock ? JSON.parse(reservationBlock.dataset.reservationData) : null;
-            
-            // より完全な予約データを送信
-            const updateData = {
-                reservation: {
-                    start_time: newStartTime,
-                    course: reservationData ? `${reservationData.duration}分` : undefined
-                }
+            const cancellationData = {
+                id: reservation.id,
+                customer: reservation.customer,
+                time: reservation.time,
+                duration: reservation.duration,
+                date: actualReservationDate.toLocaleDateString('ja-JP'),
+                status: reservation.status
             };
             
-            // 休憩機能は無効化
-            // 休憩予約の場合はis_breakフラグも送信（無効化）
+            // キャンセル履歴に追加
+            cancelledReservations.push(cancellationData);
+            saveCancelledReservations();
             
-            console.log('🔄 Sending update request:', updateData);
-            console.log('🔄 Original reservation data:', reservationData);
-            console.log('🔄 Course duration:', reservationData ? reservationData.duration : 'undefined');
-            console.log('🔄 Is break: false (休憩機能は無効化)');
-            console.log('🔄 Course string being sent:', updateData.reservation.course);
-            
-            fetch(`/admin/reservations/${reservationId}/update_booking`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': csrfToken
-                },
-                body: JSON.stringify(updateData)
-            })
-            .then(response => {
-                console.log('🔄 Response received:', response.status, response.statusText);
-                if (!response.ok) {
-                    return response.json().then(errorData => {
-                        console.error('❌ Server error response:', errorData);
-                        console.error('❌ Response status:', response.status);
-                        console.error('❌ Response headers:', response.headers);
-                        throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.message || 'Unknown error'}`);
-                    }).catch(() => {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('🔄 Response data received:', data);
-                if (data.success) {
-                    console.log('✅ Update successful, updating local data');
-                    // ローカルデータを更新
-                    updateLocalReservationData(reservationId, newDateKey, newTime);
-                    
-                    // updatedAtフィールドを更新
-                    if (data.reservation && data.reservation.updated_at) {
-                        // グローバルreservationsオブジェクトのupdatedAtを更新
-                        const reservationIndex = reservations[newDateKey].findIndex(r => r.id === parseInt(reservationId));
-                        if (reservationIndex !== -1) {
-                            reservations[newDateKey][reservationIndex].updatedAt = data.reservation.updated_at;
-                            console.log('✅ Updated updatedAt in global reservations object');
-                        } else {
-                            console.warn('⚠️ Reservation not found in global reservations object for update');
-                        }
-                        
-                                                // 現在開いているモーダルの変更日時を即座に更新
-                        console.log('🔍 Checking if currentReservation matches updated reservation');
-                        if (currentReservation && currentReservation.id === parseInt(reservationId)) {
-                            console.log('🔄 Updating currentReservation after drag-and-drop:', {
-                                before: {
-                                    time: currentReservation.time,
-                                    date: currentReservation.date,
-                                    dateKey: currentReservation.dateKey,
-                                    start_time: currentReservation.start_time
-                                }
-                            });
-                            
-                            currentReservation.updatedAt = data.reservation.updated_at;
-                            // 日付と時間も更新
-                            currentReservation.time = newTime;
-                            currentReservation.date = newDateKey;
-                            currentReservation.dateKey = newDateKey;
-                            // start_timeも更新
-                            const [hours, minutes] = newTime.split(':');
-                            const newStartTime = new Date(`${newDateKey}T${hours}:${minutes}:00+09:00`);
-                            currentReservation.start_time = newStartTime.toISOString();
-                            
-                            console.log('🔄 Updated currentReservation after drag-and-drop:', {
-                                after: {
-                                    time: currentReservation.time,
-                                    date: currentReservation.date,
-                                    dateKey: currentReservation.dateKey,
-                                    start_time: currentReservation.start_time
-                                }
-                            });
-                            
-                            try {
-                                updateModalUpdatedAt(data.reservation.updated_at);
-                                console.log('✅ Modal updated at timestamp updated successfully');
-                            } catch (error) {
-                                console.error('❌ Error updating modal timestamp:', error);
-                            }
-                        } else {
-                            console.log('❌ currentReservation not found or ID mismatch:', {
-                                currentReservation: currentReservation ? currentReservation.id : 'null',
-                                reservationId: reservationId
-                            });
-                            console.log('🔍 currentReservation details:', currentReservation);
-                            
-                            // モーダルが開いている場合は、最新のデータでcurrentReservationを更新
-                            const modal = document.getElementById('reservationDetailModal');
-                            console.log('🔍 Modal display status:', modal ? modal.style.display : 'modal not found');
-                            console.log('🔍 Modal element:', modal);
-                            
-                            if (modal && modal.style.display === 'block') {
-                                console.log('🔍 Modal is open, updating currentReservation...');
-                                console.log('🔍 Searching through reservations for ID:', reservationId);
-                                // 最新の予約データを取得してcurrentReservationを更新
+            console.log('✅ Added to cancellation display:', cancellationData);
+        }
+
+        // ユーザー検索結果表示関数
+        function displayUserSearchResultsForModal(users) {
                                 for (const dateKey of Object.keys(reservations)) {
                                     const dayReservations = reservations[dateKey];
                                     const foundReservation = dayReservations.find(r => r.id === parseInt(reservationId));
