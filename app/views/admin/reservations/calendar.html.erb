@@ -7969,6 +7969,12 @@ function showMessage(message, type = 'info') {
             const reservationId = e.dataTransfer.getData('text/plain');
             console.log('🎯 Drop detected for reservation:', reservationId, 'at cell:', cell.dataset.day, cell.dataset.time);
             
+            // 新規予約のドロップかどうかをチェック
+            if (reservationId === 'new-course-block') {
+                console.log('🎯 New reservation drop detected, redirecting to new reservation handler');
+                handleNewReservationDrop.call(cell, e);
+                return;
+            }
             
             if (!reservationId || reservationId.trim() === '') {
                 console.log('❌ Empty reservation ID, ignoring drop');
@@ -9128,21 +9134,480 @@ function showMessage(message, type = 'info') {
   }
 }
 
+/* 右側の新規予約パネル */
+.reservation-panel-right {
+  position: fixed;
+  top: 0;
+  right: -400px;
+  width: 400px;
+  height: 100vh;
+  background: white;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+  z-index: 1050;
+  transition: right 0.3s ease-in-out;
+  border-left: 1px solid #dee2e6;
+  display: flex;
+  flex-direction: column;
+}
 
+.reservation-panel-right.open {
+  right: 0;
+}
+
+.panel-header {
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f8f9fa, #ffffff);
+  border-bottom: 1px solid #dee2e6;
+}
+
+.panel-body {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+/* パネルを開くボタン */
+.panel-trigger {
+  position: fixed;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  background: #007bff;
+  color: white;
+  padding: 1rem 0.5rem;
+  border-radius: 8px 0 0 8px;
+  cursor: pointer;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: -2px 0 8px rgba(0, 123, 255, 0.3);
+  transition: all 0.3s ease;
+  z-index: 1040;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.panel-trigger:hover {
+  background: #0056b3;
+  transform: translateY(-50%) translateX(-5px);
+  box-shadow: -4px 0 12px rgba(0, 123, 255, 0.4);
+}
+
+.panel-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.panel-close:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #495057;
+}
+
+/* コースブロックのスタイル */
+.course-blocks-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.course-block {
+  background: white;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  padding: 1rem;
+  cursor: grab;
+  transition: all 0.3s ease;
+  user-select: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.course-block:hover {
+  border-color: #007bff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+}
+
+.course-block.dragging {
+  opacity: 0.7;
+  transform: scale(1.05) rotate(2deg);
+  box-shadow: 0 8px 16px rgba(0, 123, 255, 0.3);
+  z-index: 1000;
+}
+
+.course-block-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.course-block-header i {
+  color: #007bff;
+  font-size: 1.1rem;
+}
+
+.course-duration {
+  background: #007bff;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.course-block-body {
+  text-align: center;
+}
+
+.course-name {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 0.25rem;
+}
+
+.course-price {
+  color: #28a745;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* 休憩ブロックの特別スタイル */
+.break-block {
+  border-color: #6c757d;
+}
+
+.break-block:hover {
+  border-color: #495057;
+}
+
+.break-block .course-block-header i {
+  color: #6c757d;
+}
+
+.break-block .course-duration {
+  background: #6c757d;
+}
+
+.break-block .course-price {
+  color: #6c757d;
+}
+
+/* カレンダーセルのドロップゾーン */
+.time-slot.drop-zone {
+  background: linear-gradient(45deg, rgba(0, 123, 255, 0.1), rgba(0, 123, 255, 0.2));
+  border: 2px dashed #007bff;
+  position: relative;
+}
+
+.time-slot.drop-zone::before {
+  content: '📅 ここにドロップ';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.75rem;
+  color: #007bff;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .reservation-panel-right {
+    width: 100%;
+    right: -100%;
+  }
+  
+  .panel-trigger {
+    right: 10px;
+    padding: 0.75rem 0.25rem;
+    font-size: 0.75rem;
+  }
+  
+  .panel-trigger span {
+    display: none;
+  }
+  
+  .course-blocks-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
 </style>
 
 <script>
 // 既存の関数はそのまま維持（previousWeek, nextWeek, toggleMiniCalendar等）
 
+// 新規予約用のドラッグ&ドロップ機能
+let draggedCourseData = null;
+let currentReservationData = null;
 
+// 右側パネルの管理
+function openReservationPanel() {
+  document.getElementById('reservationPanel').classList.add('open');
+  loadUsersForQuickReservation();
+}
 
+function closeReservationPanel() {
+  document.getElementById('reservationPanel').classList.remove('open');
+  resetReservationForm();
+}
+
+// ユーザー一覧の読み込み
+function loadUsersForQuickReservation() {
+  fetch('/admin/users/search?q=')
+    .then(response => response.json())
+    .then(data => {
+      const select = document.getElementById('quickUser');
+      if (select) {
+        select.innerHTML = '<option value="">既存ユーザーを選択</option>';
+        
+        if (data.users && data.users.length > 0) {
+          data.users.forEach(user => {
+            const option = document.createElement('option');
+            option.value = user.id;
+            option.textContent = `${user.name} (${user.phone_number || user.email || '連絡先なし'})`;
+            select.appendChild(option);
+          });
+        }
+      }
+    })
+    .catch(error => {
+      console.error('Error loading users:', error);
+    });
+}
+
+// コースブロックのドラッグ開始
+document.addEventListener('DOMContentLoaded', function() {
+  const courseBlocks = document.querySelectorAll('.course-block');
+  
+  courseBlocks.forEach(block => {
+    block.addEventListener('dragstart', function(e) {
+      console.log('🎯 New course block drag started:', this.dataset.course);
+      
+      draggedCourseData = {
+        course: this.dataset.course,
+        duration: parseInt(this.dataset.duration),
+        price: parseInt(this.dataset.price)
+      };
+      
+      this.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'copy';
+      e.dataTransfer.setData('text/plain', 'new-course-block');
+    });
+    
+    block.addEventListener('dragend', function(e) {
+      console.log('🎯 New course block drag ended');
+      this.classList.remove('dragging');
+    });
+  });
+});
+
+// 新規予約専用のドロップハンドラー
+function handleNewReservationDrop(e) {
+  console.log('🎯 New reservation drop event triggered!');
+  e.preventDefault();
+  e.stopPropagation();
+  
+  // セルからタイムスロットを取得
+  const cell = e.target.closest('.schedule-cell');
+  if (!cell) {
+    console.log('❌ No schedule cell found');
+    return;
+  }
+  
+  // セル内のタイムスロットを探す
+  const timeSlot = cell.querySelector('.time-slot');
+  if (!timeSlot) {
+    console.log('❌ No time slot found in cell');
+    return;
+  }
+  
+  timeSlot.classList.remove('drop-zone');
+  
+  if (!draggedCourseData) {
+    console.log('❌ No dragged course data found');
+    return;
+  }
+  
+  console.log('Dropped course data:', draggedCourseData);
+  
+  // 日時を計算（セルの情報から）
+  const dayIndex = parseInt(cell.dataset.day);
+  const timeStr = cell.dataset.time;
+  const [hour, minute] = timeStr.split(':').map(Number);
+  
+  // 週の開始日を取得
+  const weekStart = new Date(currentWeekStart);
+  const targetDate = new Date(weekStart);
+  targetDate.setDate(weekStart.getDate() + dayIndex);
+  targetDate.setHours(hour, minute, 0, 0);
+  
+  const startTime = targetDate;
+  const endTime = new Date(startTime.getTime() + draggedCourseData.duration * 60000);
+  
+  console.log('Calculated start time:', startTime);
+  console.log('Calculated end time:', endTime);
+  
+  // 現在の予約データを保存
+  currentReservationData = {
+    start_time: startTime,
+    end_time: endTime,
+    course: draggedCourseData.course,
+    duration: draggedCourseData.duration,
+    price: draggedCourseData.price,
+    status: 'tentative'
+  };
+  
+  console.log('Current reservation data:', currentReservationData);
+  
+  // 予約詳細フォームを表示
+  showReservationDetailsForm();
+  
+  // データをクリア
+  draggedCourseData = null;
+}
+
+// 予約詳細フォームを表示
+function showReservationDetailsForm() {
+  if (!currentReservationData) return;
+  
+  // 選択されたコース情報を表示
+  const courseInfo = document.getElementById('selectedCourseInfo');
+  const startTimeStr = currentReservationData.start_time.toLocaleString('ja-JP', {
+    month: 'numeric',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+  const endTimeStr = currentReservationData.end_time.toLocaleString('ja-JP', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+  
+  courseInfo.innerHTML = `
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <strong>${currentReservationData.course}</strong>
+        <br>
+        <small class="text-muted">${startTimeStr} - ${endTimeStr}</small>
+      </div>
+      <div class="text-end">
+        <span class="badge bg-primary">${currentReservationData.duration}分</span>
+        ${currentReservationData.price > 0 ? `<br><small class="text-success">¥${currentReservationData.price.toLocaleString()}</small>` : ''}
+      </div>
+    </div>
+  `;
+  
+  // フォームを表示
+  document.getElementById('reservationDetailsForm').style.display = 'block';
+  
+  // ユーザー一覧を読み込む
+  loadUsersForQuickReservation();
+  
+  // パネルを下にスクロール
+  document.getElementById('reservationDetailsForm').scrollIntoView({ behavior: 'smooth' });
+}
+
+// 予約を確定
+function confirmReservation() {
+  if (!currentReservationData) return;
+  
+  const userId = document.getElementById('quickUser').value;
+  const note = document.getElementById('quickNote').value;
+  
+  if (!userId) {
+    alert('お客様を選択してください');
+    return;
+  }
+  
+  const reservationData = {
+    user_id: userId,
+    start_time: currentReservationData.start_time.toISOString(),
+    end_time: currentReservationData.end_time.toISOString(),
+    course: currentReservationData.course,
+    note: note,
+    status: 'tentative'
+  };
+  
+  console.log('Creating reservation:', reservationData);
+  
+  fetch('/admin/reservations', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+    },
+    body: JSON.stringify({ reservation: reservationData })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert('予約を作成しました！');
+      
+      // フォームをリセット
+      resetReservationForm();
+      
+      // パネルを閉じる
+      closeReservationPanel();
+      
+      // カレンダーを更新
+      renderWeekView();
+    } else {
+      alert(data.message || '予約の作成に失敗しました。');
+    }
+  })
+  .catch(error => {
+    console.error('Error creating reservation:', error);
+    alert('予約の作成中にエラーが発生しました。');
+  });
+}
+
+// 予約をキャンセル
+function cancelReservation() {
+  resetReservationForm();
+}
+
+// フォームをリセット
+function resetReservationForm() {
+  currentReservationData = null;
+  document.getElementById('reservationDetailsForm').style.display = 'none';
+  document.getElementById('quickReservationForm').reset();
+}
 
 function handleDragOver(e) {
   e.preventDefault();
   e.stopPropagation();
-  if (e.dataTransfer) {
-    e.dataTransfer.dropEffect = 'copy';
+  
+  // 新規予約のドラッグの場合のみドロップゾーンを表示
+  if (draggedCourseData) {
+    const timeSlot = e.target.closest('.time-slot');
+    if (timeSlot && !timeSlot.classList.contains('drop-zone')) {
+      // 他のドロップゾーンをクリア
+      document.querySelectorAll('.time-slot.drop-zone').forEach(slot => {
+        slot.classList.remove('drop-zone');
+      });
+      
+      // 現在のスロットをドロップゾーンに
+      timeSlot.classList.add('drop-zone');
+    }
+    
+    if (e.dataTransfer) {
+      e.dataTransfer.dropEffect = 'copy';
+    }
   }
   console.log('🎯 Drag over detected');
 }
@@ -9386,6 +9851,142 @@ function createReservationFromDrop(reservationData) {
 
 </script>
 
+
+<!-- 右側の新規予約パネル -->
+<div class="reservation-panel-right" id="reservationPanel">
+  <div class="panel-header">
+    <button type="button" class="panel-close" onclick="closeReservationPanel()">
+      <i class="fas fa-times"></i>
+    </button>
+    <h5 class="mb-0">
+      <i class="fas fa-plus-circle me-2 text-primary"></i>新規予約作成
+    </h5>
+    <p class="text-muted mb-0">ドラッグ&ドロップで簡単に予約を作成できます</p>
+  </div>
+  
+  <div class="panel-body">
+    <!-- ドラッグ可能なコースブロック -->
+    <div class="course-blocks-container">
+      <h6 class="fw-semibold mb-3">
+        <i class="fas fa-hand-paper me-2"></i>ドラッグして予約を作成
+      </h6>
+      
+      <div class="course-blocks-grid">
+        <!-- 40分コース -->
+        <div class="course-block" draggable="true" data-course="40 min" data-duration="40" data-price="8000">
+          <div class="course-block-header">
+            <i class="fas fa-clock"></i>
+            <span class="course-duration">40分</span>
+          </div>
+          <div class="course-block-body">
+            <div class="course-name">ストレッチ</div>
+            <div class="course-price">¥8,000</div>
+          </div>
+        </div>
+        
+        <!-- 60分コース -->
+        <div class="course-block" draggable="true" data-course="60 min" data-duration="60" data-price="12000">
+          <div class="course-block-header">
+            <i class="fas fa-clock"></i>
+            <span class="course-duration">60分</span>
+          </div>
+          <div class="course-block-body">
+            <div class="course-name">ストレッチ</div>
+            <div class="course-price">¥12,000</div>
+          </div>
+        </div>
+        
+        <!-- 80分コース -->
+        <div class="course-block" draggable="true" data-course="80 min" data-duration="80" data-price="15000">
+          <div class="course-block-header">
+            <i class="fas fa-clock"></i>
+            <span class="course-duration">80分</span>
+          </div>
+          <div class="course-block-body">
+            <div class="course-name">ストレッチ</div>
+            <div class="course-price">¥15,000</div>
+          </div>
+        </div>
+        
+        <!-- 休憩ブロック -->
+        <div class="course-block break-block" draggable="true" data-course="休憩" data-duration="15" data-price="0">
+          <div class="course-block-header">
+            <i class="fas fa-coffee"></i>
+            <span class="course-duration">15分</span>
+          </div>
+          <div class="course-block-body">
+            <div class="course-name">休憩</div>
+            <div class="course-price">-</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-4 p-3 bg-light rounded">
+        <small class="text-muted">
+          <i class="fas fa-info-circle me-1"></i>
+          ブロックをカレンダーの空き時間にドラッグ&ドロップしてください
+        </small>
+      </div>
+    </div>
+    
+    <!-- 予約詳細フォーム（ドロップ後に表示） -->
+    <div id="reservationDetailsForm" class="mt-4" style="display: none;">
+      <hr>
+      <h6 class="fw-semibold mb-3">
+        <i class="fas fa-user-edit me-2"></i>予約詳細
+      </h6>
+      
+      <form id="quickReservationForm">
+        <!-- 選択されたコース情報 -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold">選択されたコース</label>
+          <div class="form-control-plaintext bg-light p-2 rounded" id="selectedCourseInfo">
+            <!-- 動的に表示 -->
+          </div>
+        </div>
+        
+        <!-- ユーザー選択 -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold">
+            <i class="fas fa-user me-2"></i>お客様
+          </label>
+          <div class="d-flex gap-2">
+            <select class="form-select" id="quickUser" name="user_id" required>
+              <option value="">既存ユーザーを選択</option>
+            </select>
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="openNewUserModal()" title="新規ユーザー追加">
+              <i class="fas fa-plus"></i>
+            </button>
+          </div>
+        </div>
+        
+        <!-- 備考 -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold">
+            <i class="fas fa-sticky-note me-2"></i>備考
+          </label>
+          <textarea class="form-control" id="quickNote" name="note" rows="3" placeholder="特記事項があれば入力してください"></textarea>
+        </div>
+        
+        <!-- アクションボタン -->
+        <div class="d-grid gap-2">
+          <button type="button" class="btn btn-primary btn-lg" onclick="confirmReservation()" disabled id="confirmReservationBtn">
+            <i class="fas fa-check me-2"></i>予約を確定
+          </button>
+          <button type="button" class="btn btn-outline-secondary" onclick="cancelReservation()">
+            <i class="fas fa-times me-2"></i>キャンセル
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- パネルを開くトリガーボタン -->
+<div class="panel-trigger" onclick="openReservationPanel()">
+  <i class="fas fa-plus"></i>
+  <span>新規予約</span>
+</div>
 
 <!-- カレンダー専用のスタイル -->
 <%= stylesheet_link_tag 'calendar', media: 'all' %> 
