@@ -9390,6 +9390,35 @@ function loadUsersForQuickReservation() {
     });
 }
 
+// タイムスロットにドロップイベントリスナーを設定
+function setupNewReservationDropListeners() {
+  const timeSlots = document.querySelectorAll('.time-slot');
+  console.log('Setting up new reservation drop listeners for', timeSlots.length, 'time slots');
+  
+  timeSlots.forEach((slot, index) => {
+    // 既存のイベントリスナーを削除
+    slot.removeEventListener('dragover', handleDragOver);
+    slot.removeEventListener('dragenter', handleDragEnter);
+    slot.removeEventListener('dragleave', handleDragLeave);
+    slot.removeEventListener('drop', handleNewReservationDrop);
+    
+    // 新しいイベントリスナーを追加
+    slot.addEventListener('dragover', handleDragOver, { passive: false });
+    slot.addEventListener('dragenter', handleDragEnter, { passive: false });
+    slot.addEventListener('dragleave', handleDragLeave, { passive: false });
+    slot.addEventListener('drop', handleNewReservationDrop, { passive: false });
+    
+    // デバッグ用：最初の数個のスロットの状態を確認
+    if (index < 3) {
+      console.log(`Slot ${index} setup complete:`, {
+        element: slot,
+        classes: slot.className,
+        hasDropListener: true
+      });
+    }
+  });
+}
+
 // コースブロックのドラッグ開始
 document.addEventListener('DOMContentLoaded', function() {
   const courseBlocks = document.querySelectorAll('.course-block');
@@ -9407,11 +9436,19 @@ document.addEventListener('DOMContentLoaded', function() {
       this.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'copy';
       e.dataTransfer.setData('text/plain', 'new-course-block');
+      
+      // ドラッグ開始時にドロップリスナーを設定
+      setTimeout(setupNewReservationDropListeners, 100);
     });
     
     block.addEventListener('dragend', function(e) {
       console.log('🎯 New course block drag ended');
       this.classList.remove('dragging');
+      
+      // ドロップゾーンをクリア
+      document.querySelectorAll('.time-slot.drop-zone').forEach(slot => {
+        slot.classList.remove('drop-zone');
+      });
     });
   });
 });
@@ -9419,22 +9456,13 @@ document.addEventListener('DOMContentLoaded', function() {
 // 新規予約専用のドロップハンドラー
 function handleNewReservationDrop(e) {
   console.log('🎯 New reservation drop event triggered!');
+  console.log('🎯 Event target:', e.target);
+  console.log('🎯 Current target:', e.currentTarget);
   e.preventDefault();
   e.stopPropagation();
   
-  // セルからタイムスロットを取得
-  const cell = e.target.closest('.schedule-cell');
-  if (!cell) {
-    console.log('❌ No schedule cell found');
-    return;
-  }
-  
-  // セル内のタイムスロットを探す
-  const timeSlot = cell.querySelector('.time-slot');
-  if (!timeSlot) {
-    console.log('❌ No time slot found in cell');
-    return;
-  }
+  const timeSlot = e.currentTarget;
+  console.log('🎯 Time slot element:', timeSlot);
   
   timeSlot.classList.remove('drop-zone');
   
@@ -9443,12 +9471,26 @@ function handleNewReservationDrop(e) {
     return;
   }
   
-  console.log('Dropped course data:', draggedCourseData);
+  console.log('🎯 Dropped course data:', draggedCourseData);
+  
+  // セルから日時情報を取得
+  const cell = timeSlot.closest('.schedule-cell');
+  if (!cell) {
+    console.log('❌ No schedule cell found');
+    return;
+  }
+  
+  console.log('🎯 Schedule cell:', cell);
+  console.log('🎯 Cell day:', cell.dataset.day);
+  console.log('🎯 Cell time:', cell.dataset.time);
   
   // 日時を計算（セルの情報から）
   const dayIndex = parseInt(cell.dataset.day);
   const timeStr = cell.dataset.time;
   const [hour, minute] = timeStr.split(':').map(Number);
+  
+  console.log('🎯 Parsed day index:', dayIndex);
+  console.log('🎯 Parsed hour:', hour, 'minute:', minute);
   
   // 週の開始日を取得
   const weekStart = new Date(currentWeekStart);
@@ -9459,8 +9501,8 @@ function handleNewReservationDrop(e) {
   const startTime = targetDate;
   const endTime = new Date(startTime.getTime() + draggedCourseData.duration * 60000);
   
-  console.log('Calculated start time:', startTime);
-  console.log('Calculated end time:', endTime);
+  console.log('🎯 Calculated start time:', startTime);
+  console.log('🎯 Calculated end time:', endTime);
   
   // 現在の予約データを保存
   currentReservationData = {
@@ -9472,7 +9514,7 @@ function handleNewReservationDrop(e) {
     status: 'tentative'
   };
   
-  console.log('Current reservation data:', currentReservationData);
+  console.log('🎯 Current reservation data:', currentReservationData);
   
   // 予約詳細フォームを表示
   showReservationDetailsForm();
@@ -9615,13 +9657,21 @@ function handleDragOver(e) {
 function handleDragEnter(e) {
   e.preventDefault();
   e.stopPropagation();
-  this.classList.add('drop-zone');
-  console.log('🎯 Drag enter detected on:', this);
+  
+  // 新規予約のドラッグの場合のみドロップゾーンを表示
+  if (draggedCourseData) {
+    this.classList.add('drop-zone');
+    console.log('🎯 Drag enter detected on:', this);
+  }
 }
 
 function handleDragLeave(e) {
   e.preventDefault();
-  this.classList.remove('drop-zone');
+  
+  // 新規予約のドラッグの場合のみドロップゾーンをクリア
+  if (draggedCourseData) {
+    this.classList.remove('drop-zone');
+  }
 }
 
 
