@@ -1246,9 +1246,9 @@
             });
 
             // カレンダーの時間スロットにドロップイベントを追加
-            document.addEventListener('dragover', handleDragOver);
-            document.addEventListener('drop', handleDrop);
-            document.addEventListener('dragend', handleDragEnd);
+            document.addEventListener('dragover', handleCourseDragOver);
+            document.addEventListener('drop', handleCourseDrop);
+            document.addEventListener('dragend', handleCourseDragEnd);
         }
 
         // コース選択のドラッグ開始
@@ -1266,8 +1266,8 @@
             console.log('🎯 Course drag started:', { course: draggedCourse, duration: draggedDuration });
         }
 
-        // ドラッグオーバー
-        function handleDragOver(e) {
+        // コース選択のドラッグオーバー
+        function handleCourseDragOver(e) {
             if (!isDragging) return;
             
             e.preventDefault();
@@ -1275,12 +1275,12 @@
             
             const scheduleCell = e.target.closest('.schedule-cell');
             if (scheduleCell && !scheduleCell.classList.contains('occupied')) {
-                scheduleCell.classList.add('drag-over');
+                scheduleCell.classList.add('course-drag-over');
             }
         }
 
-        // ドロップ
-        function handleDrop(e) {
+        // コース選択のドロップ
+        function handleCourseDrop(e) {
             e.preventDefault();
             
             if (!isDragging || !draggedCourse || !draggedDuration) return;
@@ -1290,7 +1290,7 @@
             
             // ドラッグオーバークラスを削除
             document.querySelectorAll('.schedule-cell').forEach(cell => {
-                cell.classList.remove('drag-over');
+                cell.classList.remove('course-drag-over');
             });
             
             const date = scheduleCell.dataset.date;
@@ -1300,11 +1300,11 @@
                 createReservationFromDrag(date, time, draggedCourse, draggedDuration);
             }
             
-            console.log('🎯 Drop completed:', { date, time, course: draggedCourse, duration: draggedDuration });
+            console.log('🎯 Course drop completed:', { date, time, course: draggedCourse, duration: draggedDuration });
         }
 
-        // ドラッグ終了
-        function handleDragEnd(e) {
+        // コース選択のドラッグ終了
+        function handleCourseDragEnd(e) {
             isDragging = false;
             draggedCourse = null;
             draggedDuration = null;
@@ -1312,7 +1312,7 @@
             // 視覚的フィードバックをリセット
             e.target.style.opacity = '1';
             document.querySelectorAll('.schedule-cell').forEach(cell => {
-                cell.classList.remove('drag-over');
+                cell.classList.remove('course-drag-over');
             });
             
             console.log('🎯 Course drag ended');
@@ -9367,21 +9367,21 @@ function showMessage(message, type = 'info') {
   cursor: grabbing;
 }
 
-.schedule-cell.drag-over {
-  background-color: #e3f2fd !important;
-  border: 2px dashed #2196f3 !important;
+.schedule-cell.course-drag-over {
+  background-color: #e8f5e8 !important;
+  border: 2px solid #28a745 !important;
   transform: scale(1.02);
   transition: all 0.2s ease;
   position: relative;
 }
 
-.schedule-cell.drag-over::before {
-  content: "📅 ここにドロップ";
+.schedule-cell.course-drag-over::before {
+  content: "✓ ここにドロップ";
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(33, 150, 243, 0.9);
+  background: rgba(40, 167, 69, 0.9);
   color: white;
   padding: 4px 8px;
   border-radius: 4px;
