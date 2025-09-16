@@ -1241,7 +1241,7 @@
         function initializeDragAndDrop() {
             // コース選択オプションのイベントリスナー
             document.querySelectorAll('.course-option, .break-option').forEach(option => {
-                option.addEventListener('dragstart', handleDragStart);
+                option.addEventListener('dragstart', handleCourseDragStart);
                 option.draggable = true;
             });
 
@@ -1251,8 +1251,8 @@
             document.addEventListener('dragend', handleDragEnd);
         }
 
-        // ドラッグ開始
-        function handleDragStart(e) {
+        // コース選択のドラッグ開始
+        function handleCourseDragStart(e) {
             draggedCourse = e.target.dataset.course;
             draggedDuration = parseInt(e.target.dataset.duration);
             isDragging = true;
@@ -1263,7 +1263,7 @@
             // ドラッグ中の視覚的フィードバック
             e.target.style.opacity = '0.5';
             
-            console.log('🎯 Drag started:', { course: draggedCourse, duration: draggedDuration });
+            console.log('🎯 Course drag started:', { course: draggedCourse, duration: draggedDuration });
         }
 
         // ドラッグオーバー
@@ -1273,9 +1273,9 @@
             e.preventDefault();
             e.dataTransfer.dropEffect = 'copy';
             
-            const timeSlot = e.target.closest('.time-slot');
-            if (timeSlot && !timeSlot.classList.contains('occupied')) {
-                timeSlot.classList.add('drag-over');
+            const scheduleCell = e.target.closest('.schedule-cell');
+            if (scheduleCell && !scheduleCell.classList.contains('occupied')) {
+                scheduleCell.classList.add('drag-over');
             }
         }
 
@@ -1285,18 +1285,18 @@
             
             if (!isDragging || !draggedCourse || !draggedDuration) return;
             
-            const timeSlot = e.target.closest('.time-slot');
-            if (!timeSlot) return;
+            const scheduleCell = e.target.closest('.schedule-cell');
+            if (!scheduleCell) return;
             
             // ドラッグオーバークラスを削除
-            document.querySelectorAll('.time-slot').forEach(slot => {
-                slot.classList.remove('drag-over');
+            document.querySelectorAll('.schedule-cell').forEach(cell => {
+                cell.classList.remove('drag-over');
             });
             
-            const date = timeSlot.dataset.date;
-            const time = timeSlot.dataset.time;
+            const date = scheduleCell.dataset.date;
+            const time = scheduleCell.dataset.time;
             
-            if (date && time && !timeSlot.classList.contains('occupied')) {
+            if (date && time && !scheduleCell.classList.contains('occupied')) {
                 createReservationFromDrag(date, time, draggedCourse, draggedDuration);
             }
             
@@ -1311,11 +1311,11 @@
             
             // 視覚的フィードバックをリセット
             e.target.style.opacity = '1';
-            document.querySelectorAll('.time-slot').forEach(slot => {
-                slot.classList.remove('drag-over');
+            document.querySelectorAll('.schedule-cell').forEach(cell => {
+                cell.classList.remove('drag-over');
             });
             
-            console.log('🎯 Drag ended');
+            console.log('🎯 Course drag ended');
         }
 
         // ドラッグから予約を作成
@@ -9367,14 +9367,15 @@ function showMessage(message, type = 'info') {
   cursor: grabbing;
 }
 
-.time-slot.drag-over {
+.schedule-cell.drag-over {
   background-color: #e3f2fd !important;
   border: 2px dashed #2196f3 !important;
   transform: scale(1.02);
   transition: all 0.2s ease;
+  position: relative;
 }
 
-.time-slot.drag-over::before {
+.schedule-cell.drag-over::before {
   content: "📅 ここにドロップ";
   position: absolute;
   top: 50%;
