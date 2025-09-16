@@ -2420,6 +2420,12 @@
             
             updateWeekHeader();
             generateTimeSlots();
+            
+            // カレンダー更新後に新規予約のドロップリスナーを設定
+            setTimeout(() => {
+                setupNewReservationDropListeners();
+                setupCalendarDropListener();
+            }, 100);
         }
 
         // 週のヘッダーを更新
@@ -7971,8 +7977,18 @@ function showMessage(message, type = 'info') {
             
             // 新規予約のドロップかどうかをチェック
             if (reservationId === 'new-course-block') {
-                console.log('🎯 New reservation drop detected, redirecting to new reservation handler');
-                handleNewReservationDrop.call(cell, e);
+                console.log('🎯 New reservation drop detected in existing handler, redirecting to new reservation handler');
+                // セル内のタイムスロットを見つけて新規予約ハンドラーを呼び出す
+                const timeSlot = cell.querySelector('.time-slot');
+                if (timeSlot) {
+                    // 新しいイベントオブジェクトを作成して新規予約ハンドラーを呼び出す
+                    const newEvent = {
+                        ...e,
+                        currentTarget: timeSlot,
+                        target: timeSlot
+                    };
+                    handleNewReservationDrop.call(timeSlot, newEvent);
+                }
                 return;
             }
             
@@ -9359,6 +9375,9 @@ let currentReservationData = null;
 function openReservationPanel() {
   document.getElementById('reservationPanel').classList.add('open');
   loadUsersForQuickReservation();
+  
+  // パネルを開いたときにドロップリスナーを設定
+  setTimeout(setupNewReservationDropListeners, 100);
 }
 
 function closeReservationPanel() {
@@ -9417,6 +9436,41 @@ function setupNewReservationDropListeners() {
       });
     }
   });
+}
+
+// カレンダー全体のドロップリスナーを設定
+function setupCalendarDropListener() {
+  const calendarContainer = document.querySelector('.schedule-body') || document.querySelector('.calendar-container');
+  if (calendarContainer) {
+    console.log('Setting up calendar drop listener');
+    
+    // 既存のリスナーを削除
+    calendarContainer.removeEventListener('drop', handleCalendarDrop);
+    
+    // 新しいリスナーを追加
+    calendarContainer.addEventListener('drop', handleCalendarDrop, { passive: false });
+  }
+}
+
+// カレンダー全体のドロップハンドラー
+function handleCalendarDrop(e) {
+  console.log('🎯 Calendar drop event triggered');
+  const reservationId = e.dataTransfer.getData('text/plain');
+  
+  if (reservationId === 'new-course-block') {
+    console.log('🎯 New course block dropped on calendar');
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // 最も近いタイムスロットを見つける
+    const timeSlot = e.target.closest('.time-slot');
+    if (timeSlot) {
+      console.log('🎯 Found time slot, calling new reservation handler');
+      handleNewReservationDrop.call(timeSlot, e);
+    } else {
+      console.log('❌ No time slot found in calendar drop');
+    }
+  }
 }
 
 // コースブロックのドラッグ開始
