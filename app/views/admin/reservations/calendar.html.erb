@@ -9453,6 +9453,23 @@ function showMessage(message, type = 'info') {
   position: relative;
 }
 
+/* 予約変更ドラッグと同じスタイル */
+.schedule-cell.drag-over {
+  background-color: #e8f5e8 !important;
+  border: 2px solid #28a745 !important;
+  transform: scale(1.02);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.schedule-cell.drag-over-invalid {
+  background-color: #f8d7da !important;
+  border: 2px solid #dc3545 !important;
+  transform: scale(1.02);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
 
 /* ドロップダウンメニューのスタイル改善 */
 .dropdown-menu {
