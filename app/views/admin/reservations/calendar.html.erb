@@ -2888,6 +2888,9 @@
             if (searchInput) {
               searchInput.focus();
               
+              // 既存のイベントリスナーを削除
+              searchInput.removeEventListener('input', handleUserSearchForReservationForm);
+              
               // イベントリスナーを設定
               searchInput.addEventListener('input', handleUserSearchForReservationForm);
               
@@ -2920,15 +2923,19 @@
 
         function handleUserSearchForReservationForm(e) {
           const query = e.target.value.trim();
+          console.log('🔍 Search input changed:', query);
           
           if (query.length >= 2) {
+            console.log('🔍 Searching for users:', query);
             searchUsersForReservationForm(query);
           } else {
+            console.log('🔍 Query too short, hiding results');
             hideUserSearchResultsForReservationForm();
           }
         }
 
         function searchUsersForReservationForm(query) {
+          console.log('🔍 Fetching users for query:', query);
           fetch(`/admin/users/search?q=${encodeURIComponent(query)}`, {
             method: 'GET',
             headers: {
@@ -2936,8 +2943,12 @@
               'X-Requested-With': 'XMLHttpRequest'
             }
           })
-          .then(response => response.json())
+          .then(response => {
+            console.log('🔍 Search response status:', response.status);
+            return response.json();
+          })
           .then(data => {
+            console.log('🔍 Search response data:', data);
             if (data.success && data.users) {
               displayUserSearchResultsForReservationForm(data.users);
             } else {
@@ -2951,15 +2962,21 @@
         }
 
         function displayUserSearchResultsForReservationForm(users) {
+          console.log('🔍 Displaying search results:', users);
           const searchResults = document.getElementById('userSearchResultsForReservationForm');
-          if (!searchResults) return;
+          if (!searchResults) {
+            console.error('❌ Search results container not found');
+            return;
+          }
           
           if (users.length === 0) {
+            console.log('🔍 No users found, showing no results message');
             searchResults.innerHTML = '<div class="text-muted">該当する顧客が見つかりません</div>';
             searchResults.style.display = 'block';
             return;
           }
           
+          console.log('🔍 Rendering', users.length, 'users');
           const usersHtml = users.map(user => `
             <div class="user-search-result-item" onclick="selectUserForReservationForm(${user.id}, '${user.name}', '${user.phone_number}', '${user.email}')">
               <div class="user-name">${user.name}</div>
@@ -2973,6 +2990,7 @@
           
           searchResults.innerHTML = usersHtml;
           searchResults.style.display = 'block';
+          console.log('🔍 Search results displayed');
         }
 
         function hideUserSearchResultsForReservationForm() {
