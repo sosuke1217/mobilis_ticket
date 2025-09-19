@@ -2717,6 +2717,12 @@
 
         function createNewUserForDragDrop() {
           const form = document.getElementById('createUserFormForDragDrop');
+          if (!form) {
+            console.error('❌ Form element not found: createUserFormForDragDrop');
+            showMessage('フォームが見つかりません。ページを再読み込みしてください。', 'error');
+            return;
+          }
+          
           const formData = new FormData(form);
           
           // バリデーション
@@ -3060,6 +3066,12 @@
 
         function createNewUserForReservationForm() {
           const form = document.getElementById('createUserFormForReservationForm');
+          if (!form) {
+            console.error('❌ Form element not found: createUserFormForReservationForm');
+            showMessage('フォームが見つかりません。ページを再読み込みしてください。', 'error');
+            return;
+          }
+          
           const formData = new FormData(form);
           
           // バリデーション
