@@ -2949,9 +2949,11 @@
           })
           .then(data => {
             console.log('🔍 Search response data:', data);
-            if (data.success && data.users) {
+            if (data.users) {
+              console.log('🔍 Calling displayUserSearchResultsForReservationForm with:', data.users);
               displayUserSearchResultsForReservationForm(data.users);
             } else {
+              console.log('🔍 No users, hiding results');
               hideUserSearchResultsForReservationForm();
             }
           })
