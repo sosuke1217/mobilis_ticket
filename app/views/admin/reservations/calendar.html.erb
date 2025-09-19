@@ -4810,7 +4810,6 @@
                 // ドロップゾーンを再設定
                 setTimeout(() => {
                   setupNewReservationDropListeners();
-                  setupScheduleCellDropListeners();
                 }, 100);
             }).catch(error => {
                 console.error('❌ Error loading data for previous week:', error);
@@ -4837,7 +4836,6 @@
                 // ドロップゾーンを再設定
                 setTimeout(() => {
                   setupNewReservationDropListeners();
-                  setupScheduleCellDropListeners();
                 }, 100);
             }).catch(error => {
                 console.error('❌ Error loading data for next week:', error);
@@ -10011,7 +10009,6 @@ function showMessage(message, type = 'info') {
                 // ドロップゾーンを再設定
                 setTimeout(() => {
                   setupNewReservationDropListeners();
-                  setupScheduleCellDropListeners();
                 }, 100);
                 
                 console.log('✅ Calendar refreshed successfully');
