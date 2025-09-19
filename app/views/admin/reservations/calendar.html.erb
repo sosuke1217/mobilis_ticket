@@ -3076,6 +3076,13 @@
               // フォームを非表示
               toggleNewUserFormForReservationForm();
               
+              // 予約確定ボタンを有効化
+              const confirmBtn = document.getElementById('confirmReservationBtn');
+              if (confirmBtn) {
+                confirmBtn.disabled = false;
+                console.log('✅ Reservation confirm button enabled after user creation');
+              }
+              
               showMessage(`「${data.user.name}」を作成して選択しました`, 'success');
             } else {
               showMessage(`ユーザー作成に失敗しました: ${data.errors ? data.errors.join(', ') : '不明なエラー'}`, 'error');
@@ -3160,6 +3167,13 @@
           if (searchInput) {
             searchInput.value = '';
           }
+          
+          // 予約確定ボタンを有効化
+          const confirmBtn = document.getElementById('confirmReservationBtn');
+          if (confirmBtn) {
+            confirmBtn.disabled = false;
+            console.log('✅ Reservation confirm button enabled');
+          }
         }
 
         function displaySelectedUserForReservationForm(user) {
@@ -3192,6 +3206,13 @@
           const searchInput = document.getElementById('userSearchInputForReservationForm');
           if (searchInput) {
             searchInput.value = '';
+          }
+          
+          // 予約確定ボタンを無効化
+          const confirmBtn = document.getElementById('confirmReservationBtn');
+          if (confirmBtn) {
+            confirmBtn.disabled = true;
+            console.log('❌ Reservation confirm button disabled');
           }
         }
         
@@ -10913,6 +10934,13 @@ function showReservationDetailsForm() {
         </div>
       `;
       userInfo.style.display = 'block';
+    }
+    
+    // 予約確定ボタンを有効化
+    const confirmBtn = document.getElementById('confirmReservationBtn');
+    if (confirmBtn) {
+      confirmBtn.disabled = false;
+      console.log('✅ Reservation confirm button enabled (pre-selected user)');
     }
   } else {
     const userInfo = document.getElementById('selectedUserForReservation');
