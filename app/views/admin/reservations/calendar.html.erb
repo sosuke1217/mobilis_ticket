@@ -2740,8 +2740,26 @@
               }
             })
           })
-          .then(response => response.json())
+          .then(response => {
+            console.log('📡 User creation response status:', response.status);
+            console.log('📡 User creation response headers:', response.headers.get('content-type'));
+            
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+              return response.json();
+            } else {
+              return response.text().then(text => {
+                console.error('❌ Non-JSON response:', text);
+                throw new Error('サーバーから無効なレスポンスが返されました');
+              });
+            }
+          })
           .then(data => {
+            console.log('✅ User creation response:', data);
             if (data.success) {
               // 新規作成されたユーザーを選択
               window.selectedUserForDragDrop = {
@@ -2764,7 +2782,7 @@
           })
           .catch(error => {
             console.error('❌ Error creating user:', error);
-            showMessage('ユーザー作成中にエラーが発生しました', 'error');
+            showMessage('ユーザー作成中にエラーが発生しました: ' + error.message, 'error');
           });
         }
 
@@ -3059,8 +3077,26 @@
               }
             })
           })
-          .then(response => response.json())
+          .then(response => {
+            console.log('📡 User creation response status:', response.status);
+            console.log('📡 User creation response headers:', response.headers.get('content-type'));
+            
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+              return response.json();
+            } else {
+              return response.text().then(text => {
+                console.error('❌ Non-JSON response:', text);
+                throw new Error('サーバーから無効なレスポンスが返されました');
+              });
+            }
+          })
           .then(data => {
+            console.log('✅ User creation response:', data);
             if (data.success) {
               // 新規作成されたユーザーを選択
               window.selectedUserForReservationForm = {
@@ -3090,7 +3126,7 @@
           })
           .catch(error => {
             console.error('❌ Error creating user:', error);
-            showMessage('ユーザー作成中にエラーが発生しました', 'error');
+            showMessage('ユーザー作成中にエラーが発生しました: ' + error.message, 'error');
           });
         }
 
