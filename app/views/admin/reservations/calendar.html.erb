@@ -2868,28 +2868,117 @@
         }
         
         // 予約詳細フォーム用のユーザー選択機能
-        function openUserSelectionModalForReservationForm() {
-          const searchResults = document.getElementById('userSearchResultsForReservationForm');
+        function toggleUserSearchForReservationForm() {
+          const userSearchSection = document.getElementById('userSearchSectionForReservationForm');
           const recentSection = document.getElementById('recentUsersSectionForReservationForm');
-          
-          // 検索結果をクリア
-          if (searchResults) {
-            searchResults.innerHTML = '';
-            searchResults.style.display = 'none';
-          }
-          
-          // 最近の顧客を読み込み
-          loadRecentUsersForReservationForm();
-          
-          // 最近の顧客セクションを表示
-          if (recentSection) {
-            recentSection.style.display = 'block';
-          }
-          
-          // 新規ユーザーフォームを非表示
           const newUserForm = document.getElementById('newUserFormForReservationForm');
-          if (newUserForm) {
-            newUserForm.style.display = 'none';
+          const searchResults = document.getElementById('userSearchResultsForReservationForm');
+          
+          if (userSearchSection.style.display === 'none') {
+            // ユーザー検索セクションを表示
+            userSearchSection.style.display = 'block';
+            
+            // 他のセクションを非表示
+            if (recentSection) recentSection.style.display = 'none';
+            if (newUserForm) newUserForm.style.display = 'none';
+            if (searchResults) searchResults.style.display = 'none';
+            
+            // 検索入力フィールドにフォーカス
+            const searchInput = document.getElementById('userSearchInputForReservationForm');
+            if (searchInput) {
+              searchInput.focus();
+              
+              // イベントリスナーを設定
+              searchInput.addEventListener('input', handleUserSearchForReservationForm);
+              
+              // フォーカスアウト時に結果を隠す
+              searchInput.addEventListener('blur', function() {
+                setTimeout(() => {
+                  hideUserSearchResultsForReservationForm();
+                }, 200);
+              });
+              
+              // フォーカス時に結果を表示（入力がある場合）
+              searchInput.addEventListener('focus', function() {
+                const query = this.value.trim();
+                if (query.length >= 2) {
+                  searchUsersForReservationForm(query);
+                }
+              });
+            }
+          } else {
+            // ユーザー検索セクションを非表示
+            userSearchSection.style.display = 'none';
+            
+            // 検索結果をクリア
+            if (searchResults) {
+              searchResults.innerHTML = '';
+              searchResults.style.display = 'none';
+            }
+          }
+        }
+
+        function handleUserSearchForReservationForm(e) {
+          const query = e.target.value.trim();
+          
+          if (query.length >= 2) {
+            searchUsersForReservationForm(query);
+          } else {
+            hideUserSearchResultsForReservationForm();
+          }
+        }
+
+        function searchUsersForReservationForm(query) {
+          fetch(`/admin/users/search?q=${encodeURIComponent(query)}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            }
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success && data.users) {
+              displayUserSearchResultsForReservationForm(data.users);
+            } else {
+              hideUserSearchResultsForReservationForm();
+            }
+          })
+          .catch(error => {
+            console.error('❌ Error searching users:', error);
+            hideUserSearchResultsForReservationForm();
+          });
+        }
+
+        function displayUserSearchResultsForReservationForm(users) {
+          const searchResults = document.getElementById('userSearchResultsForReservationForm');
+          if (!searchResults) return;
+          
+          if (users.length === 0) {
+            searchResults.innerHTML = '<div class="text-muted">該当する顧客が見つかりません</div>';
+            searchResults.style.display = 'block';
+            return;
+          }
+          
+          const usersHtml = users.map(user => `
+            <div class="user-search-result-item" onclick="selectUserForReservationForm(${user.id}, '${user.name}', '${user.phone_number}', '${user.email}')">
+              <div class="user-name">${user.name}</div>
+              <div class="user-details">
+                📞 ${user.phone_number || '未設定'} | 📧 ${user.email || '未設定'}
+                ${user.active_tickets > 0 ? `<span class="user-tickets"> | 🎫 残${user.active_tickets}枚</span>` : ''}
+                ${user.last_visit !== 'なし' ? ` | 📅 最終来店: ${user.last_visit}` : ''}
+              </div>
+            </div>
+          `).join('');
+          
+          searchResults.innerHTML = usersHtml;
+          searchResults.style.display = 'block';
+        }
+
+        function hideUserSearchResultsForReservationForm() {
+          const searchResults = document.getElementById('userSearchResultsForReservationForm');
+          if (searchResults) {
+            searchResults.style.display = 'none';
           }
         }
 
@@ -2897,6 +2986,7 @@
           const newUserForm = document.getElementById('newUserFormForReservationForm');
           const recentSection = document.getElementById('recentUsersSectionForReservationForm');
           const searchResults = document.getElementById('userSearchResultsForReservationForm');
+          const userSearchSection = document.getElementById('userSearchSectionForReservationForm');
           
           if (newUserForm.style.display === 'none') {
             // 新規ユーザーフォームを表示
@@ -2905,6 +2995,7 @@
             // 他のセクションを非表示
             if (recentSection) recentSection.style.display = 'none';
             if (searchResults) searchResults.style.display = 'none';
+            if (userSearchSection) userSearchSection.style.display = 'none';
             
             // フォームをクリア
             document.getElementById('createUserFormForReservationForm').reset();
@@ -2914,10 +3005,6 @@
           } else {
             // 新規ユーザーフォームを非表示
             newUserForm.style.display = 'none';
-            
-            // 最近の顧客を再表示
-            loadRecentUsersForReservationForm();
-            if (recentSection) recentSection.style.display = 'block';
           }
         }
 
@@ -3043,9 +3130,16 @@
           // 選択されたユーザーを表示
           displaySelectedUserForReservationForm(window.selectedUserForReservationForm);
           
-          // 検索結果と最近の顧客を非表示
+          // 検索結果、最近の顧客、検索セクションを非表示
           document.getElementById('userSearchResultsForReservationForm').style.display = 'none';
           document.getElementById('recentUsersSectionForReservationForm').style.display = 'none';
+          document.getElementById('userSearchSectionForReservationForm').style.display = 'none';
+          
+          // 検索入力フィールドをクリア
+          const searchInput = document.getElementById('userSearchInputForReservationForm');
+          if (searchInput) {
+            searchInput.value = '';
+          }
         }
 
         function displaySelectedUserForReservationForm(user) {
@@ -3074,9 +3168,11 @@
             selectedUserDisplay.style.display = 'none';
           }
           
-          // 最近の顧客を再表示
-          loadRecentUsersForReservationForm();
-          document.getElementById('recentUsersSectionForReservationForm').style.display = 'block';
+          // 検索入力フィールドをクリア
+          const searchInput = document.getElementById('userSearchInputForReservationForm');
+          if (searchInput) {
+            searchInput.value = '';
+          }
         }
         
         // グローバル関数として公開
@@ -3089,7 +3185,7 @@
         window.createNewUserForDragDrop = createNewUserForDragDrop;
         window.selectUserForDragDrop = selectUserForDragDrop;
         window.clearSelectedUserForDragDrop = clearSelectedUserForDragDrop;
-        window.openUserSelectionModalForReservationForm = openUserSelectionModalForReservationForm;
+        window.toggleUserSearchForReservationForm = toggleUserSearchForReservationForm;
         window.toggleNewUserFormForReservationForm = toggleNewUserFormForReservationForm;
         window.createNewUserForReservationForm = createNewUserForReservationForm;
         window.selectUserForReservationForm = selectUserForReservationForm;
@@ -11346,12 +11442,21 @@ function createReservationFromDrop(reservationData) {
           </label>
           
           <div class="d-flex gap-2 mb-2">
-            <button type="button" class="btn btn-outline-primary btn-sm" onclick="openUserSelectionModalForReservationForm()">
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="toggleUserSearchForReservationForm()">
               <i class="fas fa-search me-1"></i>既存のお客様を選択
             </button>
             <button type="button" class="btn btn-outline-success btn-sm" onclick="toggleNewUserFormForReservationForm()">
               <i class="fas fa-plus me-1"></i>新規お客様追加
             </button>
+          </div>
+          
+          <!-- ユーザー検索セクション -->
+          <div id="userSearchSectionForReservationForm" class="user-search-section" style="display: none;">
+            <div class="form-group mb-3">
+              <label for="userSearchInputForReservationForm" class="form-label">お客様を検索してください</label>
+              <input type="text" id="userSearchInputForReservationForm" class="form-control" placeholder="お客様名、電話番号、メールアドレスで検索..." autocomplete="off">
+              <small class="form-text text-muted">2文字以上入力すると検索結果が表示されます</small>
+            </div>
           </div>
           
           <!-- 選択されたユーザー表示 -->
