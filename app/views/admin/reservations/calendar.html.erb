@@ -4808,7 +4808,10 @@
                 updateCancellationDisplay(); // キャンセル履歴を更新
                 
                 // ドロップゾーンを再設定
-                setTimeout(attachDropListeners, 100);
+                setTimeout(() => {
+                  setupNewReservationDropListeners();
+                  setupScheduleCellDropListeners();
+                }, 100);
             }).catch(error => {
                 console.error('❌ Error loading data for previous week:', error);
             });
@@ -4832,7 +4835,10 @@
                 updateCancellationDisplay(); // キャンセル履歴を更新
                 
                 // ドロップゾーンを再設定
-                setTimeout(attachDropListeners, 100);
+                setTimeout(() => {
+                  setupNewReservationDropListeners();
+                  setupScheduleCellDropListeners();
+                }, 100);
             }).catch(error => {
                 console.error('❌ Error loading data for next week:', error);
             });
@@ -10003,7 +10009,10 @@ function showMessage(message, type = 'info') {
                 renderWeekView();
                 
                 // ドロップゾーンを再設定
-                setTimeout(attachDropListeners, 100);
+                setTimeout(() => {
+                  setupNewReservationDropListeners();
+                  setupScheduleCellDropListeners();
+                }, 100);
                 
                 console.log('✅ Calendar refreshed successfully');
             }).catch(error => {
@@ -10761,6 +10770,8 @@ document.addEventListener('DOMContentLoaded', function() {
         price: parseInt(this.dataset.price)
       };
       
+      console.log('🎯 draggedCourseData set to:', draggedCourseData);
+      
       this.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'copy';
       e.dataTransfer.setData('text/plain', 'new-course-block');
@@ -10777,6 +10788,12 @@ document.addEventListener('DOMContentLoaded', function() {
       document.querySelectorAll('.time-slot.drop-zone').forEach(slot => {
         slot.classList.remove('drop-zone');
       });
+      
+      document.querySelectorAll('.schedule-cell.drop-zone').forEach(cell => {
+        cell.classList.remove('drop-zone');
+      });
+      
+      // データはドロップ成功時にのみクリアする（handleNewReservationDropで処理）
     });
   });
 });
@@ -10800,6 +10817,7 @@ function handleNewReservationDrop(e) {
   
   if (!draggedCourseData) {
     console.log('❌ No dragged course data found');
+    console.log('❌ draggedCourseData is:', draggedCourseData);
     return;
   }
   
