@@ -2867,6 +2867,218 @@
           document.getElementById('recentUsersSectionForDragDrop').style.display = 'block';
         }
         
+        // 予約詳細フォーム用のユーザー選択機能
+        function openUserSelectionModalForReservationForm() {
+          const searchResults = document.getElementById('userSearchResultsForReservationForm');
+          const recentSection = document.getElementById('recentUsersSectionForReservationForm');
+          
+          // 検索結果をクリア
+          if (searchResults) {
+            searchResults.innerHTML = '';
+            searchResults.style.display = 'none';
+          }
+          
+          // 最近の顧客を読み込み
+          loadRecentUsersForReservationForm();
+          
+          // 最近の顧客セクションを表示
+          if (recentSection) {
+            recentSection.style.display = 'block';
+          }
+          
+          // 新規ユーザーフォームを非表示
+          const newUserForm = document.getElementById('newUserFormForReservationForm');
+          if (newUserForm) {
+            newUserForm.style.display = 'none';
+          }
+        }
+
+        function toggleNewUserFormForReservationForm() {
+          const newUserForm = document.getElementById('newUserFormForReservationForm');
+          const recentSection = document.getElementById('recentUsersSectionForReservationForm');
+          const searchResults = document.getElementById('userSearchResultsForReservationForm');
+          
+          if (newUserForm.style.display === 'none') {
+            // 新規ユーザーフォームを表示
+            newUserForm.style.display = 'block';
+            
+            // 他のセクションを非表示
+            if (recentSection) recentSection.style.display = 'none';
+            if (searchResults) searchResults.style.display = 'none';
+            
+            // フォームをクリア
+            document.getElementById('createUserFormForReservationForm').reset();
+            
+            // 名前フィールドにフォーカス
+            document.getElementById('newUserNameForReservationForm').focus();
+          } else {
+            // 新規ユーザーフォームを非表示
+            newUserForm.style.display = 'none';
+            
+            // 最近の顧客を再表示
+            loadRecentUsersForReservationForm();
+            if (recentSection) recentSection.style.display = 'block';
+          }
+        }
+
+        function createNewUserForReservationForm() {
+          const form = document.getElementById('createUserFormForReservationForm');
+          const formData = new FormData(form);
+          
+          // バリデーション
+          const name = formData.get('name');
+          if (!name || name.trim() === '') {
+            showMessage('お名前を入力してください。', 'error');
+            return;
+          }
+          
+          fetch('/admin/users', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest',
+              'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+              user: {
+                name: formData.get('name'),
+                kana: formData.get('kana'),
+                phone_number: formData.get('phone_number'),
+                email: formData.get('email'),
+                birth_date: formData.get('birth_date'),
+                postal_code: formData.get('postal_code'),
+                address: formData.get('address'),
+                admin_memo: formData.get('admin_memo')
+              }
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              // 新規作成されたユーザーを選択
+              window.selectedUserForReservationForm = {
+                id: data.user.id,
+                name: data.user.name,
+                phone: data.user.phone_number,
+                email: data.user.email
+              };
+              
+              // 選択されたユーザーを表示
+              displaySelectedUserForReservationForm(window.selectedUserForReservationForm);
+              
+              // フォームを非表示
+              toggleNewUserFormForReservationForm();
+              
+              showMessage(`「${data.user.name}」を作成して選択しました`, 'success');
+            } else {
+              showMessage(`ユーザー作成に失敗しました: ${data.errors ? data.errors.join(', ') : '不明なエラー'}`, 'error');
+            }
+          })
+          .catch(error => {
+            console.error('❌ Error creating user:', error);
+            showMessage('ユーザー作成中にエラーが発生しました', 'error');
+          });
+        }
+
+        function loadRecentUsersForReservationForm() {
+          fetch('/admin/users/recent', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            }
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success && data.users) {
+              displayRecentUsersForReservationForm(data.users);
+            } else {
+              const recentUsersList = document.getElementById('recentUsersListForReservationForm');
+              if (recentUsersList) {
+                recentUsersList.innerHTML = '<div class="text-muted">最近の顧客が見つかりません</div>';
+              }
+            }
+          })
+          .catch(error => {
+            console.error('❌ Error loading recent users:', error);
+            const recentUsersList = document.getElementById('recentUsersListForReservationForm');
+            if (recentUsersList) {
+              recentUsersList.innerHTML = '<div class="text-muted">最近の顧客を読み込めませんでした</div>';
+            }
+          });
+        }
+
+        function displayRecentUsersForReservationForm(users) {
+          const recentUsersList = document.getElementById('recentUsersListForReservationForm');
+          if (!recentUsersList) return;
+          
+          if (users.length === 0) {
+            recentUsersList.innerHTML = '<div class="text-muted">最近の顧客が見つかりません</div>';
+            return;
+          }
+          
+          const usersHtml = users.map(user => `
+            <div class="recent-user-item" onclick="selectUserForReservationForm(${user.id}, '${user.name}', '${user.phone_number}', '${user.email}')">
+              <div class="user-name">${user.name}</div>
+              <div class="user-details">
+                📞 ${user.phone_number || '未設定'} | 📧 ${user.email || '未設定'}
+                ${user.active_tickets > 0 ? `<span class="user-tickets"> | 🎫 残${user.active_tickets}枚</span>` : ''}
+                ${user.last_visit !== 'なし' ? ` | 📅 最終来店: ${user.last_visit}` : ''}
+              </div>
+            </div>
+          `).join('');
+          
+          recentUsersList.innerHTML = usersHtml;
+        }
+
+        function selectUserForReservationForm(userId, name, phone, email) {
+          // 選択されたユーザーを保存
+          window.selectedUserForReservationForm = {
+            id: userId,
+            name: name,
+            phone: phone,
+            email: email
+          };
+          
+          // 選択されたユーザーを表示
+          displaySelectedUserForReservationForm(window.selectedUserForReservationForm);
+          
+          // 検索結果と最近の顧客を非表示
+          document.getElementById('userSearchResultsForReservationForm').style.display = 'none';
+          document.getElementById('recentUsersSectionForReservationForm').style.display = 'none';
+        }
+
+        function displaySelectedUserForReservationForm(user) {
+          const selectedUserDisplay = document.getElementById('selectedUserDisplayForReservationForm');
+          const selectedUserInfo = document.getElementById('selectedUserInfoForReservationForm');
+          
+          if (!selectedUserDisplay || !selectedUserInfo) return;
+          
+          selectedUserInfo.innerHTML = `
+            <div class="selected-user-card">
+              <div class="user-name">${user.name}</div>
+              <div class="user-details">
+                📞 ${user.phone || '未設定'} | 📧 ${user.email || '未設定'}
+              </div>
+            </div>
+          `;
+          
+          selectedUserDisplay.style.display = 'block';
+        }
+
+        function clearSelectedUserForReservationForm() {
+          window.selectedUserForReservationForm = null;
+          
+          const selectedUserDisplay = document.getElementById('selectedUserDisplayForReservationForm');
+          if (selectedUserDisplay) {
+            selectedUserDisplay.style.display = 'none';
+          }
+          
+          // 最近の顧客を再表示
+          loadRecentUsersForReservationForm();
+          document.getElementById('recentUsersSectionForReservationForm').style.display = 'block';
+        }
+        
         // グローバル関数として公開
         window.closeUserSelectionModal = closeUserSelectionModal;
         window.toggleNewUserForm = toggleNewUserForm;
@@ -2877,6 +3089,11 @@
         window.createNewUserForDragDrop = createNewUserForDragDrop;
         window.selectUserForDragDrop = selectUserForDragDrop;
         window.clearSelectedUserForDragDrop = clearSelectedUserForDragDrop;
+        window.openUserSelectionModalForReservationForm = openUserSelectionModalForReservationForm;
+        window.toggleNewUserFormForReservationForm = toggleNewUserFormForReservationForm;
+        window.createNewUserForReservationForm = createNewUserForReservationForm;
+        window.selectUserForReservationForm = selectUserForReservationForm;
+        window.clearSelectedUserForReservationForm = clearSelectedUserForReservationForm;
 
         // ユーザー選択を保存
         function saveUserSelection() {
@@ -10576,6 +10793,11 @@ function confirmReservation() {
     userName = window.selectedUserForDragDrop.name;
     userPhone = window.selectedUserForDragDrop.phone;
     userEmail = window.selectedUserForDragDrop.email;
+  } else if (window.selectedUserForReservationForm) {
+    userId = window.selectedUserForReservationForm.id;
+    userName = window.selectedUserForReservationForm.name;
+    userPhone = window.selectedUserForReservationForm.phone;
+    userEmail = window.selectedUserForReservationForm.email;
   } else {
     userId = document.getElementById('quickUser').value;
     if (!userId) {
@@ -11122,13 +11344,98 @@ function createReservationFromDrop(reservationData) {
           <label class="form-label fw-semibold">
             <i class="fas fa-user me-2"></i>お客様
           </label>
-          <div class="d-flex gap-2">
-            <select class="form-select" id="quickUser" name="user_id" required>
-              <option value="">既存ユーザーを選択</option>
-            </select>
-            <button type="button" class="btn btn-outline-primary btn-sm" onclick="openNewUserModal()" title="新規ユーザー追加">
-              <i class="fas fa-plus"></i>
+          
+          <div class="d-flex gap-2 mb-2">
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="openUserSelectionModalForReservationForm()">
+              <i class="fas fa-search me-1"></i>既存のお客様を選択
             </button>
+            <button type="button" class="btn btn-outline-success btn-sm" onclick="toggleNewUserFormForReservationForm()">
+              <i class="fas fa-plus me-1"></i>新規お客様追加
+            </button>
+          </div>
+          
+          <!-- 選択されたユーザー表示 -->
+          <div id="selectedUserDisplayForReservationForm" class="selected-user-display" style="display: none;">
+            <div id="selectedUserInfoForReservationForm" class="selected-user-info"></div>
+            <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="clearSelectedUserForReservationForm()">選択を解除</button>
+          </div>
+          
+          <!-- 検索結果 -->
+          <div class="user-search-results" id="userSearchResultsForReservationForm" style="display: none;">
+            <!-- 検索結果がここに表示されます -->
+          </div>
+          
+          <!-- 最近の顧客 -->
+          <div id="recentUsersSectionForReservationForm" class="recent-users-section" style="display: none;">
+            <h6>最近の顧客</h6>
+            <div id="recentUsersListForReservationForm" class="recent-users-list">
+              <!-- 最近の顧客がここに表示されます -->
+            </div>
+          </div>
+          
+          <!-- 新規ユーザー作成フォーム -->
+          <div id="newUserFormForReservationForm" class="new-user-form" style="display: none;">
+            <h6>新規お客様追加</h6>
+            <form id="createUserFormForReservationForm">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="newUserNameForReservationForm" class="form-label">お名前 <span class="text-danger">*</span></label>
+                    <input type="text" id="newUserNameForReservationForm" name="name" class="form-control" required>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="newUserKanaForReservationForm" class="form-label">フリガナ</label>
+                    <input type="text" id="newUserKanaForReservationForm" name="kana" class="form-control">
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="newUserPhoneForReservationForm" class="form-label">電話番号</label>
+                    <input type="tel" id="newUserPhoneForReservationForm" name="phone_number" class="form-control">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="newUserEmailForReservationForm" class="form-label">メールアドレス</label>
+                    <input type="email" id="newUserEmailForReservationForm" name="email" class="form-control">
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="newUserBirthDateForReservationForm" class="form-label">生年月日</label>
+                    <input type="date" id="newUserBirthDateForReservationForm" name="birth_date" class="form-control">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="newUserPostalCodeForReservationForm" class="form-label">郵便番号</label>
+                    <input type="text" id="newUserPostalCodeForReservationForm" name="postal_code" class="form-control">
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="newUserAddressForReservationForm" class="form-label">住所</label>
+                <textarea id="newUserAddressForReservationForm" name="address" class="form-control" rows="2"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="newUserMemoForReservationForm" class="form-label">メモ</label>
+                <textarea id="newUserMemoForReservationForm" name="admin_memo" class="form-control" rows="2"></textarea>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-success btn-sm" onclick="createNewUserForReservationForm()">
+                  <i class="fas fa-user-plus me-1"></i>お客様を作成
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="toggleNewUserFormForReservationForm()">
+                  キャンセル
+                </button>
+              </div>
+            </form>
           </div>
         </div>
         
