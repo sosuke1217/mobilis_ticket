@@ -2716,6 +2716,12 @@
         }
 
         function createNewUserForDragDrop() {
+          // フォームを表示してから要素を取得
+          const newUserForm = document.getElementById('newUserFormForDragDrop');
+          if (newUserForm && newUserForm.style.display === 'none') {
+            newUserForm.style.display = 'block';
+          }
+          
           const form = document.getElementById('createUserFormForDragDrop');
           if (!form) {
             console.error('❌ Form element not found: createUserFormForDragDrop');
@@ -3065,6 +3071,12 @@
         }
 
         function createNewUserForReservationForm() {
+          // フォームを表示してから要素を取得
+          const newUserForm = document.getElementById('newUserFormForReservationForm');
+          if (newUserForm && newUserForm.style.display === 'none') {
+            newUserForm.style.display = 'block';
+          }
+          
           const form = document.getElementById('createUserFormForReservationForm');
           if (!form) {
             console.error('❌ Form element not found: createUserFormForReservationForm');
