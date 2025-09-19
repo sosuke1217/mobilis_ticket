@@ -3100,7 +3100,15 @@
               console.log(`🔍 Form ${index}:`, f.id, f);
             });
             
-            const form = document.getElementById('createUserFormForReservationForm');
+            // フォーム要素を検索（IDで検索）
+            let form = document.getElementById('createUserFormForReservationForm');
+            
+            // IDで見つからない場合は、newUserForm内で検索
+            if (!form && newUserForm) {
+              form = newUserForm.querySelector('form');
+              console.log('🔍 Form found in newUserForm:', form);
+            }
+            
             if (!form) {
               console.error('❌ Form element not found: createUserFormForReservationForm');
               console.error('❌ Available elements:', {
