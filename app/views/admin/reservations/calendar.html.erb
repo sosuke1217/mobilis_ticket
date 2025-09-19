@@ -2936,7 +2936,7 @@
 
         function searchUsersForReservationForm(query) {
           console.log('🔍 Fetching users for query:', query);
-          fetch(`/admin/users/search?q=${encodeURIComponent(query)}`, {
+          fetch(`/admin/users/search?query=${encodeURIComponent(query)}`, {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
@@ -10415,6 +10415,40 @@ function showMessage(message, type = 'info') {
   background-color: #e8f5e8;
   border: 1px solid #c3e6c3;
   border-radius: 8px;
+}
+
+.user-search-result-item {
+  padding: 10px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: white;
+}
+
+.user-search-result-item:hover {
+  background-color: #f8f9fa;
+  border-color: #007bff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.1);
+}
+
+.user-search-result-item .user-name {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 4px;
+}
+
+.user-search-result-item .user-details {
+  font-size: 0.875rem;
+  color: #6c757d;
+  line-height: 1.4;
+}
+
+.user-search-result-item .user-tickets {
+  color: #28a745;
+  font-weight: 500;
 }
 
 .selected-user-display h5 {
