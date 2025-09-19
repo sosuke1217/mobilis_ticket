@@ -607,9 +607,70 @@
                         </div>
                     </div>
                     
+                    <!-- 新規ユーザー作成フォーム -->
+                    <div id="newUserForm" class="new-user-form" style="display: none;">
+                        <h5>新規お客様追加</h5>
+                        <form id="createUserForm">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="newUserName" class="form-label">お名前 <span class="text-danger">*</span></label>
+                                        <input type="text" id="newUserName" name="name" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="newUserKana" class="form-label">フリガナ</label>
+                                        <input type="text" id="newUserKana" name="kana" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="newUserPhone" class="form-label">電話番号</label>
+                                        <input type="tel" id="newUserPhone" name="phone_number" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="newUserEmail" class="form-label">メールアドレス</label>
+                                        <input type="email" id="newUserEmail" name="email" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="newUserBirthDate" class="form-label">生年月日</label>
+                                        <input type="date" id="newUserBirthDate" name="birth_date" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="newUserPostalCode" class="form-label">郵便番号</label>
+                                        <input type="text" id="newUserPostalCode" name="postal_code" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="newUserAddress" class="form-label">住所</label>
+                                <textarea id="newUserAddress" name="address" class="form-control" rows="2"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="newUserMemo" class="form-label">メモ</label>
+                                <textarea id="newUserMemo" name="admin_memo" class="form-control" rows="2"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    
                     <div class="modal-footer">
                         <button class="btn btn-secondary" onclick="closeUserSelectionModal()">キャンセル</button>
+                        <button class="btn btn-outline-primary" onclick="toggleNewUserForm()" id="toggleNewUserBtn">
+                            <i class="fas fa-plus"></i> 新規お客様追加
+                        </button>
                         <button class="btn btn-primary" onclick="return saveUserSelection()" id="saveUserBtn" disabled>選択</button>
+                        <button class="btn btn-success" onclick="createNewUser()" id="createUserBtn" style="display: none;">お客様を作成</button>
                     </div>
                 </div>
             </div>
@@ -2004,10 +2065,22 @@
                 console.error('❌ Search results container not found');
             }
             
-            // 保存ボタンを無効化
+            // 新規ユーザーフォームを非表示にリセット
+            const newUserForm = document.getElementById('newUserForm');
+            if (newUserForm) {
+                newUserForm.style.display = 'none';
+            }
+            
+            // ボタンの状態をリセット
+            const toggleBtn = document.getElementById('toggleNewUserBtn');
+            const createBtn = document.getElementById('createUserBtn');
             const saveBtn = document.getElementById('saveUserBtn');
+            
+            if (toggleBtn) toggleBtn.style.display = 'inline-block';
+            if (createBtn) createBtn.style.display = 'none';
             if (saveBtn) {
                 saveBtn.disabled = true;
+                saveBtn.style.display = 'inline-block';
             }
             
             // イベントリスナーを設定
@@ -2164,15 +2237,110 @@
             document.getElementById('userSelectionModal').style.display = 'none';
         }
 
-        function openNewUserModal() {
-          // 新規ユーザー作成モーダルを開く
-          const newUserModal = document.getElementById('newUserModal');
-          if (newUserModal) {
-            newUserModal.style.display = 'block';
+        function toggleNewUserForm() {
+          const newUserForm = document.getElementById('newUserForm');
+          const toggleBtn = document.getElementById('toggleNewUserBtn');
+          const createBtn = document.getElementById('createUserBtn');
+          const saveBtn = document.getElementById('saveUserBtn');
+          
+          if (newUserForm.style.display === 'none') {
+            // 新規ユーザーフォームを表示
+            newUserForm.style.display = 'block';
+            toggleBtn.style.display = 'none';
+            createBtn.style.display = 'inline-block';
+            saveBtn.style.display = 'none';
+            
+            // 他のセクションを非表示
+            document.getElementById('recentUsersSection').style.display = 'none';
+            document.getElementById('userSelectionSearchResults').style.display = 'none';
+            document.getElementById('selectedUserDisplay').style.display = 'none';
+            
+            // フォームをクリア
+            document.getElementById('createUserForm').reset();
+            
+            // 名前フィールドにフォーカス
+            document.getElementById('newUserName').focus();
           } else {
-            // モーダルが存在しない場合は、新規ユーザー作成ページに遷移
-            window.open('/admin/users/new', '_blank');
+            // 新規ユーザーフォームを非表示
+            newUserForm.style.display = 'none';
+            toggleBtn.style.display = 'inline-block';
+            createBtn.style.display = 'none';
+            saveBtn.style.display = 'inline-block';
+            
+            // 他のセクションを再表示
+            document.getElementById('recentUsersSection').style.display = 'block';
+            loadRecentUsers();
           }
+        }
+
+        function createNewUser() {
+          const form = document.getElementById('createUserForm');
+          const formData = new FormData(form);
+          
+          // バリデーション
+          const name = formData.get('name');
+          if (!name || name.trim() === '') {
+            showMessage('お名前を入力してください。', 'error');
+            return;
+          }
+          
+          // ローディング状態を表示
+          const createBtn = document.getElementById('createUserBtn');
+          const originalText = createBtn.innerHTML;
+          createBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 作成中...';
+          createBtn.disabled = true;
+          
+          fetch('/admin/users', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest',
+              'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+              user: {
+                name: formData.get('name'),
+                kana: formData.get('kana'),
+                phone_number: formData.get('phone_number'),
+                email: formData.get('email'),
+                birth_date: formData.get('birth_date'),
+                postal_code: formData.get('postal_code'),
+                address: formData.get('address'),
+                admin_memo: formData.get('admin_memo')
+              }
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              // 新規作成されたユーザーを選択
+              window.selectedUser = {
+                id: data.user.id,
+                name: data.user.name,
+                phone: data.user.phone_number,
+                email: data.user.email
+              };
+              
+              // 選択されたユーザーを表示
+              displaySelectedUser(window.selectedUser);
+              
+              // フォームを非表示
+              toggleNewUserForm();
+              
+              showMessage(`「${data.user.name}」を作成して選択しました`, 'success');
+            } else {
+              showMessage(`ユーザー作成に失敗しました: ${data.errors ? data.errors.join(', ') : '不明なエラー'}`, 'error');
+            }
+          })
+          .catch(error => {
+            console.error('❌ Error creating user:', error);
+            showMessage('ユーザー作成中にエラーが発生しました', 'error');
+          })
+          .finally(() => {
+            // ボタンの状態を復元
+            createBtn.innerHTML = originalText;
+            createBtn.disabled = false;
+          });
         }
         
         // 最近の顧客を読み込み
@@ -2277,7 +2445,8 @@
 
         // グローバル関数として公開
         window.closeUserSelectionModal = closeUserSelectionModal;
-        window.openNewUserModal = openNewUserModal;
+        window.toggleNewUserForm = toggleNewUserForm;
+        window.createNewUser = createNewUser;
         window.clearSelectedUser = clearSelectedUser;
 
         // ユーザー選択を保存
@@ -9558,6 +9727,58 @@ function showMessage(message, type = 'info') {
 .user-tickets {
   color: #28a745;
   font-weight: 500;
+}
+
+/* 新規ユーザー作成フォーム */
+.new-user-form {
+  margin: 20px 0;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+}
+
+.new-user-form h5 {
+  margin: 0 0 15px 0;
+  color: #495057;
+  font-size: 1.1em;
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 8px;
+}
+
+.new-user-form .form-group {
+  margin-bottom: 15px;
+}
+
+.new-user-form .form-label {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 5px;
+}
+
+.new-user-form .form-control {
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 0.9em;
+}
+
+.new-user-form .form-control:focus {
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.new-user-form .text-danger {
+  color: #dc3545 !important;
+}
+
+/* ボタンのスタイル調整 */
+.modal-footer .btn {
+  margin-left: 5px;
+}
+
+.modal-footer .btn:first-child {
+  margin-left: 0;
 }
 
 </style>
