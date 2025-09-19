@@ -3085,17 +3085,26 @@
             newUserForm.style.display = 'block';
           }
           
-          const form = document.getElementById('createUserFormForReservationForm');
-          if (!form) {
-            console.error('❌ Form element not found: createUserFormForReservationForm');
-            console.error('❌ Available elements:', {
-              reservationDetailsForm: !!reservationDetailsForm,
-              newUserForm: !!newUserForm,
-              form: !!form
-            });
-            showMessage('フォームが見つかりません。ページを再読み込みしてください。', 'error');
-            return;
-          }
+          // 少し遅延してからフォーム要素を取得
+          setTimeout(() => {
+            const form = document.getElementById('createUserFormForReservationForm');
+            if (!form) {
+              console.error('❌ Form element not found: createUserFormForReservationForm');
+              console.error('❌ Available elements:', {
+                reservationDetailsForm: !!reservationDetailsForm,
+                newUserForm: !!newUserForm,
+                form: !!form
+              });
+              showMessage('フォームが見つかりません。ページを再読み込みしてください。', 'error');
+              return;
+            }
+            
+            // フォームデータを取得して処理を続行
+            processNewUserForm(form);
+          }, 100);
+        }
+        
+        function processNewUserForm(form) {
           
           const formData = new FormData(form);
           
