@@ -3071,6 +3071,14 @@
         }
 
         function createNewUserForReservationForm() {
+          // 予約詳細フォームが表示されているかチェック
+          const reservationDetailsForm = document.getElementById('reservationDetailsForm');
+          if (!reservationDetailsForm || reservationDetailsForm.style.display === 'none') {
+            console.error('❌ Reservation details form is not visible');
+            showMessage('予約詳細フォームが表示されていません。まずドラッグ&ドロップで予約を作成してください。', 'error');
+            return;
+          }
+          
           // フォームを表示してから要素を取得
           const newUserForm = document.getElementById('newUserFormForReservationForm');
           if (newUserForm && newUserForm.style.display === 'none') {
@@ -3080,6 +3088,11 @@
           const form = document.getElementById('createUserFormForReservationForm');
           if (!form) {
             console.error('❌ Form element not found: createUserFormForReservationForm');
+            console.error('❌ Available elements:', {
+              reservationDetailsForm: !!reservationDetailsForm,
+              newUserForm: !!newUserForm,
+              form: !!form
+            });
             showMessage('フォームが見つかりません。ページを再読み込みしてください。', 'error');
             return;
           }
