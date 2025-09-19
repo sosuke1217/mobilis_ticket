@@ -2695,10 +2695,16 @@
             if (searchResults) searchResults.style.display = 'none';
             
             // フォームをクリア
-            document.getElementById('createUserFormForDragDrop').reset();
+            const createUserForm = document.getElementById('createUserFormForDragDrop');
+            if (createUserForm) {
+              createUserForm.reset();
+            }
             
             // 名前フィールドにフォーカス
-            document.getElementById('newUserNameForDragDrop').focus();
+            const nameField = document.getElementById('newUserNameForDragDrop');
+            if (nameField) {
+              nameField.focus();
+            }
           } else {
             // 新規ユーザーフォームを非表示
             newUserForm.style.display = 'none';
@@ -3036,10 +3042,16 @@
             if (userSearchSection) userSearchSection.style.display = 'none';
             
             // フォームをクリア
-            document.getElementById('createUserFormForReservationForm').reset();
+            const createUserForm = document.getElementById('createUserFormForReservationForm');
+            if (createUserForm) {
+              createUserForm.reset();
+            }
             
             // 名前フィールドにフォーカス
-            document.getElementById('newUserNameForReservationForm').focus();
+            const nameField = document.getElementById('newUserNameForReservationForm');
+            if (nameField) {
+              nameField.focus();
+            }
           } else {
             // 新規ユーザーフォームを非表示
             newUserForm.style.display = 'none';
