@@ -225,18 +225,101 @@
                     
             <div class="mb-3">
               <label class="form-label">
-                <i class="fas fa-user me-1"></i>お客様名 <span class="text-danger">*</span>
+                <i class="fas fa-user me-1"></i>お客様選択 <span class="text-danger">*</span>
               </label>
-              <input type="text" id="customerName" class="form-control" required placeholder="山田太郎" autocomplete="off">
-                        <div id="userSearchResults" class="user-search-results" style="display: none;"></div>
+              <div class="d-flex gap-2 mb-2">
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="openUserSelectionModalForBooking()">
+                  <i class="fas fa-search me-1"></i>既存のお客様を選択
+                </button>
+                <button type="button" class="btn btn-outline-success btn-sm" onclick="toggleNewUserFormForBooking()">
+                  <i class="fas fa-plus me-1"></i>新規お客様追加
+                </button>
+              </div>
+              
+              <!-- 選択されたユーザー表示 -->
+              <div id="selectedUserDisplayForBooking" class="selected-user-display" style="display: none;">
+                <div id="selectedUserInfoForBooking" class="selected-user-info"></div>
+                <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="clearSelectedUserForBooking()">選択を解除</button>
+              </div>
+              
+              <!-- 検索結果 -->
+              <div class="user-search-results" id="userSearchResultsForBooking" style="display: none;">
+                <!-- 検索結果がここに表示されます -->
+              </div>
+              
+              <!-- 最近の顧客 -->
+              <div id="recentUsersSectionForBooking" class="recent-users-section" style="display: none;">
+                <h6>最近の顧客</h6>
+                <div id="recentUsersListForBooking" class="recent-users-list">
+                  <!-- 最近の顧客がここに表示されます -->
+                </div>
+              </div>
+              
+              <!-- 新規ユーザー作成フォーム -->
+              <div id="newUserFormForBooking" class="new-user-form" style="display: none;">
+                <h6>新規お客様追加</h6>
+                <form id="createUserFormForBooking">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="newUserNameForBooking" class="form-label">お名前 <span class="text-danger">*</span></label>
+                        <input type="text" id="newUserNameForBooking" name="name" class="form-control" required>
+                      </div>
                     </div>
-                    
-            <div class="mb-3">
-              <label class="form-label">
-                <i class="fas fa-phone me-1"></i>電話番号 <span class="text-danger">*</span>
-              </label>
-              <input type="tel" id="customerPhone" class="form-control" required placeholder="090-1234-5678">
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="newUserKanaForBooking" class="form-label">フリガナ</label>
+                        <input type="text" id="newUserKanaForBooking" name="kana" class="form-control">
+                      </div>
                     </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="newUserPhoneForBooking" class="form-label">電話番号</label>
+                        <input type="tel" id="newUserPhoneForBooking" name="phone_number" class="form-control">
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="newUserEmailForBooking" class="form-label">メールアドレス</label>
+                        <input type="email" id="newUserEmailForBooking" name="email" class="form-control">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="newUserBirthDateForBooking" class="form-label">生年月日</label>
+                        <input type="date" id="newUserBirthDateForBooking" name="birth_date" class="form-control">
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="newUserPostalCodeForBooking" class="form-label">郵便番号</label>
+                        <input type="text" id="newUserPostalCodeForBooking" name="postal_code" class="form-control">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="newUserAddressForBooking" class="form-label">住所</label>
+                    <textarea id="newUserAddressForBooking" name="address" class="form-control" rows="2"></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label for="newUserMemoForBooking" class="form-label">メモ</label>
+                    <textarea id="newUserMemoForBooking" name="admin_memo" class="form-control" rows="2"></textarea>
+                  </div>
+                  <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-success btn-sm" onclick="createNewUserForBooking()">
+                      <i class="fas fa-user-plus me-1"></i>お客様を作成
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleNewUserFormForBooking()">
+                      キャンセル
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
                     </div>
                     
           <div class="col-md-6">
@@ -2443,11 +2526,228 @@
             loadRecentUsers();
         }
 
+        // 新規予約作成用のユーザー選択機能
+        function openUserSelectionModalForBooking() {
+          const searchResults = document.getElementById('userSearchResultsForBooking');
+          const recentSection = document.getElementById('recentUsersSectionForBooking');
+          
+          // 検索結果をクリア
+          if (searchResults) {
+            searchResults.innerHTML = '';
+            searchResults.style.display = 'none';
+          }
+          
+          // 最近の顧客を読み込み
+          loadRecentUsersForBooking();
+          
+          // 最近の顧客セクションを表示
+          if (recentSection) {
+            recentSection.style.display = 'block';
+          }
+          
+          // 新規ユーザーフォームを非表示
+          const newUserForm = document.getElementById('newUserFormForBooking');
+          if (newUserForm) {
+            newUserForm.style.display = 'none';
+          }
+        }
+
+        function toggleNewUserFormForBooking() {
+          const newUserForm = document.getElementById('newUserFormForBooking');
+          const recentSection = document.getElementById('recentUsersSectionForBooking');
+          const searchResults = document.getElementById('userSearchResultsForBooking');
+          
+          if (newUserForm.style.display === 'none') {
+            // 新規ユーザーフォームを表示
+            newUserForm.style.display = 'block';
+            
+            // 他のセクションを非表示
+            if (recentSection) recentSection.style.display = 'none';
+            if (searchResults) searchResults.style.display = 'none';
+            
+            // フォームをクリア
+            document.getElementById('createUserFormForBooking').reset();
+            
+            // 名前フィールドにフォーカス
+            document.getElementById('newUserNameForBooking').focus();
+          } else {
+            // 新規ユーザーフォームを非表示
+            newUserForm.style.display = 'none';
+            
+            // 最近の顧客を再表示
+            loadRecentUsersForBooking();
+            if (recentSection) recentSection.style.display = 'block';
+          }
+        }
+
+        function createNewUserForBooking() {
+          const form = document.getElementById('createUserFormForBooking');
+          const formData = new FormData(form);
+          
+          // バリデーション
+          const name = formData.get('name');
+          if (!name || name.trim() === '') {
+            showMessage('お名前を入力してください。', 'error');
+            return;
+          }
+          
+          fetch('/admin/users', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest',
+              'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+              user: {
+                name: formData.get('name'),
+                kana: formData.get('kana'),
+                phone_number: formData.get('phone_number'),
+                email: formData.get('email'),
+                birth_date: formData.get('birth_date'),
+                postal_code: formData.get('postal_code'),
+                address: formData.get('address'),
+                admin_memo: formData.get('admin_memo')
+              }
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              // 新規作成されたユーザーを選択
+              window.selectedUserForBooking = {
+                id: data.user.id,
+                name: data.user.name,
+                phone: data.user.phone_number,
+                email: data.user.email
+              };
+              
+              // 選択されたユーザーを表示
+              displaySelectedUserForBooking(window.selectedUserForBooking);
+              
+              // フォームを非表示
+              toggleNewUserFormForBooking();
+              
+              showMessage(`「${data.user.name}」を作成して選択しました`, 'success');
+            } else {
+              showMessage(`ユーザー作成に失敗しました: ${data.errors ? data.errors.join(', ') : '不明なエラー'}`, 'error');
+            }
+          })
+          .catch(error => {
+            console.error('❌ Error creating user:', error);
+            showMessage('ユーザー作成中にエラーが発生しました', 'error');
+          });
+        }
+
+        function loadRecentUsersForBooking() {
+          fetch('/admin/users/recent', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            }
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success && data.users) {
+              displayRecentUsersForBooking(data.users);
+            } else {
+              const recentUsersList = document.getElementById('recentUsersListForBooking');
+              if (recentUsersList) {
+                recentUsersList.innerHTML = '<div class="text-muted">最近の顧客が見つかりません</div>';
+              }
+            }
+          })
+          .catch(error => {
+            console.error('❌ Error loading recent users:', error);
+            const recentUsersList = document.getElementById('recentUsersListForBooking');
+            if (recentUsersList) {
+              recentUsersList.innerHTML = '<div class="text-muted">最近の顧客を読み込めませんでした</div>';
+            }
+          });
+        }
+
+        function displayRecentUsersForBooking(users) {
+          const recentUsersList = document.getElementById('recentUsersListForBooking');
+          if (!recentUsersList) return;
+          
+          if (users.length === 0) {
+            recentUsersList.innerHTML = '<div class="text-muted">最近の顧客が見つかりません</div>';
+            return;
+          }
+          
+          const usersHtml = users.map(user => `
+            <div class="recent-user-item" onclick="selectUserForBooking(${user.id}, '${user.name}', '${user.phone_number}', '${user.email}')">
+              <div class="user-name">${user.name}</div>
+              <div class="user-details">
+                📞 ${user.phone_number || '未設定'} | 📧 ${user.email || '未設定'}
+                ${user.active_tickets > 0 ? `<span class="user-tickets"> | 🎫 残${user.active_tickets}枚</span>` : ''}
+                ${user.last_visit !== 'なし' ? ` | 📅 最終来店: ${user.last_visit}` : ''}
+              </div>
+            </div>
+          `).join('');
+          
+          recentUsersList.innerHTML = usersHtml;
+        }
+
+        function selectUserForBooking(userId, name, phone, email) {
+          // 選択されたユーザーを保存
+          window.selectedUserForBooking = {
+            id: userId,
+            name: name,
+            phone: phone,
+            email: email
+          };
+          
+          // 選択されたユーザーを表示
+          displaySelectedUserForBooking(window.selectedUserForBooking);
+          
+          // 検索結果と最近の顧客を非表示
+          document.getElementById('userSearchResultsForBooking').style.display = 'none';
+          document.getElementById('recentUsersSectionForBooking').style.display = 'none';
+        }
+
+        function displaySelectedUserForBooking(user) {
+          const selectedUserDisplay = document.getElementById('selectedUserDisplayForBooking');
+          const selectedUserInfo = document.getElementById('selectedUserInfoForBooking');
+          
+          if (!selectedUserDisplay || !selectedUserInfo) return;
+          
+          selectedUserInfo.innerHTML = `
+            <div class="selected-user-card">
+              <div class="user-name">${user.name}</div>
+              <div class="user-details">
+                📞 ${user.phone || '未設定'} | 📧 ${user.email || '未設定'}
+              </div>
+            </div>
+          `;
+          
+          selectedUserDisplay.style.display = 'block';
+        }
+
+        function clearSelectedUserForBooking() {
+          window.selectedUserForBooking = null;
+          
+          const selectedUserDisplay = document.getElementById('selectedUserDisplayForBooking');
+          if (selectedUserDisplay) {
+            selectedUserDisplay.style.display = 'none';
+          }
+          
+          // 最近の顧客を再表示
+          loadRecentUsersForBooking();
+          document.getElementById('recentUsersSectionForBooking').style.display = 'block';
+        }
+
         // グローバル関数として公開
         window.closeUserSelectionModal = closeUserSelectionModal;
         window.toggleNewUserForm = toggleNewUserForm;
         window.createNewUser = createNewUser;
         window.clearSelectedUser = clearSelectedUser;
+        window.openUserSelectionModalForBooking = openUserSelectionModalForBooking;
+        window.toggleNewUserFormForBooking = toggleNewUserFormForBooking;
+        window.createNewUserForBooking = createNewUserForBooking;
+        window.selectUserForBooking = selectUserForBooking;
+        window.clearSelectedUserForBooking = clearSelectedUserForBooking;
 
         // ユーザー選択を保存
         function saveUserSelection() {
@@ -6468,18 +6768,25 @@ function showMessage(message, type = 'info') {
         // 予約を作成・更新
         function createBooking() {
             const duration = document.getElementById('bookingDuration').value;
-            const customerName = document.getElementById('customerName').value;
-            const customerPhone = document.getElementById('customerPhone').value;
-            const customerEmail = document.getElementById('customerEmail').value;
             const bookingNote = document.getElementById('bookingNote').value;
             const bookingStatus = document.getElementById('bookingStatus').value;
 
             console.log('🔄 Creating/Updating booking, isEditing:', isEditingReservation);
 
-            if (!duration || !customerName || !customerPhone) {
-                showMessage('コース、お客様名、電話番号は必須です。', 'error');
+            if (!duration) {
+                showMessage('コースを選択してください。', 'error');
                 return;
             }
+
+            // 選択されたユーザーをチェック
+            if (!window.selectedUserForBooking) {
+                showMessage('お客様を選択してください。', 'error');
+                return;
+            }
+
+            const customerName = window.selectedUserForBooking.name;
+            const customerPhone = window.selectedUserForBooking.phone;
+            const customerEmail = window.selectedUserForBooking.email;
 
             // 選択された日時からdateTimeを作成
             const selectedDate = window.selectedBookingDate;
