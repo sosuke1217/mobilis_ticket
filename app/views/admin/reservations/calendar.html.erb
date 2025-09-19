@@ -11247,38 +11247,26 @@ function calculateDateTimeFromSlot(timeSlotIndex, dayIndex) {
 
 // 予約詳細フォームを表示
 
-// 予約を確定
-function confirmReservation() {
-  if (!currentReservationData) return;
-  
-  const userId = document.getElementById('quickUser').value;
-  const note = document.getElementById('quickNote').value;
-  
-  if (!userId) {
-    alert('お客様を選択してください');
-    return;
-  }
-  
-  // 予約データを作成
-  const reservationData = {
-    start_time: currentReservationData.start_time.toISOString(),
-    end_time: currentReservationData.end_time.toISOString(),
-    course: currentReservationData.course,
-    user_id: userId,
-    note: note,
-    status: 'tentative'
-  };
-  
-  // 予約を作成
-  createReservationFromDrop(reservationData);
-}
 
 // 予約をキャンセル
 function cancelReservation() {
   currentReservationData = null;
+  window.selectedUserForDragDrop = null;
+  window.selectedUserForReservationForm = null;
+  
   document.getElementById('reservationDetailsForm').style.display = 'none';
-  document.getElementById('quickUser').value = '';
-  document.getElementById('quickNote').value = '';
+  
+  // 予約確定ボタンを無効化
+  const confirmBtn = document.getElementById('confirmReservationBtn');
+  if (confirmBtn) {
+    confirmBtn.disabled = true;
+  }
+  
+  // フォームをクリア
+  const noteField = document.getElementById('quickNote');
+  if (noteField) {
+    noteField.value = '';
+  }
 }
 
 // ドロップから予約を作成
