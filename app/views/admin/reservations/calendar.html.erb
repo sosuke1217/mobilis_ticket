@@ -3087,6 +3087,19 @@
           
           // 少し遅延してからフォーム要素を取得
           setTimeout(() => {
+            // より詳細なデバッグ情報を追加
+            console.log('🔍 Debugging form elements:');
+            console.log('🔍 reservationDetailsForm:', reservationDetailsForm);
+            console.log('🔍 newUserForm:', newUserForm);
+            console.log('🔍 newUserForm.style.display:', newUserForm ? newUserForm.style.display : 'N/A');
+            
+            // フォーム要素を直接検索
+            const allForms = document.querySelectorAll('form');
+            console.log('🔍 All forms in DOM:', allForms.length);
+            allForms.forEach((f, index) => {
+              console.log(`🔍 Form ${index}:`, f.id, f);
+            });
+            
             const form = document.getElementById('createUserFormForReservationForm');
             if (!form) {
               console.error('❌ Form element not found: createUserFormForReservationForm');
@@ -3099,6 +3112,7 @@
               return;
             }
             
+            console.log('✅ Form found:', form);
             // フォームデータを取得して処理を続行
             processNewUserForm(form);
           }, 100);
