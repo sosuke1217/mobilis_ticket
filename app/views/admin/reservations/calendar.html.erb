@@ -3192,10 +3192,27 @@
           const formContainer = form.closest('.new-user-form');
           console.log('🔍 Form container display:', formContainer ? formContainer.style.display : 'N/A');
           
+          // フォーム内のすべてのinput要素をデバッグ
+          const allInputs = form.querySelectorAll('input');
+          console.log('🔍 All inputs in form:', allInputs.length);
+          allInputs.forEach((input, index) => {
+            console.log(`🔍 Input ${index}:`, input.id, input.name, input.type, input.value);
+          });
+          
           // フォームのフィールド要素を直接確認
           const nameInput = form.querySelector('input[name="name"]');
           console.log('🔍 Name input element:', nameInput);
-          console.log('🔍 Name input value:', nameInput ? nameInput.value : 'N/A');
+          
+          // もし見つからない場合は、IDで直接検索
+          let nameInputById = null;
+          if (!nameInput) {
+            nameInputById = document.getElementById('newUserNameForDragDrop');
+            console.log('🔍 Name input by ID:', nameInputById);
+          }
+          
+          const finalNameInput = nameInput || nameInputById;
+          console.log('🔍 Final name input:', finalNameInput);
+          console.log('🔍 Name input value:', finalNameInput ? finalNameInput.value : 'N/A');
           
           const formData = new FormData(form);
           
