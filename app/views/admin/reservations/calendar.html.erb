@@ -2299,7 +2299,7 @@
             },
             body: JSON.stringify({
               user: {
-                name: formData.get('name'),
+                name: finalName,
                 kana: formData.get('kana'),
                 phone_number: formData.get('phone_number'),
                 email: formData.get('email'),
@@ -2517,7 +2517,7 @@
             },
             body: JSON.stringify({
               user: {
-                name: formData.get('name'),
+                name: finalName,
                 kana: formData.get('kana'),
                 phone_number: formData.get('phone_number'),
                 email: formData.get('email'),
@@ -2747,7 +2747,7 @@
             },
             body: JSON.stringify({
               user: {
-                name: formData.get('name'),
+                name: finalName,
                 kana: formData.get('kana'),
                 phone_number: formData.get('phone_number'),
                 email: formData.get('email'),
@@ -3265,10 +3265,18 @@
           // FormDataで取得できない場合は、直接値を取得
           let finalName = name;
           if (!finalName || finalName.trim() === '') {
+            // まずDragDropフォームの値を確認
             const directNameInput = document.getElementById('newUserNameForDragDrop');
             if (directNameInput && directNameInput.value) {
               finalName = directNameInput.value;
-              console.log('🔍 Using direct value:', finalName);
+              console.log('🔍 Using DragDrop direct value:', finalName);
+            } else {
+              // DragDropフォームに値がない場合は、ReservationFormフォームの値を確認
+              const reservationFormNameInput = document.getElementById('newUserNameForReservationForm');
+              if (reservationFormNameInput && reservationFormNameInput.value) {
+                finalName = reservationFormNameInput.value;
+                console.log('🔍 Using ReservationForm direct value:', finalName);
+              }
             }
           }
           
@@ -3310,7 +3318,7 @@
             },
             body: JSON.stringify({
               user: {
-                name: formData.get('name'),
+                name: finalName,
                 kana: formData.get('kana'),
                 phone_number: formData.get('phone_number'),
                 email: formData.get('email'),
