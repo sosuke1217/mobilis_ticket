@@ -10968,8 +10968,14 @@ function handleNewReservationDrop(e) {
   const weekHeader = document.getElementById('currentWeek');
   if (weekHeader && weekHeader.textContent) {
     const headerText = weekHeader.textContent;
+    console.log('🎯 Header text:', headerText);
+    
+    // より詳細な解析を試行
     const yearMatch = headerText.match(/(\d{4})年/);
     const dateMatch = headerText.match(/(\d{1,2})\/(\d{1,2})/);
+    
+    console.log('🎯 Year match:', yearMatch);
+    console.log('🎯 Date match:', dateMatch);
     
     if (yearMatch && dateMatch) {
       const year = parseInt(yearMatch[1]);
@@ -10977,6 +10983,18 @@ function handleNewReservationDrop(e) {
       const day = parseInt(dateMatch[2]);
       weekStart = new Date(year, month, day);
       console.log('🎯 Using week header date:', weekStart);
+    } else {
+      console.log('🎯 Failed to parse week header, trying alternative parsing');
+      
+      // 代替解析: "2025年 9/21 - 9/27" 形式
+      const altMatch = headerText.match(/(\d{4})年\s*(\d{1,2})\/(\d{1,2})\s*-\s*(\d{1,2})\/(\d{1,2})/);
+      if (altMatch) {
+        const year = parseInt(altMatch[1]);
+        const startMonth = parseInt(altMatch[2]) - 1;
+        const startDay = parseInt(altMatch[3]);
+        weekStart = new Date(year, startMonth, startDay);
+        console.log('🎯 Using alternative parsed date:', weekStart);
+      }
     }
   }
   
