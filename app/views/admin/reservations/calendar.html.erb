@@ -3098,33 +3098,60 @@
             // より広範囲な検索
             const allForms = document.querySelectorAll('form');
             console.log('🔍 All forms in DOM:', allForms.length);
+            allForms.forEach((f, index) => {
+              console.log(`🔍 Form ${index}:`, f.id, f);
+            });
             form = Array.from(allForms).find(f => f.id === 'createUserFormForReservationForm');
             console.log('🔍 Form found by Array.find:', form);
+            
+            // もし見つからない場合は、名前で検索
+            if (!form) {
+              form = Array.from(allForms).find(f => f.id && f.id.includes('ReservationForm'));
+              console.log('🔍 Form found by name pattern:', form);
+            }
           }
           
           if (!form) {
-            // 最後の手段：少し遅延してから再試行
+            // 最後の手段：MutationObserverを使用してフォームの表示を監視
+            console.log('🔍 Using MutationObserver to watch for form display');
+            
+            const observer = new MutationObserver((mutations) => {
+              mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                  const target = mutation.target;
+                  if (target.id === 'newUserFormForReservationForm' && target.style.display !== 'none') {
+                    console.log('🔍 Form container became visible, searching for form...');
+                    
+                    form = document.getElementById('createUserFormForReservationForm');
+                    if (!form) {
+                      form = newUserForm.querySelector('form');
+                    }
+                    
+                    if (form) {
+                      console.log('✅ Form found via MutationObserver:', form);
+                      observer.disconnect();
+                      processNewUserForm(form);
+                    }
+                  }
+                }
+              });
+            });
+            
+            observer.observe(newUserForm, { attributes: true, attributeFilter: ['style'] });
+            
+            // タイムアウト設定（5秒後にエラー）
             setTimeout(() => {
-              form = document.getElementById('createUserFormForReservationForm');
-              if (!form) {
-                form = newUserForm.querySelector('form');
-              }
-              
-              if (!form) {
-                console.error('❌ Form element not found after multiple attempts');
-                console.error('❌ Available elements:', {
-                  reservationDetailsForm: !!reservationDetailsForm,
-                  newUserForm: !!newUserForm,
-                  newUserFormDisplay: newUserForm ? newUserForm.style.display : 'N/A',
-                  allFormsCount: document.querySelectorAll('form').length
-                });
-                showMessage('フォームが見つかりません。ページを再読み込みしてください。', 'error');
-                return;
-              }
-              
-              console.log('✅ Form found after delay:', form);
-              processNewUserForm(form);
-            }, 200);
+              observer.disconnect();
+              console.error('❌ Form element not found after MutationObserver timeout');
+              console.error('❌ Available elements:', {
+                reservationDetailsForm: !!reservationDetailsForm,
+                newUserForm: !!newUserForm,
+                newUserFormDisplay: newUserForm ? newUserForm.style.display : 'N/A',
+                allFormsCount: document.querySelectorAll('form').length
+              });
+              showMessage('フォームが見つかりません。ページを再読み込みしてください。', 'error');
+            }, 5000);
+            
             return;
           }
           
