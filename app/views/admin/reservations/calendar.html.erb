@@ -3225,6 +3225,19 @@
           console.log('🔍 Final name input:', finalNameInput);
           console.log('🔍 Name input value:', finalNameInput ? finalNameInput.value : 'N/A');
           
+          // 入力フィールドの値を直接確認（複数の方法で）
+          if (finalNameInput) {
+            console.log('🔍 Direct value access:', finalNameInput.value);
+            console.log('🔍 getAttribute value:', finalNameInput.getAttribute('value'));
+            console.log('🔍 defaultValue:', finalNameInput.defaultValue);
+            console.log('🔍 Input is focused:', document.activeElement === finalNameInput);
+            
+            // 入力フィールドにイベントリスナーがあるか確認
+            const hasInputListener = finalNameInput.oninput !== null;
+            const hasChangeListener = finalNameInput.onchange !== null;
+            console.log('🔍 Has input listener:', hasInputListener, 'Has change listener:', hasChangeListener);
+          }
+          
           const formData = new FormData(form);
           
           // フォームのフィールドをデバッグ
@@ -3232,6 +3245,18 @@
           for (let [key, value] of formData.entries()) {
             console.log(`🔍 ${key}: ${value}`);
           }
+          
+          // FormData以外の方法でも値を取得してみる
+          console.log('🔍 Alternative value retrieval:');
+          const nameByQuerySelector = document.querySelector('#newUserNameForDragDrop');
+          console.log('🔍 Name by querySelector:', nameByQuerySelector ? nameByQuerySelector.value : 'N/A');
+          
+          // フォーム内のすべてのinput要素の値を直接確認
+          const allInputsDirect = document.querySelectorAll('#newUserFormForDragDrop input');
+          console.log('🔍 Direct input values:');
+          allInputsDirect.forEach((input, index) => {
+            console.log(`🔍 Direct Input ${index}:`, input.id, input.name, input.value);
+          });
           
           // バリデーション
           const name = formData.get('name');
