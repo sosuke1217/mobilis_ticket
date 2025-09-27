@@ -10876,6 +10876,7 @@ document.addEventListener('DOMContentLoaded', function() {
   courseBlocks.forEach(block => {
     block.addEventListener('dragstart', function(e) {
       console.log('🎯 New course block drag started:', this.dataset.course);
+      console.log('🎯 Block dataset:', this.dataset);
       
       draggedCourseData = {
         course: this.dataset.course,
@@ -10895,6 +10896,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     block.addEventListener('dragend', function(e) {
       console.log('🎯 New course block drag ended');
+      console.log('🎯 draggedCourseData at dragend:', draggedCourseData);
       this.classList.remove('dragging');
       
       // ドロップゾーンをクリア
