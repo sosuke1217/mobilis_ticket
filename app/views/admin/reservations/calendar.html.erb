@@ -3173,11 +3173,20 @@
         }
         
         function processNewUserForm(form) {
+          console.log('🔍 Processing form:', form.id);
           
           const formData = new FormData(form);
           
+          // フォームのフィールドをデバッグ
+          console.log('🔍 Form data entries:');
+          for (let [key, value] of formData.entries()) {
+            console.log(`🔍 ${key}: ${value}`);
+          }
+          
           // バリデーション
           const name = formData.get('name');
+          console.log('🔍 Name field value:', name);
+          
           if (!name || name.trim() === '') {
             showMessage('お名前を入力してください。', 'error');
             return;
