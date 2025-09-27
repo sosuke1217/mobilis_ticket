@@ -3260,9 +3260,21 @@
           
           // バリデーション
           const name = formData.get('name');
-          console.log('🔍 Name field value:', name);
+          console.log('🔍 Name field value from FormData:', name);
           
-          if (!name || name.trim() === '') {
+          // FormDataで取得できない場合は、直接値を取得
+          let finalName = name;
+          if (!finalName || finalName.trim() === '') {
+            const directNameInput = document.getElementById('newUserNameForDragDrop');
+            if (directNameInput && directNameInput.value) {
+              finalName = directNameInput.value;
+              console.log('🔍 Using direct value:', finalName);
+            }
+          }
+          
+          console.log('🔍 Final name value:', finalName);
+          
+          if (!finalName || finalName.trim() === '') {
             // フォームの表示状態を確認してより詳細なメッセージを表示
             const dragDropUserForm = document.getElementById('newUserFormForDragDrop');
             const isFormVisible = dragDropUserForm && dragDropUserForm.style.display !== 'none';
