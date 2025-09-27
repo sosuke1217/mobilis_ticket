@@ -521,6 +521,7 @@ class Admin::ReservationsController < ApplicationController
           start_time: reservation.start_time.iso8601, # Add start_time for validation
           date: reservation.start_time.strftime('%Y-%m-%d'), # Add date for validation
           duration: reservation.get_duration_minutes,
+          course: reservation.course, # Add course information
           customer: reservation.name || reservation.user&.name || '未設定',
           phone: reservation.user&.phone_number || '',
           email: reservation.user&.email || '',

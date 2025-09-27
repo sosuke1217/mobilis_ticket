@@ -515,6 +515,13 @@
   
   console.log('🔍 User Management Script Loading...');
   
+  // Turboの重複実行を防ぐ
+  if (window.userManagementInitialized) {
+    console.log('🔍 User Management already initialized, skipping...');
+    return;
+  }
+  window.userManagementInitialized = true;
+  
   // グローバル関数
   window.hideModal = function() {
     const modal = document.getElementById('addUserModal');
