@@ -3098,6 +3098,10 @@
             toggleNewUserFormForDragDrop();
           }
           
+          // フォームの表示状態を最終確認
+          console.log('🔍 Final form display state:', dragDropUserForm ? dragDropUserForm.style.display : 'N/A');
+          console.log('🔍 Form is visible:', dragDropUserForm && dragDropUserForm.style.display !== 'none');
+          
           // フォーム要素を取得（複数の方法を試行）
           let form = document.getElementById('createUserFormForReservationForm');
           console.log('🔍 Direct ID search result:', form);
@@ -3227,7 +3231,15 @@
           console.log('🔍 Name field value:', name);
           
           if (!name || name.trim() === '') {
-            showMessage('お名前を入力してください。', 'error');
+            // フォームの表示状態を確認してより詳細なメッセージを表示
+            const dragDropUserForm = document.getElementById('newUserFormForDragDrop');
+            const isFormVisible = dragDropUserForm && dragDropUserForm.style.display !== 'none';
+            
+            if (!isFormVisible) {
+              showMessage('新規ユーザーフォームが表示されていません。右側の「新規お客様追加」ボタンをクリックしてください。', 'error');
+            } else {
+              showMessage('お名前を入力してください。フォームが表示されていることを確認して、名前フィールドに値を入力してください。', 'error');
+            }
             return;
           }
           
