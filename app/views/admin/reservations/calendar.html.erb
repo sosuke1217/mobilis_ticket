@@ -10972,28 +10972,33 @@ function handleNewReservationDrop(e) {
     
     // より詳細な解析を試行
     const yearMatch = headerText.match(/(\d{4})年/);
-    const dateMatch = headerText.match(/(\d{1,2})\/(\d{1,2})/);
-    
     console.log('🎯 Year match:', yearMatch);
-    console.log('🎯 Date match:', dateMatch);
     
-    if (yearMatch && dateMatch) {
+    // 形式1: "2025年 9月28日 - 10月4日" 形式
+    const japaneseDateMatch = headerText.match(/(\d{4})年\s*(\d{1,2})月(\d{1,2})日/);
+    console.log('🎯 Japanese date match:', japaneseDateMatch);
+    
+    if (yearMatch && japaneseDateMatch) {
       const year = parseInt(yearMatch[1]);
-      const month = parseInt(dateMatch[1]) - 1; // JavaScriptの月は0ベース
-      const day = parseInt(dateMatch[2]);
+      const month = parseInt(japaneseDateMatch[2]) - 1; // JavaScriptの月は0ベース
+      const day = parseInt(japaneseDateMatch[3]);
       weekStart = new Date(year, month, day);
-      console.log('🎯 Using week header date:', weekStart);
+      console.log('🎯 Using Japanese date format:', weekStart);
     } else {
-      console.log('🎯 Failed to parse week header, trying alternative parsing');
+      console.log('🎯 Failed to parse Japanese format, trying slash format');
       
-      // 代替解析: "2025年 9/21 - 9/27" 形式
-      const altMatch = headerText.match(/(\d{4})年\s*(\d{1,2})\/(\d{1,2})\s*-\s*(\d{1,2})\/(\d{1,2})/);
-      if (altMatch) {
-        const year = parseInt(altMatch[1]);
-        const startMonth = parseInt(altMatch[2]) - 1;
-        const startDay = parseInt(altMatch[3]);
-        weekStart = new Date(year, startMonth, startDay);
-        console.log('🎯 Using alternative parsed date:', weekStart);
+      // 形式2: "2025年 9/21 - 9/27" 形式
+      const slashDateMatch = headerText.match(/(\d{1,2})\/(\d{1,2})/);
+      console.log('🎯 Slash date match:', slashDateMatch);
+      
+      if (yearMatch && slashDateMatch) {
+        const year = parseInt(yearMatch[1]);
+        const month = parseInt(slashDateMatch[1]) - 1; // JavaScriptの月は0ベース
+        const day = parseInt(slashDateMatch[2]);
+        weekStart = new Date(year, month, day);
+        console.log('🎯 Using slash date format:', weekStart);
+      } else {
+        console.log('🎯 Failed to parse any date format');
       }
     }
   }
