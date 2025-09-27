@@ -3092,6 +3092,12 @@
             console.log('🔍 Made DragDrop form visible');
           }
           
+          // フォームが表示されていない場合は、toggleNewUserFormForDragDropを呼び出し
+          if (dragDropUserForm && dragDropUserForm.style.display === 'none') {
+            console.log('🔍 Calling toggleNewUserFormForDragDrop to ensure form is visible');
+            toggleNewUserFormForDragDrop();
+          }
+          
           // フォーム要素を取得（複数の方法を試行）
           let form = document.getElementById('createUserFormForReservationForm');
           console.log('🔍 Direct ID search result:', form);
