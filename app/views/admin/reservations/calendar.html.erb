@@ -3085,45 +3085,51 @@
             newUserForm.style.display = 'block';
           }
           
-          // 少し遅延してからフォーム要素を取得
-          setTimeout(() => {
-            // より詳細なデバッグ情報を追加
-            console.log('🔍 Debugging form elements:');
-            console.log('🔍 reservationDetailsForm:', reservationDetailsForm);
-            console.log('🔍 newUserForm:', newUserForm);
-            console.log('🔍 newUserForm.style.display:', newUserForm ? newUserForm.style.display : 'N/A');
-            
-            // フォーム要素を直接検索
+          // フォーム要素を取得（複数の方法を試行）
+          let form = document.getElementById('createUserFormForReservationForm');
+          
+          if (!form) {
+            // newUserForm内で検索
+            form = newUserForm.querySelector('form');
+            console.log('🔍 Form found by querySelector:', form);
+          }
+          
+          if (!form) {
+            // より広範囲な検索
             const allForms = document.querySelectorAll('form');
             console.log('🔍 All forms in DOM:', allForms.length);
-            allForms.forEach((f, index) => {
-              console.log(`🔍 Form ${index}:`, f.id, f);
-            });
-            
-            // フォーム要素を検索（IDで検索）
-            let form = document.getElementById('createUserFormForReservationForm');
-            
-            // IDで見つからない場合は、newUserForm内で検索
-            if (!form && newUserForm) {
-              form = newUserForm.querySelector('form');
-              console.log('🔍 Form found in newUserForm:', form);
-            }
-            
-            if (!form) {
-              console.error('❌ Form element not found: createUserFormForReservationForm');
-              console.error('❌ Available elements:', {
-                reservationDetailsForm: !!reservationDetailsForm,
-                newUserForm: !!newUserForm,
-                form: !!form
-              });
-              showMessage('フォームが見つかりません。ページを再読み込みしてください。', 'error');
-              return;
-            }
-            
-            console.log('✅ Form found:', form);
-            // フォームデータを取得して処理を続行
-            processNewUserForm(form);
-          }, 100);
+            form = Array.from(allForms).find(f => f.id === 'createUserFormForReservationForm');
+            console.log('🔍 Form found by Array.find:', form);
+          }
+          
+          if (!form) {
+            // 最後の手段：少し遅延してから再試行
+            setTimeout(() => {
+              form = document.getElementById('createUserFormForReservationForm');
+              if (!form) {
+                form = newUserForm.querySelector('form');
+              }
+              
+              if (!form) {
+                console.error('❌ Form element not found after multiple attempts');
+                console.error('❌ Available elements:', {
+                  reservationDetailsForm: !!reservationDetailsForm,
+                  newUserForm: !!newUserForm,
+                  newUserFormDisplay: newUserForm ? newUserForm.style.display : 'N/A',
+                  allFormsCount: document.querySelectorAll('form').length
+                });
+                showMessage('フォームが見つかりません。ページを再読み込みしてください。', 'error');
+                return;
+              }
+              
+              console.log('✅ Form found after delay:', form);
+              processNewUserForm(form);
+            }, 200);
+            return;
+          }
+          
+          console.log('✅ Form found immediately:', form);
+          processNewUserForm(form);
         }
         
         function processNewUserForm(form) {
