@@ -3201,7 +3201,14 @@
           console.log('🔍 All inputs in form:', allInputs.length);
           allInputs.forEach((input, index) => {
             console.log(`🔍 Input ${index}:`, input.id, input.name, input.type, input.value);
+            // 入力フィールドの表示状態も確認
+            console.log(`🔍 Input ${index} display:`, input.style.display, 'visibility:', input.style.visibility, 'disabled:', input.disabled);
           });
+          
+          // フォームの表示状態をより詳細に確認
+          console.log('🔍 Form element style:', form.style.display, form.style.visibility);
+          console.log('🔍 Form element parent:', form.parentElement);
+          console.log('🔍 Form element parent display:', form.parentElement ? form.parentElement.style.display : 'N/A');
           
           // フォームのフィールド要素を直接確認
           const nameInput = form.querySelector('input[name="name"]');
