@@ -3087,6 +3087,7 @@
           
           // フォーム要素を取得（複数の方法を試行）
           let form = document.getElementById('createUserFormForReservationForm');
+          console.log('🔍 Direct ID search result:', form);
           
           if (!form) {
             // newUserForm内で検索
@@ -3101,13 +3102,21 @@
             allForms.forEach((f, index) => {
               console.log(`🔍 Form ${index}:`, f.id, f);
             });
-            form = Array.from(allForms).find(f => f.id === 'createUserFormForReservationForm');
-            console.log('🔍 Form found by Array.find:', form);
             
-            // もし見つからない場合は、名前で検索
+            // 予約詳細フォーム用のフォームを検索
+            form = Array.from(allForms).find(f => f.id === 'createUserFormForReservationForm');
+            console.log('🔍 Form found by exact ID:', form);
+            
+            // もし見つからない場合は、DragDrop用のフォームを使用
             if (!form) {
-              form = Array.from(allForms).find(f => f.id && f.id.includes('ReservationForm'));
-              console.log('🔍 Form found by name pattern:', form);
+              form = Array.from(allForms).find(f => f.id === 'createUserFormForDragDrop');
+              console.log('🔍 Using DragDrop form as fallback:', form);
+            }
+            
+            // 最後の手段：createUserFormを使用
+            if (!form) {
+              form = Array.from(allForms).find(f => f.id === 'createUserForm');
+              console.log('🔍 Using base createUserForm as last resort:', form);
             }
           }
           
@@ -3125,6 +3134,10 @@
                     form = document.getElementById('createUserFormForReservationForm');
                     if (!form) {
                       form = newUserForm.querySelector('form');
+                    }
+                    if (!form) {
+                      // フォールバック：DragDrop用のフォームを使用
+                      form = document.getElementById('createUserFormForDragDrop');
                     }
                     
                     if (form) {
