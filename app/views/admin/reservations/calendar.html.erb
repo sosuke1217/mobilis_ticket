@@ -1047,15 +1047,22 @@
                     
                     const updatedReservation = {
                         ...reservationForUpdates,
-                        customer: reservationData.name || reservationData.user?.name || '未設定',
-                        phone: reservationData.user?.phone_number || '',
-                        email: reservationData.user?.email || '',
+                        customer: reservationData.name || reservationData.user?.name || reservationForUpdates.customer || '未設定',
+                        phone: reservationData.user?.phone_number || reservationForUpdates.phone || '',
+                        email: reservationData.user?.email || reservationForUpdates.email || '',
                         duration: extractDurationFromCourse(reservationData.course),
                         status: reservationData.status,
                         note: reservationData.note || '',
                         updatedAt: reservationData.updated_at,
                         userId: window.currentUserId || reservationForUpdates.userId // 新しいユーザーIDを設定
                     };
+                    
+                    console.log('🔍 User data preservation check:', {
+                        originalCustomer: reservationForUpdates.customer,
+                        backendName: reservationData.name,
+                        backendUserName: reservationData.user?.name,
+                        finalCustomer: updatedReservation.customer
+                    });
                     
                     console.log('🔍 updatedReservation.note after construction:', updatedReservation.note);
                     
