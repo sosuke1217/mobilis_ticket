@@ -642,6 +642,9 @@ class Admin::ReservationsController < ApplicationController
         reservation_attrs[:user_id] = user.id
         reservation_attrs[:name] = user.name  # 予約のnameフィールドも更新
         Rails.logger.info "🔄 Updating reservation name to: #{user.name}"
+        Rails.logger.info "🔄 User details: id=#{user.id}, name=#{user.name}, phone=#{user.phone_number}"
+      else
+        Rails.logger.warn "⚠️ No user found for reservation update"
       end
       
       # バリデーション設定（管理者用の制限をスキップ）
@@ -690,6 +693,7 @@ class Admin::ReservationsController < ApplicationController
       if @reservation.update(reservation_attrs)
         Rails.logger.info "✅ Reservation #{reservation_id} updated successfully"
         Rails.logger.info "✅ Updated reservation state: start_time=#{@reservation.start_time}, end_time=#{@reservation.end_time}, course=#{@reservation.course}"
+        Rails.logger.info "✅ Updated reservation user: name=#{@reservation.name}, user_id=#{@reservation.user_id}, user_name=#{@reservation.user&.name}"
         render json: {
           success: true,
           message: '予約が更新されました',
