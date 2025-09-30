@@ -67,7 +67,7 @@ group :test do
   gem "selenium-webdriver"
 end
 
-gem "ransack", "~> 4.3"
+gem "ransack", "~> 4.4"
 
 group :development do
   gem 'letter_opener'
