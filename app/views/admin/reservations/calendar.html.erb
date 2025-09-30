@@ -10536,18 +10536,35 @@ function showMessage(message, type = 'info') {
 .container-fluid {
   padding-right: 370px !important; /* パネル幅(350px) + マージン(20px) */
   margin-right: 0 !important;
+  max-width: calc(100vw - 370px) !important;
+  width: calc(100vw - 370px) !important;
+}
+
+/* Bootstrapのグリッドシステムを無効化 */
+.row {
+  margin-right: 0 !important;
+  margin-left: 0 !important;
+}
+
+.col-12, .col-md-12 {
+  padding-right: 0 !important;
+  padding-left: 0 !important;
+  max-width: 100% !important;
+  flex: none !important;
 }
 
 /* カレンダーコンテナの調整 */
 .schedule-container {
   max-width: calc(100vw - 370px) !important;
   width: calc(100vw - 370px) !important;
+  margin: 0 !important;
 }
 
 /* カード全体も調整 */
 .card {
   max-width: calc(100vw - 370px) !important;
   width: calc(100vw - 370px) !important;
+  margin: 0 !important;
 }
 
 /* スケジュールヘッダーも調整 */
@@ -10560,6 +10577,11 @@ function showMessage(message, type = 'info') {
 .schedule-body {
   max-width: calc(100vw - 370px) !important;
   width: calc(100vw - 370px) !important;
+}
+
+/* カードボディも調整 */
+.card-body {
+  padding: 0 !important;
 }
 
 .panel-header {
@@ -10740,6 +10762,8 @@ function showMessage(message, type = 'info') {
   
   .container-fluid {
     padding-right: 320px !important;
+    max-width: calc(100vw - 320px) !important;
+    width: calc(100vw - 320px) !important;
   }
   
   .schedule-container,
@@ -10760,6 +10784,8 @@ function showMessage(message, type = 'info') {
   
   .container-fluid {
     padding-right: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
   }
   
   .schedule-container,
