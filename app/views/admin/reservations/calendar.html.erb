@@ -10517,24 +10517,29 @@ function showMessage(message, type = 'info') {
   }
 }
 
-/* 右側の新規予約パネル */
+/* 右側の新規予約パネル - 常に表示 */
 .reservation-panel-right {
   position: fixed;
   top: 0;
-  right: -400px;
-  width: 400px;
+  right: 0;
+  width: 350px;
   height: 100vh;
   background: white;
   box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
   z-index: 1050;
-  transition: right 0.3s ease-in-out;
   border-left: 1px solid #dee2e6;
   display: flex;
   flex-direction: column;
 }
 
-.reservation-panel-right.open {
-  right: 0;
+/* メインコンテナを右側パネル分狭くする */
+.container-fluid {
+  padding-right: 370px !important; /* パネル幅(350px) + マージン(20px) */
+}
+
+/* カレンダーコンテナの調整 */
+.schedule-container {
+  max-width: calc(100vw - 370px);
 }
 
 .panel-header {
@@ -10909,18 +10914,14 @@ if (typeof window.currentReservationData === 'undefined') {
   window.currentReservationData = null;
 }
 
-// 右側パネルの管理
-function openReservationPanel() {
-  document.getElementById('reservationPanel').classList.add('open');
+// 右側パネルの管理 - 常に表示
+function initializeReservationPanel() {
+  // パネルを常に表示状態にする
+  document.getElementById('reservationPanel').style.display = 'flex';
   loadUsersForQuickReservation();
   
-  // パネルを開いたときにドロップリスナーを設定
+  // ドロップリスナーを設定
   setTimeout(setupNewReservationDropListeners, 100);
-}
-
-function closeReservationPanel() {
-  document.getElementById('reservationPanel').classList.remove('open');
-  resetReservationForm();
 }
 
 // ユーザー一覧の読み込み
@@ -11644,9 +11645,6 @@ function createReservationFromDrop(reservationData) {
 <!-- 右側の新規予約パネル -->
 <div class="reservation-panel-right" id="reservationPanel">
   <div class="panel-header">
-    <button type="button" class="panel-close" onclick="closeReservationPanel()">
-      <i class="fas fa-times"></i>
-    </button>
     <h5 class="mb-0">
       <i class="fas fa-plus-circle me-2 text-primary"></i>新規予約作成
     </h5>
@@ -11975,11 +11973,6 @@ function createReservationFromDrop(reservationData) {
   </div>
 </div>
 
-<!-- パネルを開くトリガーボタン -->
-<div class="panel-trigger" onclick="openReservationPanel()">
-  <i class="fas fa-plus"></i>
-  <span>新規予約</span>
-</div>
 
 <!-- カレンダー専用のスタイル -->
 <%= stylesheet_link_tag 'calendar', media: 'all' %> 
