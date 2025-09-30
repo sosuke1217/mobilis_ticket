@@ -10535,11 +10535,31 @@ function showMessage(message, type = 'info') {
 /* メインコンテナを右側パネル分狭くする */
 .container-fluid {
   padding-right: 370px !important; /* パネル幅(350px) + マージン(20px) */
+  margin-right: 0 !important;
 }
 
 /* カレンダーコンテナの調整 */
 .schedule-container {
-  max-width: calc(100vw - 370px);
+  max-width: calc(100vw - 370px) !important;
+  width: calc(100vw - 370px) !important;
+}
+
+/* カード全体も調整 */
+.card {
+  max-width: calc(100vw - 370px) !important;
+  width: calc(100vw - 370px) !important;
+}
+
+/* スケジュールヘッダーも調整 */
+.schedule-header {
+  max-width: calc(100vw - 370px) !important;
+  width: calc(100vw - 370px) !important;
+}
+
+/* スケジュールボディも調整 */
+.schedule-body {
+  max-width: calc(100vw - 370px) !important;
+  width: calc(100vw - 370px) !important;
 }
 
 .panel-header {
@@ -10713,20 +10733,41 @@ function showMessage(message, type = 'info') {
 }
 
 /* レスポンシブ対応 */
+@media (max-width: 1200px) {
+  .reservation-panel-right {
+    width: 300px;
+  }
+  
+  .container-fluid {
+    padding-right: 320px !important;
+  }
+  
+  .schedule-container,
+  .card,
+  .schedule-header,
+  .schedule-body {
+    max-width: calc(100vw - 320px) !important;
+    width: calc(100vw - 320px) !important;
+  }
+}
+
 @media (max-width: 768px) {
   .reservation-panel-right {
     width: 100%;
     right: -100%;
+    position: fixed;
   }
   
-  .panel-trigger {
-    right: 10px;
-    padding: 0.75rem 0.25rem;
-    font-size: 0.75rem;
+  .container-fluid {
+    padding-right: 0 !important;
   }
   
-  .panel-trigger span {
-    display: none;
+  .schedule-container,
+  .card,
+  .schedule-header,
+  .schedule-body {
+    max-width: 100% !important;
+    width: 100% !important;
   }
   
   .course-blocks-grid {
