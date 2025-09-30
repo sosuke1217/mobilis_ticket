@@ -2934,6 +2934,8 @@
               // イベントリスナーを設定
               searchInput.addEventListener('input', handleUserSearchForReservationForm);
               
+              console.log('✅ User search event listener re-setup for reservation form');
+              
               // フォーカスアウト時に結果を隠す
               searchInput.addEventListener('blur', function() {
                 setTimeout(() => {
@@ -2974,6 +2976,19 @@
           }
         }
 
+        function handleUserSearchForDragDrop(e) {
+          const query = e.target.value.trim();
+          console.log('🔍 DragDrop search input changed:', query);
+          
+          if (query.length >= 2) {
+            console.log('🔍 Searching for users (drag drop):', query);
+            searchUsersForDragDrop(query);
+          } else {
+            console.log('🔍 Query too short, hiding results (drag drop)');
+            hideUserSearchResultsForDragDrop();
+          }
+        }
+
         function searchUsersForReservationForm(query) {
           console.log('🔍 Fetching users for query:', query);
           fetch(`/admin/users/search?query=${encodeURIComponent(query)}`, {
@@ -3000,6 +3015,35 @@
           .catch(error => {
             console.error('❌ Error searching users:', error);
             hideUserSearchResultsForReservationForm();
+          });
+        }
+
+        function searchUsersForDragDrop(query) {
+          console.log('🔍 Fetching users for drag drop query:', query);
+          fetch(`/admin/users/search?query=${encodeURIComponent(query)}`, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            }
+          })
+          .then(response => {
+            console.log('🔍 DragDrop search response status:', response.status);
+            return response.json();
+          })
+          .then(data => {
+            console.log('🔍 DragDrop search response data:', data);
+            if (data.users) {
+              console.log('🔍 Calling displayUserSearchResultsForDragDrop with:', data.users);
+              displayUserSearchResultsForDragDrop(data.users);
+            } else {
+              console.log('🔍 No users, hiding drag drop results');
+              hideUserSearchResultsForDragDrop();
+            }
+          })
+          .catch(error => {
+            console.error('❌ DragDrop search error:', error);
+            hideUserSearchResultsForDragDrop();
           });
         }
 
@@ -3037,6 +3081,13 @@
 
         function hideUserSearchResultsForReservationForm() {
           const searchResults = document.getElementById('userSearchResultsForReservationForm');
+          if (searchResults) {
+            searchResults.style.display = 'none';
+          }
+        }
+
+        function hideUserSearchResultsForDragDrop() {
+          const searchResults = document.getElementById('userSearchResultsForDragDrop');
           if (searchResults) {
             searchResults.style.display = 'none';
           }
@@ -10292,7 +10343,46 @@ function showMessage(message, type = 'info') {
         // ユーザー検索機能を初期化
         document.addEventListener('DOMContentLoaded', function() {
             setupUserSearch();
+            setupReservationFormUserSearch();
         });
+
+        // Turboページ遷移時の初期化
+        document.addEventListener('turbo:load', function() {
+            console.log('🚀 Turbo page loaded - reinitializing user search');
+            setupUserSearch();
+            setupReservationFormUserSearch();
+        });
+
+        // 予約フォーム内のユーザー検索イベントリスナーを設定
+        function setupReservationFormUserSearch() {
+            // 予約フォーム用の検索入力フィールド
+            const searchInput = document.getElementById('userSearchInputForReservationForm');
+            if (searchInput) {
+                // 既存のイベントリスナーを削除
+                searchInput.removeEventListener('input', handleUserSearchForReservationForm);
+                
+                // 新しいイベントリスナーを追加
+                searchInput.addEventListener('input', handleUserSearchForReservationForm);
+                
+                console.log('✅ User search event listener set up for reservation form');
+            } else {
+                console.log('⚠️ userSearchInputForReservationForm not found');
+            }
+            
+            // ドラッグ&ドロップ用の検索入力フィールド
+            const dragDropSearchInput = document.getElementById('userSearchInputForDragDrop');
+            if (dragDropSearchInput) {
+                // 既存のイベントリスナーを削除
+                dragDropSearchInput.removeEventListener('input', handleUserSearchForDragDrop);
+                
+                // 新しいイベントリスナーを追加
+                dragDropSearchInput.addEventListener('input', handleUserSearchForDragDrop);
+                
+                console.log('✅ User search event listener set up for drag drop');
+            } else {
+                console.log('⚠️ userSearchInputForDragDrop not found');
+            }
+        }
         
         // グローバル関数として公開（onclick属性で使用される関数）
         window.openBookingModal = openBookingModal;
