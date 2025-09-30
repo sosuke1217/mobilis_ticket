@@ -7353,7 +7353,7 @@ function showMessage(message, type = 'info') {
 
         // 時間枠クリック時の選択肢を表示
         function showSlotOptions(date, time, cellElement) {
-            // 既存の選択肢メニューがあれば削除
+            // 既存の選択肢メニューがあれば削除して終了
             const existingMenu = document.querySelector('.slot-options-menu');
             if (existingMenu) {
                 existingMenu.remove();
@@ -7364,13 +7364,22 @@ function showMessage(message, type = 'info') {
             const menu = document.createElement('div');
             menu.className = 'slot-options-menu';
             menu.innerHTML = `
-                <div class="slot-option" onclick="openBookingModal(new Date('${date.toISOString()}'), '${time}'); closeSlotOptionsMenu()">
+                <div class="slot-option" onclick="openBookingModal(new Date('${date.toISOString()}'), '${time}'); closeSlotOptionsMenu()" 
+                     style="padding: 8px 16px; cursor: pointer; border-bottom: 1px solid #eee; transition: background-color 0.2s;"
+                     onmouseover="this.style.backgroundColor='#f8f9fa'" 
+                     onmouseout="this.style.backgroundColor='white'">
                     👤 予約作成
                 </div>
-                <div class="slot-option" onclick="openBreakModal(new Date('${date.toISOString()}'), '${time}'); closeSlotOptionsMenu()">
+                <div class="slot-option" onclick="openBreakModal(new Date('${date.toISOString()}'), '${time}'); closeSlotOptionsMenu()" 
+                     style="padding: 8px 16px; cursor: pointer; border-bottom: 1px solid #eee; transition: background-color 0.2s;"
+                     onmouseover="this.style.backgroundColor='#f8f9fa'" 
+                     onmouseout="this.style.backgroundColor='white'">
                     ☕ 休憩作成
                 </div>
-                <div class="slot-option-cancel" onclick="closeSlotOptionsMenu()">
+                <div class="slot-option-cancel" onclick="closeSlotOptionsMenu()" 
+                     style="padding: 8px 16px; cursor: pointer; color: #666; transition: background-color 0.2s;"
+                     onmouseover="this.style.backgroundColor='#f8f9fa'" 
+                     onmouseout="this.style.backgroundColor='white'">
                     ✕ キャンセル
                 </div>
             `;
@@ -7381,18 +7390,37 @@ function showMessage(message, type = 'info') {
             menu.style.left = `${rect.left + 10}px`;
             menu.style.top = `${rect.top + 10}px`;
             menu.style.zIndex = '10000';
+            menu.style.backgroundColor = 'white';
+            menu.style.border = '1px solid #ddd';
+            menu.style.borderRadius = '8px';
+            menu.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            menu.style.padding = '8px 0';
+            menu.style.minWidth = '150px';
+            menu.style.cursor = 'pointer';
 
             // ページに追加
             document.body.appendChild(menu);
 
             // 外側クリックでメニューを閉じる
             setTimeout(() => {
-                document.addEventListener('click', function closeOnOutsideClick(e) {
-                    if (!menu.contains(e.target)) {
+                const closeOnOutsideClick = (e) => {
+                    // メニューがまだ存在するかチェック
+                    const currentMenu = document.querySelector('.slot-options-menu');
+                    if (!currentMenu) {
+                        document.removeEventListener('click', closeOnOutsideClick);
+                        return;
+                    }
+                    
+                    // クリックされた要素がメニュー内でない場合
+                    if (!currentMenu.contains(e.target)) {
+                        console.log('🎯 Outside click detected, closing menu');
                         closeSlotOptionsMenu();
                         document.removeEventListener('click', closeOnOutsideClick);
                     }
-                });
+                };
+                
+                // 少し遅延を入れてイベントリスナーを追加（現在のクリックイベントが処理される前に）
+                document.addEventListener('click', closeOnOutsideClick);
             }, 100);
         }
 
