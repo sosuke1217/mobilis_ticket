@@ -1,5 +1,6 @@
 <% content_for :title, "予約カレンダー - Mobilis" %>
 
+<div id="calendar-page-wrapper">
 <div class="container-lg my-5">
   <!-- ヘッダーセクション -->
   <div class="row mb-4">
@@ -10532,56 +10533,42 @@ function showMessage(message, type = 'info') {
   flex-direction: column;
 }
 
-/* メインコンテナを右側パネル分狭くする */
-.container-fluid {
-  padding-right: 370px !important; /* パネル幅(350px) + マージン(20px) */
-  margin-right: 0 !important;
-  max-width: calc(100vw - 370px) !important;
-  width: calc(100vw - 370px) !important;
+/* カレンダーページ専用のレイアウト調整 */
+body {
+  overflow-x: hidden;
 }
 
-/* Bootstrapのグリッドシステムを無効化 */
-.row {
-  margin-right: 0 !important;
-  margin-left: 0 !important;
-}
-
-.col-12, .col-md-12 {
-  padding-right: 0 !important;
-  padding-left: 0 !important;
-  max-width: 100% !important;
-  flex: none !important;
+/* メインコンテンツエリアの調整 */
+#calendar-page-wrapper {
+  margin-right: 350px; /* パネル幅 */
+  padding-right: 20px;
+  transition: margin-right 0.3s ease;
 }
 
 /* カレンダーコンテナの調整 */
 .schedule-container {
-  max-width: calc(100vw - 370px) !important;
-  width: calc(100vw - 370px) !important;
+  max-width: 100% !important;
+  width: 100% !important;
   margin: 0 !important;
 }
 
 /* カード全体も調整 */
-.card {
-  max-width: calc(100vw - 370px) !important;
-  width: calc(100vw - 370px) !important;
+.schedule-container .card {
+  max-width: 100% !important;
+  width: 100% !important;
   margin: 0 !important;
 }
 
 /* スケジュールヘッダーも調整 */
 .schedule-header {
-  max-width: calc(100vw - 370px) !important;
-  width: calc(100vw - 370px) !important;
+  max-width: 100% !important;
+  width: 100% !important;
 }
 
 /* スケジュールボディも調整 */
 .schedule-body {
-  max-width: calc(100vw - 370px) !important;
-  width: calc(100vw - 370px) !important;
-}
-
-/* カードボディも調整 */
-.card-body {
-  padding: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
 }
 
 .panel-header {
@@ -10760,18 +10747,9 @@ function showMessage(message, type = 'info') {
     width: 300px;
   }
   
-  .container-fluid {
-    padding-right: 320px !important;
-    max-width: calc(100vw - 320px) !important;
-    width: calc(100vw - 320px) !important;
-  }
-  
-  .schedule-container,
-  .card,
-  .schedule-header,
-  .schedule-body {
-    max-width: calc(100vw - 320px) !important;
-    width: calc(100vw - 320px) !important;
+  #calendar-page-wrapper {
+    margin-right: 300px;
+    padding-right: 20px;
   }
 }
 
@@ -10782,18 +10760,9 @@ function showMessage(message, type = 'info') {
     position: fixed;
   }
   
-  .container-fluid {
-    padding-right: 0 !important;
-    max-width: 100% !important;
-    width: 100% !important;
-  }
-  
-  .schedule-container,
-  .card,
-  .schedule-header,
-  .schedule-body {
-    max-width: 100% !important;
-    width: 100% !important;
+  #calendar-page-wrapper {
+    margin-right: 0;
+    padding-right: 0;
   }
   
   .course-blocks-grid {
@@ -12040,6 +12009,8 @@ function createReservationFromDrop(reservationData) {
   </div>
 </div>
 
+</div>
+</div>
 
 <!-- カレンダー専用のスタイル -->
 <%= stylesheet_link_tag 'calendar', media: 'all' %> 
