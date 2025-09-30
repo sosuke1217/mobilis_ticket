@@ -1439,14 +1439,30 @@
                     if (reservations[reservationDateKey]) {
                         const reservationIndex = reservations[reservationDateKey].findIndex(r => r.id === currentReservation.id);
                         if (reservationIndex !== -1) {
+                            // 元の予約データをバックアップ
+                            const originalCustomer = reservations[reservationDateKey][reservationIndex].customer;
+                            const originalUserId = reservations[reservationDateKey][reservationIndex].userId;
+                            
                             reservations[reservationDateKey][reservationIndex].updatedAt = updateTimestamp;
                             reservations[reservationDateKey][reservationIndex].effective_interval_minutes = newInterval;
                             reservations[reservationDateKey][reservationIndex].individual_interval_minutes = newInterval;
-                            console.log('🔍 Updated local reservation data:', reservations[reservationDateKey][reservationIndex]);
+                            
+                            console.log('🔍 Updated local reservation data:', {
+                                before: { customer: originalCustomer, userId: originalUserId },
+                                after: { 
+                                    customer: reservations[reservationDateKey][reservationIndex].customer, 
+                                    userId: reservations[reservationDateKey][reservationIndex].userId 
+                                },
+                                fullReservation: reservations[reservationDateKey][reservationIndex]
+                            });
                         }
                     }
                     
                     // カレンダーを再描画
+                    console.log('🔍 Before regenerating time slots - checking reservation data:', {
+                        currentReservation,
+                        reservationsData: reservations[reservationDateKey]?.find(r => r.id === currentReservation.id)
+                    });
                     generateTimeSlots();
                     
                     showMessage('準備時間が更新されました。', 'success');
