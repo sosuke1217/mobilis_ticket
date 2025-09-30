@@ -3965,6 +3965,10 @@
                                     cell.addEventListener('click', (e) => {
                                         // ドラッグ中でない場合のみクリックイベントを実行
                                         if (!isDragging) {
+                                            // 既存のメニューがあれば閉じる
+                                            if (isSlotOptionsMenuVisible()) {
+                                                closeSlotOptionsMenu();
+                                            }
                                                 console.log('👤 Regular reservation block clicked:', reservation);
                                         openReservationDetailModal(reservation);
                                         }
@@ -3984,15 +3988,16 @@
                                         console.log(`🔍 Created reservation block for ${dateKey} ${timeStr}:`, reservation);
                                     }
                                 }
-                            } else {
+    } else {
                                 cell.classList.add('available', 'bookable');
                                 
                                 // 新規予約作成のためのクリックイベント
                                 cell.addEventListener('click', (e) => {
                                     e.stopPropagation();
                                     
-                                    // メニューが既に表示されている場合は何もしない
+                                    // 既存のメニューがあれば閉じる
                                     if (isSlotOptionsMenuVisible()) {
+                                        closeSlotOptionsMenu();
                                         return;
                                     }
                                     
@@ -4306,6 +4311,12 @@
                 block.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
+                    
+                    // 既存のメニューがあれば閉じる
+                    if (isSlotOptionsMenuVisible()) {
+                        closeSlotOptionsMenu();
+                    }
+                    
                     console.log('🎯 スパニング予約ブロックがクリックされました:', reservation);
                     console.log('🔍 予約ID:', reservation.id);
                     openReservationDetailModal(reservation);
@@ -4384,6 +4395,12 @@
                 // 休憩ブロックにクリックイベントを追加
                 block.addEventListener('click', (e) => {
                     e.stopPropagation(); // イベントの伝播を停止
+                    
+                    // 既存のメニューがあれば閉じる
+                    if (isSlotOptionsMenuVisible()) {
+                        closeSlotOptionsMenu();
+                    }
+                    
                     console.log('🍊 Break block clicked:', reservation);
                     openBreakDetailModal(reservation);
                 });
@@ -7357,7 +7374,7 @@ function showMessage(message, type = 'info') {
             const existingMenu = document.querySelector('.slot-options-menu');
             if (existingMenu) {
                 existingMenu.remove();
-                return; // メニューが既に表示されている場合は何もしない
+                return; // 既存のメニューを閉じて新しいメニューは表示しない
             }
 
             // 選択肢メニューを作成
