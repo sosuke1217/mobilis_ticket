@@ -10521,13 +10521,13 @@ function showMessage(message, type = 'info') {
 /* 右側の新規予約パネル - 常に表示 */
 .reservation-panel-right {
   position: fixed;
-  top: 0;
+  top: 70px; /* ナビゲーションの高さ分だけ下に移動 */
   right: 0;
   width: 350px;
-  height: 100vh;
+  height: calc(100vh - 70px); /* ナビゲーションの高さ分を引く */
   background: white;
   box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-  z-index: 1050;
+  z-index: 1040; /* ナビゲーションより低くする */
   border-left: 1px solid #dee2e6;
   display: flex;
   flex-direction: column;
@@ -10745,6 +10745,8 @@ body {
 @media (max-width: 1200px) {
   .reservation-panel-right {
     width: 300px;
+    top: 70px; /* ナビゲーションの高さを維持 */
+    height: calc(100vh - 70px);
   }
   
   #calendar-page-wrapper {
@@ -10758,6 +10760,8 @@ body {
     width: 100%;
     right: -100%;
     position: fixed;
+    top: 70px; /* ナビゲーションの高さを維持 */
+    height: calc(100vh - 70px);
   }
   
   #calendar-page-wrapper {
