@@ -3843,6 +3843,12 @@
             }
             
             const scheduleBody = document.getElementById('scheduleBody');
+            if (!scheduleBody) {
+                console.error('❌ Schedule body not found');
+                return;
+            }
+            
+            // 既存のイベントリスナーをクリアするために完全にリセット
             scheduleBody.innerHTML = '';
             
             // 8:00から21:00まで10分刻みで生成
@@ -3981,12 +3987,10 @@
                             } else {
                                 cell.classList.add('available', 'bookable');
                                 
-                                // 既存のクリックイベントリスナーを削除
-                                const newCell = cell.cloneNode(true);
-                                cell.parentNode.replaceChild(newCell, cell);
-                                
                                 // 新規予約作成のためのクリックイベント
-                                newCell.addEventListener('click', () => {
+                                cell.addEventListener('click', (e) => {
+                                    e.stopPropagation();
+                                    
                                     // メニューが既に表示されている場合は何もしない
                                     if (isSlotOptionsMenuVisible()) {
                                         return;
@@ -3994,7 +3998,7 @@
                                     
                                     const slotDate = new Date(currentWeekStart);
                                     slotDate.setDate(slotDate.getDate() + day);
-                                    showSlotOptions(slotDate, timeStr, newCell);
+                                    showSlotOptions(slotDate, timeStr, cell);
                                 });
                             }
                         } else {
@@ -7403,6 +7407,15 @@ function showMessage(message, type = 'info') {
         // メニューが表示されているかチェックする関数
         function isSlotOptionsMenuVisible() {
             return document.querySelector('.slot-options-menu') !== null;
+        }
+
+        // 要素のクリックイベントリスナーをクリアする関数
+        function clearClickListeners(element) {
+            const newElement = element.cloneNode(true);
+            if (element.parentNode) {
+                element.parentNode.replaceChild(newElement, element);
+            }
+            return newElement;
         }
 
         // 休憩タイトル選択時の処理
