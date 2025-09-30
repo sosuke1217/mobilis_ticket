@@ -3978,13 +3978,23 @@
                                         console.log(`🔍 Created reservation block for ${dateKey} ${timeStr}:`, reservation);
                                     }
                                 }
-    } else {
+                            } else {
                                 cell.classList.add('available', 'bookable');
+                                
+                                // 既存のクリックイベントリスナーを削除
+                                const newCell = cell.cloneNode(true);
+                                cell.parentNode.replaceChild(newCell, cell);
+                                
                                 // 新規予約作成のためのクリックイベント
-                                cell.addEventListener('click', () => {
+                                newCell.addEventListener('click', () => {
+                                    // メニューが既に表示されている場合は何もしない
+                                    if (isSlotOptionsMenuVisible()) {
+                                        return;
+                                    }
+                                    
                                     const slotDate = new Date(currentWeekStart);
                                     slotDate.setDate(slotDate.getDate() + day);
-                                    showSlotOptions(slotDate, timeStr, cell);
+                                    showSlotOptions(slotDate, timeStr, newCell);
                                 });
                             }
                         } else {
@@ -7343,6 +7353,7 @@ function showMessage(message, type = 'info') {
             const existingMenu = document.querySelector('.slot-options-menu');
             if (existingMenu) {
                 existingMenu.remove();
+                return; // メニューが既に表示されている場合は何もしない
             }
 
             // 選択肢メニューを作成
@@ -7387,6 +7398,11 @@ function showMessage(message, type = 'info') {
             if (menu) {
                 menu.remove();
             }
+        }
+
+        // メニューが表示されているかチェックする関数
+        function isSlotOptionsMenuVisible() {
+            return document.querySelector('.slot-options-menu') !== null;
         }
 
         // 休憩タイトル選択時の処理
