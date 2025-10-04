@@ -1047,22 +1047,15 @@
                     
                     const updatedReservation = {
                         ...reservationForUpdates,
-                        customer: reservationData.name || reservationData.user?.name || reservationForUpdates.customer || '未設定',
-                        phone: reservationData.user?.phone_number || reservationForUpdates.phone || '',
-                        email: reservationData.user?.email || reservationForUpdates.email || '',
+                        customer: reservationData.name || reservationData.user?.name || '未設定',
+                        phone: reservationData.user?.phone_number || '',
+                        email: reservationData.user?.email || '',
                         duration: extractDurationFromCourse(reservationData.course),
                         status: reservationData.status,
                         note: reservationData.note || '',
                         updatedAt: reservationData.updated_at,
                         userId: window.currentUserId || reservationForUpdates.userId // 新しいユーザーIDを設定
                     };
-                    
-                    console.log('🔍 User data preservation check:', {
-                        originalCustomer: reservationForUpdates.customer,
-                        backendName: reservationData.name,
-                        backendUserName: reservationData.user?.name,
-                        finalCustomer: updatedReservation.customer
-                    });
                     
                     console.log('🔍 updatedReservation.note after construction:', updatedReservation.note);
                     
@@ -1465,12 +1458,15 @@
                         }
                     }
                     
-                    // カレンダーを再描画
-                    console.log('🔍 Before regenerating time slots - checking reservation data:', {
-                        currentReservation,
-                        reservationsData: reservations[reservationDateKey]?.find(r => r.id === currentReservation.id)
-                    });
-                    generateTimeSlots();
+        // カレンダーを再描画
+        console.log('🔍 Before regenerating time slots - checking reservation data:', {
+            currentReservation,
+            reservationsData: reservations[reservationDateKey]?.find(r => r.id === currentReservation.id)
+        });
+        generateTimeSlots();
+        
+        // 右側パネルのz-indexを調整（モーダルが開いているときは下げる）
+        adjustRightPanelZIndex();
                     
                     showMessage('準備時間が更新されました。', 'success');
                 } else {
@@ -10367,6 +10363,8 @@ function showMessage(message, type = 'info') {
         document.addEventListener('DOMContentLoaded', function() {
             setupUserSearch();
             setupReservationFormUserSearch();
+            // モーダル監視を開始
+            observeModalChanges();
         });
 
         // Turboページ遷移時の初期化
@@ -10374,6 +10372,8 @@ function showMessage(message, type = 'info') {
             console.log('🚀 Turbo page loaded - reinitializing user search');
             setupUserSearch();
             setupReservationFormUserSearch();
+            // モーダル監視を開始
+            observeModalChanges();
         });
 
         // 予約フォーム内のユーザー検索イベントリスナーを設定
@@ -10448,6 +10448,44 @@ function showMessage(message, type = 'info') {
         window.updateTimeSlot = updateTimeSlot;
         window.saveReservationChanges = saveReservationChanges;
         window.updateMiniCalendarFromSelector = updateMiniCalendarFromSelector;
+        
+        // 右側パネルのz-indexを調整する関数
+        function adjustRightPanelZIndex() {
+            const rightPanel = document.getElementById('reservationPanel');
+            if (!rightPanel) return;
+            
+            // モーダルが開いているかチェック
+            const openModals = document.querySelectorAll('.modal.show');
+            if (openModals.length > 0) {
+                // モーダルが開いている場合は右側パネルを下げる
+                rightPanel.style.zIndex = '1020';
+                console.log('🔧 Right panel z-index lowered for modal');
+            } else {
+                // モーダルが閉じている場合は通常のz-indexに戻す
+                rightPanel.style.zIndex = '1030';
+                console.log('🔧 Right panel z-index restored');
+            }
+        }
+        
+        // モーダルの表示状態を監視
+        function observeModalChanges() {
+            const modalObserver = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                        const target = mutation.target;
+                        if (target.classList.contains('modal')) {
+                            setTimeout(adjustRightPanelZIndex, 100);
+                        }
+                    }
+                });
+            });
+            
+            // すべてのモーダルを監視
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                modalObserver.observe(modal, { attributes: true });
+            });
+        }
         
         // カレンダー更新関数
         function refreshCalendar() {
@@ -10714,7 +10752,7 @@ function showMessage(message, type = 'info') {
   height: calc(100vh - 70px); /* ナビゲーションの高さ分を引く */
   background: white;
   box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-  z-index: 1040; /* ナビゲーションより低くする */
+  z-index: 1030; /* モーダルより低くする */
   border-left: 1px solid #dee2e6;
   display: flex;
   flex-direction: column;
