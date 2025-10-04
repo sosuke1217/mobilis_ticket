@@ -292,7 +292,8 @@ class Admin::ReservationsController < ApplicationController
       Rails.logger.info "🔍 Found user by ID: #{user&.name} (ID: #{user&.id})"
     elsif params[:reservation][:user_attributes].present?
       user_attrs = params[:reservation][:user_attributes]
-      user = User.find_by(phone_number: user_attrs[:phone_number])
+      # 名前をメインにしてユーザーを検索
+      user = User.find_by(name: user_attrs[:name])
       
       if user.nil?
         user = User.create!(
@@ -300,9 +301,14 @@ class Admin::ReservationsController < ApplicationController
           phone_number: user_attrs[:phone_number],
           email: user_attrs[:email]
         )
-        Rails.logger.info "🔄 Created new user: #{user.name} (ID: #{user.id})"
+        Rails.logger.info "🔄 Created new user by name: #{user.name} (ID: #{user.id})"
       else
-        Rails.logger.info "🔍 Found existing user: #{user.name} (ID: #{user.id})"
+        # 既存ユーザーの情報を更新（電話番号やメールが変更された場合）
+        user.update!(
+          phone_number: user_attrs[:phone_number],
+          email: user_attrs[:email]
+        )
+        Rails.logger.info "🔍 Found existing user by name: #{user.name} (ID: #{user.id})"
       end
     end
 
@@ -619,7 +625,8 @@ class Admin::ReservationsController < ApplicationController
         Rails.logger.info "🔄 Found user by ID: #{user.name} (ID: #{user.id})"
       elsif params[:reservation][:user_attributes].present?
         user_attrs = params[:reservation][:user_attributes]
-        user = User.find_by(phone_number: user_attrs[:phone_number])
+        # 名前をメインにしてユーザーを検索
+        user = User.find_by(name: user_attrs[:name])
         
         if user.nil?
           user = User.create!(
@@ -627,12 +634,14 @@ class Admin::ReservationsController < ApplicationController
             phone_number: user_attrs[:phone_number],
             email: user_attrs[:email]
           )
+          Rails.logger.info "🔄 Created new user by name for update: #{user.name} (ID: #{user.id})"
         else
-          # 既存ユーザーの情報を更新
+          # 既存ユーザーの情報を更新（電話番号やメールが変更された場合）
           user.update!(
-            name: user_attrs[:name],
+            phone_number: user_attrs[:phone_number],
             email: user_attrs[:email]
           )
+          Rails.logger.info "🔍 Found existing user by name for update: #{user.name} (ID: #{user.id})"
         end
       end
       
