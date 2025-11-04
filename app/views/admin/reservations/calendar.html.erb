@@ -10458,12 +10458,12 @@ function showMessage(message, type = 'info') {
             const openModals = document.querySelectorAll('.modal.show');
             if (openModals.length > 0) {
                 // モーダルが開いている場合は右側パネルを下げる
-                rightPanel.style.zIndex = '900';
-                console.log('🔧 Right panel z-index lowered for modal');
+                rightPanel.style.zIndex = '1';
+                console.log('🔧 Right panel z-index lowered for modal: 1');
             } else {
                 // モーダルが閉じている場合は通常のz-indexに戻す
-                rightPanel.style.zIndex = '1000';
-                console.log('🔧 Right panel z-index restored');
+                rightPanel.style.zIndex = '1';
+                console.log('🔧 Right panel z-index restored: 1');
             }
         }
         
@@ -10554,7 +10554,7 @@ function showMessage(message, type = 'info') {
   border-radius: 8px;
   overflow: hidden;
   position: relative;
-  z-index: 1000; /* カレンダーと同じレイヤー */
+  z-index: 1; /* 右側パネルと同じレイヤー */
 }
 
 .schedule-header {
@@ -10754,7 +10754,7 @@ function showMessage(message, type = 'info') {
   height: calc(100vh - 70px); /* ナビゲーションの高さ分を引く */
   background: white;
   box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-  z-index: 1000; /* カレンダーと同じレイヤー */
+  z-index: 1 !important; /* モーダルより確実に下にする */
   border-left: 1px solid #dee2e6;
   display: flex;
   flex-direction: column;
