@@ -561,7 +561,7 @@
     </div>
 
      <!-- 予約詳細モーダル -->
-    <div id="reservationDetailModal" class="modal">
+    <div id="reservationDetailModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050; background-color: rgba(0, 0, 0, 0.5);">
         <div class="modal-content">
             <div class="modal-body" id="reservationDetailContent">
                 <span class="close" onclick="closeReservationDetailModal()">&times;</span>
@@ -1458,12 +1458,12 @@
                         }
                     }
                     
-        // カレンダーを再描画
+                    // カレンダーを再描画
         console.log('🔍 Before regenerating time slots - checking reservation data:', {
             currentReservation,
             reservationsData: reservations[reservationDateKey]?.find(r => r.id === currentReservation.id)
         });
-        generateTimeSlots();
+                    generateTimeSlots();
         
         // 右側パネルのz-indexを調整（モーダルが開いているときは下げる）
         adjustRightPanelZIndex();
@@ -8254,7 +8254,13 @@ function showMessage(message, type = 'info') {
                     </div>
                 </div>
             `;
-            document.getElementById('reservationDetailModal').style.display = 'block';
+            const modal = document.getElementById('reservationDetailModal');
+            modal.style.display = 'block';
+            modal.style.zIndex = '1050';
+            modal.style.position = 'fixed';
+            
+            // 右側パネルのz-indexを調整
+            adjustRightPanelZIndex();
             
             // Add click event listener to customer link
             setTimeout(() => {
