@@ -440,6 +440,18 @@ class LinebotController < ApplicationController
       Rails.logger.info "📅 Showing booking options"
       send_booking_options(user, reply_token)
 
+    when "book_40min"
+      Rails.logger.info "📅 Starting booking flow for 40 min"
+      start_booking_flow(user, reply_token, "40 min")
+
+    when "book_60min"
+      Rails.logger.info "📅 Starting booking flow for 60 min"
+      start_booking_flow(user, reply_token, "60 min")
+
+    when "book_80min"
+      Rails.logger.info "📅 Starting booking flow for 80 min"
+      start_booking_flow(user, reply_token, "80 min")
+
     when "news"
       Rails.logger.info "📰 Showing news menu"
       send_news_menu(reply_token)
@@ -572,6 +584,7 @@ class LinebotController < ApplicationController
 
   # 🆕 予約オプションを送信
   def send_booking_options(user, reply_token)
+    Rails.logger.info "📅 send_booking_options called for user: #{user.id} (#{user.name})"
     message = {
       type: "flex",
       altText: "ご予約・コース選択",
@@ -631,7 +644,9 @@ class LinebotController < ApplicationController
       }
     }
 
+    Rails.logger.info "📅 Sending booking options message to user: #{user.id}"
     send_reply(reply_token, message)
+    Rails.logger.info "✅ Booking options message sent successfully"
   end
 
   # 🆕 今日の空き状況を表示
