@@ -43,15 +43,51 @@ class LinebotController < ApplicationController
       when Line::Bot::Event::Postback
         Rails.logger.info "🔄 Postback event received"
         Rails.logger.info "🔍 Event class: #{event.class}"
+        Rails.logger.info "🔍 Event inspect: #{event.inspect}"
         
-        # ポストバックデータを取得
-        postback_data = event['postback']['data'] rescue event.postback.data rescue nil
-        user_id = event['source']['userId'] rescue event.source.user_id rescue nil
-        reply_token = event['replyToken'] rescue event.reply_token rescue nil
+        # ポストバックデータを取得（複数の方法を試す）
+        postback_data = nil
+        user_id = nil
+        reply_token = nil
         
-        Rails.logger.info "🔍 Postback data: #{postback_data.inspect}"
-        Rails.logger.info "🔍 User ID: #{user_id.inspect}"
-        Rails.logger.info "🔍 Reply token present: #{reply_token.present?}"
+        # 方法1: ハッシュアクセス
+        begin
+          postback_data = event['postback']['data']
+          user_id = event['source']['userId']
+          reply_token = event['replyToken']
+          Rails.logger.info "✅ Got data via hash access: #{postback_data}"
+        rescue => e
+          Rails.logger.warn "⚠️ Hash access failed: #{e.message}"
+        end
+        
+        # 方法2: メソッドアクセス
+        if postback_data.nil?
+          begin
+            postback_data = event.postback.data if event.respond_to?(:postback)
+            user_id = event.source.user_id if event.respond_to?(:source) && user_id.nil?
+            reply_token = event.reply_token if event.respond_to?(:reply_token) && reply_token.nil?
+            Rails.logger.info "✅ Got data via method access: #{postback_data}"
+          rescue => e
+            Rails.logger.warn "⚠️ Method access failed: #{e.message}"
+          end
+        end
+        
+        # 方法3: 生のデータ構造を確認
+        if postback_data.nil?
+          begin
+            # LINE Bot SDKのイベントオブジェクトは通常Hashのようにアクセスできる
+            if event.respond_to?(:[])
+              Rails.logger.info "🔍 Event supports [] access"
+              Rails.logger.info "🔍 event['postback']: #{event['postback'].inspect}" if event['postback']
+            end
+          rescue => e
+            Rails.logger.warn "⚠️ Event structure check failed: #{e.message}"
+          end
+        end
+        
+        Rails.logger.info "🔍 Final postback data: #{postback_data.inspect}"
+        Rails.logger.info "🔍 Final user ID: #{user_id.inspect}"
+        Rails.logger.info "🔍 Final reply token: #{reply_token.present? ? 'present' : 'missing'}"
         
         unless user_id
           Rails.logger.error "❌ Could not extract user_id from postback event"
@@ -60,12 +96,16 @@ class LinebotController < ApplicationController
         
         unless postback_data
           Rails.logger.error "❌ Could not extract postback data from event"
+          Rails.logger.error "🔍 Full event structure: #{event.inspect}"
           # ポストバックデータがない場合はメインメニューを表示
           user = find_or_create_user_with_profile(user_id)
           send_main_menu(reply_token) if reply_token
           next
         end
 
+        # ポストバックデータを文字列に正規化
+        postback_data = postback_data.to_s.strip if postback_data
+        
         user = find_or_create_user_with_profile(user_id)
         
         if user.notification_preference.nil?
