@@ -46,8 +46,24 @@ class LinebotController < ApplicationController
         user_id = event['source']['userId']
         user = find_or_create_user_with_profile(user_id)
         
+        if user.notification_preference.nil?
+          user.create_notification_preference!(enabled: true)
+        end
+        
         data = event['postback']['data']
         handle_postback_action(user, data, event['replyToken'])
+
+      when Line::Bot::Event::Follow
+        Rails.logger.info "👋 Follow event: user: #{event['source']['userId']}"
+        user_id = event['source']['userId']
+        user = find_or_create_user_with_profile(user_id)
+        
+        if user.notification_preference.nil?
+          user.create_notification_preference!(enabled: true)
+        end
+        
+        # 新規ユーザーにメインメニューを送信
+        send_main_menu(event['replyToken'])
       end
     end
   end
@@ -407,8 +423,9 @@ class LinebotController < ApplicationController
       end
 
     else
-      # 認識されないメッセージの場合は何も送信しない
-      Rails.logger.info "🔍 Unrecognized message: '#{message_text}' - no response sent"
+      # 認識されないメッセージの場合はメインメニューを表示
+      Rails.logger.info "🔍 Unrecognized message: '#{message_text}' - showing main menu"
+      send_main_menu(reply_token)
     end
   end
 
@@ -416,8 +433,10 @@ class LinebotController < ApplicationController
     Rails.logger.info "🔄 Postback action received: #{data}"
     Rails.logger.info "🔍 Postback data type: #{data.class}"
     Rails.logger.info "🔍 Postback data length: #{data.length}"
+    Rails.logger.info "🔍 User ID: #{user.id}, User name: #{user.name}"
     
-    case data
+    begin
+      case data
     when "check_tickets"
       Rails.logger.info "📋 Checking tickets for user: #{user.id} (#{user.name})"
       Rails.logger.info "📋 User line_user_id: #{user.line_user_id}"
@@ -579,6 +598,21 @@ class LinebotController < ApplicationController
         type: "text",
         text: "⚠️ 未知のアクション: #{data}"
       })
+    end
+    rescue => e
+      Rails.logger.error "❌ Error in handle_postback_action: #{e.message}"
+      Rails.logger.error "❌ Backtrace: #{e.backtrace.first(10).join("\n")}"
+      Rails.logger.error "❌ Postback data: #{data}, User ID: #{user.id}"
+      
+      # ユーザーにエラーメッセージを送信
+      begin
+        send_reply(reply_token, {
+          type: "text",
+          text: "申し訳ございません。エラーが発生しました。\nもう一度お試しください。\n\nSorry, an error occurred. Please try again."
+        })
+      rescue => send_error
+        Rails.logger.error "❌ Failed to send error message: #{send_error.message}"
+      end
     end
   end
 
