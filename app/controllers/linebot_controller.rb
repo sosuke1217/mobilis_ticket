@@ -3350,11 +3350,32 @@ class LinebotController < ApplicationController
     user = User.find_by(line_user_id: user_id)
     if user.nil?
       # LINEからユーザー情報を取得
-      profile = client.get_profile(user_id)
+      display_name = "LINEユーザー" # デフォルト値
+      
+      begin
+        response = client.get_profile(user_id)
+        
+        if response.is_a?(Net::HTTPSuccess)
+          profile = JSON.parse(response.body)
+          display_name = profile['displayName'] || display_name
+          display_name = display_name.present? ? display_name.strip : "LINEユーザー"
+          Rails.logger.info "📝 Got LINE profile: #{display_name}"
+        else
+          Rails.logger.warn "⚠️ LINE profile API returned non-success: #{response.code}"
+        end
+      rescue => e
+        Rails.logger.error "❌ Error getting LINE profile: #{e.message}"
+        Rails.logger.error "❌ Backtrace: #{e.backtrace.first(5).join("\n")}"
+        # エラーが発生した場合でもデフォルト名で続行
+      end
+      
+      Rails.logger.info "📝 Creating new user: #{user_id}, display_name: #{display_name}"
+      
+      # ユーザーを作成（プロフィール取得に失敗してもデフォルト名で作成）
       user = User.create!(
         line_user_id: user_id,
-        name: profile['displayName'],
-        display_name: profile['displayName']
+        name: display_name,
+        display_name: display_name
       )
     else
       # 既存ユーザーの情報を更新
