@@ -3689,7 +3689,7 @@ class LinebotController < ApplicationController
           type: "button",
           action: {
             type: "postback",
-            label: "#{reservation.start_time.strftime('%m/%d %H:%M')}~ #{reservation.course.to_s.gsub('_', ' ').gsub(/分$/, '')} min",
+            label: "#{reservation.start_time.strftime('%m/%d %H:%M')}~ #{reservation.course.to_s.gsub('_', ' ').gsub(/分$/, '').gsub(/\s*min\s*$/i, '')} min",
             data: "cancel_reservation_#{reservation.id}"
           },
           style: "secondary",
