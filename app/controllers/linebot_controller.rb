@@ -2942,13 +2942,30 @@ class LinebotController < ApplicationController
               margin: "sm"
             },
             {
+              type: "text",
+              text: "View Reviews",
+              size: "xs",
+              color: "#999999",
+              align: "center",
+              margin: "xs"
+            },
+            {
               type: "button",
               style: "secondary",
               action: {
                 type: "postback",
                 label: "🔙 戻る",
                 data: "news"
-              }
+              },
+              margin: "sm"
+            },
+            {
+              type: "text",
+              text: "Back",
+              size: "xs",
+              color: "#999999",
+              align: "center",
+              margin: "xs"
             }
           ]
         }
