@@ -41,17 +41,38 @@ class LinebotController < ApplicationController
         handle_text_message(user, message_text, event['replyToken'])
 
       when Line::Bot::Event::Postback
-        Rails.logger.info "🔄 Postback event: #{event['postback']['data']}, user: #{event['source']['userId']}"
+        Rails.logger.info "🔄 Postback event received"
+        Rails.logger.info "🔍 Event class: #{event.class}"
+        
+        # ポストバックデータを取得
+        postback_data = event['postback']['data'] rescue event.postback.data rescue nil
+        user_id = event['source']['userId'] rescue event.source.user_id rescue nil
+        reply_token = event['replyToken'] rescue event.reply_token rescue nil
+        
+        Rails.logger.info "🔍 Postback data: #{postback_data.inspect}"
+        Rails.logger.info "🔍 User ID: #{user_id.inspect}"
+        Rails.logger.info "🔍 Reply token present: #{reply_token.present?}"
+        
+        unless user_id
+          Rails.logger.error "❌ Could not extract user_id from postback event"
+          next
+        end
+        
+        unless postback_data
+          Rails.logger.error "❌ Could not extract postback data from event"
+          # ポストバックデータがない場合はメインメニューを表示
+          user = find_or_create_user_with_profile(user_id)
+          send_main_menu(reply_token) if reply_token
+          next
+        end
 
-        user_id = event['source']['userId']
         user = find_or_create_user_with_profile(user_id)
         
         if user.notification_preference.nil?
           user.create_notification_preference!(enabled: true)
         end
         
-        data = event['postback']['data']
-        handle_postback_action(user, data, event['replyToken'])
+        handle_postback_action(user, postback_data, reply_token)
 
       when Line::Bot::Event::Follow
         Rails.logger.info "👋 Follow event: user: #{event['source']['userId']}"
