@@ -367,7 +367,6 @@ class LinebotController < ApplicationController
       })
 
     when /予約|booking|ご予約|予約したい|予約お願い/i
-      return unless check_consent(user, reply_token)
       send_booking_options(user, reply_token)
 
     when /40 min|40min|40minコース/i
@@ -419,28 +418,9 @@ class LinebotController < ApplicationController
     Rails.logger.info "🔍 Postback data length: #{data.length}"
     
     case data
-    when "consent_accept"
-      Rails.logger.info "✅ User accepted consent: #{user.id} (#{user.name})"
-      user.update!(
-        consent_accepted: true,
-        consent_accepted_at: Time.current
-      )
-      send_reply(reply_token, {
-        type: "text",
-        text: "✅ 同意いただきありがとうございます！\nThank you for your consent!\n\nこれでサービスをご利用いただけます。\nYou can now use our services."
-      })
-      
-    when "consent_reject"
-      Rails.logger.info "❌ User rejected consent: #{user.id} (#{user.name})"
-      send_reply(reply_token, {
-        type: "text",
-        text: "❌ 同意いただけない場合は、サービスをご利用いただけません。\nWithout consent, you cannot use our services.\n\n同意いただける場合は、再度「予約」と送信してください。\nIf you agree, please send \"予約\" again."
-      })
-      
     when "check_tickets"
       Rails.logger.info "📋 Checking tickets for user: #{user.id} (#{user.name})"
       Rails.logger.info "📋 User line_user_id: #{user.line_user_id}"
-      return unless check_consent(user, reply_token)
       send_ticket_status(user, reply_token)
 
     when "usage_history"
@@ -458,7 +438,6 @@ class LinebotController < ApplicationController
 
     when "booking"
       Rails.logger.info "📅 Showing booking options"
-      return unless check_consent(user, reply_token)
       send_booking_options(user, reply_token)
 
     when "news"
@@ -724,8 +703,8 @@ class LinebotController < ApplicationController
               color: "#999999",
                 align: "center",
                 margin: "xs"
-              }
-            ]
+            }
+          ]
           },
           footer: {
             type: "box",
@@ -841,7 +820,7 @@ class LinebotController < ApplicationController
     end
 
     send_reply(reply_token, message)
-  end
+    end
 
   # 🆕 明日の空き状況を表示
   def send_tomorrow_availability(user, reply_token)
@@ -2036,7 +2015,7 @@ class LinebotController < ApplicationController
           type: "postback",
             label: "#{period[:emoji]} #{period[:name].gsub(/[🌅☀️🌆\s]/, '')} (#{period[:slots].length}件)",
             data: "select_time_period_#{course.gsub(' ', '_')}_#{date_str}_#{period[:name].gsub(/[🌅☀️🌆\s]/, '').gsub(' ', '_')}"
-          }
+        }
         },
         {
           type: "text",
@@ -2529,11 +2508,11 @@ class LinebotController < ApplicationController
                     color: low_remaining ? "#FFA500" : "#1976d2",
                     flex: 0,
                     align: "end"
-                  }
+          }
                 ],
                 margin: "md"
               },
-              {
+        {
                 type: "box",
                 layout: "horizontal",
                 contents: [
@@ -2829,21 +2808,30 @@ class LinebotController < ApplicationController
     })
   end
 
-  # 同意チェック
-  def check_consent(user, reply_token)
-    unless user.consent_accepted?
-      Rails.logger.info "📋 User #{user.id} (#{user.name}) has not consented yet"
-      send_consent_message(reply_token, user)
-      return false
-    end
-    true
-  end
+  # 同意チェック（削除済み - 同意機能を無効化）
+  # def check_consent(user, reply_token)
+  #   unless user.consent_accepted?
+  #     Rails.logger.info "📋 User #{user.id} (#{user.name}) has not consented yet"
+  #     send_consent_message(reply_token, user)
+  #     return false
+  #   end
+  #   true
+  # end
 
-  # 同意書メッセージを送信
-  def send_consent_message(reply_token, user)
+  # 同意書メッセージを送信（削除済み - 同意機能を無効化）
+  # def send_consent_message(reply_token, user)
+  #   # メソッド全体を削除しました
+  # end
+
+  # 🆕 Googleレビューメニュー送信
+  def send_reviews_menu(reply_token)
+    # GoogleビジネスプロフィールのURLを取得
+    google_review_url = get_google_review_url
+    google_business_url = get_google_business_url
+    
     message = {
       type: "flex",
-      altText: "サービス利用同意書",
+      altText: "Googleレビュー",
       contents: {
         type: "bubble",
         header: {
@@ -2852,17 +2840,16 @@ class LinebotController < ApplicationController
           contents: [
             {
               type: "text",
-              text: "📋 サービス利用同意書",
+              text: "⭐️ Googleレビュー",
               weight: "bold",
-              size: "lg",
-              color: "#1976d2"
+              size: "xl",
+              color: "#4285F4"
             },
             {
               type: "text",
-              text: "Service Agreement",
+              text: "Googleでレビューを投稿してください",
               size: "sm",
-              color: "#999999",
-              margin: "xs"
+              color: "#666666"
             }
           ]
         },
@@ -2872,15 +2859,91 @@ class LinebotController < ApplicationController
           contents: [
             {
               type: "text",
-              text: "【利用規約 / Terms of Service】",
+              text: "📝 Googleレビュー投稿",
               weight: "bold",
-              size: "sm",
+              size: "md",
               margin: "md"
             },
             {
               type: "text",
-              text: "• 完全予約制です\n• キャンセルは24時間前まで\n• 当日キャンセルは1回分消化\n• 出張サービス（自宅・レンタルスペース）\n• 支払い：現金・クレジットカード・PayPay",
+              text: "ご利用いただいた感想やご意見をGoogleで共有してください。",
               size: "sm",
+              color: "#666666",
+              wrap: true,
+              margin: "sm"
+            },
+            {
+              type: "separator",
+              margin: "md"
+            },
+            {
+              type: "text",
+              text: "📊 現在の評価",
+              weight: "bold",
+              size: "md",
+              margin: "md"
+            },
+            {
+              type: "text",
+              text: "現在のGoogleレビューの評価をご確認いただけます。",
+              size: "sm",
+              color: "#666666",
+              wrap: true,
+              margin: "sm"
+            }
+          ],
+          paddingAll: "20px"
+        },
+        footer: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "button",
+              style: "primary",
+              action: {
+                type: "uri",
+                label: "📝 レビューを投稿",
+                uri: google_review_url
+              },
+              margin: "sm"
+            },
+            {
+              type: "text",
+              text: "Post Review",
+              size: "xs",
+              color: "#999999",
+              align: "center",
+              margin: "xs"
+            },
+            {
+              type: "button",
+              style: "secondary",
+              action: {
+                type: "uri",
+                label: "📊 レビューを見る",
+                uri: google_business_url
+              },
+              margin: "sm"
+            },
+            {
+              type: "button",
+              style: "secondary",
+              action: {
+                type: "postback",
+                label: "🔙 戻る",
+                data: "news"
+              }
+            }
+          ]
+        }
+      }
+    }
+
+    send_reply(reply_token, message)
+  end
+
+  # ヘルパーメソッド
               wrap: true,
               margin: "sm"
             },
@@ -2977,67 +3040,51 @@ class LinebotController < ApplicationController
           layout: "vertical",
           contents: [
             {
-              type: "text",
-              text: "上記内容に同意しますか？",
-              size: "sm",
-              weight: "bold",
-              align: "center",
-              margin: "md"
+              type: "button",
+              style: "primary",
+              action: {
+                type: "uri",
+                label: "📝 レビューを投稿",
+                uri: google_review_url
+              },
+              margin: "sm"
             },
             {
               type: "text",
-              text: "Do you agree to the above terms?",
+              text: "Post Review",
               size: "xs",
               color: "#999999",
               align: "center",
               margin: "xs"
             },
             {
-              type: "box",
-              layout: "horizontal",
-          contents: [
-            {
-              type: "button",
-              style: "primary",
-              action: {
-                    type: "postback",
-                    label: "✅ 同意する",
-                    data: "consent_accept"
-              }
-            },
-            {
               type: "button",
               style: "secondary",
               action: {
-                    type: "postback",
-                    label: "❌ 同意しない",
-                    data: "consent_reject"
-                  }
-                }
-              ],
-              spacing: "sm",
-              margin: "md"
+                type: "uri",
+                label: "📊 レビューを見る",
+                uri: google_business_url
+              },
+              margin: "sm"
+            },
+            {
+              type: "text",
+              text: "View Reviews",
+              size: "xs",
+              color: "#999999",
+              align: "center",
+              margin: "xs"
             }
-          ]
+          ],
+          paddingAll: "20px"
         }
       }
     }
-    
+
     send_reply(reply_token, message)
   end
 
-  # 🆕 Googleレビューメニュー送信
-  def send_reviews_menu(reply_token)
-    # GoogleビジネスプロフィールのURLを取得
-    google_review_url = get_google_review_url
-    google_business_url = get_google_business_url
-    
-    message = {
-      type: "flex",
-      altText: "Googleレビュー",
-      contents: {
-        type: "bubble",
-        header: {
+  # ヘルパーメソッド
           type: "box",
           layout: "vertical",
           contents: [
@@ -3576,7 +3623,7 @@ class LinebotController < ApplicationController
     end
     
     Rails.logger.info "📝 Creating date selection message"
-    
+      
     # コース名をURLセーフな形式に変換
     course_safe = course.gsub(/[^\w\s]/, '').gsub(/\s+/, '_')
     
@@ -3626,8 +3673,8 @@ class LinebotController < ApplicationController
     Rails.logger.info "📤 Pushing date selection message"
     push_message(user.line_user_id, message)
     Rails.logger.info "✅ Date selection message pushed successfully"
-  end
-
+      end
+      
   # 🆕 Googleレビュー投稿URLを取得
   def get_google_review_url
     # 環境変数から取得、なければデフォルトの検索URL
