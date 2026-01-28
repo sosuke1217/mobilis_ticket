@@ -10,15 +10,14 @@ class Admin::UsersController < ApplicationController
     
     # LEFT JOINでticketsとticket_usagesを結合し、最新の使用日を取得
     # チケットを持っているユーザーを優先し、その中で最新の使用日順に並び替え
+    # PostgreSQLではORDER BY句でSELECTのエイリアスを直接使用できないため、完全な式を使用
     @users = base_query
       .left_joins(tickets: :ticket_usages)
       .select("users.*")
-      .select("MAX(CASE WHEN tickets.remaining_count > 0 THEN 1 ELSE 0 END) as has_active_tickets")
-      .select("MAX(ticket_usages.used_at) as last_ticket_usage_at")
       .group("users.id")
       .order(
         Arel.sql("MAX(CASE WHEN tickets.remaining_count > 0 THEN 1 ELSE 0 END) DESC"),
-        Arel.sql("MAX(ticket_usages.used_at) DESC"),
+        Arel.sql("MAX(ticket_usages.used_at) DESC NULLS LAST"),
         "users.name ASC"
       )
       .page(params[:page]).per(20)
