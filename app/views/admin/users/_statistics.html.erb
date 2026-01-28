@@ -1,0 +1,36 @@
+<%# 統計情報カード %>
+<div class="row mb-4">
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <div class="h4 mb-1"><%= users_for_stats.count %></div>
+        <div class="small">登録ユーザー数</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <div class="h4 mb-1 text-success"><%= users_for_stats.joins(:tickets).distinct.count %></div>
+        <div class="small">チケット保有者</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <div class="h4 mb-1 text-info"><%= users_for_stats.where.not(line_user_id: [nil, '']).count %></div>
+        <div class="small">LINE連携済み</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <div class="h4 mb-1 text-warning"><%= users_for_stats.where(line_user_id: [nil, '']).count %></div>
+        <div class="small">未連携ユーザー</div>
+      </div>
+    </div>
+  </div>
+</div>
+

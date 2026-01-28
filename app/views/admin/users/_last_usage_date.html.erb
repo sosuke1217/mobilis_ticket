@@ -1,0 +1,11 @@
+<% if user.last_usage_date %>
+  <div class="text-muted">
+    <i class="fas fa-calendar me-1"></i>
+    <%= user.last_usage_date.strftime("%m/%d") %>
+  </div>
+<% else %>
+  <span class="text-muted small">
+    <i class="fas fa-minus me-1"></i>未利用
+  </span>
+<% end %>
+

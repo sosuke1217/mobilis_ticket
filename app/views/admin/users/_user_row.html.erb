@@ -1,0 +1,34 @@
+<tr>
+  <td>
+    <div class="d-flex align-items-center">
+      <div class="flex-grow-1">
+        <div class="fw-semibold">
+          <% if user.display_name_or_name.present? %>
+            <%= link_to user.display_name_or_name, admin_user_path(user), class: "text-decoration-none" %>
+          <% else %>
+            <span class="text-muted fst-italic">未登録</span>
+          <% end %>
+        </div>
+        <div class="small text-muted">
+          ID: <%= user.id %> | <%= l(user.created_at.to_date) %>
+          <% if user.display_name.present? && user.name.present? && user.display_name != user.name %>
+            <br>登録名: <%= user.name %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </td>
+  <td>
+    <%= render 'admin/users/line_status', user: user %>
+  </td>
+  <td>
+    <%= render 'admin/users/ticket_status', user: user %>
+  </td>
+  <td>
+    <%= render 'admin/users/last_usage_date', user: user %>
+  </td>
+  <td class="text-center">
+    <%= render 'admin/users/action_buttons', user: user %>
+  </td>
+</tr>
+

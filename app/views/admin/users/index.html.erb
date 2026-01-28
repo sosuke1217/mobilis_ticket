@@ -1,5 +1,5 @@
 <div class="container-lg my-5">
-  <!-- ヘッダーセクション -->
+  <%# ヘッダーセクション %>
   <div class="row mb-4">
     <div class="col-12">
       <div class="d-flex justify-content-between align-items-center">
@@ -15,13 +15,13 @@
           </button>
           <button type="button" class="btn btn-success" id="addUserBtn">
             <i class="fas fa-user-plus me-1"></i>新規追加
-        </button>
+          </button>
         </div>
       </div>
-      </div>
     </div>
+  </div>
 
-  <!-- 検索・フィルターセクション -->
+  <%# 検索・フィルターセクション %>
   <div class="card mb-4">
     <div class="card-body">
       <%= search_form_for @q, url: admin_users_path, method: :get, html: { class: "row g-3 align-items-end" } do |f| %>
@@ -45,48 +45,19 @@
     </div>
   </div>
 
-  <!-- 統計情報 -->
-  <div class="row mb-4">
-    <div class="col-md-3">
-      <div class="card text-center">
-        <div class="card-body">
-          <div class="h4 mb-1"><%= @users_for_stats.count %></div>
-          <div class="small">登録ユーザー数</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card text-center">
-        <div class="card-body">
-          <div class="h4 mb-1 text-success"><%= @users_for_stats.joins(:tickets).distinct.count %></div>
-          <div class="small">チケット保有者</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card text-center">
-        <div class="card-body">
-          <div class="h4 mb-1 text-info"><%= @users_for_stats.where.not(line_user_id: [nil, '']).count %></div>
-          <div class="small">LINE連携済み</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card text-center">
-        <div class="card-body">
-          <div class="h4 mb-1 text-warning"><%= @users_for_stats.where(line_user_id: [nil, '']).count %></div>
-          <div class="small">未連携ユーザー</div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <%= render 'statistics', users_for_stats: @users_for_stats %>
 
-  <!-- ユーザー一覧テーブル -->
+  <%# ユーザー一覧テーブル %>
   <div class="card">
     <div class="card-header bg-gradient-primary text-white">
-      <h5 class="mb-0">
-        <i class="fas fa-list me-2"></i>ユーザー一覧
-      </h5>
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+          <i class="fas fa-list me-2"></i>ユーザー一覧
+        </h5>
+        <div class="small">
+          <i class="fas fa-sort me-1"></i>並び順: チケット保有者優先 → 直近使用日順
+        </div>
+      </div>
     </div>
     <div class="card-body p-0">
       <div class="table-responsive">
@@ -102,76 +73,7 @@
           </thead>
           <tbody>
             <% @users.each do |user| %>
-              <tr>
-                <td>
-                  <div class="d-flex align-items-center">
-                    <div class="flex-grow-1">
-                      <div class="fw-semibold">
-                      <% if user.display_name_or_name.present? %>
-                          <%= link_to user.display_name_or_name, admin_user_path(user), class: "text-decoration-none" %>
-                        <% else %>
-                          <span class="text-muted fst-italic">未登録</span>
-                        <% end %>
-                      </div>
-                      <div class="small text-muted">
-                        ID: <%= user.id %> | <%= l(user.created_at.to_date) %>
-                        <% if user.display_name.present? && user.name.present? && user.display_name != user.name %>
-                          <br>登録名: <%= user.name %>
-                        <% end %>
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td>
-                  <% if user.line_user_id.present? && user.line_user_id != '' %>
-                    <span class="badge bg-success">
-                      <i class="fab fa-line me-1"></i>連携済み
-                    </span>
-                  <% else %>
-                    <span class="badge bg-secondary">
-                      <i class="fas fa-unlink me-1"></i>未連携
-                    </span>
-                  <% end %>
-                </td>
-                <td>
-                  <div>
-                    <% if user.active_ticket_count > 0 %>
-                      <span class="badge bg-info">
-                        <i class="fas fa-ticket-alt me-1"></i><%= user.active_ticket_count %>回
-                      </span>
-                    <% end %>
-                    <div class="small text-muted">
-                      <%= number_to_currency(user.remaining_ticket_value, unit: "¥", precision: 0) %>
-                    </div>
-                  </div>
-                </td>
-                <td>
-                  <% if user.last_usage_date %>
-                    <div class="text-muted">
-                      <i class="fas fa-calendar me-1"></i>
-                      <%= user.last_usage_date.strftime("%m/%d") %>
-                    </div>
-                  <% else %>
-                    <span class="text-muted small">
-                      <i class="fas fa-minus me-1"></i>未利用
-                    </span>
-                  <% end %>
-                </td>
-                <td class="text-center">
-                  <div class="btn-group" role="group">
-                    <% if user.name.present? %>
-                      <%= link_to ticket_management_admin_user_path(user), class: "btn btn-sm btn-outline-primary", title: "チケット管理" do %>
-                        <i class="fas fa-ticket-alt"></i>
-                      <% end %>
-                      <%= link_to admin_user_path(user), class: "btn btn-sm btn-outline-info", title: "詳細" do %>
-                        <i class="fas fa-eye"></i>
-                      <% end %>
-                    <% else %>
-                      <span class="text-muted fst-italic small">未登録</span>
-                    <% end %>
-                  </div>
-                </td>
-              </tr>
+              <%= render 'user_row', user: user %>
             <% end %>
           </tbody>
         </table>

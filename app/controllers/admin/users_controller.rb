@@ -4,37 +4,12 @@ class Admin::UsersController < ApplicationController
 
   def index
     @q = User.ransack(params[:q])
-    
-    # 統計情報用のクエリ（GROUP BYを使わない）
     @users_for_stats = @q.result
-    
-    # チケット保有者を優先し、直近でチケットを使った順に並び替え
-    # GROUP BYを使うため、distinct: trueは不要（GROUP BYで既に重複が排除される）
-    base_query = @q.result
-    
-    # LEFT JOINでticketsとticket_usagesを結合し、最新の使用日を取得
-    # チケットを持っているユーザーを優先し、その中で最新の使用日順に並び替え
-    # SELECT句でasキーワードを使うとcountメソッドでエラーになるため、エイリアスを使わない
-    @users = base_query
-      .left_joins(tickets: :ticket_usages)
-      .select("users.*")
-      .select("MAX(CASE WHEN tickets.remaining_count > 0 THEN 1 ELSE 0 END)")
-      .select("MAX(ticket_usages.used_at)")
-      .group("users.id")
-      .order(
-        Arel.sql("MAX(CASE WHEN tickets.remaining_count > 0 THEN 1 ELSE 0 END) DESC"),
-        Arel.sql("MAX(ticket_usages.used_at) DESC NULLS LAST"),
-        "users.name ASC"
-      )
-      .page(params[:page]).per(20)
+    @users = users_with_ticket_priority(@q.result)
     
     respond_to do |format|
       format.html
-      format.json do
-        # スタッフ一覧を返す（管理者以外）
-        staff_users = User.where(admin: false).order(:name)
-        render json: staff_users.map { |user| { id: user.id, name: user.name } }
-      end
+      format.json { render_staff_users_json }
     end
   end
 
@@ -650,5 +625,28 @@ class Admin::UsersController < ApplicationController
     else
       'available'
     end
+  end
+
+  # チケット保有者を優先し、直近でチケットを使った順に並び替えたユーザー一覧を取得
+  def users_with_ticket_priority(base_query)
+    base_query
+      .left_joins(tickets: :ticket_usages)
+      .select("users.*")
+      .select("MAX(CASE WHEN tickets.remaining_count > 0 THEN 1 ELSE 0 END)")
+      .select("MAX(ticket_usages.used_at)")
+      .group("users.id")
+      .order(
+        Arel.sql("MAX(CASE WHEN tickets.remaining_count > 0 THEN 1 ELSE 0 END) DESC"),
+        Arel.sql("MAX(ticket_usages.used_at) DESC NULLS LAST"),
+        "users.name ASC"
+      )
+      .includes(:tickets, :ticket_usages)
+      .page(params[:page]).per(20)
+  end
+
+  # スタッフ一覧をJSON形式で返す
+  def render_staff_users_json
+    staff_users = User.where(admin: false).order(:name)
+    render json: staff_users.map { |user| { id: user.id, name: user.name } }
   end
 end

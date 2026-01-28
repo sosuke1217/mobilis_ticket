@@ -1,0 +1,11 @@
+<div>
+  <% if user.active_ticket_count > 0 %>
+    <span class="badge bg-info">
+      <i class="fas fa-ticket-alt me-1"></i><%= user.active_ticket_count %>回
+    </span>
+  <% end %>
+  <div class="small text-muted">
+    <%= number_to_currency(user.remaining_ticket_value, unit: "¥", precision: 0) %>
+  </div>
+</div>
+

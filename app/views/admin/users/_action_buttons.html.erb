@@ -1,0 +1,13 @@
+<div class="btn-group" role="group">
+  <% if user.name.present? %>
+    <%= link_to ticket_management_admin_user_path(user), class: "btn btn-sm btn-outline-primary", title: "チケット管理" do %>
+      <i class="fas fa-ticket-alt"></i>
+    <% end %>
+    <%= link_to admin_user_path(user), class: "btn btn-sm btn-outline-info", title: "詳細" do %>
+      <i class="fas fa-eye"></i>
+    <% end %>
+  <% else %>
+    <span class="text-muted fst-italic small">未登録</span>
+  <% end %>
+</div>
+
