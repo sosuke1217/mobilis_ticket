@@ -6,11 +6,11 @@ class Admin::UsersController < ApplicationController
     @q = User.ransack(params[:q])
     
     # チケット保有者を優先し、直近でチケットを使った順に並び替え
-    base_query = @q.result(distinct: true)
+    # GROUP BYを使うため、distinct: trueは不要（GROUP BYで既に重複が排除される）
+    base_query = @q.result
     
     # LEFT JOINでticketsとticket_usagesを結合し、最新の使用日を取得
     # チケットを持っているユーザーを優先し、その中で最新の使用日順に並び替え
-    # PostgreSQLのSELECT DISTINCTでは、ORDER BYで使用する式をSELECTリストに含める必要がある
     @users = base_query
       .left_joins(tickets: :ticket_usages)
       .select("users.*")
