@@ -112,6 +112,74 @@ class Admin::TicketsController < ApplicationController
     end
   end
 
+  # 有効期限を延長
+  def extend_expiry
+    @ticket = Ticket.find(params[:id])
+    @user = @ticket.user
+    
+    # 延長日数または新しい有効期限日を取得
+    extend_days = params[:extend_days]&.to_i
+    new_expiry_date = params[:new_expiry_date]
+    
+    if new_expiry_date.present?
+      # 日付が直接指定された場合
+      new_expiry = Date.parse(new_expiry_date)
+    elsif extend_days.present? && extend_days > 0
+      # 日数が指定された場合
+      current_expiry = @ticket.expiry_date || Date.current
+      new_expiry = current_expiry + extend_days.days
+    else
+      respond_to do |format|
+        format.json { render json: { success: false, error: "延長日数または新しい有効期限日を指定してください" }, status: :unprocessable_entity }
+        format.html { redirect_back(fallback_location: admin_user_ticket_management_path(@user), alert: "延長日数または新しい有効期限日を指定してください") }
+      end
+      return
+    end
+    
+    # バリデーション: 新しい有効期限は現在の有効期限より後でなければならない
+    if @ticket.expiry_date && new_expiry <= @ticket.expiry_date
+      respond_to do |format|
+        format.json { render json: { success: false, error: "新しい有効期限は現在の有効期限より後の日付にしてください" }, status: :unprocessable_entity }
+        format.html { redirect_back(fallback_location: admin_user_ticket_management_path(@user), alert: "新しい有効期限は現在の有効期限より後の日付にしてください") }
+      end
+      return
+    end
+    
+    # バリデーション: 購入日より後でなければならない
+    if new_expiry < @ticket.purchase_date
+      respond_to do |format|
+        format.json { render json: { success: false, error: "有効期限は購入日以降の日付にしてください" }, status: :unprocessable_entity }
+        format.html { redirect_back(fallback_location: admin_user_ticket_management_path(@user), alert: "有効期限は購入日以降の日付にしてください") }
+      end
+      return
+    end
+    
+    # 有効期限を更新
+    if @ticket.update(expiry_date: new_expiry)
+      respond_to do |format|
+        format.json { render json: { success: true, message: "有効期限を延長しました", expiry_date: @ticket.expiry_date.strftime('%Y-%m-%d') } }
+        format.html do
+          if request.referer&.include?('ticket_management')
+            redirect_to admin_user_ticket_management_path(@user), notice: "有効期限を#{new_expiry.strftime('%Y年%m月%d日')}に延長しました"
+          else
+            redirect_to admin_user_path(@user), notice: "有効期限を#{new_expiry.strftime('%Y年%m月%d日')}に延長しました"
+          end
+        end
+      end
+    else
+      respond_to do |format|
+        format.json { render json: { success: false, error: @ticket.errors.full_messages.join(', ') }, status: :unprocessable_entity }
+        format.html do
+          if request.referer&.include?('ticket_management')
+            redirect_to admin_user_ticket_management_path(@user), alert: "延長に失敗しました: #{@ticket.errors.full_messages.join(', ')}"
+          else
+            redirect_to admin_user_path(@user), alert: "延長に失敗しました: #{@ticket.errors.full_messages.join(', ')}"
+          end
+        end
+      end
+    end
+  end
+
   def create_from_template
     @user = User.find(params[:user_id])
     template = TicketTemplate.find(params[:template_id])

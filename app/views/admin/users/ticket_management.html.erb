@@ -517,6 +517,18 @@
                         </button>
                       <% end %>
                       
+                      <% if ticket.expiry_date %>
+                        <button type="button" 
+                                class="btn btn-sm btn-outline-warning extend-expiry-btn"
+                                data-ticket-id="<%= ticket.id %>"
+                                data-ticket-name="<%= ticket.ticket_template&.name || '不明' %>"
+                                data-current-expiry="<%= ticket.expiry_date.strftime('%Y-%m-%d') %>"
+                                data-current-expiry-display="<%= ticket.expiry_date.strftime('%Y年%m月%d日') %>"
+                                title="有効期限を延長">
+                          <i class="fas fa-calendar-plus"></i>
+                        </button>
+                      <% end %>
+                      
                       <button type="button" 
                               class="btn btn-sm btn-outline-danger delete-ticket-btn"
                               data-ticket-id="<%= ticket.id %>"
@@ -575,6 +587,71 @@
       </div>
     </div>
   <% end %>
+</div>
+
+<!-- 有効期限延長モーダル -->
+<div class="modal" id="extendExpiryModal" tabindex="-1" aria-labelledby="extendExpiryModalLabel" aria-hidden="true" style="display: none;">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title" id="extendExpiryModalLabel">
+          <i class="fas fa-calendar-plus me-2"></i>
+          有効期限の延長
+        </h5>
+        <button type="button" class="btn-close" aria-label="Close" onclick="hideExtendExpiryModal()"></button>
+      </div>
+      <div class="modal-body">
+        <form id="extendExpiryForm">
+          <input type="hidden" id="extendTicketId" name="ticket_id">
+          <div class="mb-3">
+            <label class="form-label fw-bold">チケット名</label>
+            <p class="form-control-plaintext" id="extendTicketName"></p>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">現在の有効期限</label>
+            <p class="form-control-plaintext" id="currentExpiryDate"></p>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">延長方法を選択</label>
+            <div class="btn-group w-100 mb-3" role="group">
+              <input type="radio" class="btn-check" name="extendMethod" id="extendByDays" value="days" checked>
+              <label class="btn btn-outline-primary" for="extendByDays">日数で延長</label>
+              
+              <input type="radio" class="btn-check" name="extendMethod" id="extendByDate" value="date">
+              <label class="btn btn-outline-primary" for="extendByDate">日付で指定</label>
+            </div>
+          </div>
+          <div id="extendByDaysSection">
+            <div class="mb-3">
+              <label for="extendDays" class="form-label fw-bold">延長日数</label>
+              <div class="btn-group w-100 mb-2" role="group">
+                <button type="button" class="btn btn-outline-secondary extend-days-btn" data-days="30">30日</button>
+                <button type="button" class="btn btn-outline-secondary extend-days-btn" data-days="60">60日</button>
+                <button type="button" class="btn btn-outline-secondary extend-days-btn" data-days="90">90日</button>
+                <button type="button" class="btn btn-outline-secondary extend-days-btn" data-days="180">180日</button>
+              </div>
+              <input type="number" class="form-control" id="extendDays" name="extend_days" min="1" value="30" required>
+              <small class="form-text text-muted">新しい有効期限: <span id="newExpiryPreview"></span></small>
+            </div>
+          </div>
+          <div id="extendByDateSection" style="display: none;">
+            <div class="mb-3">
+              <label for="newExpiryDate" class="form-label fw-bold">新しい有効期限</label>
+              <input type="date" class="form-control" id="newExpiryDate" name="new_expiry_date" required>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="hideExtendExpiryModal()">
+          <i class="fas fa-times me-1"></i>キャンセル
+        </button>
+        <button type="button" class="btn btn-warning" id="confirmExtendExpiryBtn">
+          <i class="fas fa-calendar-plus me-1"></i>延長する
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- チケット削除確認モーダル -->
@@ -794,6 +871,176 @@ function handleCancel(e) {
   e.stopPropagation();
   console.log('🔍 Cancel clicked, hiding modal');
   hideDeleteTicketModal();
+}
+
+// 有効期限延長モーダルの表示
+function showExtendExpiryModal(ticketId, ticketName, currentExpiry, currentExpiryDisplay) {
+  console.log('🔍 Showing extend expiry modal for ticket:', ticketId);
+  
+  const modalElement = document.getElementById('extendExpiryModal');
+  if (!modalElement) {
+    console.error('❌ Extend expiry modal not found');
+    return;
+  }
+  
+  // モーダルにデータを設定
+  document.getElementById('extendTicketId').value = ticketId;
+  document.getElementById('extendTicketName').textContent = ticketName;
+  document.getElementById('currentExpiryDate').textContent = currentExpiryDisplay || currentExpiry;
+  
+  // デフォルト値を設定
+  document.getElementById('extendDays').value = 30;
+  updateExpiryPreview();
+  
+  // BootstrapのモーダルAPIを使用
+  const modal = new bootstrap.Modal(modalElement);
+  modal.show();
+  
+  console.log('✅ Extend expiry modal shown');
+}
+
+// 有効期限延長モーダルの非表示
+function hideExtendExpiryModal() {
+  console.log('🔍 Hiding extend expiry modal');
+  
+  const modalElement = document.getElementById('extendExpiryModal');
+  if (!modalElement) {
+    console.error('❌ Extend expiry modal not found');
+    return;
+  }
+  
+  const modal = bootstrap.Modal.getInstance(modalElement);
+  if (modal) {
+    modal.hide();
+  }
+}
+
+// 延長方法の切り替え
+document.addEventListener('DOMContentLoaded', function() {
+  const extendByDays = document.getElementById('extendByDays');
+  const extendByDate = document.getElementById('extendByDate');
+  const extendByDaysSection = document.getElementById('extendByDaysSection');
+  const extendByDateSection = document.getElementById('extendByDateSection');
+  
+  if (extendByDays && extendByDate) {
+    extendByDays.addEventListener('change', function() {
+      if (this.checked) {
+        extendByDaysSection.style.display = 'block';
+        extendByDateSection.style.display = 'none';
+        document.getElementById('extendDays').required = true;
+        document.getElementById('newExpiryDate').required = false;
+      }
+    });
+    
+    extendByDate.addEventListener('change', function() {
+      if (this.checked) {
+        extendByDaysSection.style.display = 'none';
+        extendByDateSection.style.display = 'block';
+        document.getElementById('extendDays').required = false;
+        document.getElementById('newExpiryDate').required = true;
+      }
+    });
+  }
+  
+  // 延長日数ボタンのクリックイベント
+  document.querySelectorAll('.extend-days-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const days = this.getAttribute('data-days');
+      document.getElementById('extendDays').value = days;
+      updateExpiryPreview();
+    });
+  });
+  
+  // 延長日数の入力でプレビューを更新
+  const extendDaysInput = document.getElementById('extendDays');
+  if (extendDaysInput) {
+    extendDaysInput.addEventListener('input', updateExpiryPreview);
+  }
+  
+  // 延長ボタンのクリックイベント
+  document.querySelectorAll('.extend-expiry-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const ticketId = this.getAttribute('data-ticket-id');
+      const ticketName = this.getAttribute('data-ticket-name');
+      const currentExpiry = this.getAttribute('data-current-expiry');
+      const currentExpiryDisplay = this.getAttribute('data-current-expiry-display');
+      showExtendExpiryModal(ticketId, ticketName, currentExpiry, currentExpiryDisplay);
+    });
+  });
+  
+  // 延長確認ボタンのクリックイベント
+  const confirmExtendBtn = document.getElementById('confirmExtendExpiryBtn');
+  if (confirmExtendBtn) {
+    confirmExtendBtn.addEventListener('click', function() {
+      const ticketId = document.getElementById('extendTicketId').value;
+      const extendMethod = document.querySelector('input[name="extendMethod"]:checked').value;
+      
+      let url = `/admin/tickets/${ticketId}/extend_expiry`;
+      let data = {};
+      
+      if (extendMethod === 'days') {
+        const extendDays = document.getElementById('extendDays').value;
+        if (!extendDays || extendDays <= 0) {
+          alert('延長日数を入力してください');
+          return;
+        }
+        data.extend_days = extendDays;
+      } else {
+        const newExpiryDate = document.getElementById('newExpiryDate').value;
+        if (!newExpiryDate) {
+          alert('新しい有効期限を選択してください');
+          return;
+        }
+        data.new_expiry_date = newExpiryDate;
+      }
+      
+      // フォーム送信
+      fetch(url, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert(data.message || '有効期限を延長しました');
+          location.reload();
+        } else {
+          alert(data.error || '延長に失敗しました');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('エラーが発生しました');
+      });
+    });
+  }
+});
+
+// 有効期限プレビューの更新
+function updateExpiryPreview() {
+  const currentExpiryStr = document.getElementById('currentExpiryDate').textContent;
+  const extendDays = document.getElementById('extendDays').value;
+  const previewElement = document.getElementById('newExpiryPreview');
+  
+  if (currentExpiryStr && extendDays && previewElement) {
+    try {
+      const currentExpiry = new Date(currentExpiryStr);
+      const newExpiry = new Date(currentExpiry);
+      newExpiry.setDate(newExpiry.getDate() + parseInt(extendDays));
+      
+      const year = newExpiry.getFullYear();
+      const month = String(newExpiry.getMonth() + 1).padStart(2, '0');
+      const day = String(newExpiry.getDate()).padStart(2, '0');
+      
+      previewElement.textContent = `${year}年${month}月${day}日`;
+    } catch (e) {
+      previewElement.textContent = '計算できません';
+    }
+  }
 }
 
 // DOMContentLoadedでイベントリスナーを設定

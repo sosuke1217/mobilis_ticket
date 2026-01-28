@@ -61,6 +61,7 @@ Rails.application.routes.draw do
     resources :tickets do
       member do
         patch 'use'
+        patch 'extend_expiry'
       end
       collection do
         post 'create_for_user'
