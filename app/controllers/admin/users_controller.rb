@@ -5,17 +5,21 @@ class Admin::UsersController < ApplicationController
   def index
     @q = User.ransack(params[:q])
     
+    # 統計情報用のクエリ（GROUP BYを使わない）
+    @users_for_stats = @q.result
+    
     # チケット保有者を優先し、直近でチケットを使った順に並び替え
     # GROUP BYを使うため、distinct: trueは不要（GROUP BYで既に重複が排除される）
     base_query = @q.result
     
     # LEFT JOINでticketsとticket_usagesを結合し、最新の使用日を取得
     # チケットを持っているユーザーを優先し、その中で最新の使用日順に並び替え
+    # SELECT句でasキーワードを使うとcountメソッドでエラーになるため、エイリアスを使わない
     @users = base_query
       .left_joins(tickets: :ticket_usages)
       .select("users.*")
-      .select("MAX(CASE WHEN tickets.remaining_count > 0 THEN 1 ELSE 0 END) as has_active_tickets")
-      .select("MAX(ticket_usages.used_at) as last_ticket_usage_at")
+      .select("MAX(CASE WHEN tickets.remaining_count > 0 THEN 1 ELSE 0 END)")
+      .select("MAX(ticket_usages.used_at)")
       .group("users.id")
       .order(
         Arel.sql("MAX(CASE WHEN tickets.remaining_count > 0 THEN 1 ELSE 0 END) DESC"),
