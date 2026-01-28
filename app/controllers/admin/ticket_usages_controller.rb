@@ -47,9 +47,9 @@ class Admin::TicketUsagesController < ApplicationController
     respond_to do |format|
       format.html
       format.json { render json: @usage }
-    end
   end
-
+  end
+  
   def update
     @usage = TicketUsage.find(params[:id])
     if @usage.update(ticket_usage_params)

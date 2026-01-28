@@ -75,7 +75,7 @@ namespace :notifications do
       puts "   設定を確認してください"
     end
   end
-
+  
   desc "LINE通知のテスト送信"
   task test_line: :environment do
     puts "📱 LINE通知テスト開始"
@@ -156,7 +156,7 @@ namespace :notifications do
       puts "   設定を確認してください"
     end
   end
-
+  
   desc "全通知機能のテスト"
   task test_all: [:test_config, :test_email, :test_line] do
     puts "\n🎯 全通知機能テスト完了"

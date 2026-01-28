@@ -18,12 +18,12 @@
             <i class="fas fa-arrow-left me-1"></i>ユーザー詳細に戻る
           <% end %>
         </div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- ユーザー情報サマリー -->
-  <div class="row mb-4">
+      <!-- ユーザー情報サマリー -->
+      <div class="row mb-4">
     <div class="col-md-4">
       <div class="card border-0 shadow-sm">
         <div class="card-header bg-gradient-info text-dark">
@@ -31,7 +31,7 @@
             <i class="fas fa-user-circle me-2"></i>ユーザー情報
           </h6>
         </div>
-        <div class="card-body">
+            <div class="card-body">
           <div class="row g-2">
             <div class="col-6">
               <small class="text-muted">名前</small>
@@ -63,7 +63,7 @@
             <i class="fas fa-ticket-alt me-2"></i>現在の状況
           </h6>
         </div>
-        <div class="card-body">
+            <div class="card-body">
           <div class="row g-2">
             <div class="col-6">
               <small class="text-muted">残チケット</small>
@@ -126,12 +126,12 @@
               </div>
             </div>
           </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- 使用履歴一覧 -->
+      <!-- 使用履歴一覧 -->
   <div class="card border-0 shadow-sm">
     <div class="card-header bg-gradient-primary text-dark">
       <h5 class="mb-0">
@@ -140,26 +140,26 @@
     </div>
     <div class="card-body p-0">
       <% if @ticket_usages.any? %>
-        <div class="table-responsive">
+      <div class="table-responsive">
           <table class="table table-hover table-striped align-middle mb-0">
-            <thead class="table-light">
-              <tr>
+          <thead class="table-light">
+            <tr>
                 <th class="small">使用日時</th>
                 <th class="small">チケット名</th>
                 <th class="small text-center">使用回数</th>
                 <th class="small text-center">残回数</th>
                 <th class="small">メモ</th>
                 <th class="small text-center">操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% @ticket_usages.each do |usage| %>
-                <tr>
-                  <td>
+            </tr>
+          </thead>
+          <tbody>
+            <% @ticket_usages.each do |usage| %>
+              <tr>
+                <td>
                     <div class="fw-bold small"><%= usage.created_at.strftime('%m/%d') %></div>
-                    <small class="text-muted"><%= usage.created_at.strftime('%H:%M') %></small>
-                  </td>
-                  <td>
+                  <small class="text-muted"><%= usage.created_at.strftime('%H:%M') %></small>
+                </td>
+                <td>
                     <div class="fw-bold small">
                       <% if usage.ticket&.ticket_template&.name.present? %>
                         <%= usage.ticket.ticket_template.name %>
@@ -176,40 +176,40 @@
                         ¥0
                       <% end %>
                     </small>
-                  </td>
+                </td>
                   <td class="text-center">
-                    <span class="badge bg-primary">1 回</span>
-                  </td>
+                  <span class="badge bg-primary">1 回</span>
+                </td>
                   <td class="text-center">
                     <span class="badge bg-<%= usage.ticket&.remaining_count&.positive? ? 'success' : 'secondary' %>">
                       <% if usage.ticket.present? %>
-                        <%= usage.ticket.remaining_count %> / <%= usage.ticket.total_count %>
+                    <%= usage.ticket.remaining_count %> / <%= usage.ticket.total_count %>
                       <% else %>
                         0 / 0
                       <% end %>
-                    </span>
-                  </td>
-                  <td>
-                    <% if usage.note.present? %>
+                  </span>
+                </td>
+                <td>
+                  <% if usage.note.present? %>
                       <span class="text-truncate d-inline-block" style="max-width: 120px;" 
-                            title="<%= usage.note %>">
-                        <%= usage.note %>
-                      </span>
-                    <% else %>
-                      <span class="text-muted">—</span>
-                    <% end %>
-                  </td>
+                          title="<%= usage.note %>">
+                      <%= usage.note %>
+                    </span>
+                  <% else %>
+                    <span class="text-muted">—</span>
+                  <% end %>
+                </td>
                   <td class="text-center">
                     <%= link_to admin_ticket_usage_path(usage), 
                         class: "btn btn-sm btn-outline-primary" do %>
                       <i class="fas fa-eye me-1"></i>詳細
                     <% end %>
-                  </td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
-        </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
       <% else %>
         <div class="text-center py-5">
           <i class="fas fa-history fa-3x text-muted mb-3"></i>

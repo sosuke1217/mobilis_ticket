@@ -387,7 +387,7 @@ export default class extends Controller {
       newRow.innerHTML = `
         <td class="px-3">
           <div>
-            <strong>${ticket.ticket_template.name}</strong>
+          <strong>${ticket.ticket_template.name}</strong>
             <br>
             <small class="text-muted" data-unit-price="${ticket.ticket_template && ticket.ticket_template.price ? (() => {
               const totalCount = ticket.ticket_template.total_count || ticket.total_count;
@@ -422,20 +422,20 @@ export default class extends Controller {
         </td>
         <td class="text-center">
           <div class="btn-group" role="group">
-            <button type="button" 
-                    class="btn btn-sm btn-outline-primary use-ticket-btn"
-                    data-ticket-id="${ticket.id}"
+          <button type="button" 
+                  class="btn btn-sm btn-outline-primary use-ticket-btn"
+                  data-ticket-id="${ticket.id}"
                     data-ticket-name="${ticket.ticket_template.name || '不明'}"
                     title="チケットを使用">
               <i class="fas fa-play"></i>
-            </button>
-            <button type="button" 
+          </button>
+          <button type="button" 
                     class="btn btn-sm btn-outline-danger delete-ticket-btn"
-                    data-ticket-id="${ticket.id}"
+                  data-ticket-id="${ticket.id}"
                     data-ticket-name="${ticket.ticket_template.name || '不明'}"
                     title="チケットを削除">
-              <i class="fas fa-trash"></i>
-            </button>
+            <i class="fas fa-trash"></i>
+          </button>
           </div>
         </td>
       `
@@ -692,21 +692,21 @@ export default class extends Controller {
         
         // ステータスセルを更新（5番目のセル）
         const statusCell = ticketRow.children[4]
-        if (statusCell) {
-          const statusBadge = statusCell.querySelector('.badge')
-          if (statusBadge) {
+          if (statusCell) {
+            const statusBadge = statusCell.querySelector('.badge')
+            if (statusBadge) {
             if (parseInt(remainingCount) === 0) {
               statusBadge.className = 'badge bg-secondary'
               statusBadge.innerHTML = '<i class="fas fa-check me-1"></i>使用済み'
             } else if (parseInt(remainingCount) <= 2) {
               statusBadge.className = 'badge bg-warning'
               statusBadge.innerHTML = '<i class="fas fa-exclamation me-1"></i>残り少ない'
-            } else {
+        } else {
               statusBadge.className = 'badge bg-success'
               statusBadge.innerHTML = '<i class="fas fa-check me-1"></i>利用可能'
             }
             console.log('✅ ステータスバッジを更新')
-          }
+            }
         }
         
         // 操作ボタンを更新（6番目のセル）
@@ -1127,7 +1127,7 @@ export default class extends Controller {
       console.error('❌ 統計データの取得中にエラーが発生しました:', error)
     }
   }
-
+  
   // チケット数と残額の更新
   updateTicketCounts() {
     try {
@@ -1309,7 +1309,7 @@ export default class extends Controller {
             
             // 1. ¥記号付き価格
             priceMatch = priceText.match(/¥([\d,]+)/)
-            if (priceMatch) {
+          if (priceMatch) {
               console.log(`🔍 ¥記号付き価格で抽出: "${priceMatch[1]}"`)
             }
             

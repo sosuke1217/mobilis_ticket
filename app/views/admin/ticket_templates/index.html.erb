@@ -11,7 +11,7 @@
         </div>
         <%= link_to new_admin_ticket_template_path, class: "btn btn-success" do %>
           <i class="fas fa-plus me-1"></i>新規作成
-        <% end %>
+    <% end %>
       </div>
     </div>
   </div>
@@ -24,19 +24,19 @@
       </h5>
     </div>
     <div class="card-body p-0">
-      <div class="table-responsive">
+    <div class="table-responsive">
         <table class="table table-hover mb-0">
           <thead class="table-light">
-            <tr>
+          <tr>
               <th class="px-3">テンプレート名</th>
               <th>価格・回数</th>
               <th>有効期間</th>
               <th class="text-center">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @templates.each do |template| %>
-              <tr>
+          </tr>
+        </thead>
+        <tbody>
+          <% @templates.each do |template| %>
+            <tr>
                 <td class="px-3">
                   <div class="d-flex align-items-center">
                     <div class="flex-shrink-0 me-3">
@@ -88,15 +88,15 @@
                     </div>
                   </div>
                 </td>
-                <td class="text-center">
+             <td class="text-center">
                   <div class="btn-group" role="group">
-                    <%= link_to edit_admin_ticket_template_path(template), 
+                  <%= link_to edit_admin_ticket_template_path(template),
                         class: "btn btn-sm btn-outline-primary", 
                         title: "編集" do %>
                       <i class="fas fa-edit"></i>
-                    <% end %>
+                  <% end %>
                     <%= button_to admin_ticket_template_path(template),
-                        method: :delete,
+                      method: :delete,
                         form: { 
                           data: { 
                             turbo_stream: true,
@@ -107,13 +107,13 @@
                         title: "削除" do %>
                       <i class="fas fa-trash"></i>
                     <% end %>
-                  </div>
-                </td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
     </div>
     <% if @templates.empty? %>
       <div class="card-body text-center py-5">

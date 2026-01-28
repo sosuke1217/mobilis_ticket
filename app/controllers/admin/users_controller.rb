@@ -5,36 +5,23 @@ class Admin::UsersController < ApplicationController
   def index
     @q = User.ransack(params[:q])
     
-    begin
-      # チケットを直近で使った順に並び替え
-      # Ruby側で並び替えを行う（確実に動作する実装）
-      base_users = @q.result(distinct: true).to_a
-      
-      # 各ユーザーの最新のticket_usageのused_atを事前に取得
-      user_ids = base_users.map(&:id)
-      latest_usages = TicketUsage
-        .where(user_id: user_ids)
-        .group(:user_id)
-        .maximum(:used_at)
-      
-      # 並び替え
-      sorted_users = base_users.sort_by do |user|
-        latest_used_at = latest_usages[user.id]
-        [
-          latest_used_at.nil? ? 1 : 0,  # NULLを最後に
-          latest_used_at ? -latest_used_at.to_i : 0,  # 降順（新しい順）
-          user.name  # 名前順
-        ]
-      end
-      
-      # Kaminariでページネーション
-      @users = Kaminari.paginate_array(sorted_users).page(params[:page]).per(20)
-    rescue => e
-      Rails.logger.error "Error in users index sorting: #{e.message}"
-      Rails.logger.error e.backtrace.join("\n")
-      # エラーが発生した場合は名前順にフォールバック
-      @users = @q.result(distinct: true).order(:name).page(params[:page]).per(20)
-    end
+    # チケット保有者を優先し、直近でチケットを使った順に並び替え
+    base_query = @q.result(distinct: true)
+    
+    # LEFT JOINでticketsとticket_usagesを結合し、最新の使用日を取得
+    # チケットを持っているユーザーを優先し、その中で最新の使用日順に並び替え
+    @users = base_query
+      .left_joins(tickets: :ticket_usages)
+      .select("users.*")
+      .select("MAX(CASE WHEN tickets.remaining_count > 0 THEN 1 ELSE 0 END) as has_active_tickets")
+      .select("MAX(ticket_usages.used_at) as last_ticket_usage_at")
+      .group("users.id")
+      .order(
+        Arel.sql("MAX(CASE WHEN tickets.remaining_count > 0 THEN 1 ELSE 0 END) DESC"),
+        Arel.sql("MAX(ticket_usages.used_at) DESC"),
+        "users.name ASC"
+      )
+      .page(params[:page]).per(20)
     
     respond_to do |format|
       format.html
