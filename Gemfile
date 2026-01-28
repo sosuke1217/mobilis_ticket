@@ -69,6 +69,9 @@ end
 
 gem "ransack", "~> 4.3"
 
+# セキュリティ
+gem 'rack-attack'
+
 group :development do
   gem 'letter_opener'
   gem 'letter_opener_web'
