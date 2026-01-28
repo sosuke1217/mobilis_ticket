@@ -8,11 +8,18 @@ class Admin::UsersController < ApplicationController
     begin
       # チケットを直近で使った順に並び替え
       # Ruby側で並び替えを行う（確実に動作する実装）
-      base_users = @q.result(distinct: true).includes(:ticket_usages).to_a
+      base_users = @q.result(distinct: true).to_a
       
-      # 各ユーザーの最新のticket_usageのused_atを取得して並び替え
+      # 各ユーザーの最新のticket_usageのused_atを事前に取得
+      user_ids = base_users.map(&:id)
+      latest_usages = TicketUsage
+        .where(user_id: user_ids)
+        .group(:user_id)
+        .maximum(:used_at)
+      
+      # 並び替え
       sorted_users = base_users.sort_by do |user|
-        latest_used_at = user.ticket_usages.maximum(:used_at)
+        latest_used_at = latest_usages[user.id]
         [
           latest_used_at.nil? ? 1 : 0,  # NULLを最後に
           latest_used_at ? -latest_used_at.to_i : 0,  # 降順（新しい順）
