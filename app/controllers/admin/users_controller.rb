@@ -7,25 +7,21 @@ class Admin::UsersController < ApplicationController
     
     begin
       # チケットを直近で使った順に並び替え
-      # 各ユーザーの最新のticket_usageのused_atで並び替え
-      # チケットを使ったことがないユーザーは最後に表示
-      base_query = @q.result
+      # Ruby側で並び替えを行う（確実に動作する実装）
+      base_users = @q.result(distinct: true).includes(:ticket_usages).to_a
       
-      # サブクエリで各ユーザーの最新のused_atを取得
-      latest_usage_subquery = TicketUsage
-        .select('user_id, MAX(used_at) as latest_used_at')
-        .group('user_id')
-        .to_sql
+      # 各ユーザーの最新のticket_usageのused_atを取得して並び替え
+      sorted_users = base_users.sort_by do |user|
+        latest_used_at = user.ticket_usages.maximum(:used_at)
+        [
+          latest_used_at.nil? ? 1 : 0,  # NULLを最後に
+          latest_used_at ? -latest_used_at.to_i : 0,  # 降順（新しい順）
+          user.name  # 名前順
+        ]
+      end
       
-      # LEFT JOINで結合して並び替え
-      # PostgreSQLとSQLiteの両方で動作するように、より安全な実装
-      # selectを使わずに、distinctで重複を排除
-      @users = base_query
-        .joins("LEFT JOIN (#{latest_usage_subquery}) latest_usages ON latest_usages.user_id = users.id")
-        .order(Arel.sql("CASE WHEN latest_usages.latest_used_at IS NULL THEN 1 ELSE 0 END, latest_usages.latest_used_at DESC, users.name ASC"))
-        .distinct
-        .page(params[:page])
-        .per(20)
+      # Kaminariでページネーション
+      @users = Kaminari.paginate_array(sorted_users).page(params[:page]).per(20)
     rescue => e
       Rails.logger.error "Error in users index sorting: #{e.message}"
       Rails.logger.error e.backtrace.join("\n")
