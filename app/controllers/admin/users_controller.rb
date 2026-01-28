@@ -5,23 +5,31 @@ class Admin::UsersController < ApplicationController
   def index
     @q = User.ransack(params[:q])
     
-    # チケットを直近で使った順に並び替え
-    # LEFT JOINで各ユーザーの最新のticket_usageを取得し、used_atで並び替え
-    # チケットを使ったことがないユーザーは最後に表示
-    base_query = @q.result(distinct: true)
-    
-    # サブクエリで各ユーザーの最新のused_atを取得
-    latest_usage_subquery = TicketUsage
-      .select('user_id, MAX(used_at) as latest_used_at')
-      .group('user_id')
-    
-    # LEFT JOINで結合して並び替え
-    # SQLiteとPostgreSQLの両方で動作するように、CASE WHENでNULLを最後に
-    @users = base_query
-      .joins("LEFT JOIN (#{latest_usage_subquery.to_sql}) AS latest_usages ON latest_usages.user_id = users.id")
-      .order(Arel.sql("CASE WHEN latest_usages.latest_used_at IS NULL THEN 1 ELSE 0 END ASC, latest_usages.latest_used_at DESC, users.name ASC"))
-      .page(params[:page])
-      .per(20)
+    begin
+      # チケットを直近で使った順に並び替え
+      # 各ユーザーの最新のticket_usageのused_atで並び替え
+      # チケットを使ったことがないユーザーは最後に表示
+      base_query = @q.result(distinct: true)
+      
+      # サブクエリで各ユーザーの最新のused_atを取得
+      latest_usage_subquery = TicketUsage
+        .select('user_id, MAX(used_at) as latest_used_at')
+        .group('user_id')
+        .to_sql
+      
+      # LEFT JOINで結合して並び替え
+      # SQLiteとPostgreSQLの両方で動作するように実装
+      @users = base_query
+        .joins("LEFT JOIN (#{latest_usage_subquery}) latest_usages ON latest_usages.user_id = users.id")
+        .order(Arel.sql("CASE WHEN latest_usages.latest_used_at IS NULL THEN 1 ELSE 0 END, latest_usages.latest_used_at DESC, users.name ASC"))
+        .page(params[:page])
+        .per(20)
+    rescue => e
+      Rails.logger.error "Error in users index sorting: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      # エラーが発生した場合は名前順にフォールバック
+      @users = @q.result(distinct: true).order(:name).page(params[:page]).per(20)
+    end
     
     respond_to do |format|
       format.html
