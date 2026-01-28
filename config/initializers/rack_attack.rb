@@ -87,6 +87,7 @@ begin
       Rails.logger.error "[Rack::Attack] Blocked #{req.env['rack.attack.match_type']} #{req.ip} #{req.path}"
     end
   end
+  end
   
   # Rack::Attackミドルウェアを有効化
   Rails.application.config.middleware.use Rack::Attack
