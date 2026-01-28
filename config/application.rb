@@ -31,8 +31,5 @@ module Mobilis
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
-    
-    # Rack::Attackミドルウェアの有効化（gemがインストールされている場合のみ）
-    config.middleware.use Rack::Attack if defined?(Rack::Attack)
   end
 end

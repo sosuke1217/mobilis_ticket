@@ -1,7 +1,10 @@
 # Be sure to restart your server when you modify this file.
 
-# Rack::Attackの設定（gemがインストールされている場合のみ）
-if defined?(Rack::Attack)
+# Rack::Attackの設定
+# 注意: rack-attack gemがインストールされている必要があります
+begin
+  require 'rack/attack'
+  
   class Rack::Attack
   # 開発環境とテスト環境では無効化
   unless Rails.env.development? || Rails.env.test?
@@ -84,6 +87,10 @@ if defined?(Rack::Attack)
       Rails.logger.error "[Rack::Attack] Blocked #{req.env['rack.attack.match_type']} #{req.ip} #{req.path}"
     end
   end
-end
+  
+  # Rack::Attackミドルウェアを有効化
+  Rails.application.config.middleware.use Rack::Attack
+rescue LoadError
+  Rails.logger.warn "rack-attack gem is not installed. Rate limiting is disabled."
 end
 
