@@ -12,18 +12,16 @@ class Admin::UsersController < ApplicationController
       base_query = @q.result
       
       # サブクエリで各ユーザーの最新のused_atを取得
-      # PostgreSQLとSQLiteの両方で動作するように、テーブル名を明示的に指定
       latest_usage_subquery = TicketUsage
-        .select('ticket_usages.user_id, MAX(ticket_usages.used_at) as latest_used_at')
-        .group('ticket_usages.user_id')
+        .select('user_id, MAX(used_at) as latest_used_at')
+        .group('user_id')
         .to_sql
       
       # LEFT JOINで結合して並び替え
-      # PostgreSQLとSQLiteの両方で動作するように実装
-      # distinctは最後に適用
+      # PostgreSQLとSQLiteの両方で動作するように、より安全な実装
+      # selectを使わずに、distinctで重複を排除
       @users = base_query
-        .joins("LEFT JOIN (#{latest_usage_subquery}) AS latest_usages ON latest_usages.user_id = users.id")
-        .select('users.*, latest_usages.latest_used_at')
+        .joins("LEFT JOIN (#{latest_usage_subquery}) latest_usages ON latest_usages.user_id = users.id")
         .order(Arel.sql("CASE WHEN latest_usages.latest_used_at IS NULL THEN 1 ELSE 0 END, latest_usages.latest_used_at DESC, users.name ASC"))
         .distinct
         .page(params[:page])
