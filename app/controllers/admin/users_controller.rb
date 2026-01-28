@@ -4,7 +4,24 @@ class Admin::UsersController < ApplicationController
 
   def index
     @q = User.ransack(params[:q])
-    @users = @q.result(distinct: true).order(:name).page(params[:page]).per(20)
+    
+    # チケットを直近で使った順に並び替え
+    # LEFT JOINで各ユーザーの最新のticket_usageを取得し、used_atで並び替え
+    # チケットを使ったことがないユーザーは最後に表示
+    base_query = @q.result(distinct: true)
+    
+    # サブクエリで各ユーザーの最新のused_atを取得
+    latest_usage_subquery = TicketUsage
+      .select('user_id, MAX(used_at) as latest_used_at')
+      .group('user_id')
+    
+    # LEFT JOINで結合して並び替え
+    # SQLiteとPostgreSQLの両方で動作するように、CASE WHENでNULLを最後に
+    @users = base_query
+      .joins("LEFT JOIN (#{latest_usage_subquery.to_sql}) AS latest_usages ON latest_usages.user_id = users.id")
+      .order(Arel.sql("CASE WHEN latest_usages.latest_used_at IS NULL THEN 1 ELSE 0 END ASC, latest_usages.latest_used_at DESC, users.name ASC"))
+      .page(params[:page])
+      .per(20)
     
     respond_to do |format|
       format.html
