@@ -61,6 +61,24 @@
     opacity: 0.2 !important;
   }
 
+  /* 有効期限延長モーダルのスタイル */
+  #extendExpiryModal {
+    z-index: 1055 !important;
+  }
+  
+  #extendExpiryModal .modal-dialog {
+    z-index: 1056 !important;
+  }
+  
+  #extendExpiryModal .modal-content {
+    z-index: 1057 !important;
+    position: relative;
+  }
+  
+  #extendExpiryModal.show {
+    display: block !important;
+  }
+
   /* グラデーションクラス */
   .bg-gradient-primary {
     background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
@@ -591,7 +609,7 @@
 </div>
 
 <!-- 有効期限延長モーダル -->
-<div class="modal" id="extendExpiryModal" tabindex="-1" aria-labelledby="extendExpiryModalLabel" aria-hidden="true" style="display: none;">
+<div class="modal fade" id="extendExpiryModal" tabindex="-1" aria-labelledby="extendExpiryModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header bg-warning text-dark">
@@ -929,16 +947,64 @@ window.showExtendExpiryModal = function(ticketId, ticketName, currentExpiry, cur
   
   // BootstrapのモーダルAPIを使用
   try {
-    const modal = new bootstrap.Modal(modalElement);
+    // 既存のモーダルインスタンスを取得または作成
+    let modal = bootstrap.Modal.getInstance(modalElement);
+    if (!modal) {
+      modal = new bootstrap.Modal(modalElement, {
+        backdrop: true,
+        keyboard: true,
+        focus: true
+      });
+    }
+    
+    // モーダルを表示
     modal.show();
-    console.log('✅ Extend expiry modal shown');
+    
+    // モーダルが表示されたことを確認
+    setTimeout(() => {
+      if (!modalElement.classList.contains('show')) {
+        console.warn('⚠️ Modal not showing, forcing display');
+        modalElement.style.display = 'block';
+        modalElement.classList.add('show');
+        modalElement.setAttribute('aria-hidden', 'false');
+        modalElement.style.zIndex = '1055';
+        document.body.classList.add('modal-open');
+        
+        // バックドロップを確認
+        let backdrop = document.querySelector('.modal-backdrop');
+        if (!backdrop) {
+          backdrop = document.createElement('div');
+          backdrop.className = 'modal-backdrop fade show';
+          backdrop.style.zIndex = '1050';
+          document.body.appendChild(backdrop);
+        }
+      } else {
+        console.log('✅ Extend expiry modal shown successfully');
+      }
+    }, 100);
   } catch (e) {
     console.error('❌ Error showing modal:', e);
     // フォールバック: 直接表示
     modalElement.style.display = 'block';
     modalElement.classList.add('show');
     modalElement.setAttribute('aria-hidden', 'false');
+    modalElement.style.zIndex = '1055';
+    modalElement.style.position = 'fixed';
+    modalElement.style.top = '0';
+    modalElement.style.left = '0';
+    modalElement.style.width = '100%';
+    modalElement.style.height = '100%';
+    modalElement.style.overflow = 'auto';
     document.body.classList.add('modal-open');
+    
+    // バックドロップを追加
+    let backdrop = document.querySelector('.modal-backdrop');
+    if (!backdrop) {
+      backdrop = document.createElement('div');
+      backdrop.className = 'modal-backdrop fade show';
+      backdrop.style.zIndex = '1050';
+      document.body.appendChild(backdrop);
+    }
   }
 };
 
@@ -958,8 +1024,14 @@ window.hideExtendExpiryModal = function() {
       modal.hide();
     } else {
       // フォールバック: 直接非表示
-      modalElement.style.display = 'none';
       modalElement.classList.remove('show');
+      modalElement.style.display = '';
+      modalElement.style.zIndex = '';
+      modalElement.style.position = '';
+      modalElement.style.top = '';
+      modalElement.style.left = '';
+      modalElement.style.width = '';
+      modalElement.style.height = '';
       modalElement.setAttribute('aria-hidden', 'true');
       document.body.classList.remove('modal-open');
       document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
@@ -967,8 +1039,14 @@ window.hideExtendExpiryModal = function() {
   } catch (e) {
     console.error('❌ Error hiding modal:', e);
     // フォールバック: 直接非表示
-    modalElement.style.display = 'none';
     modalElement.classList.remove('show');
+    modalElement.style.display = '';
+    modalElement.style.zIndex = '';
+    modalElement.style.position = '';
+    modalElement.style.top = '';
+    modalElement.style.left = '';
+    modalElement.style.width = '';
+    modalElement.style.height = '';
     modalElement.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('modal-open');
     document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
