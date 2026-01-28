@@ -524,6 +524,7 @@
                                 data-ticket-name="<%= ticket.ticket_template&.name || '不明' %>"
                                 data-current-expiry="<%= ticket.expiry_date.strftime('%Y-%m-%d') %>"
                                 data-current-expiry-display="<%= ticket.expiry_date.strftime('%Y年%m月%d日') %>"
+                                onclick="if(window.showExtendExpiryModal){window.showExtendExpiryModal('<%= ticket.id %>', '<%= j(ticket.ticket_template&.name || '不明') %>', '<%= ticket.expiry_date.strftime('%Y-%m-%d') %>', '<%= ticket.expiry_date.strftime('%Y年%m月%d日') %>');}else{console.error('showExtendExpiryModal not found');}"
                                 title="有効期限を延長">
                           <i class="fas fa-calendar-plus"></i>
                         </button>
@@ -873,8 +874,8 @@ function handleCancel(e) {
   hideDeleteTicketModal();
 }
 
-// 有効期限延長モーダルの表示
-function showExtendExpiryModal(ticketId, ticketName, currentExpiry, currentExpiryDisplay) {
+// 有効期限延長モーダルの表示（グローバル関数）
+window.showExtendExpiryModal = function(ticketId, ticketName, currentExpiry, currentExpiryDisplay) {
   console.log('🔍 Showing extend expiry modal for ticket:', ticketId);
   
   const modalElement = document.getElementById('extendExpiryModal');
@@ -884,23 +885,65 @@ function showExtendExpiryModal(ticketId, ticketName, currentExpiry, currentExpir
   }
   
   // モーダルにデータを設定
-  document.getElementById('extendTicketId').value = ticketId;
-  document.getElementById('extendTicketName').textContent = ticketName;
-  document.getElementById('currentExpiryDate').textContent = currentExpiryDisplay || currentExpiry;
+  const ticketIdInput = document.getElementById('extendTicketId');
+  const ticketNameElement = document.getElementById('extendTicketName');
+  const currentExpiryElement = document.getElementById('currentExpiryDate');
+  const extendDaysInput = document.getElementById('extendDays');
+  
+  if (!ticketIdInput || !ticketNameElement || !currentExpiryElement || !extendDaysInput) {
+    console.error('❌ Required modal elements not found');
+    return;
+  }
+  
+  ticketIdInput.value = ticketId;
+  ticketNameElement.textContent = ticketName;
+  currentExpiryElement.textContent = currentExpiryDisplay || currentExpiry;
   
   // デフォルト値を設定
-  document.getElementById('extendDays').value = 30;
+  extendDaysInput.value = 30;
+  
+  // 日付入力フィールドの最小値を設定（現在の有効期限の翌日）
+  const newExpiryDateInput = document.getElementById('newExpiryDate');
+  if (newExpiryDateInput && currentExpiry) {
+    try {
+      const currentDate = new Date(currentExpiry);
+      currentDate.setDate(currentDate.getDate() + 1);
+      const minDate = currentDate.toISOString().split('T')[0];
+      newExpiryDateInput.setAttribute('min', minDate);
+    } catch (e) {
+      console.error('Error setting min date:', e);
+    }
+  }
+  
+  // 延長方法を「日数で延長」にリセット
+  const extendByDaysRadio = document.getElementById('extendByDays');
+  if (extendByDaysRadio) {
+    extendByDaysRadio.checked = true;
+    const extendByDaysSection = document.getElementById('extendByDaysSection');
+    const extendByDateSection = document.getElementById('extendByDateSection');
+    if (extendByDaysSection) extendByDaysSection.style.display = 'block';
+    if (extendByDateSection) extendByDateSection.style.display = 'none';
+  }
+  
   updateExpiryPreview();
   
   // BootstrapのモーダルAPIを使用
-  const modal = new bootstrap.Modal(modalElement);
-  modal.show();
-  
-  console.log('✅ Extend expiry modal shown');
-}
+  try {
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+    console.log('✅ Extend expiry modal shown');
+  } catch (e) {
+    console.error('❌ Error showing modal:', e);
+    // フォールバック: 直接表示
+    modalElement.style.display = 'block';
+    modalElement.classList.add('show');
+    modalElement.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('modal-open');
+  }
+};
 
-// 有効期限延長モーダルの非表示
-function hideExtendExpiryModal() {
+// 有効期限延長モーダルの非表示（グローバル関数）
+window.hideExtendExpiryModal = function() {
   console.log('🔍 Hiding extend expiry modal');
   
   const modalElement = document.getElementById('extendExpiryModal');
@@ -909,14 +952,147 @@ function hideExtendExpiryModal() {
     return;
   }
   
-  const modal = bootstrap.Modal.getInstance(modalElement);
-  if (modal) {
-    modal.hide();
+  try {
+    const modal = bootstrap.Modal.getInstance(modalElement);
+    if (modal) {
+      modal.hide();
+    } else {
+      // フォールバック: 直接非表示
+      modalElement.style.display = 'none';
+      modalElement.classList.remove('show');
+      modalElement.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('modal-open');
+      document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+    }
+  } catch (e) {
+    console.error('❌ Error hiding modal:', e);
+    // フォールバック: 直接非表示
+    modalElement.style.display = 'none';
+    modalElement.classList.remove('show');
+    modalElement.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('modal-open');
+    document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+  }
+};
+
+// 有効期限プレビューの更新
+function updateExpiryPreview() {
+  const currentExpiryStr = document.getElementById('currentExpiryDate')?.textContent;
+  const extendDays = document.getElementById('extendDays')?.value;
+  const previewElement = document.getElementById('newExpiryPreview');
+  
+  if (currentExpiryStr && extendDays && previewElement) {
+    try {
+      // 日本語形式の日付をパース（例: "2025年1月28日"）
+      const dateMatch = currentExpiryStr.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+      let currentExpiry;
+      
+      if (dateMatch) {
+        currentExpiry = new Date(parseInt(dateMatch[1]), parseInt(dateMatch[2]) - 1, parseInt(dateMatch[3]));
+      } else {
+        // フォールバック: ISO形式の日付
+        currentExpiry = new Date(currentExpiryStr);
+      }
+      
+      const newExpiry = new Date(currentExpiry);
+      newExpiry.setDate(newExpiry.getDate() + parseInt(extendDays));
+      
+      const year = newExpiry.getFullYear();
+      const month = String(newExpiry.getMonth() + 1).padStart(2, '0');
+      const day = String(newExpiry.getDate()).padStart(2, '0');
+      
+      previewElement.textContent = `${year}年${month}月${day}日`;
+    } catch (e) {
+      console.error('Preview calculation error:', e);
+      previewElement.textContent = '計算できません';
+    }
   }
 }
 
-// 延長方法の切り替え
+// DOMContentLoadedでイベントリスナーを設定
 document.addEventListener('DOMContentLoaded', function() {
+  console.log('🔍 DOM Content Loaded - Initializing all modals and extend expiry functionality');
+  
+  // 削除モーダルを初期化
+  initializeDeleteTicketModal();
+  
+  // チケット数に応じて余白クラスを追加
+  adjustTableSpacing();
+  
+  // 延長ボタンの存在確認
+  const extendButtons = document.querySelectorAll('.extend-expiry-btn');
+  console.log('🔍 Found extend expiry buttons:', extendButtons.length);
+  extendButtons.forEach((btn, index) => {
+    console.log(`🔍 Button ${index + 1}:`, {
+      id: btn.getAttribute('data-ticket-id'),
+      name: btn.getAttribute('data-ticket-name'),
+      expiry: btn.getAttribute('data-current-expiry')
+    });
+  });
+  
+  // 延長ボタンのイベントリスナー設定関数
+  function setupExtendExpiryButtons() {
+    // 既存のイベントリスナーを削除して再設定
+    const extendButtons = document.querySelectorAll('.extend-expiry-btn');
+    extendButtons.forEach(btn => {
+      // 既存のイベントリスナーを削除（cloneNodeで新しい要素を作成）
+      const newBtn = btn.cloneNode(true);
+      btn.parentNode.replaceChild(newBtn, btn);
+    });
+    
+    // 新しいボタンにイベントリスナーを追加
+    document.querySelectorAll('.extend-expiry-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const ticketId = this.getAttribute('data-ticket-id');
+        const ticketName = this.getAttribute('data-ticket-name');
+        const currentExpiry = this.getAttribute('data-current-expiry');
+        const currentExpiryDisplay = this.getAttribute('data-current-expiry-display');
+        
+        console.log('🔍 Extend expiry button clicked:', { ticketId, ticketName, currentExpiry, currentExpiryDisplay });
+        
+        if (window.showExtendExpiryModal) {
+          window.showExtendExpiryModal(ticketId, ticketName, currentExpiry, currentExpiryDisplay);
+        } else {
+          console.error('❌ showExtendExpiryModal function not found');
+        }
+      });
+    });
+    
+    console.log('✅ Extended expiry buttons setup completed:', extendButtons.length);
+  }
+  
+  // 延長ボタンのイベントリスナー（イベント委譲を使用）
+  document.addEventListener('click', function(e) {
+    const extendBtn = e.target.closest('.extend-expiry-btn');
+    if (extendBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const ticketId = extendBtn.getAttribute('data-ticket-id');
+      const ticketName = extendBtn.getAttribute('data-ticket-name');
+      const currentExpiry = extendBtn.getAttribute('data-current-expiry');
+      const currentExpiryDisplay = extendBtn.getAttribute('data-current-expiry-display');
+      
+      console.log('🔍 Extend expiry button clicked (delegated):', { ticketId, ticketName, currentExpiry, currentExpiryDisplay });
+      
+      if (window.showExtendExpiryModal) {
+        window.showExtendExpiryModal(ticketId, ticketName, currentExpiry, currentExpiryDisplay);
+      } else {
+        console.error('❌ showExtendExpiryModal function not found');
+      }
+    }
+  });
+  
+  // 直接イベントリスナーも追加（フォールバック）
+  setupExtendExpiryButtons();
+  
+  // 少し遅延して再度設定（動的に追加される要素に対応）
+  setTimeout(setupExtendExpiryButtons, 500);
+  
+  // 延長方法の切り替え
   const extendByDays = document.getElementById('extendByDays');
   const extendByDate = document.getElementById('extendByDate');
   const extendByDaysSection = document.getElementById('extendByDaysSection');
@@ -929,6 +1105,7 @@ document.addEventListener('DOMContentLoaded', function() {
         extendByDateSection.style.display = 'none';
         document.getElementById('extendDays').required = true;
         document.getElementById('newExpiryDate').required = false;
+        updateExpiryPreview();
       }
     });
     
@@ -942,13 +1119,17 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
-  // 延長日数ボタンのクリックイベント
-  document.querySelectorAll('.extend-days-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const days = this.getAttribute('data-days');
-      document.getElementById('extendDays').value = days;
-      updateExpiryPreview();
-    });
+  // 延長日数ボタンのクリックイベント（イベント委譲）
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.extend-days-btn')) {
+      const btn = e.target.closest('.extend-days-btn');
+      const days = btn.getAttribute('data-days');
+      const extendDaysInput = document.getElementById('extendDays');
+      if (extendDaysInput) {
+        extendDaysInput.value = days;
+        updateExpiryPreview();
+      }
+    }
   });
   
   // 延長日数の入力でプレビューを更新
@@ -957,24 +1138,19 @@ document.addEventListener('DOMContentLoaded', function() {
     extendDaysInput.addEventListener('input', updateExpiryPreview);
   }
   
-  // 延長ボタンのクリックイベント
-  document.querySelectorAll('.extend-expiry-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const ticketId = this.getAttribute('data-ticket-id');
-      const ticketName = this.getAttribute('data-ticket-name');
-      const currentExpiry = this.getAttribute('data-current-expiry');
-      const currentExpiryDisplay = this.getAttribute('data-current-expiry-display');
-      showExtendExpiryModal(ticketId, ticketName, currentExpiry, currentExpiryDisplay);
-    });
-  });
-  
   // 延長確認ボタンのクリックイベント
   const confirmExtendBtn = document.getElementById('confirmExtendExpiryBtn');
   if (confirmExtendBtn) {
     confirmExtendBtn.addEventListener('click', function() {
       const ticketId = document.getElementById('extendTicketId').value;
-      const extendMethod = document.querySelector('input[name="extendMethod"]:checked').value;
+      const extendMethodRadio = document.querySelector('input[name="extendMethod"]:checked');
       
+      if (!extendMethodRadio) {
+        alert('延長方法を選択してください');
+        return;
+      }
+      
+      const extendMethod = extendMethodRadio.value;
       let url = `/admin/tickets/${ticketId}/extend_expiry`;
       let data = {};
       
@@ -994,6 +1170,8 @@ document.addEventListener('DOMContentLoaded', function() {
         data.new_expiry_date = newExpiryDate;
       }
       
+      console.log('🔍 Extending expiry:', { ticketId, data });
+      
       // フォーム送信
       fetch(url, {
         method: 'PATCH',
@@ -1003,8 +1181,12 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         body: JSON.stringify(data)
       })
-      .then(response => response.json())
+      .then(response => {
+        console.log('🔍 Response status:', response.status);
+        return response.json();
+      })
       .then(data => {
+        console.log('🔍 Response data:', data);
         if (data.success) {
           alert(data.message || '有効期限を延長しました');
           location.reload();
@@ -1013,45 +1195,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       })
       .catch(error => {
-        console.error('Error:', error);
-        alert('エラーが発生しました');
+        console.error('❌ Error:', error);
+        alert('エラーが発生しました: ' + error.message);
       });
     });
   }
-});
-
-// 有効期限プレビューの更新
-function updateExpiryPreview() {
-  const currentExpiryStr = document.getElementById('currentExpiryDate').textContent;
-  const extendDays = document.getElementById('extendDays').value;
-  const previewElement = document.getElementById('newExpiryPreview');
   
-  if (currentExpiryStr && extendDays && previewElement) {
-    try {
-      const currentExpiry = new Date(currentExpiryStr);
-      const newExpiry = new Date(currentExpiry);
-      newExpiry.setDate(newExpiry.getDate() + parseInt(extendDays));
-      
-      const year = newExpiry.getFullYear();
-      const month = String(newExpiry.getMonth() + 1).padStart(2, '0');
-      const day = String(newExpiry.getDate()).padStart(2, '0');
-      
-      previewElement.textContent = `${year}年${month}月${day}日`;
-    } catch (e) {
-      previewElement.textContent = '計算できません';
-    }
+  // モーダルが表示されたときに初期化
+  const extendExpiryModal = document.getElementById('extendExpiryModal');
+  if (extendExpiryModal) {
+    extendExpiryModal.addEventListener('shown.bs.modal', function() {
+      console.log('🔍 Extend expiry modal shown');
+      updateExpiryPreview();
+    });
   }
-}
-
-// DOMContentLoadedでイベントリスナーを設定
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('🔍 DOM Content Loaded - Initializing all modals');
-  
-  // 削除モーダルを初期化
-  initializeDeleteTicketModal();
-  
-  // チケット数に応じて余白クラスを追加
-  adjustTableSpacing();
 });
 
 // チケット数に応じてページとカードの余白を調整
