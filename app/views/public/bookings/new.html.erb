@@ -339,7 +339,13 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         
         // フォームに値を設定
-        document.getElementById('selected-datetime').value = selectedSlot.datetime;
+        const datetimeField = document.getElementById('selected-datetime');
+        if (datetimeField) {
+          datetimeField.value = selectedSlot.datetime;
+          console.log('✅ Selected datetime set:', selectedSlot.datetime);
+        } else {
+          console.error('❌ selected-datetime field not found');
+        }
         document.getElementById('selected-date-time').textContent = selectedSlot.display;
         document.getElementById('selected-time-display').style.display = 'block';
         
@@ -411,6 +417,29 @@ document.addEventListener('DOMContentLoaded', function() {
   // 入力項目の変更監視
   document.getElementById('booking-form').addEventListener('input', validateForm);
   document.getElementById('booking-form').addEventListener('change', validateForm);
+  
+  // フォーム送信前の確認
+  document.getElementById('booking-form').addEventListener('submit', function(e) {
+    const datetimeField = document.getElementById('selected-datetime');
+    const selectedCourse = document.querySelector('input[name="booking[course]"]:checked');
+    
+    console.log('📝 Form submit - datetime:', datetimeField?.value);
+    console.log('📝 Form submit - course:', selectedCourse?.value);
+    
+    if (!datetimeField || !datetimeField.value) {
+      e.preventDefault();
+      alert('予約日時を選択してください。');
+      return false;
+    }
+    
+    if (!selectedCourse) {
+      e.preventDefault();
+      alert('コースを選択してください。');
+      return false;
+    }
+    
+    return true;
+  });
 });
 </script>
 
