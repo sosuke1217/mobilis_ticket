@@ -26,7 +26,7 @@ module SecurityHeaders
       "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com",
       "img-src 'self' data: https:",
       "font-src 'self' data: https://cdnjs.cloudflare.com",
-      "connect-src 'self' https://api.line.me",
+      "connect-src 'self' https://api.line.me https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
       "frame-ancestors 'none'"
     ]
     
