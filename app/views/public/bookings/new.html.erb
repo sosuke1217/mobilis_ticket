@@ -353,18 +353,19 @@ document.addEventListener('DOMContentLoaded', function() {
       const timeKey = `${timeSlot.hour}:${timeSlot.minute}`;
       const rowNumber = timeIndex + 2; // ヘッダー行が1行目なので+2
       
-      // 時間ラベル（左側）
-      html += `<div class="time-label" style="grid-row: ${rowNumber}">${timeStr}</div>`;
+      // 時間ラベル（左側）- 列1
+      html += `<div class="time-label" style="grid-row: ${rowNumber}; grid-column: 1;">${timeStr}</div>`;
       
-      // 各日の時間セル
+      // 各日の時間セル - 列2-8
       for (let i = 0; i < 7; i++) {
+        const colNumber = i + 2; // 列2から開始
         const date = new Date(data.week_start);
         date.setDate(date.getDate() + i);
         const dateStr = date.toISOString().split('T')[0];
         const dayData = data.week_data[dateStr];
         
         if (!dayData) {
-          html += `<div class="time-cell disabled" style="grid-row: ${rowNumber}"></div>`;
+          html += `<div class="time-cell disabled" style="grid-row: ${rowNumber}; grid-column: ${colNumber};"></div>`;
           continue;
         }
         
@@ -391,7 +392,7 @@ document.addEventListener('DOMContentLoaded', function() {
                    data-datetime="${matchingSlot.start_datetime}"
                    data-date="${dateStr}"
                    data-time="${timeStr}"
-                   style="grid-row: ${rowNumber} / span ${rowSpan}">
+                   style="grid-row: ${rowNumber} / span ${rowSpan}; grid-column: ${colNumber};">
                 <div class="time-slot-block">
                   ${startTimeStr} - ${endTimeStr}
                 </div>
@@ -422,14 +423,14 @@ document.addEventListener('DOMContentLoaded', function() {
           }
           
           if (!hasSlotInThisRow) {
-            html += `<div class="time-cell empty" style="grid-row: ${rowNumber}"></div>`;
+            html += `<div class="time-cell empty" style="grid-row: ${rowNumber}; grid-column: ${colNumber};"></div>`;
           }
           // スロットの継続部分の場合は何も表示しない（スパンでカバーされるため）
         }
       }
       
-      // 時間ラベル（右側）
-      html += `<div class="time-label" style="grid-row: ${rowNumber}">${timeStr}</div>`;
+      // 時間ラベル（右側）- 列9
+      html += `<div class="time-label" style="grid-row: ${rowNumber}; grid-column: 9;">${timeStr}</div>`;
     });
     
     html += '</div>';
@@ -551,8 +552,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     if (!addressField || !addressField.value.trim()) {
-      allValid = false;
-    }
+        allValid = false;
+      }
     
     submitBtn.disabled = !allValid;
   }
