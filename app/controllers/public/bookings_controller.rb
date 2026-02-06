@@ -223,10 +223,14 @@ class Public::BookingsController < ApplicationController
   def time_slot_available_with_interval?(start_time, end_time, interval_minutes = nil)
     interval_minutes ||= ApplicationSetting.current.reservation_interval_minutes
     
-    # インターバルを考慮した重複チェック
+    # インターバルを考慮した重複チェック（PostgreSQL用の構文）
+    # start_time - interval_minutes分 から end_time + interval_minutes分 の範囲で重複をチェック
+    interval_start = start_time - interval_minutes.minutes
+    interval_end = end_time + interval_minutes.minutes
+    
     overlapping_reservations = Reservation.active.where(
-      '(start_time - INTERVAL ? MINUTE) < ? AND (end_time + INTERVAL ? MINUTE) > ?',
-      interval_minutes, end_time, interval_minutes, start_time
+      'start_time < ? AND end_time > ?',
+      interval_end, interval_start
     )
     
     overlapping_reservations.empty?
@@ -238,9 +242,12 @@ class Public::BookingsController < ApplicationController
     interval_minutes = 60
     
     # 既存の予約との重複チェック（60分インターバル考慮）
+    interval_start = start_time - interval_minutes.minutes
+    interval_end = end_time + interval_minutes.minutes
+    
     overlapping_reservations = Reservation.active.where(
-      '(start_time - INTERVAL ? MINUTE) < ? AND (end_time + INTERVAL ? MINUTE) > ?',
-      interval_minutes, end_time, interval_minutes, start_time
+      'start_time < ? AND end_time > ?',
+      interval_end, interval_start
     )
     
     overlapping_reservations.empty?
@@ -252,9 +259,11 @@ class Public::BookingsController < ApplicationController
     interval_minutes = 75
     
     # 既存の予約との重複チェック（次の予約の前に75分の準備時間を確保）
+    interval_end = end_time + interval_minutes.minutes
+    
     overlapping_reservations = Reservation.active.where(
-      'start_time < ? AND (end_time + INTERVAL ? MINUTE) > ?',
-      end_time + interval_minutes.minutes, interval_minutes, start_time
+      'start_time < ? AND end_time > ?',
+      interval_end, start_time
     )
     
     overlapping_reservations.empty?
