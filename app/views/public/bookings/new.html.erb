@@ -398,16 +398,35 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
+  // 選択をクリアする関数
+  function clearTimeSelection() {
+    selectedSlot = null;
+    const datetimeField = document.getElementById('selected-datetime');
+    if (datetimeField) {
+      datetimeField.value = '';
+    }
+    const selectedTimeDisplay = document.getElementById('selected-time-display');
+    if (selectedTimeDisplay) {
+      selectedTimeDisplay.style.display = 'none';
+    }
+    // 選択されたスロットのハイライトを解除
+    document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+  }
+  
   // 前の週へ
   document.getElementById('prev-week').addEventListener('click', function() {
+    clearTimeSelection();
     currentWeekStart.setDate(currentWeekStart.getDate() - 7);
     loadWeekCalendar();
+    validateForm();
   });
   
   // 次の週へ
   document.getElementById('next-week').addEventListener('click', function() {
+    clearTimeSelection();
     currentWeekStart.setDate(currentWeekStart.getDate() + 7);
     loadWeekCalendar();
+    validateForm();
   });
   
   // フォームバリデーション
@@ -456,15 +475,15 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('📝 Form submit - datetime:', datetimeField?.value);
     console.log('📝 Form submit - course:', selectedCourse?.value);
     
-    if (!datetimeField || !datetimeField.value) {
-      e.preventDefault();
-      alert('予約日時を選択してください。');
-      return false;
-    }
-    
     if (!selectedCourse) {
       e.preventDefault();
       alert('コースを選択してください。');
+      return false;
+    }
+    
+    if (!datetimeField || !datetimeField.value) {
+      e.preventDefault();
+      alert('予約日時を選択してください。カレンダーから日時を選択してください。');
       return false;
     }
     
