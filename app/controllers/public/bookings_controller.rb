@@ -100,29 +100,52 @@ class Public::BookingsController < ApplicationController
   end
 
   def create
-    @user = find_or_create_user
-    return render :new, status: :unprocessable_entity unless @user.persisted?
+    @courses = load_courses
+    
+    begin
+      @user = find_or_create_user
+      
+      unless @user.persisted?
+        flash[:alert] = "ユーザー情報の登録に失敗しました: #{@user.errors.full_messages.join(', ')}"
+        @reservation = Reservation.new
+        return render :new, status: :unprocessable_entity
+      end
 
-    @reservation = build_reservation(@user)
-    
-    # 予約時間の重複チェック
-    if time_conflict_exists?(@reservation)
-      flash[:alert] = '選択された時間は既に予約が入っています。別の時間をお選びください。'
-      @courses = load_courses
-      return render :new, status: :unprocessable_entity
-    end
-    
-    if @reservation.save
-      # LINE通知を送信
-      send_booking_notification(@reservation) if @reservation.user.line_user_id
+      @reservation = build_reservation(@user)
       
-      # 管理者への通知
-      notify_admin(@reservation)
+      # 必須項目のチェック
+      unless @reservation.start_time.present? && @reservation.end_time.present?
+        flash[:alert] = '予約日時が選択されていません。カレンダーから日時を選択してください。'
+        @reservation = Reservation.new
+        return render :new, status: :unprocessable_entity
+      end
       
-      redirect_to public_booking_path(@reservation), 
-                  notice: 'ご予約リクエストを承りました。確認のご連絡をお待ちください。'
-    else
-      @courses = load_courses
+      # 予約時間の重複チェック
+      if time_conflict_exists?(@reservation)
+        flash[:alert] = '選択された時間は既に予約が入っています。別の時間をお選びください。'
+        @reservation = Reservation.new
+        return render :new, status: :unprocessable_entity
+      end
+      
+      if @reservation.save
+        # LINE通知を送信
+        send_booking_notification(@reservation) if @reservation.user.line_user_id
+        
+        # 管理者への通知
+        notify_admin(@reservation)
+        
+        redirect_to public_booking_path(@reservation), 
+                    notice: 'ご予約リクエストを承りました。確認のご連絡をお待ちください。'
+      else
+        flash[:alert] = "予約の作成に失敗しました: #{@reservation.errors.full_messages.join(', ')}"
+        @reservation = Reservation.new
+        render :new, status: :unprocessable_entity
+      end
+    rescue => e
+      Rails.logger.error "❌ Booking creation error: #{e.message}"
+      Rails.logger.error "❌ Backtrace: #{e.backtrace.first(10).join("\n")}"
+      flash[:alert] = "予約の作成中にエラーが発生しました: #{e.message}"
+      @reservation = Reservation.new
       render :new, status: :unprocessable_entity
     end
   end
