@@ -67,10 +67,8 @@ class Public::BookingsController < ApplicationController
       
       available_slots = get_available_time_slots(date, duration)
       
-      # 今日の場合は、現在時刻より後のスロットのみ表示
-      if date == Date.current
-        available_slots = available_slots.select { |slot| slot[:start_time] > now }
-      end
+      # get_available_time_slots内で最低予約時間の制約を考慮しているため、
+      # ここでは追加のフィルタリングは不要
       
       week_data[date.iso8601] = {
         date: date.iso8601,
@@ -197,6 +195,10 @@ class Public::BookingsController < ApplicationController
     # インターバル時間を取得
     interval_minutes = settings.reservation_interval_minutes
     
+    # 最低予約時間を取得（デフォルト2時間）
+    min_advance_hours = settings.min_advance_booking_hours || 2
+    min_advance_time = Time.current + min_advance_hours.hours
+    
     # スロット間隔を取得
     slot_interval = settings.slot_interval_minutes.minutes
     available_slots = []
@@ -204,6 +206,12 @@ class Public::BookingsController < ApplicationController
     current_time = opening_time
     while current_time + duration.minutes <= closing_time
       end_time = current_time + duration.minutes
+      
+      # 最低予約時間の制約をチェック（今日の日付の場合のみ）
+      if date == Date.current && current_time < min_advance_time
+        current_time += slot_interval
+        next
+      end
       
       # インターバルを考慮した空きチェック
       if time_slot_available_with_interval?(current_time, end_time, interval_minutes)
