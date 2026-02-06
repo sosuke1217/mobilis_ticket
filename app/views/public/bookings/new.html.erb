@@ -282,70 +282,141 @@ document.addEventListener('DOMContentLoaded', function() {
       });
   }
   
-  // 週間カレンダーの描画
+  // 週間カレンダーの描画（TimeRex風：時間軸縦表示）
   function renderWeekCalendar(data) {
     const calendarWeek = document.getElementById('calendar-week');
-    const days = ['月', '火', '水', '木', '金', '土', '日']; // 月曜日から開始
-    let html = '';
+    const days = ['月', '火', '水', '木', '金', '土', '日'];
     
-    // 日付ヘッダー
-    html += '<div class="calendar-days-header">';
+    // 営業時間の設定を取得
+    const settings = data.settings || { business_hours_start: 10, business_hours_end: 19 };
+    const startHour = settings.business_hours_start || 10;
+    const endHour = settings.business_hours_end || 19;
+    
+    // 時間帯を30分間隔で生成
+    const timeSlots = [];
+    for (let hour = startHour; hour < endHour; hour++) {
+      timeSlots.push({ hour, minute: 0 });
+      timeSlots.push({ hour, minute: 30 });
+    }
+    
+    let html = '<div class="timerex-calendar-grid">';
+    
+    // 左上角の空白セル
+    html += '<div class="time-label-header"></div>';
+    
+    // 日付ヘッダー行
     for (let i = 0; i < 7; i++) {
       const date = new Date(data.week_start);
       date.setDate(date.getDate() + i);
       const dateStr = date.toISOString().split('T')[0];
       const dayData = data.week_data[dateStr];
       
-      // 今日かどうかをチェック
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const checkDate = new Date(date);
       checkDate.setHours(0, 0, 0, 0);
       const isToday = checkDate.getTime() === today.getTime();
       
+      html += `
+        <div class="day-header-cell ${isToday ? 'today' : ''} ${!dayData ? 'disabled' : ''}">
+          <div class="day-name">${days[i]}</div>
+          <div class="day-number">${dayData ? dayData.day_number : date.getDate()}</div>
+          ${isToday ? '<div class="today-badge">今日</div>' : ''}
+        </div>
+      `;
+    }
+    
+    // 各日のスロット情報を整理（開始時間をキーに）
+    const daySlotsMap = {};
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(data.week_start);
+      date.setDate(date.getDate() + i);
+      const dateStr = date.toISOString().split('T')[0];
+      const dayData = data.week_data[dateStr];
+      
       if (dayData) {
-        html += `
-          <div class="day-column ${isToday ? 'today' : ''}">
-            <div class="day-header ${isToday ? 'today-header' : ''}">
-              <div class="day-name">${days[i]}</div>
-              <div class="day-number">${dayData.day_number}</div>
-              ${isToday ? '<div class="today-badge">今日</div>' : ''}
-            </div>
-            <div class="time-slots" data-date="${dateStr}">
-              ${renderTimeSlots(dayData.slots, dateStr)}
-            </div>
-          </div>
-        `;
-      } else {
-        // 過去の日付や休業日
-        html += `
-          <div class="day-column disabled">
-            <div class="day-header">
-              <div class="day-name">${days[i]}</div>
-              <div class="day-number">${date.getDate()}</div>
-            </div>
-            <div class="time-slots disabled">
-              <div class="no-slots">-</div>
-            </div>
-          </div>
-        `;
+        daySlotsMap[dateStr] = {};
+        dayData.slots.forEach(slot => {
+          const slotTime = new Date(slot.start_datetime);
+          const key = `${slotTime.getHours()}:${slotTime.getMinutes()}`;
+          daySlotsMap[dateStr][key] = slot;
+        });
       }
     }
+    
+    // 時間行を生成
+    timeSlots.forEach((timeSlot, timeIndex) => {
+      const timeStr = `${String(timeSlot.hour).padStart(2, '0')}:${String(timeSlot.minute).padStart(2, '0')}`;
+      const timeKey = `${timeSlot.hour}:${timeSlot.minute}`;
+      
+      // 時間ラベル（左側）
+      html += `<div class="time-label">${timeStr}</div>`;
+      
+      // 各日の時間セル
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(data.week_start);
+        date.setDate(date.getDate() + i);
+        const dateStr = date.toISOString().split('T')[0];
+        const dayData = data.week_data[dateStr];
+        
+        if (!dayData) {
+          html += '<div class="time-cell disabled"></div>';
+          continue;
+        }
+        
+        // この時間帯に開始するスロットを探す
+        const matchingSlot = daySlotsMap[dateStr] && daySlotsMap[dateStr][timeKey];
+        
+        if (matchingSlot) {
+          const slotTime = new Date(matchingSlot.start_datetime);
+          const slotEndTime = new Date(matchingSlot.end_datetime);
+          const durationMinutes = (slotEndTime - slotTime) / (1000 * 60);
+          const rowSpan = Math.max(1, Math.round(durationMinutes / 30));
+          
+          const startTimeStr = slotTime.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+          const endTimeStr = slotEndTime.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+          
+          // スロットがこの行で開始する場合のみ表示
+          if (slotTime.getHours() === timeSlot.hour && slotTime.getMinutes() === timeSlot.minute) {
+            html += `
+              <div class="time-cell available" 
+                   data-datetime="${matchingSlot.start_datetime}"
+                   data-date="${dateStr}"
+                   data-time="${timeStr}"
+                   style="grid-row: span ${rowSpan}">
+                <div class="time-slot-block">
+                  ${startTimeStr} - ${endTimeStr}
+                </div>
+              </div>
+            `;
+          } else {
+            // スロットがこの行に含まれるが開始しない場合は空
+            html += '<div class="time-cell empty"></div>';
+          }
+        } else {
+          html += '<div class="time-cell empty"></div>';
+        }
+      }
+      
+      // 時間ラベル（右側）
+      html += `<div class="time-label">${timeStr}</div>`;
+    });
+    
     html += '</div>';
     
     calendarWeek.innerHTML = html;
     
     // 時間スロットのクリックイベント
-    document.querySelectorAll('.time-slot').forEach(slot => {
-      slot.addEventListener('click', function() {
-        // 他のスロットの選択解除
-        document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+    document.querySelectorAll('.time-cell.available').forEach(cell => {
+      cell.addEventListener('click', function() {
+        // 他のセルの選択解除
+        document.querySelectorAll('.time-cell').forEach(c => c.classList.remove('selected'));
         
-        // このスロットを選択
+        // このセルを選択
         this.classList.add('selected');
         selectedSlot = {
           datetime: this.dataset.datetime,
-          display: this.textContent.trim()
+          display: this.querySelector('.time-slot-block').textContent.trim()
         };
         
         // フォームに値を設定
@@ -353,28 +424,17 @@ document.addEventListener('DOMContentLoaded', function() {
         if (datetimeField) {
           datetimeField.value = selectedSlot.datetime;
           console.log('✅ Selected datetime set:', selectedSlot.datetime);
-        } else {
-          console.error('❌ selected-datetime field not found');
         }
-        document.getElementById('selected-date-time').textContent = selectedSlot.display;
+        
+        // 選択された日時を表示
+        const date = new Date(selectedSlot.datetime);
+        const dateStr = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 ${date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`;
+        document.getElementById('selected-date-time').textContent = dateStr;
         document.getElementById('selected-time-display').style.display = 'block';
         
         validateForm();
       });
     });
-  }
-  
-  // 時間スロットの描画
-  function renderTimeSlots(slots, dateStr) {
-    if (!slots || slots.length === 0) {
-      return '<div class="no-slots">空きがありません</div>';
-    }
-    
-    return slots.map(slot => {
-      const time = new Date(slot.start_datetime);
-      const timeStr = time.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
-      return `<div class="time-slot" data-datetime="${slot.start_datetime}">${timeStr}</div>`;
-    }).join('');
   }
   
   // 週の範囲を更新
@@ -624,201 +684,171 @@ document.addEventListener('DOMContentLoaded', function() {
   letter-spacing: -0.5px;
 }
 
-.calendar-days-header {
+/* TimeRex風カレンダーグリッド（時間軸縦表示） */
+.timerex-calendar-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 16px;
-  margin-bottom: 8px;
-}
-
-.day-column {
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.2s ease;
-}
-
-.day-column:hover {
-  transform: translateY(-2px);
-}
-
-.day-header {
-  text-align: center;
-  padding: 16px 12px;
-  background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
-  border-radius: 12px 12px 0 0;
-  margin-bottom: 10px;
-  border: 2px solid rgba(102, 126, 234, 0.1);
-  transition: all 0.3s ease;
-  position: relative;
+  grid-template-columns: 70px repeat(7, 1fr) 70px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
   overflow: hidden;
+  background: white;
+  position: relative;
 }
 
-.day-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #667eea, #764ba2);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.day-column:hover .day-header::before {
-  opacity: 1;
-}
-
-.day-name {
-  font-size: 0.8rem;
-  color: #888;
+.time-label-header {
+  background: #f8f9fa;
+  border-right: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 12px;
   font-weight: 600;
-  margin-bottom: 6px;
+  color: #666;
+  font-size: 0.875rem;
+}
+
+.day-header-cell {
+  background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+  border-right: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 16px 12px;
+  text-align: center;
+  font-weight: 600;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.day-header-cell.today {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.day-header-cell.disabled {
+  background: #f5f5f5;
+  opacity: 0.5;
+}
+
+.day-header-cell .day-name {
+  font-size: 0.75rem;
+  color: #888;
+  margin-bottom: 4px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-.day-number {
+.day-header-cell.today .day-name {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.day-header-cell .day-number {
   font-size: 1.5rem;
   font-weight: 700;
   color: #333;
   line-height: 1.2;
 }
 
-.day-column.disabled .day-header {
-  background: #f5f5f5;
-  border-color: #e0e0e0;
-  opacity: 0.5;
-}
-
-.day-column.disabled .day-name,
-.day-column.disabled .day-number {
-  color: #bbb;
-}
-
-.day-column.today .day-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-color: #667eea;
-  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
-  transform: scale(1.05);
-}
-
-.day-column.today .day-header::before {
-  opacity: 1;
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.day-column.today .day-name,
-.day-column.today .day-number {
+.day-header-cell.today .day-number {
   color: white;
 }
 
-.today-badge {
+.day-header-cell .today-badge {
   font-size: 0.65rem;
   background: rgba(255, 255, 255, 0.25);
-  padding: 3px 8px;
-  border-radius: 12px;
-  margin-top: 6px;
+  padding: 2px 6px;
+  border-radius: 8px;
+  margin-top: 4px;
   display: inline-block;
   font-weight: 600;
-  backdrop-filter: blur(10px);
 }
 
-.time-slots {
-  min-height: 220px;
-  padding: 12px;
-  background: linear-gradient(135deg, #fafbfc 0%, #ffffff 100%);
-  border-radius: 0 0 12px 12px;
-  border: 2px solid rgba(102, 126, 234, 0.1);
-  border-top: none;
+.time-label {
+  background: #fafbfc;
+  border-right: 1px solid #e0e0e0;
+  border-bottom: 1px dashed #e0e0e0;
+  padding: 8px;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #666;
+  font-weight: 500;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-height: 450px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(102, 126, 234, 0.3) transparent;
+  align-items: center;
+  justify-content: center;
 }
 
-.time-slots::-webkit-scrollbar {
-  width: 6px;
+.time-cell {
+  border-right: 1px solid #e0e0e0;
+  border-bottom: 1px dashed #e0e0e0;
+  min-height: 50px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.time-slots::-webkit-scrollbar-track {
-  background: transparent;
+.time-cell.empty {
+  background: #fafbfc;
+  cursor: default;
 }
 
-.time-slots::-webkit-scrollbar-thumb {
-  background: rgba(102, 126, 234, 0.3);
-  border-radius: 3px;
-}
-
-.time-slots::-webkit-scrollbar-thumb:hover {
-  background: rgba(102, 126, 234, 0.5);
-}
-
-.time-slots.disabled {
+.time-cell.disabled {
   background: #f5f5f5;
   opacity: 0.4;
-  border-color: #e0e0e0;
+  cursor: not-allowed;
 }
 
-.time-slot {
-  background: white;
-  border: 2px solid rgba(102, 126, 234, 0.15);
-  border-radius: 10px;
-  padding: 14px 12px;
-  text-align: center;
+.time-cell.available {
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  border: 2px solid #4caf50;
+  border-radius: 6px;
+  margin: 2px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  font-weight: 600;
-  color: #333;
-  font-size: 0.95rem;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.2);
 }
 
-.time-slot::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-  transition: left 0.5s ease;
+.time-cell.available:hover {
+  background: linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%);
+  border-color: #388e3c;
+  transform: translateY(-2px);
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
 }
 
-.time-slot:hover::before {
-  left: 100%;
-}
-
-.time-slot:hover {
+.time-cell.selected {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
   border-color: #667eea;
-  transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
-}
-
-.time-slot.selected {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-color: #667eea;
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.45);
-  transform: scale(1.08);
-  font-weight: 700;
+  z-index: 20;
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+  transform: scale(1.03);
   animation: pulse 2s infinite;
 }
 
 @keyframes pulse {
   0%, 100% {
-    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.45);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
   }
   50% {
-    box-shadow: 0 8px 28px rgba(102, 126, 234, 0.55);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.6);
   }
+}
+
+.time-slot-block {
+  padding: 8px 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #2e7d32;
+  text-align: center;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.time-cell.selected .time-slot-block {
+  color: white;
+}
+
+.time-cell.available:hover .time-slot-block {
+  color: #1b5e20;
 }
 
 .no-slots {
