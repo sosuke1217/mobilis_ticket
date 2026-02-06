@@ -83,13 +83,13 @@
               <!-- 週間カレンダー -->
               <div class="timerex-calendar-container">
                 <div class="calendar-header">
-                  <button class="btn-calendar-nav" id="prev-week">
+                  <button type="button" class="btn-calendar-nav" id="prev-week">
                     <i class="fas fa-chevron-left"></i>
                   </button>
                   <div class="calendar-title" id="calendar-title">
                     <span id="week-range"></span>
                   </div>
-                  <button class="btn-calendar-nav" id="next-week">
+                  <button type="button" class="btn-calendar-nav" id="next-week">
                     <i class="fas fa-chevron-right"></i>
                   </button>
                 </div>
@@ -414,7 +414,9 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   // 前の週へ
-  document.getElementById('prev-week').addEventListener('click', function() {
+  document.getElementById('prev-week').addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
     clearTimeSelection();
     currentWeekStart.setDate(currentWeekStart.getDate() - 7);
     loadWeekCalendar();
@@ -422,7 +424,9 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   
   // 次の週へ
-  document.getElementById('next-week').addEventListener('click', function() {
+  document.getElementById('next-week').addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
     clearTimeSelection();
     currentWeekStart.setDate(currentWeekStart.getDate() + 7);
     loadWeekCalendar();
