@@ -718,12 +718,14 @@ document.addEventListener('DOMContentLoaded', function() {
 /* TimeRex風カレンダーグリッド（時間軸縦表示） */
 .timerex-calendar-grid {
   display: grid;
-  grid-template-columns: 70px repeat(7, 1fr) 70px;
+  grid-template-columns: 70px repeat(7, minmax(100px, 1fr)) 70px;
   border: 1px solid #e0e0e0;
   border-radius: 12px;
   overflow: hidden;
   background: white;
   position: relative;
+  width: 100%;
+  max-width: 100%;
 }
 
 .time-label-header {
@@ -740,11 +742,13 @@ document.addEventListener('DOMContentLoaded', function() {
   background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
   border-right: 1px solid #e0e0e0;
   border-bottom: 1px solid #e0e0e0;
-  padding: 16px 12px;
+  padding: 12px 8px;
   text-align: center;
   font-weight: 600;
   position: relative;
   transition: all 0.3s ease;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .day-header-cell.today {
@@ -759,11 +763,12 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .day-header-cell .day-name {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: #888;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
 }
 
 .day-header-cell.today .day-name {
@@ -771,10 +776,11 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .day-header-cell .day-number {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-weight: 700;
   color: #333;
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .day-header-cell.today .day-number {
@@ -782,13 +788,14 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .day-header-cell .today-badge {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   background: rgba(255, 255, 255, 0.25);
-  padding: 2px 6px;
-  border-radius: 8px;
-  margin-top: 4px;
+  padding: 2px 4px;
+  border-radius: 6px;
+  margin-top: 3px;
   display: inline-block;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .time-label {
