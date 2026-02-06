@@ -351,9 +351,10 @@ document.addEventListener('DOMContentLoaded', function() {
     timeSlots.forEach((timeSlot, timeIndex) => {
       const timeStr = `${String(timeSlot.hour).padStart(2, '0')}:${String(timeSlot.minute).padStart(2, '0')}`;
       const timeKey = `${timeSlot.hour}:${timeSlot.minute}`;
+      const rowNumber = timeIndex + 2; // ヘッダー行が1行目なので+2
       
       // 時間ラベル（左側）
-      html += `<div class="time-label">${timeStr}</div>`;
+      html += `<div class="time-label" style="grid-row: ${rowNumber}">${timeStr}</div>`;
       
       // 各日の時間セル
       for (let i = 0; i < 7; i++) {
@@ -363,7 +364,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const dayData = data.week_data[dateStr];
         
         if (!dayData) {
-          html += '<div class="time-cell disabled"></div>';
+          html += `<div class="time-cell disabled" style="grid-row: ${rowNumber}"></div>`;
           continue;
         }
         
@@ -383,22 +384,22 @@ document.addEventListener('DOMContentLoaded', function() {
           if (slotTime.getHours() === timeSlot.hour && slotTime.getMinutes() === timeSlot.minute) {
             // このスロットがどの行に表示されるかを記録
             const slotKey = `${dateStr}_${timeKey}`;
-            slotRowMap[slotKey] = { startRow: timeIndex + 2, rowSpan: rowSpan };
+            slotRowMap[slotKey] = { startRow: rowNumber, rowSpan: rowSpan };
             
             html += `
               <div class="time-cell available" 
                    data-datetime="${matchingSlot.start_datetime}"
                    data-date="${dateStr}"
                    data-time="${timeStr}"
-                   style="grid-row: ${timeIndex + 2} / span ${rowSpan}">
+                   style="grid-row: ${rowNumber} / span ${rowSpan}">
                 <div class="time-slot-block">
                   ${startTimeStr} - ${endTimeStr}
                 </div>
               </div>
             `;
           } else {
-            // スロットがこの行に含まれるが開始しない場合は空（スロットの継続部分）
-            html += '<div class="time-cell empty slot-continued"></div>';
+            // スロットがこの行に含まれるが開始しない場合は何も表示しない（スロットの継続部分）
+            // グリッドレイアウトでは、スパンでカバーされるため表示不要
           }
         } else {
           // この行にスロットが含まれているかチェック
@@ -411,7 +412,7 @@ document.addEventListener('DOMContentLoaded', function() {
               
               // この時間帯がスロットの範囲内にあるかチェック
               if (currentTime >= slotStart && currentTime < slotEnd) {
-                // スロットの開始時間でない場合のみ空セル
+                // スロットの開始時間でない場合のみスロットの継続部分
                 if (!(slotStart.getHours() === timeSlot.hour && slotStart.getMinutes() === timeSlot.minute)) {
                   hasSlotInThisRow = true;
                   break;
@@ -420,16 +421,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           }
           
-          if (hasSlotInThisRow) {
-            html += '<div class="time-cell empty slot-continued"></div>';
-          } else {
-            html += '<div class="time-cell empty"></div>';
+          if (!hasSlotInThisRow) {
+            html += `<div class="time-cell empty" style="grid-row: ${rowNumber}"></div>`;
           }
+          // スロットの継続部分の場合は何も表示しない（スパンでカバーされるため）
         }
       }
       
       // 時間ラベル（右側）
-      html += `<div class="time-label">${timeStr}</div>`;
+      html += `<div class="time-label" style="grid-row: ${rowNumber}">${timeStr}</div>`;
     });
     
     html += '</div>';
@@ -822,10 +822,6 @@ document.addEventListener('DOMContentLoaded', function() {
   cursor: default;
 }
 
-.time-cell.empty.slot-continued {
-  background: transparent;
-  border: none;
-}
 
 .time-cell.disabled {
   background: #f5f5f5;
