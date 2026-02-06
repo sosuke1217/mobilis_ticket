@@ -1,12 +1,12 @@
 <!-- app/views/public/bookings/new.html.erb -->
 <div class="container my-5">
   <div class="row justify-content-center">
-    <div class="col-lg-8">
-      <div class="card shadow-lg">
-        <div class="card-header bg-primary text-white text-center">
+    <div class="col-lg-10">
+      <div class="card shadow-lg timerex-style">
+        <div class="card-header timerex-header text-center">
           <h2 class="mb-0">
-            <i class="fas fa-calendar-plus me-2"></i>
-            出張ストレッチ予約フォーム
+            <i class="fas fa-calendar-check me-2"></i>
+            出張ストレッチ予約
           </h2>
           <p class="mb-0 mt-2">広尾エリア専門</p>
         </div>
@@ -16,9 +16,9 @@
                         local: true, html: { id: 'booking-form' } do |f| %>
             
             <!-- Step 1: コース選択 -->
-            <div class="step-section mb-4">
+            <div class="step-section mb-5">
               <h4 class="step-title">
-                <span class="step-number">1</span>コース選択
+                <span class="step-number">1</span>コースを選択
               </h4>
               
               <div class="row">
@@ -30,7 +30,7 @@
                              id="course_<%= index %>"
                              data-duration="<%= course[:duration] %>"
                              <%= 'checked' if index == 1 %> hidden>
-                      <div class="card h-100">
+                      <div class="card h-100 course-option">
                         <div class="card-body text-center">
                           <h5 class="card-title"><%= course[:name] %></h5>
                           <p class="price-display">
@@ -45,36 +45,45 @@
               </div>
             </div>
             
-            <!-- Step 2: 希望日時選択 -->
-            <div class="step-section mb-4">
+            <!-- Step 2: 希望日時選択 - TimeRex風カレンダー -->
+            <div class="step-section mb-5">
               <h4 class="step-title">
-                <span class="step-number">2</span>希望日時選択
+                <span class="step-number">2</span>日時を選択
               </h4>
               
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <%= label_tag 'preferred_date', '希望日', class: 'form-label required' %>
-                  <%= date_field_tag 'preferred_date', '', 
-                        { class: 'form-control', required: true, id: 'preferred-date',
-                          min: Date.current + 1.day, max: Date.current + 30.days } %>
+              <!-- 週間カレンダー -->
+              <div class="timerex-calendar-container">
+                <div class="calendar-header">
+                  <button class="btn-calendar-nav" id="prev-week">
+                    <i class="fas fa-chevron-left"></i>
+                  </button>
+                  <div class="calendar-title" id="calendar-title">
+                    <span id="week-range"></span>
+                  </div>
+                  <button class="btn-calendar-nav" id="next-week">
+                    <i class="fas fa-chevron-right"></i>
+                  </button>
                 </div>
                 
-                <div class="col-md-6 mb-3">
-                  <%= label_tag 'booking[selected_datetime]', '空き時間', class: 'form-label required' %>
-                  <select name="booking[selected_datetime]" id="available-times-select" class="form-select" required>
-                    <option value="">まず日付とコースを選択してください</option>
-                  </select>
-                  <div id="loading-times" class="form-text text-primary" style="display: none;">
-                    <i class="fas fa-spinner fa-spin me-1"></i>空き時間を検索中...
+                <div class="calendar-week" id="calendar-week">
+                  <!-- 週間カレンダーがここに動的に生成されます -->
+                  <div class="loading-calendar">
+                    <i class="fas fa-spinner fa-spin"></i> カレンダーを読み込み中...
                   </div>
                 </div>
               </div>
               
-              <div class="alert alert-info">
-                <i class="fas fa-info-circle me-2"></i>
-                <strong>リアルタイム空き時間表示</strong><br>
-                選択した日付とコースに応じて、実際に予約可能な時間のみが表示されます。
+              <!-- 選択された日時表示 -->
+              <div id="selected-time-display" class="selected-time-display" style="display: none;">
+                <div class="alert alert-info mb-0">
+                  <i class="fas fa-check-circle me-2"></i>
+                  <strong>選択された日時:</strong>
+                  <span id="selected-date-time"></span>
+                </div>
               </div>
+              
+              <!-- 隠しフィールド -->
+              <input type="hidden" name="booking[selected_datetime]" id="selected-datetime" required>
             </div>
             
             <!-- Step 3: お客様情報 -->
@@ -86,27 +95,27 @@
               <div class="row">
                 <div class="col-md-6 mb-3">
                   <%= label_tag 'booking[name]', 'お名前', class: 'form-label required' %>
-                  <%= text_field_tag 'booking[name]', '', 
+                  <%= text_field_tag 'booking[name]', (@user_info&.dig(:name) || ''), 
                         { class: 'form-control', required: true, placeholder: '山田太郎' } %>
                 </div>
                 
                 <div class="col-md-6 mb-3">
                   <%= label_tag 'booking[phone_number]', 'お電話番号', class: 'form-label required' %>
-                  <%= telephone_field_tag 'booking[phone_number]', '', 
+                  <%= telephone_field_tag 'booking[phone_number]', (@user_info&.dig(:phone_number) || ''), 
                         { class: 'form-control', required: true, placeholder: '090-1234-5678' } %>
                 </div>
               </div>
               
               <div class="mb-3">
                 <%= label_tag 'booking[email]', 'メールアドレス', class: 'form-label' %>
-                <%= email_field_tag 'booking[email]', '', 
+                <%= email_field_tag 'booking[email]', (@user_info&.dig(:email) || ''), 
                       { class: 'form-control', placeholder: 'example@email.com' } %>
                 <div class="form-text">ご連絡用（任意）</div>
               </div>
               
               <div class="mb-3">
                 <%= label_tag 'booking[address]', 'ご住所', class: 'form-label required' %>
-                <%= text_area_tag 'booking[address]', '', 
+                <%= text_area_tag 'booking[address]', (@user_info&.dig(:address) || ''), 
                       { class: 'form-control', rows: 2, required: true,
                         placeholder: '港区南麻布○-○-○　○○マンション○○号室' } %>
               </div>
@@ -158,14 +167,19 @@
   </div>
 </div>
 
-<!-- 🆕 JavaScript for 空き時間取得 -->
+<!-- JavaScript for TimeRex風カレンダー -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const courseCards = document.querySelectorAll('.course-card');
-  const dateInput = document.getElementById('preferred-date');
-  const timesSelect = document.getElementById('available-times-select');
-  const loadingIndicator = document.getElementById('loading-times');
   const submitBtn = document.getElementById('submit-btn');
+  let currentWeekStart = new Date();
+  // 週の開始日を月曜日に設定
+  const day = currentWeekStart.getDay();
+  const diff = currentWeekStart.getDate() - day + (day === 0 ? -6 : 1); // 月曜日を週の開始に
+  currentWeekStart.setDate(diff);
+  currentWeekStart.setHours(0, 0, 0, 0);
+  let selectedCourse = null;
+  let selectedSlot = null;
   
   // コース選択処理
   courseCards.forEach(card => {
@@ -180,77 +194,176 @@ document.addEventListener('DOMContentLoaded', function() {
       const radio = this.querySelector('input');
       radio.checked = true;
       this.querySelector('.card').classList.add('selected');
+      selectedCourse = {
+        name: radio.value,
+        duration: parseInt(radio.dataset.duration)
+      };
       
-      // 空き時間を更新
-      updateAvailableTimes();
+      // カレンダーを更新
+      loadWeekCalendar();
     });
   });
-  
-  // 日付変更時の処理
-  dateInput.addEventListener('change', updateAvailableTimes);
-  
-  // 時間選択時の処理
-  timesSelect.addEventListener('change', validateForm);
   
   // 初期選択状態の設定
   const checkedCourse = document.querySelector('input[name="booking[course]"]:checked');
   if (checkedCourse) {
     checkedCourse.closest('.course-card').querySelector('.card').classList.add('selected');
+    selectedCourse = {
+      name: checkedCourse.value,
+      duration: parseInt(checkedCourse.dataset.duration)
+    };
+    loadWeekCalendar();
   }
   
-  // 🆕 空き時間を取得する関数
-  function updateAvailableTimes() {
-    const selectedCourse = document.querySelector('input[name="booking[course]"]:checked');
-    const selectedDate = dateInput.value;
-    
-    if (!selectedCourse || !selectedDate) {
-      timesSelect.innerHTML = '<option value="">コースと日付を選択してください</option>';
-      timesSelect.disabled = true;
+  // 週間カレンダーの読み込み
+  function loadWeekCalendar() {
+    if (!selectedCourse) {
+      document.getElementById('calendar-week').innerHTML = 
+        '<div class="no-course-selected">まずコースを選択してください</div>';
       return;
     }
     
-    const duration = selectedCourse.dataset.duration;
+    const weekStartStr = currentWeekStart.toISOString().split('T')[0];
+    const calendarWeek = document.getElementById('calendar-week');
+    calendarWeek.innerHTML = '<div class="loading-calendar"><i class="fas fa-spinner fa-spin"></i> カレンダーを読み込み中...</div>';
     
-    // ローディング表示
-    timesSelect.disabled = true;
-    timesSelect.innerHTML = '<option value="">検索中...</option>';
-    loadingIndicator.style.display = 'block';
-    
-    // 空き時間をAPIから取得
-    fetch(`/public/bookings/available_times?date=${selectedDate}&duration=${duration}`)
+    fetch(`/public/bookings/week_calendar?start_date=${weekStartStr}&duration=${selectedCourse.duration}`)
       .then(response => response.json())
       .then(data => {
-        loadingIndicator.style.display = 'none';
-        
         if (data.success) {
-          timesSelect.innerHTML = '<option value="">時間を選択してください</option>';
-          
-          if (data.slots.length === 0) {
-            timesSelect.innerHTML = '<option value="" disabled>この日は空きがありません</option>';
-            timesSelect.disabled = true;
-          } else {
-            data.slots.forEach(slot => {
-              const option = document.createElement('option');
-              option.value = slot.start_datetime;
-              option.textContent = slot.display;
-              timesSelect.appendChild(option);
-            });
-            timesSelect.disabled = false;
-          }
+          renderWeekCalendar(data);
+          updateWeekRange(data.week_start);
         } else {
-          timesSelect.innerHTML = '<option value="" disabled>エラーが発生しました</option>';
-          console.error('API Error:', data.error);
+          calendarWeek.innerHTML = '<div class="error-message">エラーが発生しました</div>';
         }
-        
-        validateForm();
       })
       .catch(error => {
-        loadingIndicator.style.display = 'none';
-        timesSelect.innerHTML = '<option value="" disabled>通信エラーが発生しました</option>';
-        console.error('Fetch Error:', error);
-        validateForm();
+        console.error('Error loading calendar:', error);
+        calendarWeek.innerHTML = '<div class="error-message">通信エラーが発生しました</div>';
       });
   }
+  
+  // 週間カレンダーの描画
+  function renderWeekCalendar(data) {
+    const calendarWeek = document.getElementById('calendar-week');
+    const days = ['月', '火', '水', '木', '金', '土', '日']; // 月曜日から開始
+    let html = '';
+    
+    // 日付ヘッダー
+    html += '<div class="calendar-days-header">';
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(data.week_start);
+      date.setDate(date.getDate() + i);
+      const dateStr = date.toISOString().split('T')[0];
+      const dayData = data.week_data[dateStr];
+      
+      // 今日かどうかをチェック
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const checkDate = new Date(date);
+      checkDate.setHours(0, 0, 0, 0);
+      const isToday = checkDate.getTime() === today.getTime();
+      
+      if (dayData) {
+        html += `
+          <div class="day-column ${isToday ? 'today' : ''}">
+            <div class="day-header ${isToday ? 'today-header' : ''}">
+              <div class="day-name">${days[i]}</div>
+              <div class="day-number">${dayData.day_number}</div>
+              ${isToday ? '<div class="today-badge">今日</div>' : ''}
+            </div>
+            <div class="time-slots" data-date="${dateStr}">
+              ${renderTimeSlots(dayData.slots, dateStr)}
+            </div>
+          </div>
+        `;
+      } else {
+        // 過去の日付や休業日
+        html += `
+          <div class="day-column disabled">
+            <div class="day-header">
+              <div class="day-name">${days[i]}</div>
+              <div class="day-number">${date.getDate()}</div>
+            </div>
+            <div class="time-slots disabled">
+              <div class="no-slots">-</div>
+            </div>
+          </div>
+        `;
+      }
+    }
+    html += '</div>';
+    
+    calendarWeek.innerHTML = html;
+    
+    // 時間スロットのクリックイベント
+    document.querySelectorAll('.time-slot').forEach(slot => {
+      slot.addEventListener('click', function() {
+        // 他のスロットの選択解除
+        document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+        
+        // このスロットを選択
+        this.classList.add('selected');
+        selectedSlot = {
+          datetime: this.dataset.datetime,
+          display: this.textContent.trim()
+        };
+        
+        // フォームに値を設定
+        document.getElementById('selected-datetime').value = selectedSlot.datetime;
+        document.getElementById('selected-date-time').textContent = selectedSlot.display;
+        document.getElementById('selected-time-display').style.display = 'block';
+        
+        validateForm();
+      });
+    });
+  }
+  
+  // 時間スロットの描画
+  function renderTimeSlots(slots, dateStr) {
+    if (!slots || slots.length === 0) {
+      return '<div class="no-slots">空きがありません</div>';
+    }
+    
+    return slots.map(slot => {
+      const time = new Date(slot.start_datetime);
+      const timeStr = time.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+      return `<div class="time-slot" data-datetime="${slot.start_datetime}">${timeStr}</div>`;
+    }).join('');
+  }
+  
+  // 週の範囲を更新
+  function updateWeekRange(weekStartStr) {
+    const start = new Date(weekStartStr);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6);
+    
+    const startMonth = start.getMonth() + 1;
+    const startDate = start.getDate();
+    const endMonth = end.getMonth() + 1;
+    const endDate = end.getDate();
+    
+    let startStr = `${startMonth}月${startDate}日`;
+    let endStr = `${endMonth}月${endDate}日`;
+    
+    if (startMonth === endMonth) {
+      document.getElementById('week-range').textContent = `${startMonth}月${startDate}日 - ${endDate}日`;
+    } else {
+      document.getElementById('week-range').textContent = `${startStr} - ${endStr}`;
+    }
+  }
+  
+  // 前の週へ
+  document.getElementById('prev-week').addEventListener('click', function() {
+    currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+    loadWeekCalendar();
+  });
+  
+  // 次の週へ
+  document.getElementById('next-week').addEventListener('click', function() {
+    currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+    loadWeekCalendar();
+  });
   
   // フォームバリデーション
   function validateForm() {
@@ -273,28 +386,49 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
+/* TimeRex風スタイル */
+.timerex-style {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.timerex-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px;
+  border: none;
+}
+
+.timerex-header h2 {
+  font-weight: 700;
+  font-size: 2rem;
+}
+
 .step-section {
-  border-left: 4px solid #e3f2fd;
-  padding-left: 20px;
-  margin-bottom: 2rem;
+  border-left: 4px solid #667eea;
+  padding-left: 24px;
+  margin-bottom: 2.5rem;
 }
 
 .step-title {
-  color: #1976d2;
-  margin-bottom: 1rem;
+  color: #667eea;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+  font-size: 1.25rem;
 }
 
 .step-number {
-  display: inline-block;
-  width: 30px;
-  height: 30px;
-  background: #1976d2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border-radius: 50%;
-  text-align: center;
-  line-height: 30px;
-  margin-right: 10px;
-  font-weight: bold;
+  margin-right: 12px;
+  font-weight: 700;
+  font-size: 1.1rem;
 }
 
 .course-card {
@@ -302,24 +436,198 @@ document.addEventListener('DOMContentLoaded', function() {
   transition: all 0.3s ease;
 }
 
-.course-card .card {
+.course-option {
   border: 2px solid #e0e0e0;
+  border-radius: 12px;
   transition: all 0.3s ease;
+  background: white;
 }
 
-.course-card:hover .card,
-.course-card input:checked + .card,
-.course-card .card.selected {
-  border-color: #1976d2;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.2);
+.course-card:hover .course-option,
+.course-card input:checked ~ .course-option,
+.course-option.selected {
+  border-color: #667eea;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+  background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
 }
 
 .price-display {
-  font-size: 1.5rem;
-  color: #1976d2;
-  font-weight: bold;
-  margin: 0;
+  font-size: 1.75rem;
+  color: #667eea;
+  font-weight: 700;
+  margin: 0.5rem 0;
+}
+
+/* TimeRex風カレンダー */
+.timerex-calendar-container {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.btn-calendar-nav {
+  background: #f8f9fa;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #667eea;
+}
+
+.btn-calendar-nav:hover {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+  transform: scale(1.05);
+}
+
+.calendar-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.calendar-days-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 12px;
+}
+
+.day-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.day-header {
+  text-align: center;
+  padding: 12px 8px;
+  background: #f8f9fa;
+  border-radius: 8px 8px 0 0;
+  margin-bottom: 8px;
+}
+
+.day-name {
+  font-size: 0.875rem;
+  color: #666;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.day-number {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.day-column.disabled .day-header {
+  background: #f0f0f0;
+  opacity: 0.6;
+}
+
+.day-column.disabled .day-name,
+.day-column.disabled .day-number {
+  color: #999;
+}
+
+.day-column.today .day-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.day-column.today .day-name,
+.day-column.today .day-number {
+  color: white;
+}
+
+.today-badge {
+  font-size: 0.7rem;
+  background: rgba(255, 255, 255, 0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 4px;
+  display: inline-block;
+}
+
+.time-slots {
+  min-height: 200px;
+  padding: 8px;
+  background: #fafafa;
+  border-radius: 0 0 8px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.time-slots.disabled {
+  background: #f5f5f5;
+  opacity: 0.5;
+}
+
+.time-slot {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 600;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.time-slot:hover {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.time-slot.selected {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: #667eea;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+  transform: scale(1.05);
+}
+
+.no-slots {
+  text-align: center;
+  color: #999;
+  padding: 20px;
+  font-size: 0.875rem;
+}
+
+.loading-calendar,
+.no-course-selected,
+.error-message {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+.selected-time-display {
+  margin-top: 16px;
 }
 
 .required::after {
@@ -328,16 +636,47 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .form-control:focus {
-  border-color: #1976d2;
-  box-shadow: 0 0 0 0.2rem rgba(25, 118, 210, 0.25);
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
 }
 
-#available-times-select:disabled {
-  background-color: #f5f5f5;
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 8px;
+  padding: 12px 32px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-#loading-times {
-  font-size: 0.875rem;
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .calendar-days-header {
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    overflow-x: auto;
+  }
+  
+  .day-column {
+    min-width: 80px;
+  }
+  
+  .time-slots {
+    max-height: 300px;
+  }
+  
+  .timerex-header h2 {
+    font-size: 1.5rem;
+  }
 }
 </style>

@@ -9,6 +9,9 @@ class Public::BookingsController < ApplicationController
       { name: '80分コース', duration: 80, price: 16000 }
     ]
     
+    # システム設定を取得
+    @settings = ApplicationSetting.current
+    
     # 🆕 LINEユーザーの場合は情報を事前入力
     if params[:line_user_id].present?
       user = User.find_by(line_user_id: params[:line_user_id])
@@ -39,6 +42,58 @@ class Public::BookingsController < ApplicationController
         start_datetime: slot[:start_time].iso8601,
         end_datetime: slot[:end_time].iso8601
       }}
+    }
+  rescue => e
+    render json: { success: false, error: e.message }
+  end
+
+  # 週間カレンダー用のAPIエンドポイント
+  def week_calendar
+    start_date = params[:start_date] ? Date.parse(params[:start_date]) : Date.current.beginning_of_week(:monday)
+    duration = params[:duration].to_i
+    
+    settings = ApplicationSetting.current
+    week_data = {}
+    now = Time.current
+    
+    (0..6).each do |day_offset|
+      date = start_date + day_offset.days
+      
+      # 日曜休業チェック
+      next if settings.sunday_closed? && date.sunday?
+      
+      # 過去の日付はスキップ
+      next if date < Date.current
+      
+      available_slots = get_available_time_slots(date, duration)
+      
+      # 今日の場合は、現在時刻より後のスロットのみ表示
+      if date == Date.current
+        available_slots = available_slots.select { |slot| slot[:start_time] > now }
+      end
+      
+      week_data[date.iso8601] = {
+        date: date.iso8601,
+        day_name: date.strftime('%a'),
+        day_number: date.day,
+        slots: available_slots.map { |slot| {
+          time: slot[:start_time].strftime('%H:%M'),
+          display: slot[:start_time].strftime('%H:%M'),
+          start_datetime: slot[:start_time].iso8601,
+          end_datetime: slot[:end_time].iso8601
+        }}
+      }
+    end
+    
+    render json: {
+      success: true,
+      week_start: start_date.iso8601,
+      week_data: week_data,
+      settings: {
+        business_hours_start: settings.business_hours_start,
+        business_hours_end: settings.business_hours_end,
+        slot_interval_minutes: settings.slot_interval_minutes
+      }
     }
   rescue => e
     render json: { success: false, error: e.message }
@@ -97,27 +152,29 @@ class Public::BookingsController < ApplicationController
 
   # 空き時間スロットを取得
   def get_available_time_slots(date, duration)
+    settings = ApplicationSetting.current
+    
     # 営業時間の設定
-    opening_time = Time.zone.parse("#{date} 10:00")
-    closing_time = Time.zone.parse("#{date} 19:00")
+    opening_time = Time.zone.parse("#{date} #{settings.business_hours_start}:00")
+    closing_time = Time.zone.parse("#{date} #{settings.business_hours_end}:00")
     
-    # インターバル時間を取得（75分）
-    interval_minutes = Reservation.interval_minutes
+    # インターバル時間を取得
+    interval_minutes = settings.reservation_interval_minutes
     
-    # 75分インターバルに対応したスロット間隔（80分刻み）
-    slot_interval = 80.minutes
+    # スロット間隔を取得
+    slot_interval = settings.slot_interval_minutes.minutes
     available_slots = []
     
     current_time = opening_time
     while current_time + duration.minutes <= closing_time
       end_time = current_time + duration.minutes
       
-      # 75分インターバルを考慮した空きチェック
-      if time_slot_available_with_75min_interval?(current_time, end_time)
+      # インターバルを考慮した空きチェック
+      if time_slot_available_with_interval?(current_time, end_time, interval_minutes)
         available_slots << {
           start_time: current_time,
           end_time: end_time,
-          interval_info: "（75分準備時間含む）"
+          interval_info: "（#{interval_minutes}分準備時間含む）"
         }
       end
       
@@ -127,8 +184,8 @@ class Public::BookingsController < ApplicationController
     available_slots
   end
 
-  def time_slot_available_with_interval?(start_time, end_time)
-    interval_minutes = Reservation.interval_minutes
+  def time_slot_available_with_interval?(start_time, end_time, interval_minutes = nil)
+    interval_minutes ||= ApplicationSetting.current.reservation_interval_minutes
     
     # インターバルを考慮した重複チェック
     overlapping_reservations = Reservation.active.where(

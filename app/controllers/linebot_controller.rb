@@ -517,8 +517,8 @@ class LinebotController < ApplicationController
       send_booking_options(user, reply_token)
 
     when "booking"
-      Rails.logger.info "📅 Showing booking options"
-      send_booking_options(user, reply_token)
+      Rails.logger.info "📅 Sending booking page URL"
+      send_booking_page_url(user, reply_token)
 
     when "book_40min"
       Rails.logger.info "📅 Starting booking flow for 40 min"
@@ -675,6 +675,93 @@ class LinebotController < ApplicationController
         Rails.logger.error "❌ Failed to send error message: #{send_error.message}"
       end
     end
+  end
+
+  # 🆕 予約ページのURLを送信
+  def send_booking_page_url(user, reply_token)
+    Rails.logger.info "📅 send_booking_page_url called for user: #{user.id} (#{user.name})"
+    
+    base_url = ENV['APP_HOST'] || ENV['app_host'] || 'https://mobilis-stretch.com'
+    booking_url = "#{base_url}/public/bookings/new"
+    
+    # LINEユーザーIDがある場合はURLパラメータに追加
+    if user.line_user_id.present?
+      booking_url += "?line_user_id=#{user.line_user_id}"
+    end
+    
+    message = {
+      type: "flex",
+      altText: "予約ページを開く",
+      contents: {
+        type: "bubble",
+        header: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "📅 予約ページ",
+              weight: "bold",
+              size: "xl",
+              color: "#667eea"
+            },
+            {
+              type: "text",
+              text: "Booking Page",
+              size: "sm",
+              color: "#999999",
+              margin: "xs"
+            }
+          ],
+          paddingAll: "20px",
+          backgroundColor: "#f8f9ff"
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "text",
+              text: "TimeRex風のカレンダーで\n日時を選択できます",
+              size: "md",
+              color: "#333333",
+              wrap: true,
+              margin: "md"
+            },
+            {
+              type: "text",
+              text: "You can select date and time\non a TimeRex-style calendar",
+              size: "sm",
+              color: "#999999",
+              wrap: true,
+              margin: "xs"
+            }
+          ],
+          paddingAll: "20px"
+        },
+        footer: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "button",
+              style: "primary",
+              action: {
+                type: "uri",
+                label: "予約ページを開く",
+                uri: booking_url
+              },
+              color: "#667eea"
+            }
+          ],
+          paddingAll: "20px"
+        }
+      }
+    }
+    
+    Rails.logger.info "📅 Sending booking page URL: #{booking_url}"
+    send_reply(reply_token, message)
+    Rails.logger.info "✅ Booking page URL sent successfully"
   end
 
   # 🆕 予約オプションを送信
