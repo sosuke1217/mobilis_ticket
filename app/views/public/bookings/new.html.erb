@@ -29,7 +29,7 @@
             </div>
           <% end %>
           
-          <% if @reservation && @reservation.errors.any? %>
+          <% if @reservation && @reservation.errors.any? && @reservation.errors.size > 0 %>
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
               <h6><i class="fas fa-exclamation-triangle me-2"></i>入力内容にエラーがあります</h6>
               <ul class="mb-0">
@@ -112,7 +112,7 @@
               </div>
               
               <!-- 隠しフィールド -->
-              <input type="hidden" name="booking[selected_datetime]" id="selected-datetime" required>
+              <input type="hidden" name="booking[selected_datetime]" id="selected-datetime">
             </div>
             
             <!-- Step 3: お客様情報 -->
@@ -256,19 +256,29 @@ document.addEventListener('DOMContentLoaded', function() {
     const calendarWeek = document.getElementById('calendar-week');
     calendarWeek.innerHTML = '<div class="loading-calendar"><i class="fas fa-spinner fa-spin"></i> カレンダーを読み込み中...</div>';
     
+    console.log('📅 Loading calendar for week:', weekStartStr, 'duration:', selectedCourse.duration);
+    
     fetch(`/public/bookings/week_calendar?start_date=${weekStartStr}&duration=${selectedCourse.duration}`)
-      .then(response => response.json())
+      .then(response => {
+        console.log('📅 Calendar API response status:', response.status);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
       .then(data => {
+        console.log('📅 Calendar API data:', data);
         if (data.success) {
           renderWeekCalendar(data);
           updateWeekRange(data.week_start);
         } else {
-          calendarWeek.innerHTML = '<div class="error-message">エラーが発生しました</div>';
+          console.error('❌ Calendar API error:', data.error);
+          calendarWeek.innerHTML = `<div class="error-message">エラーが発生しました: ${data.error || '不明なエラー'}</div>`;
         }
       })
       .catch(error => {
-        console.error('Error loading calendar:', error);
-        calendarWeek.innerHTML = '<div class="error-message">通信エラーが発生しました</div>';
+        console.error('❌ Error loading calendar:', error);
+        calendarWeek.innerHTML = `<div class="error-message">通信エラーが発生しました: ${error.message}</div>`;
       });
   }
   
@@ -402,14 +412,34 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // フォームバリデーション
   function validateForm() {
-    const requiredFields = document.querySelectorAll('[required]');
+    const datetimeField = document.getElementById('selected-datetime');
+    const selectedCourse = document.querySelector('input[name="booking[course]"]:checked');
+    const nameField = document.querySelector('input[name="booking[name]"]');
+    const phoneField = document.querySelector('input[name="booking[phone_number]"]');
+    const addressField = document.querySelector('textarea[name="booking[address]"]');
+    
     let allValid = true;
     
-    requiredFields.forEach(field => {
-      if (!field.value.trim()) {
-        allValid = false;
-      }
-    });
+    // 必須項目のチェック
+    if (!selectedCourse) {
+      allValid = false;
+    }
+    
+    if (!datetimeField || !datetimeField.value) {
+      allValid = false;
+    }
+    
+    if (!nameField || !nameField.value.trim()) {
+      allValid = false;
+    }
+    
+    if (!phoneField || !phoneField.value.trim()) {
+      allValid = false;
+    }
+    
+    if (!addressField || !addressField.value.trim()) {
+      allValid = false;
+    }
     
     submitBtn.disabled = !allValid;
   }
