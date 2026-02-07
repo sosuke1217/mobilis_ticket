@@ -725,7 +725,7 @@ document.addEventListener('DOMContentLoaded', function() {
 /* TimeRex風カレンダーグリッド（時間軸縦表示） */
 .timerex-calendar-grid {
   display: grid;
-  grid-template-columns: 60px repeat(7, minmax(80px, 1fr)) 60px;
+  grid-template-columns: 70px repeat(7, minmax(80px, 1fr)) 70px;
   border: 1px solid #e0e0e0;
   border-radius: 12px;
   overflow: hidden;
@@ -823,6 +823,10 @@ document.addEventListener('DOMContentLoaded', function() {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 70px;
+  min-width: 70px;
+  max-width: 70px;
+  box-sizing: border-box;
 }
 
 .time-cell {
