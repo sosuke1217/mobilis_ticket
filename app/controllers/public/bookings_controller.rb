@@ -250,12 +250,29 @@ class Public::BookingsController < ApplicationController
       end
       
       # enabledがtrueで、timesが存在する場合のみ週間スケジュールの営業時間を使用
-      if enabled_value != false && enabled_value != "false" && enabled_value != false.to_s && day_schedule && day_schedule[:times].present?
-        # 週間スケジュールの営業時間を使用
-        first_time_slot = day_schedule[:times].first
-        opening_time = Time.zone.parse("#{date} #{first_time_slot[:start]}")
-        closing_time = Time.zone.parse("#{date} #{first_time_slot[:end]}")
-        Rails.logger.info "📅 Using weekly schedule for #{date}: #{first_time_slot[:start]} - #{first_time_slot[:end]}"
+      if day_schedule && day_schedule.is_a?(Hash) && enabled_value != false && enabled_value != "false" && enabled_value != false.to_s
+        times_data = day_schedule[:times] || day_schedule["times"]
+        if times_data.present? && times_data.is_a?(Array) && times_data.first
+          # 週間スケジュールの営業時間を使用
+          first_time_slot = times_data.first
+          start_time_str = first_time_slot[:start] || first_time_slot["start"]
+          end_time_str = first_time_slot[:end] || first_time_slot["end"]
+          if start_time_str && end_time_str
+            opening_time = Time.zone.parse("#{date} #{start_time_str}")
+            closing_time = Time.zone.parse("#{date} #{end_time_str}")
+            Rails.logger.info "📅 Using weekly schedule for #{date}: #{start_time_str} - #{end_time_str}"
+          else
+            # 時間データが不正な場合は、システム設定を使用
+            opening_time = Time.zone.parse("#{date} #{settings.business_hours_start}:00")
+            closing_time = Time.zone.parse("#{date} #{settings.business_hours_end}:00")
+            Rails.logger.info "📅 Weekly schedule times invalid, using system settings for #{date}: #{settings.business_hours_start}:00 - #{settings.business_hours_end}:00"
+          end
+        else
+          # 時間データがない場合は、システム設定を使用
+          opening_time = Time.zone.parse("#{date} #{settings.business_hours_start}:00")
+          closing_time = Time.zone.parse("#{date} #{settings.business_hours_end}:00")
+          Rails.logger.info "📅 Weekly schedule has no times, using system settings for #{date}: #{settings.business_hours_start}:00 - #{settings.business_hours_end}:00"
+        end
       else
         # 週間スケジュールで無効または時間がない場合は、システム設定を使用
         opening_time = Time.zone.parse("#{date} #{settings.business_hours_start}:00")
