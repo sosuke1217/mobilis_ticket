@@ -308,16 +308,21 @@ class Public::BookingsController < ApplicationController
       # 各予約の有効なインターバル時間を取得
       res_interval = res.effective_interval_minutes
       
+      # タイムゾーンを考慮して予約時間を取得
+      res_start = res.start_time.in_time_zone
+      res_end = res.end_time.in_time_zone
+      
       # 予約の開始時間からインターバル分前
-      res_interval_start = res.start_time - res_interval.minutes
+      res_interval_start = res_start - res_interval.minutes
       # 予約の終了時間からインターバル分後
-      res_interval_end = res.end_time + res_interval.minutes
+      res_interval_end = res_end + res_interval.minutes
       
       # 時間帯が重複しているかチェック
       overlaps = res_interval_start < interval_end && res_interval_end > interval_start
       
       if overlaps
-        Rails.logger.info "  ⚠️ Overlap detected: Reservation ID=#{res.id}, #{res.start_time.strftime('%Y-%m-%d %H:%M')} - #{res.end_time.strftime('%H:%M')} (status: #{res.status}, interval: #{res_interval}min, range: #{res_interval_start.strftime('%Y-%m-%d %H:%M')} - #{res_interval_end.strftime('%Y-%m-%d %H:%M')})"
+        Rails.logger.info "  ⚠️ Overlap detected: Reservation ID=#{res.id}, #{res_start.strftime('%Y-%m-%d %H:%M %Z')} - #{res_end.strftime('%H:%M %Z')} (status: #{res.status}, interval: #{res_interval}min, range: #{res_interval_start.strftime('%Y-%m-%d %H:%M %Z')} - #{res_interval_end.strftime('%Y-%m-%d %H:%M %Z')})"
+        Rails.logger.info "  ⚠️ Checking slot: #{start_time.strftime('%Y-%m-%d %H:%M %Z')} - #{end_time.strftime('%H:%M %Z')} (range: #{interval_start.strftime('%Y-%m-%d %H:%M %Z')} - #{interval_end.strftime('%Y-%m-%d %H:%M %Z')})"
       end
       
       overlaps
