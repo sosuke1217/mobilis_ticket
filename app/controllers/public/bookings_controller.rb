@@ -250,39 +250,36 @@ class Public::BookingsController < ApplicationController
       end
       
       # enabledがtrueで、timesが存在する場合のみ週間スケジュールの営業時間を使用
+      time_slots = []
       if day_schedule && day_schedule.is_a?(Hash) && enabled_value != false && enabled_value != "false" && enabled_value != false.to_s
         times_data = day_schedule[:times] || day_schedule["times"]
-        if times_data.present? && times_data.is_a?(Array) && times_data.first
-          # 週間スケジュールの営業時間を使用
-          first_time_slot = times_data.first
-          start_time_str = first_time_slot[:start] || first_time_slot["start"]
-          end_time_str = first_time_slot[:end] || first_time_slot["end"]
-          if start_time_str && end_time_str
-            opening_time = Time.zone.parse("#{date} #{start_time_str}")
-            closing_time = Time.zone.parse("#{date} #{end_time_str}")
-            Rails.logger.info "📅 Using weekly schedule for #{date}: #{start_time_str} - #{end_time_str}"
-          else
-            # 時間データが不正な場合は、システム設定を使用
-            opening_time = Time.zone.parse("#{date} #{settings.business_hours_start}:00")
-            closing_time = Time.zone.parse("#{date} #{settings.business_hours_end}:00")
-            Rails.logger.info "📅 Weekly schedule times invalid, using system settings for #{date}: #{settings.business_hours_start}:00 - #{settings.business_hours_end}:00"
+        if times_data.present? && times_data.is_a?(Array)
+          # 週間スケジュールのすべての時間スロットを使用
+          times_data.each do |time_slot|
+            start_time_str = time_slot[:start] || time_slot["start"]
+            end_time_str = time_slot[:end] || time_slot["end"]
+            if start_time_str && end_time_str
+              opening_time = Time.zone.parse("#{date} #{start_time_str}")
+              closing_time = Time.zone.parse("#{date} #{end_time_str}")
+              time_slots << { opening: opening_time, closing: closing_time }
+              Rails.logger.info "📅 Using weekly schedule slot for #{date}: #{start_time_str} - #{end_time_str}"
+            end
           end
-        else
-          # 時間データがない場合は、システム設定を使用
-          opening_time = Time.zone.parse("#{date} #{settings.business_hours_start}:00")
-          closing_time = Time.zone.parse("#{date} #{settings.business_hours_end}:00")
-          Rails.logger.info "📅 Weekly schedule has no times, using system settings for #{date}: #{settings.business_hours_start}:00 - #{settings.business_hours_end}:00"
         end
-      else
-        # 週間スケジュールで無効または時間がない場合は、システム設定を使用
+      end
+      
+      # 時間スロットがない場合は、システム設定を使用
+      if time_slots.empty?
         opening_time = Time.zone.parse("#{date} #{settings.business_hours_start}:00")
         closing_time = Time.zone.parse("#{date} #{settings.business_hours_end}:00")
+        time_slots << { opening: opening_time, closing: closing_time }
         Rails.logger.info "📅 Using system settings for #{date}: #{settings.business_hours_start}:00 - #{settings.business_hours_end}:00"
       end
     else
       # 週間スケジュールがない場合は、システム設定を使用
       opening_time = Time.zone.parse("#{date} #{settings.business_hours_start}:00")
       closing_time = Time.zone.parse("#{date} #{settings.business_hours_end}:00")
+      time_slots = [{ opening: opening_time, closing: closing_time }]
       Rails.logger.debug "📅 No weekly schedule found, using system settings for #{date}"
     end
     
@@ -309,26 +306,32 @@ class Public::BookingsController < ApplicationController
       Rails.logger.debug "  - #{res.start_time.strftime('%Y-%m-%d %H:%M')} - #{res.end_time.strftime('%H:%M')} (status: #{res.status}, course: #{res.course})"
     end
     
-    current_time = opening_time
-    while current_time + duration.minutes <= closing_time
-      end_time = current_time + duration.minutes
+    # 各時間スロットごとに利用可能な時間を生成
+    time_slots.each do |time_slot|
+      opening_time = time_slot[:opening]
+      closing_time = time_slot[:closing]
       
-      # 最低予約時間の制約をチェック（今日の日付の場合のみ）
-      if date == Date.current && current_time < min_advance_time
+      current_time = opening_time
+      while current_time + duration.minutes <= closing_time
+        end_time = current_time + duration.minutes
+        
+        # 最低予約時間の制約をチェック（今日の日付の場合のみ）
+        if date == Date.current && current_time < min_advance_time
+          current_time += slot_interval
+          next
+        end
+        
+        # インターバルを考慮した空きチェック
+        if time_slot_available_with_interval?(current_time, end_time, interval_minutes)
+          available_slots << {
+            start_time: current_time,
+            end_time: end_time,
+            interval_info: "（#{interval_minutes}分準備時間含む）"
+          }
+        end
+        
         current_time += slot_interval
-        next
       end
-      
-      # インターバルを考慮した空きチェック
-      if time_slot_available_with_interval?(current_time, end_time, interval_minutes)
-        available_slots << {
-          start_time: current_time,
-          end_time: end_time,
-          interval_info: "（#{interval_minutes}分準備時間含む）"
-        }
-      end
-      
-      current_time += slot_interval
     end
     
     Rails.logger.info "✅ Available slots for #{date}: #{available_slots.count}"
