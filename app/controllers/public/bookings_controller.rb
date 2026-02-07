@@ -193,9 +193,36 @@ class Public::BookingsController < ApplicationController
   def get_available_time_slots(date, duration)
     settings = ApplicationSetting.current
     
-    # 営業時間の設定
-    opening_time = Time.zone.parse("#{date} #{settings.business_hours_start}:00")
-    closing_time = Time.zone.parse("#{date} #{settings.business_hours_end}:00")
+    # 週間スケジュールを取得（その日の週の開始日を計算）
+    week_start = date.beginning_of_week(:monday)
+    weekly_schedule = WeeklySchedule.find_by(week_start_date: week_start)
+    
+    # その日の曜日を取得（0=日曜日, 1=月曜日, ..., 6=土曜日）
+    day_of_week = date.wday
+    
+    # 週間スケジュールからその日の営業時間を取得
+    if weekly_schedule && weekly_schedule.schedule.present?
+      schedule_data = weekly_schedule.schedule_for_javascript
+      day_schedule = schedule_data[day_of_week]
+      
+      if day_schedule && day_schedule[:enabled] && day_schedule[:times].present?
+        # 週間スケジュールの営業時間を使用
+        first_time_slot = day_schedule[:times].first
+        opening_time = Time.zone.parse("#{date} #{first_time_slot[:start]}")
+        closing_time = Time.zone.parse("#{date} #{first_time_slot[:end]}")
+        Rails.logger.debug "📅 Using weekly schedule for #{date}: #{first_time_slot[:start]} - #{first_time_slot[:end]}"
+      else
+        # 週間スケジュールで無効または時間がない場合は、システム設定を使用
+        opening_time = Time.zone.parse("#{date} #{settings.business_hours_start}:00")
+        closing_time = Time.zone.parse("#{date} #{settings.business_hours_end}:00")
+        Rails.logger.debug "📅 Using system settings for #{date}: #{settings.business_hours_start}:00 - #{settings.business_hours_end}:00"
+      end
+    else
+      # 週間スケジュールがない場合は、システム設定を使用
+      opening_time = Time.zone.parse("#{date} #{settings.business_hours_start}:00")
+      closing_time = Time.zone.parse("#{date} #{settings.business_hours_end}:00")
+      Rails.logger.debug "📅 No weekly schedule found, using system settings for #{date}"
+    end
     
     # インターバル時間を取得
     interval_minutes = settings.reservation_interval_minutes
