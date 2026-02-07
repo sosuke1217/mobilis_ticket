@@ -59,17 +59,6 @@ class Public::BookingsController < ApplicationController
     (0..6).each do |day_offset|
       date = start_date + day_offset.days
       
-      # 日曜休業チェック
-      if settings.sunday_closed? && date.sunday?
-        week_data[date.iso8601] = {
-          date: date.iso8601,
-          day_name: date.strftime('%a'),
-          day_number: date.day,
-          slots: []
-        }
-        next
-      end
-      
       # 過去の日付でもデータは含める（スロットは空）
       if date < Date.current
         week_data[date.iso8601] = {
