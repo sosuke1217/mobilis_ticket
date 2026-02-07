@@ -269,7 +269,8 @@ class Public::BookingsController < ApplicationController
       current_time += slot_interval
     end
     
-    Rails.logger.debug "✅ Available slots for #{date}: #{available_slots.count}"
+    Rails.logger.info "✅ Available slots for #{date}: #{available_slots.count}"
+    Rails.logger.info "📋 Available slot times for #{date}: #{available_slots.map { |s| "#{s[:start_time].strftime('%H:%M')}-#{s[:end_time].strftime('%H:%M')}" }.join(', ')}"
     available_slots
   end
 
