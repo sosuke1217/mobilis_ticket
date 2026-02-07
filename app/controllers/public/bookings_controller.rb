@@ -276,14 +276,26 @@ class Public::BookingsController < ApplicationController
   def time_slot_available_with_interval?(start_time, end_time, interval_minutes = nil)
     interval_minutes ||= ApplicationSetting.current.reservation_interval_minutes
     
-    # インターバルを考慮した重複チェック（PostgreSQL用の構文）
+    # インターバルを考慮した重複チェック
     # start_time - interval_minutes分 から end_time + interval_minutes分 の範囲で重複をチェック
     interval_start = start_time - interval_minutes.minutes
     interval_end = end_time + interval_minutes.minutes
     
-    # 既存の予約を取得（キャンセルされていないもの）
-    # 各予約の個別インターバル時間を考慮してチェック
-    overlapping_reservations = Reservation.active.select do |res|
+    # まず、時間的に重複する可能性のある予約をSQLで絞り込む（パフォーマンス向上）
+    # 最大のインターバル時間を考慮して、広めに範囲を取る
+    max_interval = ApplicationSetting.current.reservation_interval_minutes
+    # 個別インターバル時間が設定されている可能性があるため、少し広めに範囲を取る（最大60分と仮定）
+    extended_start = interval_start - 60.minutes
+    extended_end = interval_end + 60.minutes
+    
+    # 時間的に重複する可能性のある予約を取得（キャンセルされていないもの）
+    candidate_reservations = Reservation.active.where(
+      'start_time < ? AND end_time > ?',
+      extended_end, extended_start
+    )
+    
+    # 各予約の個別インターバル時間を考慮して、実際に重複しているかチェック
+    overlapping_reservations = candidate_reservations.select do |res|
       # 各予約の有効なインターバル時間を取得
       res_interval = res.effective_interval_minutes
       
