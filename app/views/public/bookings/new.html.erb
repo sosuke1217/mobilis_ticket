@@ -726,6 +726,7 @@ document.addEventListener('DOMContentLoaded', function() {
 .timerex-calendar-grid {
   display: grid;
   grid-template-columns: 70px repeat(7, minmax(80px, 1fr)) 70px;
+  grid-auto-rows: 60px;
   border: 1px solid #e0e0e0;
   border-radius: 12px;
   overflow: hidden;
@@ -826,6 +827,8 @@ document.addEventListener('DOMContentLoaded', function() {
   width: 70px;
   min-width: 70px;
   max-width: 70px;
+  height: 100%;
+  min-height: 60px;
   box-sizing: border-box;
 }
 
@@ -833,6 +836,7 @@ document.addEventListener('DOMContentLoaded', function() {
   border-right: 1px solid #e0e0e0;
   border-bottom: 1px dashed #e0e0e0;
   min-height: 60px;
+  height: 100%;
   position: relative;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -841,6 +845,7 @@ document.addEventListener('DOMContentLoaded', function() {
   align-items: center;
   justify-content: center;
   padding: 4px;
+  box-sizing: border-box;
 }
 
 .time-cell.empty {
