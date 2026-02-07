@@ -211,30 +211,32 @@ class Public::BookingsController < ApplicationController
       
       # schedule_for_javascriptが返すデータは { enabled: ..., times: ... } の形式
       # enabledの値を取得（シンボルキーと文字列キーの両方をチェック）
+      # schedule_for_javascriptメソッドは常に { enabled: ..., times: ... } の形式で返す
       enabled_value = nil
       if day_schedule
-        # まずシンボルキーをチェック
-        if day_schedule.respond_to?(:key?) && day_schedule.key?(:enabled)
+        # まずシンボルキーをチェック（schedule_for_javascriptはシンボルキーで返す）
+        if day_schedule.is_a?(Hash) && day_schedule.key?(:enabled)
           enabled_value = day_schedule[:enabled]
-        # 次に文字列キーをチェック
-        elsif day_schedule.respond_to?(:key?) && day_schedule.key?("enabled")
+        # 次に文字列キーをチェック（JSONから復元された場合）
+        elsif day_schedule.is_a?(Hash) && day_schedule.key?("enabled")
           enabled_value = day_schedule["enabled"]
-        # ハッシュではなく、メソッドでアクセスできる場合
+        # ハッシュではなく、メソッドでアクセスできる場合（ActiveSupport::HashWithIndifferentAccessなど）
         elsif day_schedule.respond_to?(:enabled)
           enabled_value = day_schedule.enabled
+        # キーが存在しない場合はデフォルトでtrue（schedule_for_javascriptの仕様）
         else
-          # キーが存在しない場合はデフォルトでtrue（schedule_for_javascriptの仕様）
           enabled_value = true
         end
       end
       
       Rails.logger.info "📅 Enabled value for #{date}: #{enabled_value.inspect} (type: #{enabled_value.class})"
       Rails.logger.info "📅 day_schedule class: #{day_schedule.class if day_schedule}"
-      Rails.logger.info "📅 day_schedule keys: #{day_schedule.keys.inspect if day_schedule.respond_to?(:keys)}"
+      Rails.logger.info "📅 day_schedule keys: #{day_schedule.keys.inspect if day_schedule.is_a?(Hash)}"
       
       # その日が無効（enabled: false）の場合は、予約不可として空配列を返す
       # enabledがfalse、nil以外のfalse値、または文字列"false"の場合もチェック
-      if enabled_value == false || enabled_value == "false" || enabled_value == false.to_s
+      # 注意: false == false は true なので、== で比較可能
+      if enabled_value === false || enabled_value == "false" || enabled_value == false.to_s
         Rails.logger.info "🚫 Date #{date} is disabled in weekly schedule (enabled: #{enabled_value}) - no slots available"
         return []
       end
