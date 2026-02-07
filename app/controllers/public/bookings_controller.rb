@@ -281,7 +281,7 @@ class Public::BookingsController < ApplicationController
     interval_start = start_time - interval_minutes.minutes
     interval_end = end_time + interval_minutes.minutes
     
-    Rails.logger.debug "🔍 Checking availability: #{start_time.strftime('%Y-%m-%d %H:%M')} - #{end_time.strftime('%H:%M')} (interval: #{interval_minutes}min, range: #{interval_start.strftime('%Y-%m-%d %H:%M')} - #{interval_end.strftime('%Y-%m-%d %H:%M')})"
+    Rails.logger.info "🔍 Checking availability: #{start_time.strftime('%Y-%m-%d %H:%M')} - #{end_time.strftime('%H:%M')} (interval: #{interval_minutes}min, range: #{interval_start.strftime('%Y-%m-%d %H:%M')} - #{interval_end.strftime('%Y-%m-%d %H:%M')})"
     
     # まず、時間的に重複する可能性のある予約をSQLで絞り込む（パフォーマンス向上）
     # 個別インターバル時間が設定されている可能性があるため、広めに範囲を取る（最大120分と仮定）
@@ -295,7 +295,12 @@ class Public::BookingsController < ApplicationController
       extended_start, extended_end
     )
     
-    Rails.logger.debug "🔍 Found #{candidate_reservations.count} candidate reservations in extended range (#{extended_start.strftime('%Y-%m-%d %H:%M')} - #{extended_end.strftime('%Y-%m-%d %H:%M')})"
+    Rails.logger.info "🔍 Found #{candidate_reservations.count} candidate reservations in extended range (#{extended_start.strftime('%Y-%m-%d %H:%M')} - #{extended_end.strftime('%Y-%m-%d %H:%M')})"
+    
+    # 候補予約の詳細をログ出力
+    candidate_reservations.each do |res|
+      Rails.logger.info "  - Candidate: ID=#{res.id}, #{res.start_time.strftime('%Y-%m-%d %H:%M')} - #{res.end_time.strftime('%H:%M')} (status: #{res.status})"
+    end
     
     # 各予約の個別インターバル時間を考慮して、実際に重複しているかチェック
     overlapping_reservations = candidate_reservations.select do |res|
@@ -311,7 +316,7 @@ class Public::BookingsController < ApplicationController
       overlaps = res_interval_start < interval_end && res_interval_end > interval_start
       
       if overlaps
-        Rails.logger.debug "  ⚠️ Overlap detected: Reservation ID=#{res.id}, #{res.start_time.strftime('%Y-%m-%d %H:%M')} - #{res.end_time.strftime('%H:%M')} (status: #{res.status}, interval: #{res_interval}min, range: #{res_interval_start.strftime('%Y-%m-%d %H:%M')} - #{res_interval_end.strftime('%Y-%m-%d %H:%M')})"
+        Rails.logger.info "  ⚠️ Overlap detected: Reservation ID=#{res.id}, #{res.start_time.strftime('%Y-%m-%d %H:%M')} - #{res.end_time.strftime('%H:%M')} (status: #{res.status}, interval: #{res_interval}min, range: #{res_interval_start.strftime('%Y-%m-%d %H:%M')} - #{res_interval_end.strftime('%Y-%m-%d %H:%M')})"
       end
       
       overlaps
@@ -319,13 +324,13 @@ class Public::BookingsController < ApplicationController
     
     # デバッグログ
     if overlapping_reservations.any?
-      Rails.logger.debug "⚠️ Time slot conflict detected: #{start_time.strftime('%Y-%m-%d %H:%M')} - #{end_time.strftime('%H:%M')}"
+      Rails.logger.info "⚠️ Time slot conflict detected: #{start_time.strftime('%Y-%m-%d %H:%M')} - #{end_time.strftime('%H:%M')}"
       overlapping_reservations.each do |res|
         res_interval = res.effective_interval_minutes
-        Rails.logger.debug "  - Existing reservation: ID=#{res.id}, #{res.start_time.strftime('%Y-%m-%d %H:%M')} - #{res.end_time.strftime('%H:%M')} (status: #{res.status}, interval: #{res_interval}min)"
+        Rails.logger.info "  - Existing reservation: ID=#{res.id}, #{res.start_time.strftime('%Y-%m-%d %H:%M')} - #{res.end_time.strftime('%H:%M')} (status: #{res.status}, interval: #{res_interval}min)"
       end
     else
-      Rails.logger.debug "✅ No conflicts found for: #{start_time.strftime('%Y-%m-%d %H:%M')} - #{end_time.strftime('%H:%M')}"
+      Rails.logger.info "✅ No conflicts found for: #{start_time.strftime('%Y-%m-%d %H:%M')} - #{end_time.strftime('%H:%M')}"
     end
     
     overlapping_reservations.empty?
