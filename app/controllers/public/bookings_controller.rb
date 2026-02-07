@@ -241,10 +241,19 @@ class Public::BookingsController < ApplicationController
     interval_start = start_time - interval_minutes.minutes
     interval_end = end_time + interval_minutes.minutes
     
+    # 既存の予約を取得（キャンセルされていないもの）
     overlapping_reservations = Reservation.active.where(
       'start_time < ? AND end_time > ?',
       interval_end, interval_start
     )
+    
+    # デバッグログ
+    if overlapping_reservations.any?
+      Rails.logger.debug "⚠️ Time slot conflict detected: #{start_time.strftime('%Y-%m-%d %H:%M')} - #{end_time.strftime('%H:%M')}"
+      overlapping_reservations.each do |res|
+        Rails.logger.debug "  - Existing reservation: #{res.start_time.strftime('%Y-%m-%d %H:%M')} - #{res.end_time.strftime('%H:%M')} (status: #{res.status})"
+      end
+    end
     
     overlapping_reservations.empty?
   end
