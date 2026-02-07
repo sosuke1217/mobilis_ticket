@@ -73,13 +73,19 @@ class WeeklySchedule < ApplicationRecord
       end
       
       # フロントエンドが期待する形式に変換
-      if day_schedule[:business_hours]
+      if day_schedule.nil?
+        # day_scheduleがnilの場合はデフォルト形式
+        schedule_data[day_of_week] = {
+          enabled: true,
+          times: [{ start: '09:00', end: '18:00' }]
+        }
+      elsif day_schedule.is_a?(Hash) && day_schedule[:business_hours]
         # 古い形式（business_hours）の場合
         schedule_data[day_of_week] = {
           enabled: true,
           times: day_schedule[:business_hours].map { |h| { start: h[:start], end: h[:end] } }
         }
-      elsif day_schedule[:times] || day_schedule["times"]
+      elsif day_schedule.is_a?(Hash) && (day_schedule[:times] || day_schedule["times"])
         # 新しい形式（times）の場合
         times_data = day_schedule[:times] || day_schedule["times"]
         enabled_status = day_schedule.key?(:enabled) ? day_schedule[:enabled] : (day_schedule.key?("enabled") ? day_schedule["enabled"] : true)
