@@ -205,6 +205,12 @@ class Public::BookingsController < ApplicationController
       schedule_data = weekly_schedule.schedule_for_javascript
       day_schedule = schedule_data[day_of_week]
       
+      # その日が無効（enabled: false）の場合は、予約不可として空配列を返す
+      if day_schedule && day_schedule[:enabled] == false
+        Rails.logger.info "🚫 Date #{date} is disabled in weekly schedule - no slots available"
+        return []
+      end
+      
       if day_schedule && day_schedule[:enabled] && day_schedule[:times].present?
         # 週間スケジュールの営業時間を使用
         first_time_slot = day_schedule[:times].first
