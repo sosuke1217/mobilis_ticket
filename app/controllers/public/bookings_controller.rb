@@ -110,7 +110,7 @@ class Public::BookingsController < ApplicationController
     Rails.logger.info "📝 Booking params: #{booking_params.inspect}"
     
     begin
-      @user = find_or_create_user
+    @user = find_or_create_user
       
       unless @user.persisted?
         Rails.logger.error "❌ User creation failed: #{@user.errors.full_messages.join(', ')}"
@@ -120,8 +120,8 @@ class Public::BookingsController < ApplicationController
       end
 
       Rails.logger.info "✅ User found/created: #{@user.id} (#{@user.name})"
-      
-      @reservation = build_reservation(@user)
+
+    @reservation = build_reservation(@user)
       
       Rails.logger.info "📝 Reservation built: start_time=#{@reservation.start_time}, end_time=#{@reservation.end_time}, course=#{@reservation.course}"
       
@@ -132,26 +132,26 @@ class Public::BookingsController < ApplicationController
         @reservation = Reservation.new
         return render :new, status: :unprocessable_entity
       end
-      
-      # 予約時間の重複チェック
-      if time_conflict_exists?(@reservation)
+    
+    # 予約時間の重複チェック
+    if time_conflict_exists?(@reservation)
         Rails.logger.error "❌ Time conflict detected"
-        flash[:alert] = '選択された時間は既に予約が入っています。別の時間をお選びください。'
+      flash[:alert] = '選択された時間は既に予約が入っています。別の時間をお選びください。'
         @reservation = Reservation.new
-        return render :new, status: :unprocessable_entity
-      end
-      
-      if @reservation.save
+      return render :new, status: :unprocessable_entity
+    end
+    
+    if @reservation.save
         Rails.logger.info "✅ Reservation created successfully: #{@reservation.id}"
-        # LINE通知を送信
-        send_booking_notification(@reservation) if @reservation.user.line_user_id
-        
-        # 管理者への通知
-        notify_admin(@reservation)
-        
-        redirect_to public_booking_path(@reservation), 
-                    notice: 'ご予約リクエストを承りました。確認のご連絡をお待ちください。'
-      else
+      # LINE通知を送信
+      send_booking_notification(@reservation) if @reservation.user.line_user_id
+      
+      # 管理者への通知
+      notify_admin(@reservation)
+      
+      redirect_to public_booking_path(@reservation), 
+                  notice: 'ご予約リクエストを承りました。確認のご連絡をお待ちください。'
+    else
         Rails.logger.error "❌ Reservation save failed: #{@reservation.errors.full_messages.join(', ')}"
         flash[:alert] = "予約の作成に失敗しました: #{@reservation.errors.full_messages.join(', ')}"
         @reservation = Reservation.new
@@ -244,13 +244,8 @@ class Public::BookingsController < ApplicationController
     )
     Rails.logger.debug "📋 Existing reservations for #{date}: #{existing_reservations.count}"
     existing_reservations.each do |res|
-      res_interval = res.effective_interval_minutes
-      Rails.logger.debug "  - #{res.start_time.strftime('%Y-%m-%d %H:%M')} - #{res.end_time.strftime('%H:%M')} (status: #{res.status}, course: #{res.course}, interval: #{res_interval}min)"
+      Rails.logger.debug "  - #{res.start_time.strftime('%Y-%m-%d %H:%M')} - #{res.end_time.strftime('%H:%M')} (status: #{res.status}, course: #{res.course})"
     end
-    
-    # さらに広い範囲で予約を確認（デバッグ用）
-    all_active_reservations = Reservation.active.count
-    Rails.logger.debug "📋 Total active reservations in system: #{all_active_reservations}"
     
     current_time = opening_time
     while current_time + duration.minutes <= closing_time
@@ -286,7 +281,7 @@ class Public::BookingsController < ApplicationController
     interval_start = start_time - interval_minutes.minutes
     interval_end = end_time + interval_minutes.minutes
     
-    Rails.logger.debug "🔍 Checking availability for: #{start_time.strftime('%Y-%m-%d %H:%M')} - #{end_time.strftime('%H:%M')} (interval: #{interval_minutes}min, range: #{interval_start.strftime('%Y-%m-%d %H:%M')} - #{interval_end.strftime('%Y-%m-%d %H:%M')})"
+    Rails.logger.debug "🔍 Checking availability: #{start_time.strftime('%Y-%m-%d %H:%M')} - #{end_time.strftime('%H:%M')} (interval: #{interval_minutes}min, range: #{interval_start.strftime('%Y-%m-%d %H:%M')} - #{interval_end.strftime('%Y-%m-%d %H:%M')})"
     
     # まず、時間的に重複する可能性のある予約をSQLで絞り込む（パフォーマンス向上）
     # 個別インターバル時間が設定されている可能性があるため、広めに範囲を取る（最大120分と仮定）
@@ -294,12 +289,13 @@ class Public::BookingsController < ApplicationController
     extended_end = interval_end + 120.minutes
     
     # 時間的に重複する可能性のある予約を取得（キャンセルされていないもの）
+    # 注意: SQLの条件は「予約の終了時間が範囲の開始より後」かつ「予約の開始時間が範囲の終了より前」
     candidate_reservations = Reservation.active.where(
-      'start_time < ? AND end_time > ?',
-      extended_end, extended_start
+      'end_time > ? AND start_time < ?',
+      extended_start, extended_end
     )
     
-    Rails.logger.debug "🔍 Found #{candidate_reservations.count} candidate reservations in extended range"
+    Rails.logger.debug "🔍 Found #{candidate_reservations.count} candidate reservations in extended range (#{extended_start.strftime('%Y-%m-%d %H:%M')} - #{extended_end.strftime('%Y-%m-%d %H:%M')})"
     
     # 各予約の個別インターバル時間を考慮して、実際に重複しているかチェック
     overlapping_reservations = candidate_reservations.select do |res|
@@ -315,7 +311,7 @@ class Public::BookingsController < ApplicationController
       overlaps = res_interval_start < interval_end && res_interval_end > interval_start
       
       if overlaps
-        Rails.logger.debug "  ⚠️ Overlap detected: Reservation #{res.id} (#{res.start_time.strftime('%Y-%m-%d %H:%M')} - #{res.end_time.strftime('%H:%M')}, interval: #{res_interval}min, range: #{res_interval_start.strftime('%H:%M')} - #{res_interval_end.strftime('%H:%M')})"
+        Rails.logger.debug "  ⚠️ Overlap detected: Reservation ID=#{res.id}, #{res.start_time.strftime('%Y-%m-%d %H:%M')} - #{res.end_time.strftime('%H:%M')} (status: #{res.status}, interval: #{res_interval}min, range: #{res_interval_start.strftime('%Y-%m-%d %H:%M')} - #{res_interval_end.strftime('%Y-%m-%d %H:%M')})"
       end
       
       overlaps
