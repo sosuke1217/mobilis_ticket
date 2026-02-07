@@ -60,10 +60,26 @@ class Public::BookingsController < ApplicationController
       date = start_date + day_offset.days
       
       # 日曜休業チェック
-      next if settings.sunday_closed? && date.sunday?
+      if settings.sunday_closed? && date.sunday?
+        week_data[date.iso8601] = {
+          date: date.iso8601,
+          day_name: date.strftime('%a'),
+          day_number: date.day,
+          slots: []
+        }
+        next
+      end
       
-      # 過去の日付はスキップ
-      next if date < Date.current
+      # 過去の日付でもデータは含める（スロットは空）
+      if date < Date.current
+        week_data[date.iso8601] = {
+          date: date.iso8601,
+          day_name: date.strftime('%a'),
+          day_number: date.day,
+          slots: []
+        }
+        next
+      end
       
       available_slots = get_available_time_slots(date, duration)
       
