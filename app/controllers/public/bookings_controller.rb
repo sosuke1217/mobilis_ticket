@@ -209,14 +209,28 @@ class Public::BookingsController < ApplicationController
       Rails.logger.info "📅 Weekly schedule data for #{date} (day_of_week: #{day_of_week}): #{day_schedule.inspect}"
       Rails.logger.info "📅 Raw schedule for week #{week_start}: #{weekly_schedule.schedule.inspect}"
       
+      # schedule_for_javascriptが返すデータは { enabled: ..., times: ... } の形式
       # enabledの値を取得（シンボルキーと文字列キーの両方をチェック）
       enabled_value = nil
       if day_schedule
-        enabled_value = day_schedule[:enabled] if day_schedule.key?(:enabled)
-        enabled_value = day_schedule["enabled"] if enabled_value.nil? && day_schedule.key?("enabled")
+        # まずシンボルキーをチェック
+        if day_schedule.respond_to?(:key?) && day_schedule.key?(:enabled)
+          enabled_value = day_schedule[:enabled]
+        # 次に文字列キーをチェック
+        elsif day_schedule.respond_to?(:key?) && day_schedule.key?("enabled")
+          enabled_value = day_schedule["enabled"]
+        # ハッシュではなく、メソッドでアクセスできる場合
+        elsif day_schedule.respond_to?(:enabled)
+          enabled_value = day_schedule.enabled
+        else
+          # キーが存在しない場合はデフォルトでtrue（schedule_for_javascriptの仕様）
+          enabled_value = true
+        end
       end
       
       Rails.logger.info "📅 Enabled value for #{date}: #{enabled_value.inspect} (type: #{enabled_value.class})"
+      Rails.logger.info "📅 day_schedule class: #{day_schedule.class if day_schedule}"
+      Rails.logger.info "📅 day_schedule keys: #{day_schedule.keys.inspect if day_schedule.respond_to?(:keys)}"
       
       # その日が無効（enabled: false）の場合は、予約不可として空配列を返す
       # enabledがfalse、nil以外のfalse値、または文字列"false"の場合もチェック
