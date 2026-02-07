@@ -208,6 +208,16 @@ class Public::BookingsController < ApplicationController
     slot_interval = settings.slot_interval_minutes.minutes
     available_slots = []
     
+    # デバッグ: その日の既存予約を確認
+    existing_reservations = Reservation.active.where(
+      'DATE(start_time) = ?',
+      date
+    )
+    Rails.logger.debug "📋 Existing reservations for #{date}: #{existing_reservations.count}"
+    existing_reservations.each do |res|
+      Rails.logger.debug "  - #{res.start_time.strftime('%H:%M')} - #{res.end_time.strftime('%H:%M')} (status: #{res.status}, course: #{res.course})"
+    end
+    
     current_time = opening_time
     while current_time + duration.minutes <= closing_time
       end_time = current_time + duration.minutes
@@ -230,6 +240,7 @@ class Public::BookingsController < ApplicationController
       current_time += slot_interval
     end
     
+    Rails.logger.debug "✅ Available slots for #{date}: #{available_slots.count}"
     available_slots
   end
 
