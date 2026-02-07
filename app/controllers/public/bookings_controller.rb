@@ -194,8 +194,16 @@ class Public::BookingsController < ApplicationController
     settings = ApplicationSetting.current
     
     # 週間スケジュールを取得（その日の週の開始日を計算）
-    week_start = date.beginning_of_week(:monday)
+    # アドミン側では日曜日を週の開始日として使用しているため、日曜日で計算
+    week_start = date.beginning_of_week(:sunday)
     weekly_schedule = WeeklySchedule.find_by(week_start_date: week_start)
+    
+    # 日曜日で見つからない場合は、月曜日もチェック（後方互換性のため）
+    if !weekly_schedule
+      week_start_monday = date.beginning_of_week(:monday)
+      weekly_schedule = WeeklySchedule.find_by(week_start_date: week_start_monday)
+      week_start = week_start_monday if weekly_schedule
+    end
     
     # その日の曜日を取得（0=日曜日, 1=月曜日, ..., 6=土曜日）
     day_of_week = date.wday
