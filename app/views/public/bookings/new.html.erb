@@ -285,7 +285,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // 週間カレンダーの描画（TimeRex風：時間軸縦表示）
   function renderWeekCalendar(data) {
     const calendarWeek = document.getElementById('calendar-week');
-    const days = ['月', '火', '水', '木', '金', '土', '日'];
+    const dayNames = ['日', '月', '火', '水', '木', '金', '土']; // JavaScriptのgetDay()は0=日曜日から
     
     // 営業時間の設定を取得
     const settings = data.settings || { business_hours_start: 10, business_hours_end: 19 };
@@ -311,6 +311,10 @@ document.addEventListener('DOMContentLoaded', function() {
       const dateStr = date.toISOString().split('T')[0];
       const dayData = data.week_data[dateStr];
       
+      // 実際の日付の曜日を取得
+      const dayOfWeek = date.getDay(); // 0=日曜日, 1=月曜日, ..., 6=土曜日
+      const dayName = dayNames[dayOfWeek];
+      
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const checkDate = new Date(date);
@@ -319,7 +323,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       html += `
         <div class="day-header-cell ${isToday ? 'today' : ''} ${!dayData ? 'disabled' : ''}">
-          <div class="day-name">${days[i]}</div>
+          <div class="day-name">${dayName}</div>
           <div class="day-number">${dayData ? dayData.day_number : date.getDate()}</div>
           ${isToday ? '<div class="today-badge">今日</div>' : ''}
         </div>
