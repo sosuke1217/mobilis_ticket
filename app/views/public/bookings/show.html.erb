@@ -75,31 +75,31 @@
               </div>
               
               <!-- コース情報 -->
-              <div class="detail-section mb-4">
-                <h5 class="section-title">
+              <div class="mb-4">
+                <h5 class="section-title mb-3">
                   <i class="fas fa-spa me-2"></i>
-                  コース (Course)
+                  コース / Course
                 </h5>
-                <div class="detail-content">
-                  <div class="detail-item">
-                    <span class="detail-label">コース名 / Course Name</span>
-                    <span class="detail-value">
-                      <% course_en = case @reservation.course
-                           when '対面セッション（スタジオ／出張）' then 'In-Person Session (Studio / Home Visit)'
-                           when 'オンライン身体分析・設計' then 'Online Body Analysis & Design'
-                           else @reservation.course
-                         end %>
-                      <%= @reservation.course %><br>
-                      <small style="color: #666;"><%= course_en %></small>
-                    </span>
-                  </div>
-                  <div class="detail-item">
-                    <span class="detail-label">料金 (Price)</span>
-                    <span class="detail-value price">¥<%= number_with_delimiter(@reservation.get_price) %></span>
-                  </div>
-                  <div class="detail-item">
-                    <span class="detail-label">所要時間 / Duration</span>
-                    <span class="detail-value"><%= @reservation.get_duration_minutes %>分 / <%= @reservation.get_duration_minutes %> minutes</span>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="course-menu-card">
+                      <div class="card h-100 course-menu-option">
+                        <div class="card-body text-center">
+                          <h5 class="card-title"><%= @reservation.course %></h5>
+                          <p class="price-display">
+                            <% if @reservation.course == 'オンライン身体分析・設計' %>
+                              ¥<%= number_with_delimiter(@reservation.get_price) %>（テスト導入）<br>
+                              <small style="color: #666;">¥<%= number_with_delimiter(@reservation.get_price) %> (Test Price)</small>
+                            <% else %>
+                              ¥<%= number_with_delimiter(@reservation.get_price) %>
+                            <% end %>
+                          </p>
+                          <small class="text-muted">
+                            目安：約<%= @reservation.get_duration_minutes %>分 / Approx. <%= @reservation.get_duration_minutes %> minutes
+                          </small>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
