@@ -866,22 +866,26 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .time-cell.available {
-  background: linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%);
-  border: 2px solid #2e7d32;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  border: 2px solid #4caf50;
+  border-bottom: 2px solid #4caf50 !important;
   border-radius: 8px;
   margin: 3px;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(46, 125, 50, 0.3);
+  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.25);
   min-height: 56px;
   padding: 6px;
+  position: relative;
+  z-index: 1;
 }
 
 .time-cell.available:hover {
-  background: linear-gradient(135deg, #a5d6a7 0%, #81c784 100%);
-  border-color: #1b5e20;
+  background: linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%);
+  border-color: #388e3c;
+  border-bottom: 2px solid #388e3c !important;
   transform: translateY(-2px);
   z-index: 10;
-  box-shadow: 0 4px 12px rgba(27, 94, 32, 0.4);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
 }
 
 .time-cell.selected {
