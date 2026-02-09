@@ -399,17 +399,27 @@ document.addEventListener('DOMContentLoaded', function() {
             const slotKey = `${dateStr}_${timeKey}`;
             slotRowMap[slotKey] = { startRow: rowNumber, rowSpan: rowSpan };
             
-            // スロットの高さに応じて表示を調整
-            const isShortSlot = rowSpan <= 1;
-            const timeDisplay = isShortSlot 
-              ? `${startTimeStr}<br><span class="time-separator">-</span><br>${endTimeStr}`
-              : `<div class="time-start">${startTimeStr}</div><div class="time-separator">-</div><div class="time-end">${endTimeStr}</div>`;
+            // スロットの高さに応じて表示を調整（実際の時間に基づく）
+            let slotClass = '';
+            if (durationMinutes <= 30) {
+              slotClass = 'very-short-slot';
+            } else if (durationMinutes <= 60) {
+              slotClass = 'short-slot';
+            } else if (durationMinutes <= 90) {
+              slotClass = 'medium-slot';
+            } else {
+              slotClass = 'long-slot';
+            }
+            
+            // 常に縦配置で表示（見やすさのため）
+            const timeDisplay = `<div class="time-start">${startTimeStr}</div><div class="time-separator">-</div><div class="time-end">${endTimeStr}</div>`;
             
             html += `
-              <div class="time-cell available ${isShortSlot ? 'short-slot' : ''}" 
+              <div class="time-cell available ${slotClass}" 
                    data-datetime="${matchingSlot.start_datetime}"
                    data-date="${dateStr}"
                    data-time="${timeStr}"
+                   data-duration="${durationMinutes}"
                    style="grid-row: ${rowNumber} / span ${rowSpan}; grid-column: ${colNumber};">
                 <div class="time-slot-block">
                   ${timeDisplay}
@@ -976,21 +986,72 @@ document.addEventListener('DOMContentLoaded', function() {
   opacity: 0.9;
 }
 
-.time-cell.available.short-slot .time-slot-block {
-  font-size: 0.8rem;
+/* 30分以下のスロット */
+.time-cell.available.very-short-slot .time-slot-block {
   padding: 4px 6px;
+  line-height: 1.1;
+}
+
+.time-cell.available.very-short-slot .time-slot-block .time-start,
+.time-cell.available.very-short-slot .time-slot-block .time-end {
+  font-size: 0.8rem;
+  margin: 1px 0;
+}
+
+.time-cell.available.very-short-slot .time-slot-block .time-separator {
+  font-size: 0.6rem;
+  margin: 0;
+}
+
+/* 30分超60分以下のスロット（40分など） */
+.time-cell.available.short-slot .time-slot-block {
+  padding: 6px 8px;
   line-height: 1.2;
 }
 
 .time-cell.available.short-slot .time-slot-block .time-start,
 .time-cell.available.short-slot .time-slot-block .time-end {
-  font-size: 0.85rem;
-  margin: 1px 0;
+  font-size: 0.9rem;
+  margin: 2px 0;
 }
 
 .time-cell.available.short-slot .time-slot-block .time-separator {
-  font-size: 0.65rem;
-  margin: 0;
+  font-size: 0.7rem;
+  margin: 1px 0;
+}
+
+/* 60分超90分以下のスロット（80分など） */
+.time-cell.available.medium-slot .time-slot-block {
+  padding: 8px 10px;
+  line-height: 1.3;
+}
+
+.time-cell.available.medium-slot .time-slot-block .time-start,
+.time-cell.available.medium-slot .time-slot-block .time-end {
+  font-size: 0.95rem;
+  margin: 2px 0;
+}
+
+.time-cell.available.medium-slot .time-slot-block .time-separator {
+  font-size: 0.75rem;
+  margin: 1px 0;
+}
+
+/* 90分超のスロット */
+.time-cell.available.long-slot .time-slot-block {
+  padding: 10px 12px;
+  line-height: 1.4;
+}
+
+.time-cell.available.long-slot .time-slot-block .time-start,
+.time-cell.available.long-slot .time-slot-block .time-end {
+  font-size: 1rem;
+  margin: 3px 0;
+}
+
+.time-cell.available.long-slot .time-slot-block .time-separator {
+  font-size: 0.8rem;
+  margin: 2px 0;
 }
 
 .time-cell.selected .time-slot-block {
