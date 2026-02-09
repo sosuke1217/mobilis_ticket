@@ -756,14 +756,19 @@ document.addEventListener('DOMContentLoaded', function() {
   background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
   border-right: 1px solid #e0e0e0;
   border-bottom: 1px solid #e0e0e0;
-  padding: 10px 4px;
+  padding: 8px 4px;
   text-align: center;
   font-weight: 600;
   position: relative;
   transition: all 0.3s ease;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
   box-sizing: border-box;
+  min-height: 70px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .day-header-cell.today {
@@ -807,14 +812,15 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .day-header-cell .today-badge {
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   background: rgba(255, 255, 255, 0.25);
   padding: 2px 4px;
   border-radius: 6px;
-  margin-top: 3px;
+  margin-top: 2px;
   display: inline-block;
   font-weight: 600;
   white-space: nowrap;
+  line-height: 1.2;
 }
 
 .time-label {
