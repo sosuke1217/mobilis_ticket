@@ -11,20 +11,17 @@
         </div>
         
         <div class="card-body p-4">
-          <!-- 成功メッセージ -->
-          <% if flash[:notice] %>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-              <i class="fas fa-check-circle me-2"></i>
-              <%= flash[:notice] %>
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-          <% end %>
-          
-          <!-- エラーメッセージ -->
+          <!-- フラッシュメッセージ（1つだけ表示、優先順位: alert > notice） -->
           <% if flash[:alert] %>
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <div class="alert alert-danger alert-dismissible fade show auto-dismiss" role="alert" data-dismiss-time="5000">
               <i class="fas fa-exclamation-circle me-2"></i>
               <%= flash[:alert] %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          <% elsif flash[:notice] %>
+            <div class="alert alert-success alert-dismissible fade show auto-dismiss" role="alert" data-dismiss-time="5000">
+              <i class="fas fa-check-circle me-2"></i>
+              <%= flash[:notice] %>
               <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
           <% end %>
@@ -327,3 +324,37 @@
   }
 }
 </style>
+
+<script>
+// アラートを一定時間後に自動的に消す
+(function() {
+  function initAutoDismiss() {
+    const alerts = document.querySelectorAll('.auto-dismiss');
+    alerts.forEach(function(alert) {
+      const dismissTime = parseInt(alert.getAttribute('data-dismiss-time')) || 5000;
+      setTimeout(function() {
+        if (typeof bootstrap !== 'undefined' && bootstrap.Alert) {
+          const bsAlert = new bootstrap.Alert(alert);
+          bsAlert.close();
+        } else {
+          // Bootstrapが読み込まれていない場合のフォールバック
+          alert.style.transition = 'opacity 0.5s';
+          alert.style.opacity = '0';
+          setTimeout(function() {
+            alert.remove();
+          }, 500);
+        }
+      }, dismissTime);
+    });
+  }
+  
+  // DOMContentLoadedとturbo:loadの両方で実行
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAutoDismiss);
+  } else {
+    initAutoDismiss();
+  }
+  
+  document.addEventListener('turbo:load', initAutoDismiss);
+})();
+</script>
