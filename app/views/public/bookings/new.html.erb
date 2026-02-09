@@ -1,7 +1,7 @@
 <!-- app/views/public/bookings/new.html.erb -->
-<div class="container my-5">
+<div class="container my-4 my-md-5">
   <div class="row justify-content-center">
-    <div class="col-lg-10">
+    <div class="col-lg-10 col-xl-9">
       <div class="card shadow-lg timerex-style">
         <div class="card-header timerex-header text-center">
           <h2 class="mb-0">
@@ -11,7 +11,7 @@
           <p class="mb-0 mt-2">広尾エリア専門</p>
         </div>
         
-        <div class="card-body p-4">
+        <div class="card-body p-4 p-md-5">
           <!-- エラーメッセージ表示 -->
           <% if flash[:alert] %>
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -45,7 +45,7 @@
                         local: true, html: { id: 'booking-form' } do |f| %>
             
             <!-- Step 1: コース選択 -->
-            <div class="step-section mb-5">
+            <div class="step-section mb-4 mb-md-5">
               <h4 class="step-title">
                 <span class="step-number">1</span>コースを選択
               </h4>
@@ -79,7 +79,7 @@
             </div>
             
             <!-- Step 2: 希望日時選択 - TimeRex風カレンダー -->
-            <div class="step-section mb-5">
+            <div class="step-section mb-4 mb-md-5">
               <h4 class="step-title">
                 <span class="step-number">2</span>日時を選択
               </h4>
@@ -686,13 +686,37 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
 .timerex-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 30px;
+  padding: 24px 20px;
   border: none;
+}
+
+@media (min-width: 768px) {
+  .timerex-header {
+    padding: 32px 30px;
+  }
 }
 
 .timerex-header h2 {
   font-weight: 700;
-  font-size: 2rem;
+  font-size: 1.5rem;
+  line-height: 1.3;
+}
+
+@media (min-width: 768px) {
+  .timerex-header h2 {
+    font-size: 2rem;
+  }
+}
+
+.timerex-header p {
+  font-size: 0.9rem;
+  opacity: 0.95;
+}
+
+@media (min-width: 768px) {
+  .timerex-header p {
+    font-size: 1rem;
+  }
 }
 
 .step-section {
