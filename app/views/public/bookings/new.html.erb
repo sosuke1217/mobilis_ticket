@@ -335,6 +335,9 @@ document.addEventListener('DOMContentLoaded', function() {
       `;
     }
     
+    // 右上角の空白セル
+    html += '<div class="time-label-header"></div>';
+    
     // 各日のスロット情報を整理（開始時間をキーに）
     const daySlotsMap = {};
     for (let i = 0; i < 7; i++) {
@@ -756,7 +759,7 @@ document.addEventListener('DOMContentLoaded', function() {
 .day-header-cell {
   background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
   border-right: 1px solid #e0e0e0;
-  border-bottom: 2px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
   padding: 8px 4px;
   text-align: center;
   font-weight: 600;
