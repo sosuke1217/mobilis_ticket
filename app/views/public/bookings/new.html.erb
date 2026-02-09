@@ -389,21 +389,29 @@ document.addEventListener('DOMContentLoaded', function() {
           });
         });
         
-        // 重なりを検出してz-indexを設定
-        overlappingSlots[colNumber].forEach((slot1, idx1) => {
-          let maxZIndex = 1;
-          overlappingSlots[colNumber].forEach((slot2, idx2) => {
-            if (idx1 !== idx2) {
-              // 重なっているかチェック
-              if (!(slot1.endRow < slot2.startRow || slot1.startRow > slot2.endRow)) {
-                // 重なっている場合、後から開始するスロットのz-indexを高くする
-                if (slot2.startRow >= slot1.startRow) {
-                  maxZIndex = Math.max(maxZIndex, idx2 + 2);
-                }
+        // 開始行の順序でソート（早い順）
+        overlappingSlots[colNumber].sort((a, b) => {
+          if (a.startRow !== b.startRow) {
+            return a.startRow - b.startRow;
+          }
+          // 同じ開始行の場合は、終了行が早い順
+          return a.endRow - b.endRow;
+        });
+        
+        // 各スロットのz-indexを設定（後から開始するスロットのz-indexを高くする）
+        overlappingSlots[colNumber].forEach((slot, idx) => {
+          // 基本のz-indexは開始行に基づく（後から開始するほど高い）
+          slot.zIndex = idx + 1;
+          
+          // 重なっているスロットがある場合、後から開始するスロットのz-indexをさらに高くする
+          overlappingSlots[colNumber].forEach((otherSlot, otherIdx) => {
+            if (idx !== otherIdx) {
+              const isOverlapping = !(slot.endRow < otherSlot.startRow || slot.startRow > otherSlot.endRow);
+              if (isOverlapping && otherSlot.startRow > slot.startRow) {
+                slot.zIndex = Math.max(slot.zIndex, otherIdx + 2);
               }
             }
           });
-          slot1.zIndex = maxZIndex;
         });
       }
     }
