@@ -88,17 +88,17 @@
               </div>
               
               <!-- お客様情報 -->
-              <% if @reservation.user %>
-                <div class="detail-section mb-4">
-                  <h5 class="section-title">
-                    <i class="fas fa-user me-2"></i>
-                    お客様情報
-                  </h5>
-                  <div class="detail-content">
-                    <div class="detail-item">
-                      <span class="detail-label">お名前</span>
-                      <span class="detail-value"><%= @reservation.user.name %></span>
-                    </div>
+              <div class="detail-section mb-4">
+                <h5 class="section-title">
+                  <i class="fas fa-user me-2"></i>
+                  お客様情報
+                </h5>
+                <div class="detail-content">
+                  <div class="detail-item">
+                    <span class="detail-label">お名前</span>
+                    <span class="detail-value"><%= @reservation.name.presence || (@reservation.user&.name) || '未設定' %></span>
+                  </div>
+                  <% if @reservation.user %>
                     <% if @reservation.user.phone_number.present? %>
                       <div class="detail-item">
                         <span class="detail-label">電話番号</span>
@@ -111,9 +111,9 @@
                         <span class="detail-value"><%= @reservation.user.email %></span>
                       </div>
                     <% end %>
-                  </div>
+                  <% end %>
                 </div>
-              <% end %>
+              </div>
               
               <!-- メモ -->
               <% if @reservation.note.present? %>

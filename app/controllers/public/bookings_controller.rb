@@ -167,7 +167,17 @@ class Public::BookingsController < ApplicationController
   end
 
   def show
-    @reservation = Reservation.find(params[:id])
+    @reservation = Reservation.find_by(id: params[:id])
+    
+    unless @reservation
+      flash[:alert] = '予約が見つかりませんでした。'
+      redirect_to new_public_booking_path
+      return
+    end
+  rescue => e
+    Rails.logger.error "❌ Error loading reservation: #{e.message}"
+    flash[:alert] = '予約情報の読み込み中にエラーが発生しました。'
+    redirect_to new_public_booking_path
   end
 
   def cancel
@@ -310,11 +320,11 @@ class Public::BookingsController < ApplicationController
     time_slots.each do |time_slot|
       opening_time = time_slot[:opening]
       closing_time = time_slot[:closing]
+    
+    current_time = opening_time
+    while current_time + duration.minutes <= closing_time
+      end_time = current_time + duration.minutes
       
-      current_time = opening_time
-      while current_time + duration.minutes <= closing_time
-        end_time = current_time + duration.minutes
-        
         # 最低予約時間の制約をチェック（今日の日付の場合のみ）
         if date == Date.current && current_time < min_advance_time
           current_time += slot_interval
@@ -323,14 +333,14 @@ class Public::BookingsController < ApplicationController
         
         # インターバルを考慮した空きチェック
         if time_slot_available_with_interval?(current_time, end_time, interval_minutes)
-          available_slots << {
-            start_time: current_time,
-            end_time: end_time,
+        available_slots << {
+          start_time: current_time,
+          end_time: end_time,
             interval_info: "（#{interval_minutes}分準備時間含む）"
-          }
-        end
-        
-        current_time += slot_interval
+        }
+      end
+      
+      current_time += slot_interval
       end
     end
     
