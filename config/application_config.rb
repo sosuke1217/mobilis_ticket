@@ -5,6 +5,8 @@ class ApplicationConfig
   }.freeze
 
   COURSE_PRICES = {
+    "対面セッション（スタジオ／出張）" => ENV.fetch('PRICE_FACE_TO_FACE', 15000).to_i,
+    "オンライン身体分析・設計" => ENV.fetch('PRICE_ONLINE', 5000).to_i,
     "40分コース" => ENV.fetch('PRICE_40MIN', 8000).to_i,
     "60分コース" => ENV.fetch('PRICE_60MIN', 12000).to_i,
     "80分コース" => ENV.fetch('PRICE_80MIN', 16000).to_i

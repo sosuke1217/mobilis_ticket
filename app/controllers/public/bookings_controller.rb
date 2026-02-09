@@ -6,11 +6,7 @@ class Public::BookingsController < ApplicationController
   
   def new
     @reservation = Reservation.new
-    @courses = [
-      { name: '40分コース', duration: 40, price: 8000 },
-      { name: '60分コース', duration: 60, price: 12000 },
-      { name: '80分コース', duration: 80, price: 16000 }
-    ]
+    @courses = load_courses
     
     # システム設定を取得
     @settings = ApplicationSetting.current
@@ -544,18 +540,16 @@ class Public::BookingsController < ApplicationController
 
   def course_duration(course)
     case course
-    when '40分コース' then 40
-    when '60分コース' then 60
-    when '80分コース' then 80
+    when '対面セッション（スタジオ／出張）' then 60
+    when 'オンライン身体分析・設計' then 30
     else 60
     end
   end
 
   def load_courses
     [
-      { name: '40分コース', duration: 40, price: 8000 },
-      { name: '60分コース', duration: 60, price: 12000 },
-      { name: '80分コース', duration: 80, price: 16000 }
+      { name: '対面セッション（スタジオ／出張）', duration: 60, price: 15000 },
+      { name: 'オンライン身体分析・設計', duration: 30, price: 5000 }
     ]
   end
 end

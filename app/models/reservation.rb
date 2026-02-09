@@ -167,6 +167,8 @@ class Reservation < ApplicationRecord
     return 60 unless course.present? # デフォルト
     
     case course.to_s.strip
+    when "対面セッション（スタジオ／出張）" then 60
+    when "オンライン身体分析・設計" then 30
     when "40分", "40分コース", "40 min", "40" then 40
     when "60分", "60分コース", "60 min", "60" then 60
     when "80分", "80分コース", "80 min", "80" then 80
@@ -191,10 +193,12 @@ class Reservation < ApplicationRecord
   # 料金を取得
   def get_price
     case course
+    when "対面セッション（スタジオ／出張）" then 15000
+    when "オンライン身体分析・設計" then 5000
     when "40分", "40分コース" then 8000
     when "60分", "60分コース" then 12000
     when "80分", "80分コース" then 16000
-    else 12000
+    else 15000
     end
   end
 
