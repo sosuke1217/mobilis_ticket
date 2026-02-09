@@ -45,7 +45,7 @@
                 </h5>
                 <div class="detail-content">
                   <div class="detail-item">
-                    <span class="detail-label">日付</span>
+                    <span class="detail-label">日付 (Date)</span>
                     <span class="detail-value"><%= @reservation.start_time.strftime('%Y年%m月%d日') %></span>
                   </div>
                   <div class="detail-item">
@@ -99,7 +99,7 @@
                   <% if @reservation.user %>
                     <% if @reservation.user.phone_number.present? %>
                       <div class="detail-item">
-                        <span class="detail-label">電話番号</span>
+                        <span class="detail-label">電話番号 (Phone Number)</span>
                         <span class="detail-value"><%= @reservation.user.phone_number %></span>
                       </div>
                     <% end %>
@@ -147,7 +147,7 @@
                       method: :post,
                       class: "btn btn-outline-danger btn-lg me-3",
                       data: { 
-                        confirm: "本当にキャンセルしますか？",
+                        confirm: "本当にキャンセルしますか？\nAre you sure you want to cancel?",
                         turbo_method: :post
                       } do %>
                     <i class="fas fa-times me-2"></i>
