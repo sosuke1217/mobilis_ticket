@@ -15,7 +15,12 @@ module ErrorHandling
     respond_to do |format|
       format.html { 
         flash[:alert] = "エラーが発生しました。管理者にお問い合わせください。"
-        redirect_to admin_root_path 
+        # Public::BookingsControllerの場合は新規予約ページにリダイレクト
+        if self.class.name.start_with?('Public::')
+          redirect_to new_public_booking_path
+        else
+          redirect_to admin_root_path 
+        end
       }
       format.json { 
         render json: { 
@@ -30,7 +35,12 @@ module ErrorHandling
     respond_to do |format|
       format.html { 
         flash[:alert] = "指定されたデータが見つかりません。"
-        redirect_to admin_root_path 
+        # Public::BookingsControllerの場合は新規予約ページにリダイレクト
+        if self.class.name.start_with?('Public::')
+          redirect_to new_public_booking_path
+        else
+          redirect_to admin_root_path 
+        end
       }
       format.json { 
         render json: { 
