@@ -811,6 +811,15 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   overflow-x: auto;
   width: 100%;
   box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  .timerex-calendar-container {
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
 }
 
 .calendar-header {
@@ -820,6 +829,13 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   margin-bottom: 28px;
   padding-bottom: 20px;
   border-bottom: 2px solid rgba(8, 121, 166, 0.1);
+}
+
+@media (max-width: 768px) {
+  .calendar-header {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+  }
 }
 
 .btn-calendar-nav {
@@ -836,6 +852,19 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   color: #0879A6;
   font-size: 1.1rem;
   box-shadow: 0 2px 8px rgba(8, 121, 166, 0.1);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 768px) {
+  .btn-calendar-nav {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+    border-radius: 10px;
+    min-width: 40px;
+    flex-shrink: 0;
+  }
 }
 
 .btn-calendar-nav:hover {
@@ -857,6 +886,14 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   letter-spacing: -0.5px;
 }
 
+@media (max-width: 768px) {
+  .calendar-title {
+    font-size: 1rem;
+    padding: 0 8px;
+    text-align: center;
+  }
+}
+
 /* TimeRex風カレンダーグリッド（時間軸縦表示） */
 .timerex-calendar-grid {
   display: grid;
@@ -873,6 +910,16 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   min-width: 0;
 }
 
+@media (max-width: 768px) {
+  .timerex-calendar-grid {
+    grid-template-columns: 50px repeat(7, minmax(60px, 1fr)) 50px;
+    grid-template-rows: 65px;
+    grid-auto-rows: 50px;
+    border-radius: 8px;
+    min-width: 600px; /* 横スクロールを確保 */
+  }
+}
+
 .time-label-header {
   background: #f8f9fa;
   border-right: 1px solid #e0e0e0;
@@ -881,6 +928,13 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   font-weight: 600;
   color: #666;
   font-size: 0.875rem;
+}
+
+@media (max-width: 768px) {
+  .time-label-header {
+    padding: 8px 4px;
+    font-size: 0.75rem;
+  }
 }
 
 .day-header-cell {
@@ -922,6 +976,27 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+@media (max-width: 768px) {
+  .day-header-cell {
+    padding: 6px 2px;
+  }
+  
+  .day-header-cell .day-name {
+    font-size: 0.55rem;
+    margin-bottom: 1px;
+  }
+  
+  .day-header-cell .day-number {
+    font-size: 0.9rem;
+  }
+  
+  .day-header-cell .today-badge {
+    font-size: 0.5rem;
+    padding: 1px 3px;
+    margin-top: 1px;
+  }
 }
 
 .day-header-cell.today .day-name {
@@ -974,6 +1049,17 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   box-sizing: border-box;
 }
 
+@media (max-width: 768px) {
+  .time-label {
+    width: 50px;
+    min-width: 50px;
+    max-width: 50px;
+    padding: 4px 2px;
+    font-size: 0.7rem;
+    min-height: 50px;
+  }
+}
+
 .time-cell {
   border-right: 1px solid #e0e0e0;
   border-bottom: 1px dashed #e0e0e0;
@@ -988,6 +1074,15 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   justify-content: center;
   padding: 4px;
   box-sizing: border-box;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 768px) {
+  .time-cell {
+    min-height: 50px;
+    padding: 2px;
+  }
 }
 
 .time-cell.empty {
@@ -1015,6 +1110,16 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   position: relative;
   z-index: 1;
   overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .time-cell.available {
+    min-height: 46px;
+    margin: 2px;
+    padding: 4px;
+    border-radius: 6px;
+    border-width: 1.5px;
+  }
 }
 
 .time-cell.available::before {
@@ -1077,6 +1182,25 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   min-height: 100%;
   box-sizing: border-box;
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+@media (max-width: 768px) {
+  .time-slot-block {
+    padding: 4px 6px;
+    font-size: 0.75rem;
+    line-height: 1.2;
+  }
+  
+  .time-slot-block .time-start,
+  .time-slot-block .time-end {
+    font-size: 0.85rem;
+    margin: 1px 0;
+  }
+  
+  .time-slot-block .time-separator {
+    font-size: 0.65rem;
+    margin: 0;
+  }
 }
 
 .time-slot-block .time-start,
