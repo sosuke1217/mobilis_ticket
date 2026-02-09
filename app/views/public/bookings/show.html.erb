@@ -1,2 +1,329 @@
-<h1>Public::Bookings#show</h1>
-<p>Find me in app/views/public/bookings/show.html.erb</p>
+<!-- app/views/public/bookings/show.html.erb -->
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow-lg timerex-style">
+        <div class="card-header timerex-header text-center">
+          <h2 class="mb-0">
+            <i class="fas fa-check-circle me-2"></i>
+            予約確認
+          </h2>
+        </div>
+        
+        <div class="card-body p-4">
+          <!-- 成功メッセージ -->
+          <% if flash[:notice] %>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+              <i class="fas fa-check-circle me-2"></i>
+              <%= flash[:notice] %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          <% end %>
+          
+          <!-- エラーメッセージ -->
+          <% if flash[:alert] %>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              <i class="fas fa-exclamation-circle me-2"></i>
+              <%= flash[:alert] %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          <% end %>
+          
+          <!-- 予約情報 -->
+          <div class="booking-confirmation">
+            <div class="confirmation-header mb-4">
+              <div class="status-badge status-<%= @reservation.status %>">
+                <i class="fas fa-<%= @reservation.status == 'confirmed' ? 'check' : @reservation.status == 'cancelled' ? 'times' : 'clock' %> me-2"></i>
+                <%= @reservation.status_text %>
+              </div>
+            </div>
+            
+            <div class="booking-details">
+              <!-- 予約日時 -->
+              <div class="detail-section mb-4">
+                <h5 class="section-title">
+                  <i class="fas fa-calendar-alt me-2"></i>
+                  予約日時
+                </h5>
+                <div class="detail-content">
+                  <div class="detail-item">
+                    <span class="detail-label">日付</span>
+                    <span class="detail-value"><%= @reservation.start_time.strftime('%Y年%m月%d日') %></span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">時間</span>
+                    <span class="detail-value">
+                      <%= @reservation.start_time.strftime('%H:%M') %> - <%= @reservation.end_time.strftime('%H:%M') %>
+                    </span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">曜日</span>
+                    <span class="detail-value">
+                      <%= %w[日 月 火 水 木 金 土][@reservation.start_time.wday] %>曜日
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- コース情報 -->
+              <div class="detail-section mb-4">
+                <h5 class="section-title">
+                  <i class="fas fa-spa me-2"></i>
+                  コース
+                </h5>
+                <div class="detail-content">
+                  <div class="detail-item">
+                    <span class="detail-label">コース名</span>
+                    <span class="detail-value"><%= @reservation.course %></span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">料金</span>
+                    <span class="detail-value price">¥<%= number_with_delimiter(@reservation.get_price) %></span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">所要時間</span>
+                    <span class="detail-value"><%= @reservation.get_duration_minutes %>分</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- お客様情報 -->
+              <% if @reservation.user %>
+                <div class="detail-section mb-4">
+                  <h5 class="section-title">
+                    <i class="fas fa-user me-2"></i>
+                    お客様情報
+                  </h5>
+                  <div class="detail-content">
+                    <div class="detail-item">
+                      <span class="detail-label">お名前</span>
+                      <span class="detail-value"><%= @reservation.user.name %></span>
+                    </div>
+                    <% if @reservation.user.phone_number.present? %>
+                      <div class="detail-item">
+                        <span class="detail-label">電話番号</span>
+                        <span class="detail-value"><%= @reservation.user.phone_number %></span>
+                      </div>
+                    <% end %>
+                    <% if @reservation.user.email.present? %>
+                      <div class="detail-item">
+                        <span class="detail-label">メールアドレス</span>
+                        <span class="detail-value"><%= @reservation.user.email %></span>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+              
+              <!-- メモ -->
+              <% if @reservation.note.present? %>
+                <div class="detail-section mb-4">
+                  <h5 class="section-title">
+                    <i class="fas fa-sticky-note me-2"></i>
+                    メモ
+                  </h5>
+                  <div class="detail-content">
+                    <div class="note-content">
+                      <%= simple_format(@reservation.note) %>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+              
+              <!-- 予約ID -->
+              <div class="detail-section mb-4">
+                <div class="detail-content">
+                  <div class="detail-item">
+                    <span class="detail-label">予約ID</span>
+                    <span class="detail-value reservation-id">#<%= @reservation.id %></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- アクションボタン -->
+            <div class="action-buttons mt-4">
+              <% unless @reservation.cancelled? %>
+                <% if @reservation.cancellable? %>
+                  <%= link_to public_booking_cancel_path(@reservation), 
+                      method: :post,
+                      class: "btn btn-outline-danger btn-lg me-3",
+                      data: { 
+                        confirm: "本当にキャンセルしますか？",
+                        turbo_method: :post
+                      } do %>
+                    <i class="fas fa-times me-2"></i>
+                    予約をキャンセル
+                  <% end %>
+                <% end %>
+              <% end %>
+              
+              <%= link_to new_public_booking_path, class: "btn btn-primary btn-lg" do %>
+                <i class="fas fa-calendar-check me-2"></i>
+                新しい予約をする
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.booking-confirmation {
+  color: #333;
+}
+
+.confirmation-header {
+  text-align: center;
+  padding: 20px 0;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.status-badge.status-confirmed {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+}
+
+.status-badge.status-tentative {
+  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+  color: white;
+}
+
+.status-badge.status-cancelled {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+}
+
+.status-badge.status-completed {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+  color: white;
+}
+
+.detail-section {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+}
+
+.section-title {
+  color: #667eea;
+  font-weight: 700;
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+}
+
+.detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.detail-item:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.detail-value {
+  font-weight: 700;
+  color: #333;
+  font-size: 1rem;
+  text-align: right;
+}
+
+.detail-value.price {
+  color: #667eea;
+  font-size: 1.2rem;
+}
+
+.detail-value.reservation-id {
+  font-family: 'Courier New', monospace;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.note-content {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  color: #555;
+  line-height: 1.6;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.action-buttons .btn {
+  min-width: 200px;
+  padding: 12px 24px;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.action-buttons .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-outline-danger {
+  border: 2px solid #dc3545;
+  color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+  background: #dc3545;
+  border-color: #dc3545;
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .detail-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .detail-value {
+    text-align: left;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .action-buttons .btn {
+    width: 100%;
+  }
+}
+</style>

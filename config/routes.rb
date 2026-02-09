@@ -84,6 +84,9 @@ Rails.application.routes.draw do
   # 一般ユーザー用ルート
   namespace :public do
     resources :bookings, only: [:new, :create, :show] do
+      member do
+        post 'cancel'
+      end
       collection do
         get 'available_times'
         get 'week_calendar'
