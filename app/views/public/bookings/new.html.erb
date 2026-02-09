@@ -52,7 +52,7 @@
               
               <div class="row">
                 <% @courses.each_with_index do |course, index| %>
-                  <div class="col-md-4 mb-3">
+                  <div class="col-md-4 mb-3 d-flex">
                     <div class="course-card" data-course="<%= course[:name] %>" data-duration="<%= course[:duration] %>">
                       <input type="radio" name="booking[course]" 
                              value="<%= course[:name] %>" 
