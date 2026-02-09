@@ -32,7 +32,15 @@
             <div class="confirmation-header mb-4">
               <div class="status-badge status-<%= @reservation.status %>">
                 <i class="fas fa-<%= @reservation.status == 'confirmed' ? 'check' : @reservation.status == 'cancelled' ? 'times' : 'clock' %> me-2"></i>
-                <%= @reservation.status_text %>
+                <% status_en = case @reservation.status
+                     when 'confirmed' then 'Confirmed'
+                     when 'tentative' then 'Tentative'
+                     when 'cancelled' then 'Cancelled'
+                     when 'completed' then 'Completed'
+                     when 'no_show' then 'No Show'
+                     else @reservation.status
+                   end %>
+                <%= @reservation.status_text %> / <%= status_en %>
               </div>
             </div>
             
