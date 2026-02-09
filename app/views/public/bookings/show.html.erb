@@ -335,6 +335,26 @@
   color: white;
 }
 
+.btn-primary {
+  background: #0879A6;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #066a8f;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(8, 121, 166, 0.4);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 @media (max-width: 768px) {
   .detail-item {
     flex-direction: column;
