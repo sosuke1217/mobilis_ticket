@@ -146,11 +146,12 @@
                 <div class="form-text">ご連絡用（任意）</div>
               </div>
               
-              <div class="mb-3">
-                <%= label_tag 'booking[address]', 'ご住所', class: 'form-label required' %>
+              <div class="mb-3" id="address-field-container">
+                <%= label_tag 'booking[address]', 'ご住所', class: 'form-label required', id: 'address-label' %>
                 <%= text_area_tag 'booking[address]', (@user_info&.dig(:address) || ''), 
-                      { class: 'form-control', rows: 2, required: true,
+                      { class: 'form-control', rows: 2, id: 'address-field',
                         placeholder: '港区南麻布○-○-○　○○マンション○○号室' } %>
+                <div class="form-text" id="address-help-text" style="display: none;">オンラインコースの場合は任意です</div>
               </div>
               
               <div class="mb-3">
@@ -252,6 +253,8 @@ function initializeBookingPage() {
       duration: parseInt(checkedCourse.dataset.duration)
     };
     loadWeekCalendar();
+    // 住所フィールドの必須/任意を設定
+    updateAddressFieldRequirement();
   }
   
   // 週間カレンダーの読み込み
@@ -595,9 +598,12 @@ function initializeBookingPage() {
       allValid = false;
     }
     
-    if (!addressField || !addressField.value.trim()) {
-        allValid = false;
-      }
+    // 住所フィールドのバリデーション（オンラインコースの場合は任意）
+    const courseName = selectedCourse?.value || '';
+    const isOnline = courseName === 'オンライン身体分析・設計';
+    if (!isOnline && (!addressField || !addressField.value.trim())) {
+      allValid = false;
+    }
     
     submitBtn.disabled = !allValid;
   }
