@@ -199,6 +199,13 @@
 <!-- JavaScript for TimeRex風カレンダー -->
 <script>
 function initializeBookingPage() {
+  // 予約フォームページかどうかをチェック
+  const bookingForm = document.getElementById('booking-form');
+  if (!bookingForm) {
+    // 予約フォームページではない場合は初期化をスキップ
+    return;
+  }
+  
   const courseCards = document.querySelectorAll('.course-card');
   const submitBtn = document.getElementById('submit-btn');
   let currentWeekStart = new Date();
@@ -533,24 +540,30 @@ function initializeBookingPage() {
   }
   
   // 前の週へ
-  document.getElementById('prev-week').addEventListener('click', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    clearTimeSelection();
-    currentWeekStart.setDate(currentWeekStart.getDate() - 7);
-    loadWeekCalendar();
-    validateForm();
-  });
+  const prevWeekBtn = document.getElementById('prev-week');
+  if (prevWeekBtn) {
+    prevWeekBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      clearTimeSelection();
+      currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+      loadWeekCalendar();
+      validateForm();
+    });
+  }
   
   // 次の週へ
-  document.getElementById('next-week').addEventListener('click', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    clearTimeSelection();
-    currentWeekStart.setDate(currentWeekStart.getDate() + 7);
-    loadWeekCalendar();
-    validateForm();
-  });
+  const nextWeekBtn = document.getElementById('next-week');
+  if (nextWeekBtn) {
+    nextWeekBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      clearTimeSelection();
+      currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+      loadWeekCalendar();
+      validateForm();
+    });
+  }
   
   // フォームバリデーション
   function validateForm() {
@@ -587,11 +600,12 @@ function initializeBookingPage() {
   }
   
   // 入力項目の変更監視
-  document.getElementById('booking-form').addEventListener('input', validateForm);
-  document.getElementById('booking-form').addEventListener('change', validateForm);
-  
-  // フォーム送信前の確認
-  document.getElementById('booking-form').addEventListener('submit', function(e) {
+  if (bookingForm) {
+    bookingForm.addEventListener('input', validateForm);
+    bookingForm.addEventListener('change', validateForm);
+    
+    // フォーム送信前の確認
+    bookingForm.addEventListener('submit', function(e) {
     const datetimeField = document.getElementById('selected-datetime');
     const selectedCourse = document.querySelector('input[name="booking[course]"]:checked');
     
@@ -611,7 +625,8 @@ function initializeBookingPage() {
     }
     
     return true;
-  });
+    });
+  }
 }
 
 // DOMContentLoadedとturbo:loadの両方で初期化
