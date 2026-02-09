@@ -533,8 +533,9 @@ function initializeBookingPage() {
         
         // 選択された日時を表示
         const date = new Date(selectedSlot.datetime);
-        const dateStr = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 ${date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`;
-        document.getElementById('selected-date-time').textContent = dateStr;
+        const dateStrJP = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 ${date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`;
+        const dateStrEN = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + ' ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('selected-date-time').textContent = dateStrJP + ' / ' + dateStrEN;
         document.getElementById('selected-time-display').style.display = 'block';
         
         validateForm();
@@ -656,13 +657,13 @@ function initializeBookingPage() {
     
     if (!selectedCourse) {
       e.preventDefault();
-      alert('コースを選択してください。');
+      alert('コースを選択してください。\nPlease select a course.');
       return false;
     }
     
     if (!datetimeField || !datetimeField.value) {
       e.preventDefault();
-      alert('予約日時を選択してください。カレンダーから日時を選択してください。');
+      alert('予約日時を選択してください。カレンダーから日時を選択してください。\nPlease select a date and time. Select a date and time from the calendar.');
       return false;
     }
     
