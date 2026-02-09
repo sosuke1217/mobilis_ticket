@@ -63,7 +63,11 @@
                         <div class="card-body text-center">
                           <h5 class="card-title"><%= course[:name] %></h5>
                           <p class="price-display">
-                            ¥<%= number_with_delimiter(course[:price]) %>
+                            <% if course[:name] == 'オンライン身体分析・設計' %>
+                              ¥<%= number_with_delimiter(course[:price]) %>（テスト導入）
+                            <% else %>
+                              ¥<%= number_with_delimiter(course[:price]) %>
+                            <% end %>
                           </p>
                           <small class="text-muted">目安：約<%= course[:duration] %>分</small>
                         </div>
