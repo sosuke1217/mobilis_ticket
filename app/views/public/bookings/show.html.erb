@@ -145,7 +145,7 @@
             <div class="action-buttons mt-4">
               <% unless @reservation.cancelled? %>
                 <% if @reservation.cancellable? %>
-                  <%= link_to public_booking_cancel_path(@reservation), 
+                  <%= link_to cancel_public_booking_path(@reservation), 
                       method: :post,
                       class: "btn btn-outline-danger btn-lg me-3",
                       data: { 
