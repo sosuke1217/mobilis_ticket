@@ -82,8 +82,16 @@
                 </h5>
                 <div class="detail-content">
                   <div class="detail-item">
-                    <span class="detail-label">コース名 (Course Name)</span>
-                    <span class="detail-value"><%= @reservation.course %></span>
+                    <span class="detail-label">コース名 / Course Name</span>
+                    <span class="detail-value">
+                      <% course_en = case @reservation.course
+                           when '対面セッション（スタジオ／出張）' then 'In-Person Session (Studio / Home Visit)'
+                           when 'オンライン身体分析・設計' then 'Online Body Analysis & Design'
+                           else @reservation.course
+                         end %>
+                      <%= @reservation.course %><br>
+                      <small style="color: #666;"><%= course_en %></small>
+                    </span>
                   </div>
                   <div class="detail-item">
                     <span class="detail-label">料金 (Price)</span>
