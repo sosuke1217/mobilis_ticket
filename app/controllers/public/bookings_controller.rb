@@ -514,6 +514,12 @@ class Public::BookingsController < ApplicationController
     Rails.logger.error "LINE通知エラー: #{e.message}"
   end
 
+  def send_cancellation_notification(reservation)
+    LineBookingNotifier.send_cancellation_notification(reservation)
+  rescue => e
+    Rails.logger.error "LINEキャンセル通知エラー: #{e.message}"
+  end
+
   def notify_admin(reservation)
     AdminNotificationJob.perform_later(reservation)
   rescue => e
