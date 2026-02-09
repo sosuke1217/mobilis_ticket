@@ -1,5 +1,5 @@
 <!-- app/views/public/bookings/show.html.erb -->
-<% content_for :title, "予約確認" %>
+<% content_for :title, "予約確認 / Reservation Confirmation" %>
 <div class="container my-5">
   <div class="row justify-content-center">
     <div class="col-lg-8">
@@ -7,7 +7,7 @@
         <div class="card-header timerex-header text-center">
           <h2 class="mb-0">
             <i class="fas fa-check-circle me-2"></i>
-            予約確認
+            予約確認 / Reservation Confirmation
           </h2>
         </div>
         
@@ -41,23 +41,26 @@
               <div class="detail-section mb-4">
                 <h5 class="section-title">
                   <i class="fas fa-calendar-alt me-2"></i>
-                  予約日時
+                  予約日時 / Reservation Date & Time
                 </h5>
                 <div class="detail-content">
                   <div class="detail-item">
-                    <span class="detail-label">日付 (Date)</span>
-                    <span class="detail-value"><%= @reservation.start_time.strftime('%Y年%m月%d日') %></span>
+                    <span class="detail-label">日付 / Date</span>
+                    <span class="detail-value">
+                      <%= @reservation.start_time.strftime('%Y年%m月%d日') %><br>
+                      <small style="color: #666;"><%= @reservation.start_time.strftime('%B %d, %Y') %></small>
+                    </span>
                   </div>
                   <div class="detail-item">
-                    <span class="detail-label">時間 (Time)</span>
+                    <span class="detail-label">時間 / Time</span>
                     <span class="detail-value">
                       <%= @reservation.start_time.strftime('%H:%M') %> - <%= @reservation.end_time.strftime('%H:%M') %>
                     </span>
                   </div>
                   <div class="detail-item">
-                    <span class="detail-label">曜日 (Day of Week)</span>
+                    <span class="detail-label">曜日 / Day of Week</span>
                     <span class="detail-value">
-                      <%= %w[日 月 火 水 木 金 土][@reservation.start_time.wday] %>曜日
+                      <%= %w[日 月 火 水 木 金 土][@reservation.start_time.wday] %>曜日 / <%= %w[Sun Mon Tue Wed Thu Fri Sat][@reservation.start_time.wday] %>
                     </span>
                   </div>
                 </div>
@@ -79,8 +82,8 @@
                     <span class="detail-value price">¥<%= number_with_delimiter(@reservation.get_price) %></span>
                   </div>
                   <div class="detail-item">
-                    <span class="detail-label">所要時間 (Duration)</span>
-                    <span class="detail-value"><%= @reservation.get_duration_minutes %>分</span>
+                    <span class="detail-label">所要時間 / Duration</span>
+                    <span class="detail-value"><%= @reservation.get_duration_minutes %>分 / <%= @reservation.get_duration_minutes %> minutes</span>
                   </div>
                 </div>
               </div>
@@ -93,19 +96,19 @@
                 </h5>
                 <div class="detail-content">
                   <div class="detail-item">
-                    <span class="detail-label">お名前 (Name)</span>
-                    <span class="detail-value"><%= @reservation.name.presence || (@reservation.user&.name) || '未設定' %></span>
+                    <span class="detail-label">お名前 / Name</span>
+                    <span class="detail-value"><%= @reservation.name.presence || (@reservation.user&.name) || '未設定 / Not Set' %></span>
                   </div>
                   <% if @reservation.user %>
                     <% if @reservation.user.phone_number.present? %>
                       <div class="detail-item">
-                        <span class="detail-label">電話番号 (Phone Number)</span>
+                        <span class="detail-label">電話番号 / Phone Number</span>
                         <span class="detail-value"><%= @reservation.user.phone_number %></span>
                       </div>
                     <% end %>
                     <% if @reservation.user.email.present? %>
                       <div class="detail-item">
-                        <span class="detail-label">メールアドレス (Email)</span>
+                        <span class="detail-label">メールアドレス / Email</span>
                         <span class="detail-value"><%= @reservation.user.email %></span>
                       </div>
                     <% end %>
