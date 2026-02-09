@@ -241,8 +241,39 @@ function initializeBookingPage() {
       
       // カレンダーを更新
       loadWeekCalendar();
+      
+      // 住所フィールドの必須/任意を切り替え
+      updateAddressFieldRequirement();
     });
   });
+  
+  // 住所フィールドの必須/任意を切り替える関数
+  function updateAddressFieldRequirement() {
+    const addressField = document.getElementById('address-field');
+    const addressLabel = document.getElementById('address-label');
+    const addressHelpText = document.getElementById('address-help-text');
+    const selectedCourse = document.querySelector('input[name="booking[course]"]:checked');
+    
+    if (!addressField || !addressLabel || !selectedCourse) return;
+    
+    const courseName = selectedCourse.value;
+    const isOnline = courseName === 'オンライン身体分析・設計';
+    
+    if (isOnline) {
+      // オンラインコースの場合：任意
+      addressField.removeAttribute('required');
+      addressLabel.classList.remove('required');
+      addressHelpText.style.display = 'block';
+    } else {
+      // 対面セッションの場合：必須
+      addressField.setAttribute('required', 'required');
+      addressLabel.classList.add('required');
+      addressHelpText.style.display = 'none';
+    }
+    
+    // バリデーションを再実行
+    validateForm();
+  }
   
   // 初期選択状態の設定
   const checkedCourse = document.querySelector('input[name="booking[course]"]:checked');
