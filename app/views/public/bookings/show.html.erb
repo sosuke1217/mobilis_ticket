@@ -49,13 +49,13 @@
                     <span class="detail-value"><%= @reservation.start_time.strftime('%Y年%m月%d日') %></span>
                   </div>
                   <div class="detail-item">
-                    <span class="detail-label">時間</span>
+                    <span class="detail-label">時間 (Time)</span>
                     <span class="detail-value">
                       <%= @reservation.start_time.strftime('%H:%M') %> - <%= @reservation.end_time.strftime('%H:%M') %>
                     </span>
                   </div>
                   <div class="detail-item">
-                    <span class="detail-label">曜日</span>
+                    <span class="detail-label">曜日 (Day of Week)</span>
                     <span class="detail-value">
                       <%= %w[日 月 火 水 木 金 土][@reservation.start_time.wday] %>曜日
                     </span>
@@ -67,19 +67,19 @@
               <div class="detail-section mb-4">
                 <h5 class="section-title">
                   <i class="fas fa-spa me-2"></i>
-                  コース
+                  コース (Course)
                 </h5>
                 <div class="detail-content">
                   <div class="detail-item">
-                    <span class="detail-label">コース名</span>
+                    <span class="detail-label">コース名 (Course Name)</span>
                     <span class="detail-value"><%= @reservation.course %></span>
                   </div>
                   <div class="detail-item">
-                    <span class="detail-label">料金</span>
+                    <span class="detail-label">料金 (Price)</span>
                     <span class="detail-value price">¥<%= number_with_delimiter(@reservation.get_price) %></span>
                   </div>
                   <div class="detail-item">
-                    <span class="detail-label">所要時間</span>
+                    <span class="detail-label">所要時間 (Duration)</span>
                     <span class="detail-value"><%= @reservation.get_duration_minutes %>分</span>
                   </div>
                 </div>
@@ -89,11 +89,11 @@
               <div class="detail-section mb-4">
                 <h5 class="section-title">
                   <i class="fas fa-user me-2"></i>
-                  お客様情報
+                  お客様情報 (Customer Information)
                 </h5>
                 <div class="detail-content">
                   <div class="detail-item">
-                    <span class="detail-label">お名前</span>
+                    <span class="detail-label">お名前 (Name)</span>
                     <span class="detail-value"><%= @reservation.name.presence || (@reservation.user&.name) || '未設定' %></span>
                   </div>
                   <% if @reservation.user %>
@@ -105,7 +105,7 @@
                     <% end %>
                     <% if @reservation.user.email.present? %>
                       <div class="detail-item">
-                        <span class="detail-label">メールアドレス</span>
+                        <span class="detail-label">メールアドレス (Email)</span>
                         <span class="detail-value"><%= @reservation.user.email %></span>
                       </div>
                     <% end %>
@@ -118,7 +118,7 @@
                 <div class="detail-section mb-4">
                   <h5 class="section-title">
                     <i class="fas fa-sticky-note me-2"></i>
-                    メモ
+                    メモ (Notes)
                   </h5>
                   <div class="detail-content">
                     <div class="note-content">
@@ -132,7 +132,7 @@
               <div class="detail-section mb-4">
                 <div class="detail-content">
                   <div class="detail-item">
-                    <span class="detail-label">予約ID</span>
+                    <span class="detail-label">予約ID (Reservation ID)</span>
                     <span class="detail-value reservation-id">#<%= @reservation.id %></span>
                   </div>
                 </div>
@@ -151,14 +151,14 @@
                         turbo_method: :post
                       } do %>
                     <i class="fas fa-times me-2"></i>
-                    予約をキャンセル
+                    予約をキャンセル (Cancel Reservation)
                   <% end %>
                 <% end %>
               <% end %>
               
               <%= link_to new_public_booking_path, class: "btn btn-primary btn-lg" do %>
                 <i class="fas fa-calendar-check me-2"></i>
-                新しい予約をする
+                新しい予約をする (Make New Reservation)
               <% end %>
             </div>
           </div>
