@@ -1,6 +1,9 @@
 # app/controllers/public/bookings_controller.rb の修正版
 
 class Public::BookingsController < ApplicationController
+  # 認証をスキップ（一般ユーザー向けページのため）
+  skip_before_action :verify_authenticity_token, only: [:available_times, :week_calendar]
+  
   def new
     @reservation = Reservation.new
     @courses = [
@@ -167,17 +170,25 @@ class Public::BookingsController < ApplicationController
   end
 
   def show
-    @reservation = Reservation.find_by(id: params[:id])
-    
-    unless @reservation
+    begin
+      @reservation = Reservation.find_by(id: params[:id])
+      
+      unless @reservation
+        flash[:alert] = '予約が見つかりませんでした。'
+        redirect_to new_public_booking_path
+        return
+      end
+    rescue ActiveRecord::RecordNotFound => e
+      Rails.logger.error "❌ Reservation not found: #{e.message}"
       flash[:alert] = '予約が見つかりませんでした。'
       redirect_to new_public_booking_path
-      return
+    rescue => e
+      Rails.logger.error "❌ Error loading reservation: #{e.class.name}: #{e.message}"
+      Rails.logger.error "❌ Backtrace: #{e.backtrace.first(10).join("\n")}"
+      # エラーハンドリングモジュールに任せず、直接エラーを表示
+      flash[:alert] = "予約情報の読み込み中にエラーが発生しました: #{e.message}"
+      redirect_to new_public_booking_path
     end
-  rescue => e
-    Rails.logger.error "❌ Error loading reservation: #{e.message}"
-    flash[:alert] = '予約情報の読み込み中にエラーが発生しました。'
-    redirect_to new_public_booking_path
   end
 
   def cancel

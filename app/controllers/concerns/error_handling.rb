@@ -14,11 +14,12 @@ module ErrorHandling
 
     respond_to do |format|
       format.html { 
-        flash[:alert] = "エラーが発生しました。管理者にお問い合わせください。"
-        # Public::BookingsControllerの場合は新規予約ページにリダイレクト
+        # Public::BookingsControllerの場合は詳細なエラーメッセージを表示
         if self.class.name.start_with?('Public::')
+          flash[:alert] = "エラーが発生しました: #{error.message}"
           redirect_to new_public_booking_path
         else
+          flash[:alert] = "エラーが発生しました。管理者にお問い合わせください。"
           redirect_to admin_root_path 
         end
       }
