@@ -358,63 +358,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 各日のスロットがどの行に表示されるかを追跡
     const slotRowMap = {};
-    // 各列の各時間帯で重なっているスロットを追跡
-    const overlappingSlots = {};
-    
-    // まず、すべてのスロットの位置を計算して重なりを検出
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(data.week_start);
-      date.setDate(date.getDate() + i);
-      const dateStr = date.toISOString().split('T')[0];
-      const dayData = data.week_data[dateStr];
-      
-      if (dayData && dayData.slots) {
-        const colNumber = i + 2;
-        overlappingSlots[colNumber] = [];
-        
-        dayData.slots.forEach(slot => {
-          const slotStart = new Date(slot.start_datetime);
-          const slotEnd = new Date(slot.end_datetime);
-          const startTimeKey = `${slotStart.getHours()}:${slotStart.getMinutes()}`;
-          const startRow = timeSlots.findIndex(ts => 
-            ts.hour === slotStart.getHours() && ts.minute === slotStart.getMinutes()
-          ) + 2;
-          const durationMinutes = (slotEnd - slotStart) / (1000 * 60);
-          const rowSpan = Math.max(1, Math.round(durationMinutes / 30));
-          
-          overlappingSlots[colNumber].push({
-            startRow: startRow,
-            endRow: startRow + rowSpan - 1,
-            slot: slot
-          });
-        });
-        
-        // 開始行の順序でソート（早い順）
-        overlappingSlots[colNumber].sort((a, b) => {
-          if (a.startRow !== b.startRow) {
-            return a.startRow - b.startRow;
-          }
-          // 同じ開始行の場合は、終了行が早い順
-          return a.endRow - b.endRow;
-        });
-        
-        // 各スロットのz-indexを設定（後から開始するスロットのz-indexを高くする）
-        overlappingSlots[colNumber].forEach((slot, idx) => {
-          // 基本のz-indexは開始行に基づく（後から開始するほど高い）
-          slot.zIndex = idx + 1;
-          
-          // 重なっているスロットがある場合、後から開始するスロットのz-indexをさらに高くする
-          overlappingSlots[colNumber].forEach((otherSlot, otherIdx) => {
-            if (idx !== otherIdx) {
-              const isOverlapping = !(slot.endRow < otherSlot.startRow || slot.startRow > otherSlot.endRow);
-              if (isOverlapping && otherSlot.startRow > slot.startRow) {
-                slot.zIndex = Math.max(slot.zIndex, otherIdx + 2);
-              }
-            }
-          });
-        });
-      }
-    }
     
     // 時間行を生成
     timeSlots.forEach((timeSlot, timeIndex) => {
@@ -471,26 +414,13 @@ document.addEventListener('DOMContentLoaded', function() {
             // 常に縦配置で表示（見やすさのため）
             const timeDisplay = `<div class="time-start">${startTimeStr}</div><div class="time-separator">-</div><div class="time-end">${endTimeStr}</div>`;
             
-            // 重なっているスロットのz-indexを取得
-            let zIndex = 1;
-            if (overlappingSlots[colNumber]) {
-              const overlappingSlot = overlappingSlots[colNumber].find(os => {
-                const osStart = new Date(os.slot.start_datetime);
-                return osStart.getHours() === slotTime.getHours() && 
-                       osStart.getMinutes() === slotTime.getMinutes();
-              });
-              if (overlappingSlot) {
-                zIndex = overlappingSlot.zIndex || 1;
-              }
-            }
-            
             html += `
               <div class="time-cell available ${slotClass}" 
                    data-datetime="${matchingSlot.start_datetime}"
                    data-date="${dateStr}"
                    data-time="${timeStr}"
                    data-duration="${durationMinutes}"
-                   style="grid-row: ${rowNumber} / span ${rowSpan}; grid-column: ${colNumber}; z-index: ${zIndex};">
+                   style="grid-row: ${rowNumber} / span ${rowSpan}; grid-column: ${colNumber};">
                 <div class="time-slot-block">
                   ${timeDisplay}
                 </div>
@@ -973,7 +903,7 @@ document.addEventListener('DOMContentLoaded', function() {
   padding: 6px;
   position: relative;
   z-index: 1;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .time-cell.available::before {
@@ -1032,13 +962,10 @@ document.addEventListener('DOMContentLoaded', function() {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   min-height: 100%;
   box-sizing: border-box;
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
-  position: relative;
-  z-index: 2;
-  padding-top: 6px;
 }
 
 .time-slot-block .time-start,
@@ -1095,8 +1022,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* 60分超90分以下のスロット（80分など） */
 .time-cell.available.medium-slot .time-slot-block {
-  padding: 8px 10px;
+  padding: 6px 10px 8px 10px;
   line-height: 1.3;
+  justify-content: flex-start;
+  padding-top: 6px;
 }
 
 .time-cell.available.medium-slot .time-slot-block .time-start,
