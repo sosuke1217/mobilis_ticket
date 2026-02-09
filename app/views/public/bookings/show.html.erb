@@ -387,6 +387,56 @@
   cursor: not-allowed;
 }
 
+/* コースメニューカード */
+.course-menu-card {
+  cursor: default;
+  transition: all 0.3s ease;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.course-menu-option {
+  border: 2px solid #0879A6;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #e6f4f8 0%, #ffffff 100%);
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 16px rgba(8, 121, 166, 0.2);
+}
+
+.course-menu-option .card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px;
+}
+
+.course-menu-option .card-title {
+  white-space: normal;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.course-menu-option .price-display {
+  font-size: 1.75rem;
+  color: #0879A6;
+  font-weight: 700;
+  margin: 0.5rem 0;
+}
+
+.course-menu-option .text-muted {
+  color: #666 !important;
+  font-size: 0.9rem;
+}
+
 @media (max-width: 768px) {
   .detail-item {
     flex-direction: column;
