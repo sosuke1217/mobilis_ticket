@@ -358,6 +358,55 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 各日のスロットがどの行に表示されるかを追跡
     const slotRowMap = {};
+    // 各列の各時間帯で重なっているスロットを追跡
+    const overlappingSlots = {};
+    
+    // まず、すべてのスロットの位置を計算して重なりを検出
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(data.week_start);
+      date.setDate(date.getDate() + i);
+      const dateStr = date.toISOString().split('T')[0];
+      const dayData = data.week_data[dateStr];
+      
+      if (dayData && dayData.slots) {
+        const colNumber = i + 2;
+        overlappingSlots[colNumber] = [];
+        
+        dayData.slots.forEach(slot => {
+          const slotStart = new Date(slot.start_datetime);
+          const slotEnd = new Date(slot.end_datetime);
+          const startTimeKey = `${slotStart.getHours()}:${slotStart.getMinutes()}`;
+          const startRow = timeSlots.findIndex(ts => 
+            ts.hour === slotStart.getHours() && ts.minute === slotStart.getMinutes()
+          ) + 2;
+          const durationMinutes = (slotEnd - slotStart) / (1000 * 60);
+          const rowSpan = Math.max(1, Math.round(durationMinutes / 30));
+          
+          overlappingSlots[colNumber].push({
+            startRow: startRow,
+            endRow: startRow + rowSpan - 1,
+            slot: slot
+          });
+        });
+        
+        // 重なりを検出してz-indexを設定
+        overlappingSlots[colNumber].forEach((slot1, idx1) => {
+          let maxZIndex = 1;
+          overlappingSlots[colNumber].forEach((slot2, idx2) => {
+            if (idx1 !== idx2) {
+              // 重なっているかチェック
+              if (!(slot1.endRow < slot2.startRow || slot1.startRow > slot2.endRow)) {
+                // 重なっている場合、後から開始するスロットのz-indexを高くする
+                if (slot2.startRow >= slot1.startRow) {
+                  maxZIndex = Math.max(maxZIndex, idx2 + 2);
+                }
+              }
+            }
+          });
+          slot1.zIndex = maxZIndex;
+        });
+      }
+    }
     
     // 時間行を生成
     timeSlots.forEach((timeSlot, timeIndex) => {
@@ -414,13 +463,26 @@ document.addEventListener('DOMContentLoaded', function() {
             // 常に縦配置で表示（見やすさのため）
             const timeDisplay = `<div class="time-start">${startTimeStr}</div><div class="time-separator">-</div><div class="time-end">${endTimeStr}</div>`;
             
+            // 重なっているスロットのz-indexを取得
+            let zIndex = 1;
+            if (overlappingSlots[colNumber]) {
+              const overlappingSlot = overlappingSlots[colNumber].find(os => {
+                const osStart = new Date(os.slot.start_datetime);
+                return osStart.getHours() === slotTime.getHours() && 
+                       osStart.getMinutes() === slotTime.getMinutes();
+              });
+              if (overlappingSlot) {
+                zIndex = overlappingSlot.zIndex || 1;
+              }
+            }
+            
             html += `
               <div class="time-cell available ${slotClass}" 
                    data-datetime="${matchingSlot.start_datetime}"
                    data-date="${dateStr}"
                    data-time="${timeStr}"
                    data-duration="${durationMinutes}"
-                   style="grid-row: ${rowNumber} / span ${rowSpan}; grid-column: ${colNumber};">
+                   style="grid-row: ${rowNumber} / span ${rowSpan}; grid-column: ${colNumber}; z-index: ${zIndex};">
                 <div class="time-slot-block">
                   ${timeDisplay}
                 </div>
@@ -903,7 +965,7 @@ document.addEventListener('DOMContentLoaded', function() {
   padding: 6px;
   position: relative;
   z-index: 1;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .time-cell.available::before {
@@ -962,10 +1024,13 @@ document.addEventListener('DOMContentLoaded', function() {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   min-height: 100%;
   box-sizing: border-box;
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+  position: relative;
+  z-index: 2;
+  padding-top: 6px;
 }
 
 .time-slot-block .time-start,
