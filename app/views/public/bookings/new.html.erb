@@ -1,4 +1,5 @@
 <!-- app/views/public/bookings/new.html.erb -->
+<% content_for :title, "Mobilis｜ご予約 / Reservation" %>
 <div class="container my-4 my-md-5">
   <div class="row justify-content-center">
     <div class="col-lg-10 col-xl-9">
@@ -6,7 +7,8 @@
         <div class="card-header timerex-header text-center">
           <h2 class="mb-0">
             <i class="fas fa-calendar-check me-2"></i>
-            Mobilis｜ご予約（身体評価・調整／オンライン分析）
+            Mobilis｜ご予約（身体評価・調整／オンライン分析）<br>
+            <small style="font-size: 0.6em; opacity: 0.9;">Mobilis | Reservation (Body Assessment & Adjustment / Online Analysis)</small>
           </h2>
         </div>
         
@@ -30,7 +32,7 @@
           
           <% if @reservation && @reservation.errors.any? && @reservation.errors.size > 0 %>
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
-              <h6><i class="fas fa-exclamation-triangle me-2"></i>入力内容にエラーがあります</h6>
+              <h6><i class="fas fa-exclamation-triangle me-2"></i>入力内容にエラーがあります / There are errors in your input</h6>
               <ul class="mb-0">
                 <% @reservation.errors.full_messages.each do |message| %>
                   <li><%= message %></li>
@@ -46,7 +48,7 @@
             <!-- Step 1: コース選択 -->
             <div class="step-section mb-4 mb-md-5">
               <h4 class="step-title">
-                <span class="step-number">1</span>コースを選択
+                <span class="step-number">1</span>コースを選択 / Select Course
               </h4>
               
               <div class="row">
@@ -63,12 +65,13 @@
                           <h5 class="card-title"><%= course[:name] %></h5>
                           <p class="price-display">
                             <% if course[:name] == 'オンライン身体分析・設計' %>
-                              ¥<%= number_with_delimiter(course[:price]) %>（テスト導入）
+                              ¥<%= number_with_delimiter(course[:price]) %>（テスト導入）<br>
+                              <small style="font-size: 0.6em; color: #666;">¥<%= number_with_delimiter(course[:price]) %> (Test Price)</small>
                             <% else %>
-                              ¥<%= number_with_delimiter(course[:price]) %>
+                            ¥<%= number_with_delimiter(course[:price]) %>
                             <% end %>
                           </p>
-                          <small class="text-muted">目安：約<%= course[:duration] %>分</small>
+                          <small class="text-muted">目安：約<%= course[:duration] %>分 / Approx. <%= course[:duration] %> minutes</small>
                         </div>
                       </div>
                     </div>
@@ -80,7 +83,7 @@
             <!-- Step 2: 希望日時選択 - TimeRex風カレンダー -->
             <div class="step-section mb-4 mb-md-5">
               <h4 class="step-title">
-                <span class="step-number">2</span>日時を選択
+                <span class="step-number">2</span>日時を選択 / Select Date & Time
               </h4>
               
               <!-- 週間カレンダー -->
@@ -100,7 +103,7 @@
                 <div class="calendar-week" id="calendar-week">
                   <!-- 週間カレンダーがここに動的に生成されます -->
                   <div class="loading-calendar">
-                    <i class="fas fa-spinner fa-spin"></i> カレンダーを読み込み中...
+                    <i class="fas fa-spinner fa-spin"></i> カレンダーを読み込み中... / Loading calendar...
                   </div>
                 </div>
               </div>
@@ -109,7 +112,7 @@
               <div id="selected-time-display" class="selected-time-display" style="display: none;">
                 <div class="alert alert-info mb-0">
                   <i class="fas fa-check-circle me-2"></i>
-                  <strong>選択された日時:</strong>
+                  <strong>選択された日時 / Selected Date & Time:</strong>
                   <span id="selected-date-time"></span>
                 </div>
               </div>
@@ -121,67 +124,67 @@
             <!-- Step 3: お客様情報 -->
             <div class="step-section mb-4">
               <h4 class="step-title">
-                <span class="step-number">3</span>お客様情報
+                <span class="step-number">3</span>お客様情報 / Customer Information
               </h4>
               
               <div class="row">
                 <div class="col-md-6 mb-3">
-                  <%= label_tag 'booking[name]', 'お名前', class: 'form-label required' %>
+                  <%= label_tag 'booking[name]', 'お名前 / Name', class: 'form-label required' %>
                   <%= text_field_tag 'booking[name]', (@user_info&.dig(:name) || ''), 
-                        { class: 'form-control', required: true, placeholder: '山田太郎' } %>
+                        { class: 'form-control', required: true, placeholder: '山田太郎 / Yamada Taro' } %>
                 </div>
                 
                 <div class="col-md-6 mb-3">
-                  <%= label_tag 'booking[phone_number]', 'お電話番号', class: 'form-label required' %>
+                  <%= label_tag 'booking[phone_number]', 'お電話番号 / Phone Number', class: 'form-label required' %>
                   <%= telephone_field_tag 'booking[phone_number]', (@user_info&.dig(:phone_number) || ''), 
                         { class: 'form-control', required: true, placeholder: '090-1234-5678' } %>
                 </div>
               </div>
               
               <div class="mb-3">
-                <%= label_tag 'booking[email]', 'メールアドレス', class: 'form-label' %>
+                <%= label_tag 'booking[email]', 'メールアドレス / Email', class: 'form-label' %>
                 <%= email_field_tag 'booking[email]', (@user_info&.dig(:email) || ''), 
                       { class: 'form-control', placeholder: 'example@email.com' } %>
-                <div class="form-text">ご連絡用（任意）</div>
+                <div class="form-text">ご連絡用（任意） / For contact (Optional)</div>
               </div>
               
               <div class="mb-3" id="address-field-container">
-                <%= label_tag 'booking[address]', 'ご住所', class: 'form-label required', id: 'address-label' %>
+                <%= label_tag 'booking[address]', 'ご住所 / Address', class: 'form-label required', id: 'address-label' %>
                 <%= text_area_tag 'booking[address]', (@user_info&.dig(:address) || ''), 
                       { class: 'form-control', rows: 2, id: 'address-field',
-                        placeholder: '港区南麻布○-○-○　○○マンション○○号室' } %>
-                <div class="form-text" id="address-help-text" style="display: none;">オンラインコースの場合は任意です</div>
+                        placeholder: '港区南麻布○-○-○　○○マンション○○号室 / Minato-ku Minami-Azabu ○-○-○ ○○ Mansion ○○' } %>
+                <div class="form-text" id="address-help-text" style="display: none;">オンラインコースの場合は任意です / Optional for online courses</div>
               </div>
               
               <div class="mb-3">
-                <%= label_tag 'booking[access_notes]', 'アクセス・入館方法', class: 'form-label' %>
+                <%= label_tag 'booking[access_notes]', 'アクセス・入館方法 / Access & Entry Method', class: 'form-label' %>
                 <%= text_area_tag 'booking[access_notes]', '', 
                       { class: 'form-control', rows: 2,
-                        placeholder: '最寄り駅、目印となる建物など' } %>
+                        placeholder: '最寄り駅、目印となる建物など / Nearest station, landmark buildings, etc.' } %>
               </div>
             </div>
             
             <!-- Step 4: ご要望・その他 -->
             <div class="step-section mb-4">
               <h4 class="step-title">
-                <span class="step-number">4</span>ご要望・その他
+                <span class="step-number">4</span>ご要望・その他 / Requests & Other
               </h4>
               
               <div class="mb-3">
-                <%= label_tag 'booking[notes]', 'ご要望・気になる箇所など', class: 'form-label' %>
+                <%= label_tag 'booking[notes]', 'ご要望・気になる箇所など / Requests & Concerns', class: 'form-label' %>
                 <%= text_area_tag 'booking[notes]', '', 
                       { class: 'form-control', rows: 3,
-                        placeholder: '肩こりがひどい、腰痛が気になる、初回で不安など' } %>
+                        placeholder: '肩こりがひどい、腰痛が気になる、初回で不安など / Severe shoulder stiffness, lower back pain concerns, first-time anxiety, etc.' } %>
               </div>
             </div>
             
             <!-- 確認事項 -->
             <div class="alert alert-warning">
-              <h6><i class="fas fa-exclamation-triangle me-2"></i>ご確認ください</h6>
+              <h6><i class="fas fa-exclamation-triangle me-2"></i>ご確認ください / Please Confirm</h6>
               <ul class="mb-0">
-                <li>選択された時間で<strong>仮予約</strong>いたします</li>
-                <li>確認のご連絡後、正式な予約確定となります</li>
-                <li>キャンセルは前日までにご連絡ください</li>
+                <li>選択された時間で<strong>仮予約</strong>いたします / A <strong>tentative reservation</strong> will be made for the selected time</li>
+                <li>確認のご連絡後、正式な予約確定となります / The reservation will be confirmed after we contact you</li>
+                <li>キャンセルは前日までにご連絡ください / Please contact us by the day before to cancel</li>
               </ul>
             </div>
             
@@ -189,7 +192,7 @@
             <div class="text-center mt-4">
               <button type="submit" class="btn btn-primary btn-lg px-5" id="submit-btn" disabled>
                 <i class="fas fa-paper-plane me-2"></i>
-                予約リクエストを送信
+                予約リクエストを送信 / Submit Reservation Request
               </button>
             </div>
           <% end %>
@@ -291,13 +294,13 @@ function initializeBookingPage() {
   function loadWeekCalendar() {
     if (!selectedCourse) {
       document.getElementById('calendar-week').innerHTML = 
-        '<div class="no-course-selected">まずコースを選択してください</div>';
+        '<div class="no-course-selected">まずコースを選択してください / Please select a course first</div>';
       return;
     }
     
     const weekStartStr = currentWeekStart.toISOString().split('T')[0];
     const calendarWeek = document.getElementById('calendar-week');
-    calendarWeek.innerHTML = '<div class="loading-calendar"><i class="fas fa-spinner fa-spin"></i> カレンダーを読み込み中...</div>';
+    calendarWeek.innerHTML = '<div class="loading-calendar"><i class="fas fa-spinner fa-spin"></i> カレンダーを読み込み中... / Loading calendar...</div>';
     
     console.log('📅 Loading calendar for week:', weekStartStr, 'duration:', selectedCourse.duration);
     
@@ -597,8 +600,8 @@ function initializeBookingPage() {
       clearTimeSelection();
       currentWeekStart.setDate(currentWeekStart.getDate() + 7);
       loadWeekCalendar();
-      validateForm();
-    });
+        validateForm();
+      });
   }
   
   // フォームバリデーション
@@ -632,8 +635,8 @@ function initializeBookingPage() {
     const courseName = selectedCourse?.value || '';
     const isOnline = courseName === 'オンライン身体分析・設計';
     if (!isOnline && (!addressField || !addressField.value.trim())) {
-      allValid = false;
-    }
+        allValid = false;
+      }
     
     submitBtn.disabled = !allValid;
   }
