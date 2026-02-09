@@ -198,7 +198,7 @@
 
 <!-- JavaScript for TimeRex風カレンダー -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+function initializeBookingPage() {
   const courseCards = document.querySelectorAll('.course-card');
   const submitBtn = document.getElementById('submit-btn');
   let currentWeekStart = new Date();
@@ -612,7 +612,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     return true;
   });
-});
+}
+
+// DOMContentLoadedとturbo:loadの両方で初期化
+document.addEventListener('DOMContentLoaded', initializeBookingPage);
+document.addEventListener('turbo:load', initializeBookingPage);
+// Turbo 7ではturbo:loadが使えない場合があるので、turbo:frame-loadも追加
+document.addEventListener('turbo:frame-load', initializeBookingPage);
 </script>
 
 <style>
