@@ -287,16 +287,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const calendarWeek = document.getElementById('calendar-week');
     const dayNames = ['日', '月', '火', '水', '木', '金', '土']; // JavaScriptのgetDay()は0=日曜日から
     
-    // 営業時間の設定を取得（表示時間は10:00から21:00まで）
+    // 営業時間の設定を取得（表示時間は10:00から20:30まで）
     const settings = data.settings || { business_hours_start: 10, business_hours_end: 21 };
     const startHour = 10; // 表示開始時間を10時に固定
-    const endHour = 21; // 表示終了時間を21時に固定
+    const endHour = 20; // 表示終了時間を20:30に固定
     
-    // 時間帯を30分間隔で生成（10:00から21:00まで）
+    // 時間帯を30分間隔で生成（10:00から20:30まで）
     const timeSlots = [];
     for (let hour = startHour; hour <= endHour; hour++) {
       timeSlots.push({ hour, minute: 0 });
-      if (hour < endHour) { // 最後の時間（21:00）の場合は30分のスロットは追加しない
+      if (hour < endHour) { // 最後の時間（20:00）の場合は30分のスロット（20:30）を追加
+        timeSlots.push({ hour, minute: 30 });
+      } else {
+        // 20:00の場合は20:30も追加
         timeSlots.push({ hour, minute: 30 });
       }
     }
