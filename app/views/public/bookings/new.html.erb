@@ -45,10 +45,10 @@
           <%= form_with model: @reservation, url: public_bookings_path, 
                         local: true, html: { id: 'booking-form' } do |f| %>
             
-            <!-- Step 1: コース選択 -->
+            <!-- Step 1: メニュー選択 -->
             <div class="step-section mb-4 mb-md-5">
               <h4 class="step-title">
-                <span class="step-number">1</span>コースを選択 / Select Course
+                <span class="step-number">1</span>メニューを選択 / Select Menu
               </h4>
               
               <div class="row">
@@ -62,7 +62,16 @@
                              <%= 'checked' if index == 0 %> hidden>
                       <div class="card h-100 course-option">
                         <div class="card-body text-center">
-                          <h5 class="card-title"><%= course[:name] %></h5>
+                          <h5 class="card-title">
+                            <%= course[:name] %><br>
+                            <small style="font-size: 0.7em; color: #666; font-weight: normal;">
+                              <% if course[:name] == '対面セッション（スタジオ／出張）' %>
+                                In-Person Session (Studio / Home Visit)
+                              <% elsif course[:name] == 'オンライン身体分析・設計' %>
+                                Online Body Analysis & Design
+                              <% end %>
+                            </small>
+                          </h5>
                           <p class="price-display">
                             <% if course[:name] == 'オンライン身体分析・設計' %>
                               <span class="price-main">¥<%= number_with_delimiter(course[:price]) %>（テスト導入）</span>
@@ -115,7 +124,7 @@
                   <i class="fas fa-check-circle me-2"></i>
                   <strong>選択された日時 / Selected Date & Time:</strong>
                   <span id="selected-date-time"></span>
-                </div>
+              </div>
               </div>
               
               <!-- 隠しフィールド -->
@@ -154,7 +163,7 @@
                 <%= text_area_tag 'booking[address]', (@user_info&.dig(:address) || ''), 
                       { class: 'form-control', rows: 2, id: 'address-field',
                         placeholder: '港区南麻布○-○-○　○○マンション○○号室 / Minato-ku Minami-Azabu ○-○-○ ○○ Mansion ○○' } %>
-                <div class="form-text" id="address-help-text" style="display: none;">オンラインコースの場合は任意です / Optional for online courses</div>
+                <div class="form-text" id="address-help-text" style="display: none;">オンラインメニューの場合は任意です / Optional for online menu</div>
               </div>
               
               <div class="mb-3">
@@ -224,7 +233,7 @@ function initializeBookingPage() {
   let selectedCourse = null;
   let selectedSlot = null;
   
-  // コース選択処理
+  // メニュー選択処理
   courseCards.forEach(card => {
     card.addEventListener('click', function() {
       // 他のカードの選択解除
@@ -295,7 +304,7 @@ function initializeBookingPage() {
   function loadWeekCalendar() {
     if (!selectedCourse) {
       document.getElementById('calendar-week').innerHTML = 
-        '<div class="no-course-selected">まずコースを選択してください / Please select a course first</div>';
+        '<div class="no-course-selected">まずメニューを選択してください / Please select a menu first</div>';
       return;
     }
     
@@ -345,7 +354,7 @@ function initializeBookingPage() {
       timeSlots.push({ hour, minute: 0 });
       if (hour < endHour) { // 最後の時間（20:00）の場合は30分のスロット（20:30）を追加
         timeSlots.push({ hour, minute: 30 });
-      } else {
+          } else {
         // 20:00の場合は20:30も追加
         timeSlots.push({ hour, minute: 30 });
       }
@@ -454,7 +463,7 @@ function initializeBookingPage() {
               slotClass = 'short-slot';
             } else if (durationMinutes <= 90) {
               slotClass = 'medium-slot';
-            } else {
+        } else {
               slotClass = 'long-slot';
             }
             
@@ -618,8 +627,8 @@ function initializeBookingPage() {
     
     // 必須項目のチェック
     if (!selectedCourse) {
-      allValid = false;
-    }
+        allValid = false;
+      }
     
     if (!datetimeField || !datetimeField.value) {
       allValid = false;
@@ -633,7 +642,7 @@ function initializeBookingPage() {
       allValid = false;
     }
     
-    // 住所フィールドのバリデーション（オンラインコースの場合は任意）
+    // 住所フィールドのバリデーション（オンラインメニューの場合は任意）
     const courseName = selectedCourse?.value || '';
     const isOnline = courseName === 'オンライン身体分析・設計';
     if (!isOnline && (!addressField || !addressField.value.trim())) {
@@ -658,7 +667,7 @@ function initializeBookingPage() {
     
     if (!selectedCourse) {
       e.preventDefault();
-      alert('コースを選択してください。\nPlease select a course.');
+      alert('メニューを選択してください。\nPlease select a menu.');
       return false;
     }
     
@@ -1233,7 +1242,7 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   
   .time-slot-block .time-separator {
     font-size: 0.65rem;
-    margin: 0;
+  margin: 0;
   }
 }
 
