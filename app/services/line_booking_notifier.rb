@@ -308,7 +308,7 @@ class LineBookingNotifier
               style: "secondary",
               action: {
                 type: "postback",
-                label: "予約をキャンセル",
+                label: "予約をキャンセル / Cancel",
                 data: "cancel_confirmed_booking_#{reservation.id}"
               }
             }
