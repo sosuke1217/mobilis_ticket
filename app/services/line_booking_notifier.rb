@@ -154,7 +154,7 @@ class LineBookingNotifier
               type: "box",
               layout: "vertical",
               contents: [
-                create_info_row("コース", reservation.course),
+                create_info_row("メニュー/Menu", reservation.course),
                 create_info_row("希望日時", reservation.start_time&.strftime('%m/%d %H:%M')),
                 create_info_row("お名前", user.name)
               ],
@@ -441,7 +441,7 @@ class LineBookingNotifier
                   contents: [
                     {
                       type: "text",
-                      text: "コース/Course",
+                      text: "メニュー/Menu",
                       size: "sm",
                       color: "#666666",
                       flex: 2
@@ -637,7 +637,7 @@ class LineBookingNotifier
               contents: [
                 {
                   type: "text",
-                  text: "コース",
+                  text: "メニュー",
                   size: "sm",
                   color: "#666666",
                   flex: 2

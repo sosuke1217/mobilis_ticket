@@ -389,8 +389,8 @@ class LinebotController < ApplicationController
       confirmation_notice_en: "We will contact you within 24 hours to confirm your reservation.\nPlease wait for our response.",
       date_time_label: "日時",
       date_time_label_en: "Time",
-      course_label: "コース",
-      course_label_en: "Course",
+      course_label: "メニュー",
+      course_label_en: "Menu",
       name_label: "お名前",
       name_label_en: "Name",
       address_label: "ご住所",
@@ -2119,7 +2119,7 @@ class LinebotController < ApplicationController
                 margin: "md"
               },
               create_info_row("日時", "#{start_time.strftime('%m/%d (%a) %H:%M')} - #{end_time.strftime('%H:%M')}", user),
-              create_info_row("コース", course.gsub('_', ' '), user),
+              create_info_row("メニュー", course.gsub('_', ' '), user),
               create_info_row("お名前", user.name, user),
               create_info_row("ご住所", get_display_address(user), user),
               {
@@ -2484,7 +2484,7 @@ class LinebotController < ApplicationController
                 margin: "md"
               },
               create_info_row("日時", "#{reservation.start_time.strftime('%m/%d (%a) %H:%M')} - #{reservation.end_time.strftime('%H:%M')}"),
-              create_info_row("コース", reservation.course.to_s.gsub('_', ' ').gsub(/分$/, '').gsub(/min$/, '')),
+              create_info_row("メニュー", reservation.course.to_s.gsub('_', ' ').gsub(/分$/, '').gsub(/min$/, '')),
               {
                 type: "separator",
                 margin: "md"
@@ -3223,14 +3223,14 @@ class LinebotController < ApplicationController
   def create_info_row(label, value, user = nil)
     label_en = case label
                when "日時" then user ? get_message(user, :date_time_label_en) : "Time"
-               when "コース" then user ? get_message(user, :course_label_en) : "Course"
+               when "コース", "メニュー" then user ? get_message(user, :course_label_en) : "Menu"
                when "お名前" then user ? get_message(user, :name_label_en) : "Name"
                when "ご住所" then user ? get_message(user, :address_label_en) : "Address"
                else label
                end
     
-    # コース名の処理（アンダースコアをスペースに変換、末尾の「分」を削除）
-    if label == "コース"
+    # メニュー名の処理（アンダースコアをスペースに変換、末尾の「分」を削除）
+    if label == "コース" || label == "メニュー"
       processed_value = value.to_s.gsub('_', ' ').gsub(/分$/, '')
     else
       processed_value = value.to_s
