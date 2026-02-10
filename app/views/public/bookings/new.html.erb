@@ -330,12 +330,12 @@ function initializeBookingPage() {
           updateWeekRange(data.week_start);
         } else {
           console.error('❌ Calendar API error:', data.error);
-          calendarWeek.innerHTML = `<div class="error-message">エラーが発生しました: ${data.error || '不明なエラー'}</div>`;
+          calendarWeek.innerHTML = `<div class="error-message">エラーが発生しました / An error occurred: ${data.error || '不明なエラー / Unknown error'}</div>`;
         }
       })
       .catch(error => {
         console.error('❌ Error loading calendar:', error);
-        calendarWeek.innerHTML = `<div class="error-message">通信エラーが発生しました: ${error.message}</div>`;
+        calendarWeek.innerHTML = `<div class="error-message">通信エラーが発生しました / Communication error occurred: ${error.message}</div>`;
       });
   }
   
