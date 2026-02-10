@@ -128,9 +128,23 @@ class LineBookingNotifier
             },
             {
               type: "text",
+              text: "Booking Request Received",
+              size: "sm",
+              color: "#999999",
+              margin: "xs"
+            },
+            {
+              type: "text",
               text: "確認のご連絡をお待ちください",
               size: "sm",
               color: "#666666"
+            },
+            {
+              type: "text",
+              text: "Please wait for our confirmation",
+              size: "xs",
+              color: "#999999",
+              margin: "xs"
             }
           ],
           paddingAll: "20px"
@@ -147,6 +161,13 @@ class LineBookingNotifier
               margin: "md"
             },
             {
+              type: "text",
+              text: "Booking Details",
+              size: "sm",
+              color: "#999999",
+              margin: "xs"
+            },
+            {
               type: "separator",
               margin: "md"
             },
@@ -155,8 +176,8 @@ class LineBookingNotifier
               layout: "vertical",
               contents: [
                 create_info_row("メニュー/Menu", reservation.course),
-                create_info_row("希望日時", reservation.start_time&.strftime('%m/%d %H:%M')),
-                create_info_row("お名前", user.name)
+                create_info_row("希望日時/Preferred Time", reservation.start_time&.strftime('%m/%d %H:%M')),
+                create_info_row("お名前/Name", user.name)
               ],
               margin: "md"
             },
@@ -167,6 +188,14 @@ class LineBookingNotifier
               color: "#666666",
               wrap: true,
               margin: "md"
+            },
+            {
+              type: "text",
+              text: "We will contact you within 24 hours. Please wait for our confirmation.",
+              size: "xs",
+              color: "#999999",
+              wrap: true,
+              margin: "xs"
             }
           ]
         },
@@ -179,7 +208,7 @@ class LineBookingNotifier
               style: "secondary",
               action: {
                 type: "postback",
-                label: "この予約をキャンセル",
+                label: "この予約をキャンセル / Cancel",
                 data: "cancel_booking_#{reservation.id}"
               }
             }
