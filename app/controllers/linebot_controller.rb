@@ -722,7 +722,7 @@ class LinebotController < ApplicationController
           contents: [
             {
               type: "text",
-              text: "TimeRex風のカレンダーで\n日時を選択できます",
+              text: "週間カレンダーから\n日時を選択できます",
               size: "md",
               color: "#333333",
               wrap: true,
@@ -730,7 +730,7 @@ class LinebotController < ApplicationController
             },
             {
               type: "text",
-              text: "You can select date and time\non a TimeRex-style calendar",
+              text: "You can select date and time\nfrom the weekly calendar",
               size: "sm",
               color: "#999999",
               wrap: true,
