@@ -499,7 +499,7 @@ class LineBookingNotifier
                     },
                     {
                       type: "text",
-                      text: reservation.course.to_s.gsub('_', ' ').gsub(/分$/, '').gsub(/min$/, '') + " min",
+                      text: format_course_name(reservation.course),
                       size: "sm",
                       wrap: true,
                       flex: 3
