@@ -3961,4 +3961,36 @@ class LinebotController < ApplicationController
 
     # 元々のキャンセル通知を使用するため、追加のメッセージは送信しない
   end
+
+  def format_course_name_for_display(course)
+    return "メニュー未設定" unless course.present?
+    
+    # コース名を整形（アンダースコアをスペースに、末尾の「分」や「min」を削除）
+    formatted = course.to_s.gsub('_', ' ').gsub(/分$/, '').gsub(/\s*min\s*$/i, '').strip
+    
+    # もし「60分」のような形式だけの場合は、コース名を推測
+    if formatted.match?(/^\d+\s*$/)
+      case formatted.strip
+      when "60"
+        "対面セッション"
+      when "30"
+        "オンライン身体分析"
+      else
+        formatted
+      end
+    else
+      # 長いコース名を短縮（LINEの表示制限を考慮）
+      # 末尾の「min」を削除（大文字小文字問わず）
+      formatted = formatted.gsub(/\s*min\s*$/i, '').strip
+      
+      case formatted
+      when /対面セッション（スタジオ／出張）/
+        "対面セッション"
+      when /オンライン身体分析・設計/
+        "オンライン身体分析"
+      else
+        formatted
+      end
+    end
+  end
 end
