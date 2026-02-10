@@ -798,6 +798,23 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   color: #0879A6;
   font-weight: 700;
   margin: 0.5rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 768px) {
+  .price-display {
+    font-size: 1.4rem;
+    white-space: normal;
+    line-height: 1.2;
+  }
+  
+  .price-display small {
+    display: inline;
+    font-size: 0.6em;
+    margin-left: 4px;
+  }
 }
 
 /* TimeRex風カレンダー - 改善版 */
