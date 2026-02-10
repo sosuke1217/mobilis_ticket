@@ -274,8 +274,7 @@ class Reservation < ApplicationRecord
       end
     end
     
-    # キャンセル通知送信
-    send_cancellation_notifications
+    # キャンセル通知はafter_updateコールバック（handle_status_change）で送信されるため、ここでは送信しない
   end
 
   def self.interval_minutes

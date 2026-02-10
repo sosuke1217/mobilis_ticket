@@ -2449,75 +2449,8 @@ class LinebotController < ApplicationController
         return
       end
 
+      # キャンセル処理（通知はReservationモデルのコールバックで送信される）
       reservation.cancel!(reason)
-      
-      # キャンセル完了メッセージ
-      message = {
-        type: "flex",
-        altText: "予約をキャンセルしました",
-        contents: {
-          type: "bubble",
-          header: {
-            type: "box",
-            layout: "vertical",
-            contents: [
-              {
-                type: "text",
-                text: "✅ キャンセル完了",
-                weight: "bold",
-                size: "lg",
-                color: "#dc3545"
-              }
-            ]
-          },
-          body: {
-            type: "box",
-            layout: "vertical",
-            contents: [
-              {
-                type: "text",
-                text: "以下の予約をキャンセルいたしました：",
-                wrap: true
-              },
-              {
-                type: "separator",
-                margin: "md"
-              },
-              create_info_row("日時", "#{reservation.start_time.strftime('%m/%d (%a) %H:%M')} - #{reservation.end_time.strftime('%H:%M')}"),
-              create_info_row("メニュー", reservation.course.to_s.gsub('_', ' ').gsub(/分$/, '').gsub(/min$/, '')),
-              {
-                type: "separator",
-                margin: "md"
-              },
-              {
-                type: "text",
-                text: "またのご利用をお待ちしております。",
-                size: "sm",
-                color: "#666666",
-                wrap: true,
-                margin: "md"
-              }
-            ]
-          },
-          footer: {
-            type: "box",
-            layout: "vertical",
-            contents: [
-              {
-                type: "button",
-                style: "primary",
-                action: {
-                  type: "postback",
-                  label: "新しい予約をする",
-                  data: "booking"
-                }
-              }
-            ]
-          }
-        }
-      }
-
-      send_reply(reply_token, message)
 
       # 管理者に通知
       Rails.logger.info "LINE予約キャンセル: 予約ID #{reservation.id}, ユーザー: #{user.name}"
