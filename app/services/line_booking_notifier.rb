@@ -338,9 +338,23 @@ class LineBookingNotifier
             },
             {
               type: "text",
+              text: "Reservation Reminder",
+              size: "sm",
+              color: "#999999",
+              margin: "xs"
+            },
+            {
+              type: "text",
               text: "明日のご予約についてお知らせします",
               size: "sm",
               color: "#666666"
+            },
+            {
+              type: "text",
+              text: "Reminder for tomorrow's reservation",
+              size: "xs",
+              color: "#999999",
+              margin: "xs"
             }
           ],
           paddingAll: "20px"
@@ -354,6 +368,13 @@ class LineBookingNotifier
               text: "📅 明日のご予約",
               weight: "bold",
               size: "md"
+            },
+            {
+              type: "text",
+              text: "Tomorrow's Reservation",
+              size: "sm",
+              color: "#999999",
+              margin: "xs"
             },
             {
               type: "separator",
@@ -375,6 +396,14 @@ class LineBookingNotifier
               color: "#666666",
               wrap: true,
               margin: "lg"
+            },
+            {
+              type: "text",
+              text: "We will visit you 5 minutes before your reservation time.",
+              size: "xs",
+              color: "#999999",
+              wrap: true,
+              margin: "xs"
             }
           ]
         },
