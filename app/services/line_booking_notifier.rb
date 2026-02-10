@@ -237,6 +237,13 @@ class LineBookingNotifier
             },
             {
               type: "text",
+              text: "Reservation Confirmed",
+              size: "sm",
+              color: "#999999",
+              margin: "xs"
+            },
+            {
+              type: "text",
               text: "ご予約が確定いたしました",
               size: "sm",
               color: "#666666"
@@ -255,6 +262,13 @@ class LineBookingNotifier
               size: "md"
             },
             {
+              type: "text",
+              text: "Confirmed Details",
+              size: "sm",
+              color: "#999999",
+              margin: "xs"
+            },
+            {
               type: "separator",
               margin: "md"
             },
@@ -262,18 +276,26 @@ class LineBookingNotifier
               type: "box",
               layout: "vertical",
               contents: [
-                create_info_row("日時", reservation.start_time.strftime('%m/%d(%a) %H:%M〜')),
-                create_info_row("メニュー", reservation.course)
+                create_info_row("日時/Time", reservation.start_time.strftime('%m/%d(%a) %H:%M〜')),
+                create_info_row("メニュー/Menu", format_course_name(reservation.course))
               ],
               margin: "md"
             },
             {
               type: "text",
-              text: "当日は5分前にお伺いいたします。よろしくお願いいたします。",
+              text: "当日はよろしくお願いいたします。",
               size: "sm",
               color: "#666666",
               wrap: true,
               margin: "lg"
+            },
+            {
+              type: "text",
+              text: "We look forward to seeing you on the day.",
+              size: "xs",
+              color: "#999999",
+              wrap: true,
+              margin: "xs"
             }
           ]
         },
