@@ -787,11 +787,25 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
 }
 
 .course-option .card-title {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   font-size: 1.1rem;
   margin-bottom: 0.5rem;
+  line-height: 1.4;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+@media (max-width: 768px) {
+  .course-option .card-title {
+    font-size: 1rem;
+    line-height: 1.3;
+  }
+  
+  .course-option .card-title small {
+    display: block;
+    font-size: 0.65em;
+    margin-top: 4px;
+    line-height: 1.2;
+  }
 }
 
 .course-card:hover .course-option,
