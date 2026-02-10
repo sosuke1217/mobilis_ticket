@@ -63,14 +63,15 @@
                       <div class="card h-100 course-option">
                         <div class="card-body text-center">
                           <h5 class="card-title">
-                            <%= course[:name] %><br>
-                            <small style="font-size: 0.7em; color: #666; font-weight: normal;">
-                              <% if course[:name] == '対面セッション（スタジオ／出張）' %>
-                                In-Person Session (Studio / Home Visit)
-                              <% elsif course[:name] == 'オンライン身体分析・設計' %>
-                                Online Body Analysis & Design
-                              <% end %>
-                            </small>
+                            <% if course[:name] == '対面セッション（スタジオ／出張）' %>
+                              対面セッション<br>
+                              <small style="font-size: 0.7em; color: #666; font-weight: normal;">In-Person Session</small>
+                            <% elsif course[:name] == 'オンライン身体分析・設計' %>
+                              オンライン身体分析<br>
+                              <small style="font-size: 0.7em; color: #666; font-weight: normal;">Online Body Analysis</small>
+                            <% else %>
+                              <%= course[:name] %>
+                            <% end %>
                           </h5>
                           <p class="price-display">
                             <% if course[:name] == 'オンライン身体分析・設計' %>
