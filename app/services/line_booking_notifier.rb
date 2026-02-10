@@ -556,6 +556,35 @@ class LineBookingNotifier
     }
   end
 
+  def self.format_course_name(course)
+    return "" unless course.present?
+    
+    # コース名を整形（アンダースコアをスペースに、末尾の「分」を削除）
+    formatted = course.to_s.gsub('_', ' ').gsub(/分$/, '').gsub(/\s*min\s*$/i, '')
+    
+    # もし「60分」のような形式だけの場合は、コース名を推測
+    if formatted.match?(/^\d+\s*$/)
+      case formatted.strip
+      when "60"
+        "対面セッション"
+      when "30"
+        "オンライン身体分析"
+      else
+        formatted
+      end
+    else
+      # 長いコース名を短縮（LINEの表示制限を考慮）
+      case formatted
+      when /対面セッション（スタジオ／出張）/
+        "対面セッション"
+      when /オンライン身体分析・設計/
+        "オンライン身体分析"
+      else
+        formatted
+      end
+    end
+  end
+
   def self.create_info_row(label, value, is_english = false)
     {
       type: "box",
