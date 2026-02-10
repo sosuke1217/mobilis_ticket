@@ -364,7 +364,7 @@ class LineBookingNotifier
               layout: "vertical",
               contents: [
                 create_info_row("日時", reservation.start_time.strftime('%m/%d(%a) %H:%M〜%H:%M')),
-                create_info_row("メニュー", reservation.course)
+                create_info_row("メニュー/Menu", format_course_name(reservation.course))
               ],
               margin: "md"
             },
@@ -559,7 +559,7 @@ class LineBookingNotifier
   def self.format_course_name(course)
     return "" unless course.present?
     
-    # コース名を整形（アンダースコアをスペースに、末尾の「分」や「min」を削除）
+    # メニュー名を整形（アンダースコアをスペースに、末尾の「分」や「min」を削除）
     formatted = course.to_s.gsub('_', ' ').gsub(/分$/, '').gsub(/\s*min\s*$/i, '').strip
     
     # もし「60分」のような形式だけの場合は、コース名を推測
@@ -573,7 +573,7 @@ class LineBookingNotifier
         formatted
       end
     else
-      # 長いコース名を短縮（LINEの表示制限を考慮）
+      # 長いメニュー名を短縮（LINEの表示制限を考慮）
       # 末尾の「min」を削除（大文字小文字問わず）
       formatted = formatted.gsub(/\s*min\s*$/i, '').strip
       

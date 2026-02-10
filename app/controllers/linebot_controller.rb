@@ -325,8 +325,8 @@ class LinebotController < ApplicationController
       cancellation_completed_en: "Reservation has been cancelled",
       booking_title: "📅 ご予約",
       booking_title_en: "Reservation",
-      booking_subtitle: "ご希望のコースをお選びください",
-      booking_subtitle_en: "Please select your preferred course",
+      booking_subtitle: "ご希望のメニューをお選びください",
+      booking_subtitle_en: "Please select your preferred menu",
       today_availability_title: "📅 今日の空き状況",
       today_availability_title_en: "Today's Availability",
       tomorrow_availability_title: "📅 明日の空き状況",
@@ -340,7 +340,7 @@ class LinebotController < ApplicationController
       available_times: "✅ 以下の時間が予約可能です",
       available_times_en: "Available time slots",
       course_60min: "60 minで予約可能な時間",
-      course_60min_en: "Available times for 60min course",
+      course_60min_en: "Available times for 60min menu",
       price_note: "※料金は出張費込み\n※広尾エリア専門",
       price_note_en: "※Price includes travel fee\n※Hiroo area only",
       no_availability_tomorrow: "❌ 明日は予約可能な時間がございません",
@@ -585,7 +585,7 @@ class LinebotController < ApplicationController
     when /^start_date_selection_(.+)$/
       Rails.logger.info "📅 Starting date selection for course: #{$1}"
       course_safe = $1
-      # コース名を復元
+      # メニュー名を復元
       course = case course_safe
                when "60" then "60 min"
                when "40" then "40 min"
@@ -769,7 +769,7 @@ class LinebotController < ApplicationController
     Rails.logger.info "📅 send_booking_options called for user: #{user.id} (#{user.name})"
     message = {
       type: "flex",
-      altText: "ご予約・コース選択",
+      altText: "ご予約・メニュー選択",
       contents: {
         type: "bubble",
         header: {
@@ -1384,7 +1384,7 @@ class LinebotController < ApplicationController
   def start_booking_flow(user, reply_token, course)
     Rails.logger.info "🔄 start_booking_flow called for user #{user.id}, course: #{course}"
     
-    # コース情報を保存して場所選択画面を表示
+    # メニュー情報を保存して場所選択画面を表示
     user.update(booking_course: course)
     send_location_selection(user, reply_token)
   end
@@ -1403,7 +1403,7 @@ class LinebotController < ApplicationController
     
     Rails.logger.info "📝 Missing info: #{missing_info.join(', ')}"
     
-    # 保存するコース情報
+    # 保存するメニュー情報
     user.update(booking_course: course)
 
     message = {
@@ -1715,7 +1715,7 @@ class LinebotController < ApplicationController
         # 住所情報を保持し、booking_locationをクリア
         user.update(booking_location: 'home', booking_state: nil)
         
-        # コース名をURLセーフな形式に変換
+        # メニュー名をURLセーフな形式に変換
         course_safe = course.gsub(/[^\w\s]/, '').gsub(/\s+/, '_')
         
         # 日程選択を直接開始（push_message使用）
@@ -1742,7 +1742,7 @@ class LinebotController < ApplicationController
       # レンタルスペースとして設定
       user.update(booking_location: 'rental', booking_state: nil)
       
-      # コース名をURLセーフな形式に変換
+      # メニュー名をURLセーフな形式に変換
       course_safe = course.gsub(/[^\w\s]/, '').gsub(/\s+/, '_')
       
       # 日程選択を直接開始（push_message使用）
@@ -1775,7 +1775,7 @@ class LinebotController < ApplicationController
     
     Rails.logger.info "📝 Creating date selection message"
     
-    # コース名をURLセーフな形式に変換
+    # メニュー名をURLセーフな形式に変換
     course_safe = course.gsub(/[^\w\s]/, '').gsub(/\s+/, '_')
     
     message = {
@@ -2316,7 +2316,7 @@ class LinebotController < ApplicationController
   # 時間帯が選択された場合の処理
   def handle_time_period_selection(user, reply_token, course, date_str, period_name)
     date = Date.parse(date_str)
-    # コース名を復元（60_min -> 60 min）
+    # メニュー名を復元（60_min -> 60 min）
     course = course.gsub('_', ' ')
     duration = get_duration_from_course(course)
     available_slots = get_available_time_slots(date, duration)
@@ -3423,7 +3423,7 @@ class LinebotController < ApplicationController
     
     Rails.logger.info "📝 Creating date selection message"
       
-    # コース名をURLセーフな形式に変換
+    # メニュー名をURLセーフな形式に変換
     course_safe = course.gsub(/[^\w\s]/, '').gsub(/\s+/, '_')
     
     message = {
@@ -3965,10 +3965,10 @@ class LinebotController < ApplicationController
   def format_course_name_for_display(course)
     return "メニュー未設定" unless course.present?
     
-    # コース名を整形（アンダースコアをスペースに、末尾の「分」や「min」を削除）
+    # メニュー名を整形（アンダースコアをスペースに、末尾の「分」や「min」を削除）
     formatted = course.to_s.gsub('_', ' ').gsub(/分$/, '').gsub(/\s*min\s*$/i, '').strip
     
-    # もし「60分」のような形式だけの場合は、コース名を推測
+    # もし「60分」のような形式だけの場合は、メニュー名を推測
     if formatted.match?(/^\d+\s*$/)
       case formatted.strip
       when "60"
@@ -3979,7 +3979,7 @@ class LinebotController < ApplicationController
         formatted
       end
     else
-      # 長いコース名を短縮（LINEの表示制限を考慮）
+      # 長いメニュー名を短縮（LINEの表示制限を考慮）
       # 末尾の「min」を削除（大文字小文字問わず）
       formatted = formatted.gsub(/\s*min\s*$/i, '').strip
       
