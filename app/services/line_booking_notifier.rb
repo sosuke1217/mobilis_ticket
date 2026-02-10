@@ -384,7 +384,7 @@ class LineBookingNotifier
               type: "box",
               layout: "vertical",
               contents: [
-                create_info_row("日時", reservation.start_time.strftime('%m/%d(%a) %H:%M〜%H:%M')),
+                create_info_row("日時/Time", reservation.start_time.strftime('%m/%d(%a) %H:%M〜%H:%M')),
                 create_info_row("メニュー/Menu", format_course_name(reservation.course))
               ],
               margin: "md"
