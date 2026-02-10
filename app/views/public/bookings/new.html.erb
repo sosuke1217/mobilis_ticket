@@ -65,8 +65,9 @@
                           <h5 class="card-title"><%= course[:name] %></h5>
                           <p class="price-display">
                             <% if course[:name] == 'オンライン身体分析・設計' %>
-                              ¥<%= number_with_delimiter(course[:price]) %>（テスト導入）<br>
-                              <small style="font-size: 0.6em; color: #666;">¥<%= number_with_delimiter(course[:price]) %> (Test Price)</small>
+                              <span class="price-main">¥<%= number_with_delimiter(course[:price]) %>（テスト導入）</span>
+                              <br class="price-break">
+                              <small class="price-sub" style="font-size: 0.6em; color: #666;">¥<%= number_with_delimiter(course[:price]) %> (Test Price)</small>
                             <% else %>
                             ¥<%= number_with_delimiter(course[:price]) %>
                             <% end %>
@@ -798,22 +799,38 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   color: #0879A6;
   font-weight: 700;
   margin: 0.5rem 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.price-main {
+  display: inline-block;
+}
+
+.price-sub {
+  display: block;
+}
+
+.price-break {
+  display: block;
 }
 
 @media (max-width: 768px) {
   .price-display {
-    font-size: 1.4rem;
-    white-space: normal;
-    line-height: 1.2;
+    font-size: 1.3rem;
+    line-height: 1.3;
   }
   
-  .price-display small {
+  .price-break {
+    display: none;
+  }
+  
+  .price-sub {
     display: inline;
-    font-size: 0.6em;
     margin-left: 4px;
+    font-size: 0.55em !important;
+  }
+  
+  .price-main {
+    display: inline;
   }
 }
 
