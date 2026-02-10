@@ -389,22 +389,6 @@ class LineBookingNotifier
               ],
               margin: "md"
             },
-            {
-              type: "text",
-              text: "ご予約時間の5分前にお伺いいたします。",
-              size: "sm",
-              color: "#666666",
-              wrap: true,
-              margin: "lg"
-            },
-            {
-              type: "text",
-              text: "We will visit you 5 minutes before your reservation time.",
-              size: "xs",
-              color: "#999999",
-              wrap: true,
-              margin: "xs"
-            }
           ]
         },
         footer: {
