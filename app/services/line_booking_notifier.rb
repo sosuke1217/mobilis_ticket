@@ -574,10 +574,9 @@ class LineBookingNotifier
       end
     else
       # 長いコース名を短縮（LINEの表示制限を考慮）
-      case formatted
-      when /対面セッション（スタジオ／出張）/
+      if formatted.include?("対面セッション")
         "対面セッション"
-      when /オンライン身体分析・設計/
+      elsif formatted.include?("オンライン身体分析")
         "オンライン身体分析"
       else
         formatted
