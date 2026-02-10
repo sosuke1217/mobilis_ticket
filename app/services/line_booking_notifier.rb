@@ -176,7 +176,7 @@ class LineBookingNotifier
               layout: "vertical",
               contents: [
                 create_info_row("メニュー/Menu", reservation.course),
-                create_info_row("希望日時/Preferred Time", reservation.start_time&.strftime('%m/%d %H:%M')),
+                create_info_row("希望日時/Time", reservation.start_time&.strftime('%m/%d %H:%M')),
                 create_info_row("お名前/Name", user.name)
               ],
               margin: "md"
