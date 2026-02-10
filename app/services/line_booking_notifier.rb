@@ -176,7 +176,7 @@ class LineBookingNotifier
               layout: "vertical",
               contents: [
                 create_info_row("メニュー/Menu", reservation.course),
-                create_info_row("希望日時/Time", reservation.start_time&.strftime('%m/%d %H:%M')),
+                create_info_row("希望日時/Time", reservation.start_time&.strftime('%m/%d %H:%M~')),
                 create_info_row("お名前/Name", user.name)
               ],
               margin: "md"
@@ -263,7 +263,7 @@ class LineBookingNotifier
               layout: "vertical",
               contents: [
                 create_info_row("日時", reservation.start_time.strftime('%m/%d(%a) %H:%M〜')),
-                create_info_row("コース", reservation.course)
+                create_info_row("メニュー", reservation.course)
               ],
               margin: "md"
             },
@@ -342,7 +342,7 @@ class LineBookingNotifier
               layout: "vertical",
               contents: [
                 create_info_row("日時", reservation.start_time.strftime('%m/%d(%a) %H:%M〜%H:%M')),
-                create_info_row("コース", reservation.course)
+                create_info_row("メニュー", reservation.course)
               ],
               margin: "md"
             },

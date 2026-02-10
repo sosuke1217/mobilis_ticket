@@ -479,7 +479,7 @@ class LinebotController < ApplicationController
       else
         send_reply(reply_token, {
           type: "text",
-          text: "申し訳ございません。コースが選択されていません。\nまずコースを選択してください。"
+          text: "申し訳ございません。メニューが選択されていません。\nまずメニューを選択してください。"
         })
       end
 
@@ -1795,7 +1795,7 @@ class LinebotController < ApplicationController
             },
             {
               type: "text",
-              text: "選択コース: #{course}",
+              text: "選択メニュー: #{course}",
               size: "sm",
               color: "#1976d2"
             }
@@ -2118,7 +2118,7 @@ class LinebotController < ApplicationController
                 type: "separator",
                 margin: "md"
               },
-              create_info_row("日時", "#{start_time.strftime('%m/%d (%a) %H:%M')} - #{end_time.strftime('%H:%M')}", user),
+              create_info_row("日時", "#{start_time.strftime('%m/%d (%a) %H:%M')}~#{end_time.strftime('%H:%M')}", user),
               create_info_row("メニュー", course.gsub('_', ' '), user),
               create_info_row("お名前", user.name, user),
               create_info_row("ご住所", get_display_address(user), user),
@@ -2590,7 +2590,7 @@ class LinebotController < ApplicationController
               },
           {
             type: "text",
-                text: t.ticket_template.present? ? t.ticket_template.name : "コース未設定",
+                text: t.ticket_template.present? ? t.ticket_template.name : "メニュー未設定",
             size: "sm",
                 color: "#666666",
                 align: "center"
@@ -2766,7 +2766,7 @@ class LinebotController < ApplicationController
       # リスト形式で12件表示
       list_items = usages.map.with_index(1) do |usage, index|
         ticket_title = usage.ticket.title.present? ? usage.ticket.title : "回数券"
-        course_name = usage.ticket.ticket_template.present? ? usage.ticket.ticket_template.name : "コース未設定"
+        course_name = usage.ticket.ticket_template.present? ? usage.ticket.ticket_template.name : "メニュー未設定"
         date = usage.used_at.strftime('%m/%d')
         
         {
@@ -3443,7 +3443,7 @@ class LinebotController < ApplicationController
             },
             {
               type: "text",
-              text: "選択コース: #{course}",
+              text: "選択メニュー: #{course}",
               size: "sm",
               color: "#1976d2"
             }
@@ -3629,7 +3629,7 @@ class LinebotController < ApplicationController
             },
             {
               type: "text",
-              text: "📍 #{(reservation.course || 'コース未設定').to_s.gsub('_', ' ').gsub(/分$/, '')} min",
+              text: "📍 #{(reservation.course || 'メニュー未設定').to_s.gsub('_', ' ').gsub(/分$/, '')} min",
               size: "sm",
               color: "#666666",
               margin: "sm"
