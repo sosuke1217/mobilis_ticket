@@ -1798,9 +1798,29 @@
             const dayOfWeek = reservationDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
 
             // Convert start time to minutes
-            const [hours, minutes] = startTime.split(':').map(Number);
+            const timeParts = startTime.split(':');
+            if (timeParts.length !== 2) {
+                console.error('❌ Invalid time format:', startTime);
+                return { valid: false, message: '予約時間の形式が不正です' };
+            }
+            
+            const hours = parseInt(timeParts[0], 10);
+            const minutes = parseInt(timeParts[1], 10);
+            
+            if (isNaN(hours) || isNaN(minutes)) {
+                console.error('❌ Invalid time values:', { hours, minutes, startTime });
+                return { valid: false, message: '予約時間の値が不正です' };
+            }
+            
             const startTimeInMinutes = hours * 60 + minutes;
-            const totalDuration = newDuration + newInterval;
+            
+            // newDurationがNaNでないことを確認
+            if (isNaN(newDuration)) {
+                console.error('❌ Invalid duration:', newDuration);
+                return { valid: false, message: 'コースの時間が不正です' };
+            }
+            
+            const totalDuration = newDuration + (newInterval || 0);
             const endTimeInMinutes = startTimeInMinutes + totalDuration;
             
             const endHours = Math.floor(endTimeInMinutes / 60);
@@ -9481,8 +9501,27 @@ function showMessage(message, type = 'info') {
         function extractDurationFromCourse(courseString) {
             if (!courseString) return 60;
             
+            // 新しいコース名に対応
+            if (courseString === '対面セッション（スタジオ／出張）') {
+                return 60;
+            }
+            if (courseString === 'オンライン身体分析・設計') {
+                return 30;
+            }
+            
+            // 「数字+分」のパターンを抽出
             const match = courseString.match(/(\d+)分/);
-            return match ? parseInt(match[1]) : 60;
+            if (match) {
+                return parseInt(match[1]);
+            }
+            
+            // フォールバック: コース名に数字が含まれている場合
+            const numberMatch = courseString.match(/(\d+)/);
+            if (numberMatch) {
+                return parseInt(numberMatch[1]);
+            }
+            
+            return 60; // デフォルト値
         }
 
         // 重複チェック関数
