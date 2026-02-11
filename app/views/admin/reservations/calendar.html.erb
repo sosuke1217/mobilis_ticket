@@ -11916,7 +11916,7 @@ function createReservationFromDrop(reservationData) {
     if (data.success) {
       // 成功時の処理
       alert('予約が作成されました！');
-      closeReservationPanel();
+      closeBookingModal();
       refreshCalendar();
       resetReservationForm();
     } else {
