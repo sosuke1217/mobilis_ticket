@@ -214,13 +214,12 @@
           <div class="col-md-6">
             <div class="mb-3">
               <label class="form-label">
-                <i class="fas fa-graduation-cap me-1"></i>コース選択
+                <i class="fas fa-graduation-cap me-1"></i>メニュー選択
               </label>
-              <select id="bookingDuration" class="form-select" required>
-                            <option value="">コースを選択してください</option>
-                            <option value="40">40分コース</option>
-                            <option value="60">60分コース</option>
-                            <option value="80">80分コース</option>
+              <select id="bookingCourse" class="form-select" required>
+                            <option value="">メニューを選択してください</option>
+                            <option value="対面セッション（スタジオ／出張）" data-duration="60">対面セッション（スタジオ／出張） - 60分 - ¥15,000</option>
+                            <option value="オンライン身体分析・設計" data-duration="30">オンライン身体分析・設計 - 30分 - ¥5,000（テスト導入）</option>
                         </select>
                     </div>
                     
@@ -477,12 +476,11 @@
                     </div>
                     
                     <div class="form-group mb-3">
-                        <label for="bulkDuration" class="form-label">コース選択</label>
-                        <select id="bulkDuration" class="form-select" required>
-                            <option value="">コースを選択してください</option>
-                            <option value="40">40分コース</option>
-                            <option value="60">60分コース</option>
-                            <option value="80">80分コース</option>
+                        <label for="bulkCourse" class="form-label">メニュー選択</label>
+                        <select id="bulkCourse" class="form-select" required>
+                            <option value="">メニューを選択してください</option>
+                            <option value="対面セッション（スタジオ／出張）" data-duration="60">対面セッション（スタジオ／出張） - 60分 - ¥15,000</option>
+                            <option value="オンライン身体分析・設計" data-duration="30">オンライン身体分析・設計 - 30分 - ¥5,000（テスト導入）</option>
                         </select>
                     </div>
                     
@@ -6160,13 +6158,14 @@ function showMessage(message, type = 'info') {
         function setupBulkReservationValidation() {
             // 時間、日付、コースが変更されたときにリアルタイムでチェック
             const timeInput = document.getElementById('bulkStartTime');
-            const durationSelect = document.getElementById('bulkDuration');
+            const courseSelect = document.getElementById('bulkCourse');
             const startDateInput = document.getElementById('bulkStartDate');
             const endDateInput = document.getElementById('bulkEndDate');
             
             const validateInputs = () => {
                 const startTime = timeInput.value;
-                const duration = parseInt(durationSelect.value);
+                const course = courseSelect ? courseSelect.value : '';
+                const duration = courseSelect && courseSelect.options[courseSelect.selectedIndex] ? parseInt(courseSelect.options[courseSelect.selectedIndex].dataset.duration) : null;
                 const startDate = new Date(startDateInput.value);
                 const endDate = new Date(endDateInput.value);
                 const selectedDays = Array.from(document.querySelectorAll('#bulkDaysOfWeek input[type="checkbox"]:checked'))
@@ -6182,7 +6181,7 @@ function showMessage(message, type = 'info') {
             };
             
             timeInput.addEventListener('change', validateInputs);
-            durationSelect.addEventListener('change', validateInputs);
+            if (courseSelect) courseSelect.addEventListener('change', validateInputs);
             startDateInput.addEventListener('change', validateInputs);
             endDateInput.addEventListener('change', validateInputs);
             
@@ -6235,7 +6234,9 @@ function showMessage(message, type = 'info') {
             const startDateValue = document.getElementById('bulkStartDate').value;
             const endDateValue = document.getElementById('bulkEndDate').value;
             const startTime = document.getElementById('bulkStartTime').value;
-            const duration = parseInt(document.getElementById('bulkDuration').value);
+            const courseSelect = document.getElementById('bulkCourse');
+            const course = courseSelect ? courseSelect.value : '';
+            const duration = courseSelect && courseSelect.options[courseSelect.selectedIndex] ? parseInt(courseSelect.options[courseSelect.selectedIndex].dataset.duration) : null;
             const selectedDays = Array.from(document.querySelectorAll('#bulkDaysOfWeek input[type="checkbox"]:checked'))
                 .map(cb => parseInt(cb.value));
             
@@ -6988,7 +6989,9 @@ function showMessage(message, type = 'info') {
             const startDateValue = document.getElementById('bulkStartDate').value;
             const endDateValue = document.getElementById('bulkEndDate').value;
             const startTime = document.getElementById('bulkStartTime').value;
-            const duration = parseInt(document.getElementById('bulkDuration').value);
+            const courseSelect = document.getElementById('bulkCourse');
+            const course = courseSelect ? courseSelect.value : '';
+            const duration = courseSelect && courseSelect.options[courseSelect.selectedIndex] ? parseInt(courseSelect.options[courseSelect.selectedIndex].dataset.duration) : null;
             const selectedDays = Array.from(document.querySelectorAll('#bulkDaysOfWeek input[type="checkbox"]:checked'))
                 .map(cb => parseInt(cb.value));
             const customerName = document.getElementById('bulkCustomerName').value;
@@ -7006,13 +7009,13 @@ function showMessage(message, type = 'info') {
             });
             
             // より厳密なバリデーション
-            if (!startDateValue || !endDateValue || !startTime || !duration || selectedDays.length === 0 || !customerName || !customerPhone) {
+            if (!startDateValue || !endDateValue || !startTime || !course || !duration || selectedDays.length === 0 || !customerName || !customerPhone) {
                 // デバッグ用：どの項目が空かを特定
                 const missingFields = [];
                 if (!startDateValue) missingFields.push('開始日');
                 if (!endDateValue) missingFields.push('終了日');
                 if (!startTime) missingFields.push('開始時間');
-                if (!duration) missingFields.push('コース選択');
+                if (!course || !duration) missingFields.push('メニュー選択');
                 if (selectedDays.length === 0) missingFields.push('対象曜日');
                 if (!customerName) missingFields.push('お客様名');
                 if (!customerPhone) missingFields.push('電話番号');
@@ -7126,7 +7129,7 @@ function showMessage(message, type = 'info') {
                                                     const reservationData = {
                             reservation: {
                                 start_time: `${createReservationsDate.toISOString().split('T')[0]} ${startTime}`,
-                                course: getCourseFromDuration(duration),
+                                course: course,
                                 name: customerName,
                                 note: note,
                                 status: status,
@@ -7573,7 +7576,8 @@ function showMessage(message, type = 'info') {
             window.selectedBookingTime = time;
             
             // フィールドをリセット
-            document.getElementById('bookingDuration').value = '';
+            const bookingCourseField = document.getElementById('bookingCourse');
+            if (bookingCourseField) bookingCourseField.value = '';
             document.getElementById('customerName').value = '';
             document.getElementById('customerPhone').value = '';
             document.getElementById('customerEmail').value = '';
@@ -7691,7 +7695,9 @@ function showMessage(message, type = 'info') {
 
         // 予約を作成・更新
         function createBooking() {
-            const duration = document.getElementById('bookingDuration').value;
+            const courseSelect = document.getElementById('bookingCourse');
+            const course = courseSelect ? courseSelect.value : '';
+            const duration = courseSelect && courseSelect.options[courseSelect.selectedIndex] ? parseInt(courseSelect.options[courseSelect.selectedIndex].dataset.duration) : null;
             const customerName = document.getElementById('customerName').value;
             const customerPhone = document.getElementById('customerPhone').value;
             const customerEmail = document.getElementById('customerEmail').value;
@@ -7700,8 +7706,8 @@ function showMessage(message, type = 'info') {
 
             console.log('🔄 Creating/Updating booking, isEditing:', isEditingReservation);
 
-            if (!duration || !customerName || !customerPhone) {
-                showMessage('コース、お客様名、電話番号は必須です。', 'error');
+            if (!course || !duration || !customerName || !customerPhone) {
+                showMessage('メニュー、お客様名、電話番号は必須です。', 'error');
                 return;
             }
 
@@ -7714,7 +7720,7 @@ function showMessage(message, type = 'info') {
             const [dateStr, timeStr] = dateTime.split(' ');
             const reservationDate = new Date(dateStr);
             const dayOfWeek = reservationDate.getDay();
-            const newDuration = parseInt(duration);
+            const newDuration = duration;
             const defaultInterval = 15; // 新規予約のデフォルト間隔（システム設定に合わせて15分）
             
             const validation = validateReservationTimeWithinBusinessHours({
@@ -7744,7 +7750,7 @@ function showMessage(message, type = 'info') {
             const bookingData = {
                 reservation: {
                     start_time: dateTime,
-                    course: `${duration}分`,
+                    course: course,
                     name: customerName,
                     note: bookingNote,
                     status: bookingStatus,
@@ -8926,14 +8932,23 @@ function showMessage(message, type = 'info') {
                 const customerNameField = document.getElementById('customerName');
                 const customerPhoneField = document.getElementById('customerPhone');
                 const customerEmailField = document.getElementById('customerEmail');
-                const bookingDurationField = document.getElementById('bookingDuration');
+                const bookingCourseField = document.getElementById('bookingCourse');
                 const bookingNoteField = document.getElementById('bookingNote');
                 const bookingStatusField = document.getElementById('bookingStatus');
                 
                 if (customerNameField) customerNameField.value = reservationToEdit.customer;
                 if (customerPhoneField) customerPhoneField.value = reservationToEdit.phone;
                 if (customerEmailField) customerEmailField.value = reservationToEdit.email;
-                if (bookingDurationField) bookingDurationField.value = reservationToEdit.duration;
+                if (bookingCourseField && reservationToEdit.course) {
+                    // コース名に一致するオプションを探す
+                    const options = bookingCourseField.options;
+                    for (let i = 0; i < options.length; i++) {
+                        if (options[i].value === reservationToEdit.course) {
+                            bookingCourseField.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
                 if (bookingNoteField) bookingNoteField.value = reservationToEdit.note;
                 if (bookingStatusField) bookingStatusField.value = reservationToEdit.status;
             }, 200);
@@ -9260,9 +9275,11 @@ function showMessage(message, type = 'info') {
         // 予約可能時間をハイライトする関数
         function highlightAvailableSlots() {
             const dateTime = document.getElementById('bookingDate')?.value;
-            const duration = document.getElementById('bookingDuration')?.value;
+            const courseSelect = document.getElementById('bookingCourse');
+            const course = courseSelect ? courseSelect.value : '';
+            const duration = courseSelect && courseSelect.options[courseSelect.selectedIndex] ? parseInt(courseSelect.options[courseSelect.selectedIndex].dataset.duration) : null;
             
-            if (!dateTime || !duration) return;
+            if (!dateTime || !course || !duration) return;
             
             const startTime = new Date(dateTime);
             const endTime = new Date(startTime.getTime() + parseInt(duration) * 60 * 1000);
