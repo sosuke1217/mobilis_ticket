@@ -11584,51 +11584,6 @@ function setupCourseBlockDragEvents() {
   });
 }
 
-// コースブロックのドラッグ開始ハンドラー
-function handleCourseBlockDragStart(e) {
-  console.log('🎯 New course block drag started:', this.dataset.course);
-  console.log('🎯 Block dataset:', this.dataset);
-  
-  window.draggedCourseData = {
-    course: this.dataset.course,
-    duration: parseInt(this.dataset.duration),
-    price: parseInt(this.dataset.price)
-  };
-  
-  console.log('🎯 draggedCourseData set to:', window.draggedCourseData);
-  
-  this.classList.add('dragging');
-  e.dataTransfer.effectAllowed = 'copy';
-  e.dataTransfer.setData('text/plain', 'new-course-block');
-  
-  // ドラッグ開始時にドロップリスナーを設定
-  setTimeout(setupNewReservationDropListeners, 100);
-}
-
-// コースブロックのドラッグ終了ハンドラー
-function handleCourseBlockDragEnd(e) {
-  console.log('🎯 New course block drag ended');
-  console.log('🎯 draggedCourseData at dragend:', window.draggedCourseData);
-  this.classList.remove('dragging');
-  
-  // ドロップゾーンをクリア
-  document.querySelectorAll('.time-slot.drop-zone').forEach(slot => {
-    slot.classList.remove('drop-zone');
-  });
-  
-  document.querySelectorAll('.schedule-cell.drop-zone').forEach(cell => {
-    cell.classList.remove('drop-zone');
-  });
-  
-  // ドラッグデータをクリア（ドロップされなかった場合）
-  setTimeout(() => {
-    if (window.draggedCourseData) {
-      console.log('🎯 Clearing draggedCourseData after dragend timeout');
-      window.draggedCourseData = null;
-    }
-  }, 100);
-}
-
 // コースブロックのドラッグ開始（初期化）
 document.addEventListener('DOMContentLoaded', function() {
   setupCourseBlockDragEvents();
