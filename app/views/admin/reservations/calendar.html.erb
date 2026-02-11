@@ -8396,9 +8396,11 @@ function showMessage(message, type = 'info') {
                             <div class="header-detail-item">
                                 <span class="header-label">コース</span>
                                     <select id="edit-course" class="form-select course-select" onchange="updateCalendarOnCourseChange()">
-                                        <option value="40分" ${latestReservation.duration === 40 ? 'selected' : ''}>40分</option>
-                                        <option value="60分" ${latestReservation.duration === 60 ? 'selected' : ''}>60分</option>
-                                        <option value="80分" ${latestReservation.duration === 80 ? 'selected' : ''}>80分</option>
+                                        <option value="対面セッション（スタジオ／出張）" ${latestReservation.course === '対面セッション（スタジオ／出張）' || (latestReservation.duration === 60 && latestReservation.course === '対面セッション（スタジオ／出張）') ? 'selected' : ''}>対面セッション（スタジオ／出張） - 60分 - ¥15,000</option>
+                                        <option value="オンライン身体分析・設計" ${latestReservation.course === 'オンライン身体分析・設計' || (latestReservation.duration === 30 && latestReservation.course === 'オンライン身体分析・設計') ? 'selected' : ''}>オンライン身体分析・設計 - 30分 - ¥5,000（テスト導入）</option>
+                                        <option value="40分" ${latestReservation.duration === 40 && latestReservation.course !== '対面セッション（スタジオ／出張）' && latestReservation.course !== 'オンライン身体分析・設計' ? 'selected' : ''}>40分コース - ¥8,000</option>
+                                        <option value="60分" ${latestReservation.duration === 60 && latestReservation.course !== '対面セッション（スタジオ／出張）' && latestReservation.course !== 'オンライン身体分析・設計' ? 'selected' : ''}>60分コース - ¥12,000</option>
+                                        <option value="80分" ${latestReservation.duration === 80 ? 'selected' : ''}>80分コース - ¥15,000</option>
                                     </select>
                                 </div>
                                 <div class="header-detail-item">
