@@ -339,6 +339,145 @@
                 </form>
               </div>
             </div>
+            
+            <!-- 予約詳細フォーム（ドロップ後に表示） -->
+            <div id="reservationDetailsForm" class="mt-4" style="display: none;">
+              <hr>
+              <h6 class="fw-semibold mb-3">
+                <i class="fas fa-user-edit me-2"></i>予約詳細
+              </h6>
+              
+              <form id="quickReservationForm">
+                <!-- 選択されたコース情報 -->
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">選択されたコース</label>
+                  <div class="form-control-plaintext bg-light p-2 rounded" id="selectedCourseInfo">
+                    <!-- 動的に表示 -->
+                  </div>
+                </div>
+                
+                <!-- 選択されたユーザー表示 -->
+                <div id="selectedUserForReservation" class="mb-3" style="display: none;">
+                  <label class="form-label fw-semibold">
+                    <i class="fas fa-user-check me-2"></i>選択されたお客様
+                  </label>
+                  <div class="selected-user-display">
+                    <!-- 動的に表示 -->
+                  </div>
+                </div>
+                
+                <!-- ユーザー選択 -->
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">
+                    <i class="fas fa-user me-2"></i>お客様
+                  </label>
+                  
+                  <div class="d-flex gap-2 mb-2">
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="toggleUserSearchForReservationForm()">
+                      <i class="fas fa-search me-1"></i>既存のお客様を選択
+                    </button>
+                    <button type="button" class="btn btn-outline-success btn-sm" onclick="toggleNewUserFormForReservationForm()">
+                      <i class="fas fa-plus me-1"></i>新規お客様追加
+                    </button>
+                  </div>
+                  
+                  <!-- ユーザー検索セクション -->
+                  <div id="userSearchSectionForReservationForm" class="user-search-section" style="display: none;">
+                    <div class="form-group mb-3">
+                      <label for="userSearchInputForReservationForm" class="form-label">お客様を検索してください</label>
+                      <input type="text" id="userSearchInputForReservationForm" class="form-control" placeholder="お客様名、電話番号、メールアドレスで検索..." autocomplete="off">
+                      <small class="form-text text-muted">2文字以上入力すると検索結果が表示されます</small>
+                    </div>
+                  </div>
+                  
+                  <!-- 選択されたユーザー表示 -->
+                  <div id="selectedUserDisplayForReservationForm" class="selected-user-display" style="display: none;">
+                    <div id="selectedUserInfoForReservationForm" class="selected-user-info"></div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="clearSelectedUserForReservationForm()">選択を解除</button>
+                  </div>
+                  
+                  <!-- 検索結果 -->
+                  <div class="user-search-results" id="userSearchResultsForReservationForm" style="display: none;">
+                    <!-- 検索結果がここに表示されます -->
+                  </div>
+                  
+                  <!-- 新規ユーザー作成フォーム -->
+                  <div id="newUserFormForReservationForm" class="new-user-form" style="display: none;">
+                    <h6>新規お客様追加</h6>
+                    <form id="createUserFormForReservationForm">
+                      <div class="row">
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <label for="newUserNameForReservationForm" class="form-label">お名前 <span class="text-danger">*</span></label>
+                            <input type="text" id="newUserNameForReservationForm" name="name" class="form-control" required>
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <label for="newUserKanaForReservationForm" class="form-label">フリガナ</label>
+                            <input type="text" id="newUserKanaForReservationForm" name="kana" class="form-control">
+                          </div>
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <label for="newUserPhoneForReservationForm" class="form-label">電話番号</label>
+                            <input type="tel" id="newUserPhoneForReservationForm" name="phone_number" class="form-control">
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <label for="newUserEmailForReservationForm" class="form-label">メールアドレス</label>
+                            <input type="email" id="newUserEmailForReservationForm" name="email" class="form-control">
+                          </div>
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <label for="newUserBirthDateForReservationForm" class="form-label">生年月日</label>
+                            <input type="date" id="newUserBirthDateForReservationForm" name="birth_date" class="form-control">
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <label for="newUserPostalCodeForReservationForm" class="form-label">郵便番号</label>
+                            <input type="text" id="newUserPostalCodeForReservationForm" name="postal_code" class="form-control">
+                          </div>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="newUserAddressForReservationForm" class="form-label">住所</label>
+                        <textarea id="newUserAddressForReservationForm" name="address" class="form-control" rows="2"></textarea>
+                      </div>
+                      <div class="form-group">
+                        <label for="newUserMemoForReservationForm" class="form-label">メモ</label>
+                        <textarea id="newUserMemoForReservationForm" name="admin_memo" class="form-control" rows="2"></textarea>
+                      </div>
+                      <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-success btn-sm" onclick="createNewUserForReservationForm()">
+                          <i class="fas fa-user-plus me-1"></i>お客様を作成
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="toggleNewUserFormForReservationForm()">
+                          キャンセル
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+                
+                <!-- 予約確定ボタン -->
+                <div class="d-flex gap-2">
+                  <button type="button" class="btn btn-primary" id="confirmReservationBtn" onclick="confirmReservation()" disabled>
+                    <i class="fas fa-check me-1"></i>予約を確定
+                  </button>
+                  <button type="button" class="btn btn-secondary" onclick="cancelReservationForm()">
+                    <i class="fas fa-times me-1"></i>キャンセル
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       </div>
