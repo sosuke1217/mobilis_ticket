@@ -1110,11 +1110,13 @@ html {
 
 @media (max-width: 768px) {
   .timerex-calendar-grid {
-    grid-template-columns: 50px repeat(7, minmax(60px, 1fr)) 50px;
-    grid-template-rows: 65px;
-    grid-auto-rows: 50px;
+    grid-template-columns: 35px repeat(7, 1fr) 35px;
+    grid-template-rows: 55px;
+    grid-auto-rows: 45px;
     border-radius: 8px;
-    min-width: 600px; /* 横スクロールを確保 */
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 }
 
