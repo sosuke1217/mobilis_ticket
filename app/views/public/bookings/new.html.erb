@@ -1615,8 +1615,17 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   
   .timerex-calendar-grid {
     min-width: 0;
+    max-width: 100%;
+    width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    box-sizing: border-box;
+  }
+  
+  .timerex-calendar-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
   }
   
   .calendar-days-header {
