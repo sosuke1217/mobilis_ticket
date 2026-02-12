@@ -12,11 +12,11 @@
         </h1>
           <p class="text-muted mb-0 d-none d-md-block">週間スケジュール管理と予約作成</p>
         </div>
-        <div class="d-flex gap-2 w-100 w-md-auto">
-          <button class="btn btn-outline-primary btn-sm flex-fill flex-md-initial" onclick="refreshCalendar()">
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-primary btn-sm" onclick="refreshCalendar()">
             <i class="fas fa-sync-alt me-1"></i><span class="d-none d-md-inline">カレンダー更新</span><span class="d-md-none">更新</span>
           </button>
-          <a href="<%= admin_reservations_path %>" class="btn btn-outline-secondary btn-sm flex-fill flex-md-initial">
+          <a href="<%= admin_reservations_path %>" class="btn btn-outline-secondary btn-sm">
             <i class="fas fa-list me-1"></i><span class="d-none d-md-inline">予約一覧</span><span class="d-md-none">一覧</span>
           </a>
         </div>
