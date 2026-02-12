@@ -1415,6 +1415,128 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
 
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
+  .container {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  
+  .card {
+    margin: 0;
+    border-radius: 0;
+  }
+  
+  .card-body {
+    padding: 1rem !important;
+  }
+  
+  .timerex-header h2 {
+    font-size: 1.1rem;
+    line-height: 1.4;
+    padding: 0.75rem;
+  }
+  
+  .timerex-header h2 small {
+    font-size: 0.5em !important;
+    display: block;
+    margin-top: 0.25rem;
+  }
+  
+  .step-title {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .step-number {
+    width: 28px;
+    height: 28px;
+    font-size: 0.9rem;
+    line-height: 28px;
+  }
+  
+  .course-card {
+    margin-bottom: 0.75rem;
+  }
+  
+  .course-option .card-body {
+    padding: 1rem 0.75rem;
+  }
+  
+  .course-option .card-title {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .price-display {
+    font-size: 1.1rem;
+    margin: 0.5rem 0;
+  }
+  
+  .timerex-calendar-container {
+    margin: 0 -10px;
+    padding: 0 10px;
+  }
+  
+  .timerex-calendar-grid {
+    font-size: 0.75rem;
+  }
+  
+  .day-header-cell {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.75rem;
+  }
+  
+  .day-name {
+    font-size: 0.7rem;
+  }
+  
+  .day-date {
+    font-size: 0.85rem;
+  }
+  
+  .today-badge {
+    font-size: 0.6rem;
+    padding: 2px 4px;
+    margin-top: 2px;
+  }
+  
+  .time-label {
+    font-size: 0.7rem;
+    padding: 0.25rem;
+  }
+  
+  .time-cell {
+    min-height: 40px;
+  }
+  
+  .form-label {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .form-control {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .btn {
+    font-size: 0.9rem;
+    padding: 0.75rem 1.5rem;
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  .btn-primary {
+    padding: 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+  
+  .selected-time-display {
+    font-size: 0.9rem;
+    padding: 0.75rem;
+    margin-top: 1rem;
+  }
+  
   .calendar-days-header {
     grid-template-columns: repeat(7, 1fr);
     gap: 4px;
@@ -1429,8 +1551,18 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
     max-height: 300px;
   }
   
-  .timerex-header h2 {
-    font-size: 1.5rem;
+  .week-navigation {
+    margin: 1rem 0;
+  }
+  
+  .week-navigation button {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+  
+  .week-navigation .current-week {
+    font-size: 0.85rem;
+    padding: 0.5rem;
   }
 }
 </style>
