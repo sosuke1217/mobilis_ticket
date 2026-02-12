@@ -1601,12 +1601,13 @@ html {
   
   .timerex-calendar-container {
     margin: 0;
-    padding: 0.75rem 0.5rem;
+    padding: 0.75rem 0.25rem;
     border-radius: 12px;
     width: 100%;
     max-width: 100%;
     overflow-x: auto;
     box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
   }
   
   .calendar-header {
@@ -1617,12 +1618,16 @@ html {
     box-sizing: border-box;
     padding-left: 0;
     padding-right: 0;
+    position: sticky;
+    left: 0;
+    background: white;
+    z-index: 10;
   }
   
   .timerex-calendar-grid {
-    font-size: 0.7rem;
-    grid-template-columns: 40px repeat(7, minmax(45px, 1fr)) 40px;
-    grid-auto-rows: 50px;
+    font-size: 0.65rem;
+    grid-template-columns: 35px repeat(7, 1fr) 35px;
+    grid-auto-rows: 45px;
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
@@ -1630,18 +1635,18 @@ html {
   }
   
   .day-header-cell {
-    padding: 0.4rem 0.2rem;
-    font-size: 0.7rem;
-    min-height: 60px;
+    padding: 0.3rem 0.15rem;
+    font-size: 0.65rem;
+    min-height: 55px;
   }
   
   .day-name {
-    font-size: 0.65rem;
-    margin-bottom: 0.25rem;
+    font-size: 0.6rem;
+    margin-bottom: 0.2rem;
   }
   
   .day-date {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 600;
   }
   
@@ -1652,15 +1657,15 @@ html {
   }
   
   .time-label {
-    font-size: 0.65rem;
-    padding: 0.2rem;
-    width: 40px;
-    min-width: 40px;
-    max-width: 40px;
+    font-size: 0.6rem;
+    padding: 0.15rem;
+    width: 35px;
+    min-width: 35px;
+    max-width: 35px;
   }
   
   .time-cell {
-    min-height: 50px;
+    min-height: 45px;
   }
   
   .step-section {
