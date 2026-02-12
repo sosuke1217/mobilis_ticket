@@ -3350,7 +3350,12 @@
             text-align: center;
             min-width: 100px;
             max-width: none;
-            flex: 1;
+            flex-shrink: 0;
+        }
+
+        /* 週ナビゲーションのボタンを横並びに */
+        .card-header .d-flex.flex-wrap {
+            flex-wrap: nowrap !important;
         }
 
         /* カレンダーヘッダーの調整 */
