@@ -874,9 +874,12 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
 
 @media (max-width: 768px) {
   .timerex-calendar-container {
-    padding: 12px;
+    padding: 8px 4px;
     border-radius: 12px;
     margin-bottom: 16px;
+    margin-left: -10px;
+    margin-right: -10px;
+    width: calc(100% + 20px);
   }
 }
 
@@ -891,9 +894,11 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
 
 @media (max-width: 768px) {
   .calendar-header {
-    margin-bottom: 12px;
-    padding-bottom: 10px;
-    gap: 8px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    gap: 4px;
+    padding-left: 0;
+    padding-right: 0;
   }
 }
 
@@ -918,13 +923,14 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
 
 @media (max-width: 768px) {
   .btn-calendar-nav {
-    width: 32px;
-    height: 32px;
-    font-size: 0.85rem;
-    border-radius: 8px;
-    min-width: 32px;
-    border-width: 1.5px;
+    width: 28px;
+    height: 28px;
+    font-size: 0.7rem;
+    border-radius: 6px;
+    min-width: 28px;
+    border-width: 1px;
     padding: 0;
+    box-shadow: 0 1px 4px rgba(8, 121, 166, 0.1);
   }
 }
 
@@ -955,8 +961,9 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
 
 @media (max-width: 768px) {
   .calendar-title {
-    font-size: 0.9rem;
-    padding: 0 4px;
+    font-size: 0.75rem;
+    padding: 0 2px;
+    font-weight: 600;
     font-size: 1rem;
     padding: 0 8px;
     text-align: center;
