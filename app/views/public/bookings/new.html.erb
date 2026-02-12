@@ -1032,16 +1032,17 @@ html {
 
 @media (max-width: 768px) {
   .btn-calendar-nav {
-    width: 28px;
-    height: 28px;
-    font-size: 0.7rem;
+    width: 26px;
+    height: 26px;
+    font-size: 0.65rem;
     border-radius: 6px;
-    min-width: 28px;
-    max-width: 28px;
+    min-width: 26px;
+    max-width: 26px;
     border-width: 1px;
     padding: 0;
     box-shadow: 0 1px 4px rgba(8, 121, 166, 0.1);
     flex-shrink: 0;
+    flex-grow: 0;
     box-sizing: border-box;
   }
 }
@@ -1075,14 +1076,15 @@ html {
 
 @media (max-width: 768px) {
   .calendar-title {
-    font-size: 0.75rem;
-    padding: 0 2px;
+    font-size: 0.7rem;
+    padding: 0 4px;
     font-weight: 600;
     min-width: 0;
-    flex: 1 1 auto;
-    font-size: 1rem;
-    padding: 0 8px;
+    flex: 1 1 0;
     text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
@@ -1615,11 +1617,12 @@ html {
   
   .timerex-calendar-grid {
     font-size: 0.7rem;
-    grid-template-columns: 45px repeat(7, minmax(50px, 1fr)) 45px;
+    grid-template-columns: 40px repeat(7, minmax(45px, 1fr)) 40px;
     grid-auto-rows: 50px;
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
+    min-width: 0;
   }
   
   .day-header-cell {
@@ -1647,9 +1650,9 @@ html {
   .time-label {
     font-size: 0.65rem;
     padding: 0.2rem;
-    width: 45px;
-    min-width: 45px;
-    max-width: 45px;
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
   }
   
   .time-cell {
