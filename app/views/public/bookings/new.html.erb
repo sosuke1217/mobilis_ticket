@@ -778,6 +778,28 @@ html {
     overflow-x: hidden;
   }
 
+@media (max-width: 767px) {
+  .booking-page-container .row {
+    margin-left: 0;
+    margin-right: 0;
+    max-width: 100%;
+  }
+  
+  .booking-page-container .col-md-6,
+  .booking-page-container [class*="col-"] {
+    max-width: 100%;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    flex: 0 0 100%;
+  }
+  
+  .booking-page-container .d-flex {
+    max-width: 100%;
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+}
+
 @media (min-width: 768px) {
   .booking-page-container {
     padding: 2rem 1rem;
