@@ -695,6 +695,7 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   max-width: 100%;
   padding: 0;
   margin: 0;
+  overflow-x: hidden;
 }
 
 .booking-wrapper {
@@ -702,6 +703,7 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   max-width: 100%;
   padding: 0;
   margin: 0;
+  overflow-x: hidden;
 }
 
 .booking-card {
@@ -711,6 +713,7 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   box-shadow: none;
   margin: 0;
   padding: 0;
+  overflow-x: hidden;
 }
 
 .booking-header {
@@ -743,9 +746,13 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   line-height: 1.5;
 }
 
-.booking-content {
-  padding: 1.5rem 1rem;
-}
+  .booking-content {
+    padding: 1.5rem 1rem;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
 
 @media (min-width: 768px) {
   .booking-page-container {
@@ -1571,17 +1578,29 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
     margin: 0;
     padding: 0.75rem 0.5rem;
     border-radius: 12px;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    box-sizing: border-box;
   }
   
   .calendar-header {
     margin-bottom: 1rem;
     padding-bottom: 0.75rem;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding-left: 0;
+    padding-right: 0;
   }
   
   .timerex-calendar-grid {
     font-size: 0.7rem;
-    grid-template-columns: 50px repeat(7, minmax(60px, 1fr)) 50px;
+    grid-template-columns: 45px repeat(7, minmax(50px, 1fr)) 45px;
     grid-auto-rows: 50px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
   
   .day-header-cell {
@@ -1609,9 +1628,9 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   .time-label {
     font-size: 0.65rem;
     padding: 0.2rem;
-    width: 50px;
-    min-width: 50px;
-    max-width: 50px;
+    width: 45px;
+    min-width: 45px;
+    max-width: 45px;
   }
   
   .time-cell {
