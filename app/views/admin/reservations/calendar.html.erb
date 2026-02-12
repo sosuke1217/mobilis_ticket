@@ -2246,7 +2246,7 @@
             if (!courseSelect) return;
             
             const newCourse = courseSelect.value;
-            const newDuration = parseInt(newCourse);
+            const newDuration = extractDurationFromCourse(newCourse);
             const currentInterval = currentReservation.effective_interval_minutes ?? 10;
             
             console.log('🔄 Course changed to:', newCourse, 'Duration:', newDuration);
