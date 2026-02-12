@@ -37,7 +37,7 @@
                 <button class="btn btn-outline-primary btn-sm" onclick="previousWeek()">
                   <i class="fas fa-chevron-left"></i>
                 </button>
-                <div class="fw-semibold small" id="currentWeek">読み込み中...</div>
+                <div class="fw-semibold small" id="currentWeek" style="white-space: nowrap; min-width: 140px;">読み込み中...</div>
                 <button class="btn btn-outline-primary btn-sm" onclick="nextWeek()">
                   <i class="fas fa-chevron-right"></i>
                 </button>
@@ -4128,8 +4128,11 @@
             const startStr = formatDateShort(currentWeekStart);
             const endStr = formatDateShort(endDate);
             
+            // 年を短縮表示（例：2025 → 25）
+            const yearShort = String(currentWeekStart.getFullYear()).slice(-2);
+            
             document.getElementById('currentWeek').textContent = 
-                `${currentWeekStart.getFullYear()}年 ${startStr} - ${endStr}`;
+                `${yearShort}年 ${startStr} - ${endStr}`;
             
               // 今日の日付を取得
               const today = new Date();
