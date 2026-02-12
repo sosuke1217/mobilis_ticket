@@ -25,9 +25,9 @@
       </div>
 
             <!-- カレンダーコンテナ -->
-  <div class="row">
+  <div class="row g-3">
     <!-- カレンダー部分 -->
-    <div class="col-lg-9 col-md-8">
+    <div class="col-lg-9 col-md-8 order-2 order-md-1">
       <div class="card border-0 shadow-sm">
         <div class="card-header bg-light">
           <div class="d-flex justify-content-between align-items-center">
@@ -140,13 +140,13 @@
           </div>
         </div>
       </div>
-    </div>
+            </div>
     
     <!-- サイドバー（コースブロックパネル） -->
-      <div class="col-lg-3 col-md-4">
-        <div class="card border-0 shadow-sm h-100">
+      <div class="col-lg-3 col-md-4 order-1 order-md-2">
+        <div class="card border-0 shadow-sm h-100 sticky-top" style="top: 20px;">
           <div class="card-header bg-light">
-            <h5 class="mb-0">
+            <h5 class="mb-1">
               <i class="fas fa-plus-circle me-2 text-primary"></i>新規予約作成
             </h5>
             <p class="text-muted mb-0 small">ドラッグ&ドロップで簡単に予約を作成できます</p>
@@ -11036,18 +11036,59 @@ function showMessage(message, type = 'info') {
 
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
+  .container-lg {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  
+  .row {
+    margin-left: -4px;
+    margin-right: -4px;
+  }
+  
+  .row > [class*="col-"] {
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+  
   .schedule-header {
-    grid-template-columns: 60px repeat(7, 1fr);
+    grid-template-columns: 50px repeat(7, 1fr);
   }
   
   .time-column-header,
   .day-header {
-    padding: 0.5rem 0.25rem;
-    font-size: 0.875rem;
+    padding: 0.4rem 0.2rem;
+    font-size: 0.75rem;
+  }
+  
+  .day-header span {
+    font-size: 0.65rem !important;
   }
   
   .schedule-body {
     max-height: 400px;
+  }
+  
+  .card-header h5 {
+    font-size: 0.95rem;
+  }
+  
+  .card-header p {
+    font-size: 0.75rem;
+  }
+  
+  .course-blocks-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .course-block {
+    padding: 0.75rem;
+  }
+  
+  .sticky-top {
+    position: relative !important;
+    top: 0 !important;
   }
 }
 
