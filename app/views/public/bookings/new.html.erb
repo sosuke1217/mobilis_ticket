@@ -702,6 +702,8 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   color: white;
   padding: 24px 20px;
   border: none;
+  position: relative;
+  overflow: hidden;
 }
 
 @media (min-width: 768px) {
@@ -887,12 +889,19 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   margin-bottom: 28px;
   padding-bottom: 20px;
   border-bottom: 2px solid rgba(8, 121, 166, 0.1);
+  gap: 8px;
+  flex-wrap: nowrap;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 @media (max-width: 768px) {
   .calendar-header {
     margin-bottom: 16px;
     padding-bottom: 12px;
+    gap: 6px;
+    padding-left: 4px;
+    padding-right: 4px;
   }
 }
 
@@ -916,11 +925,12 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
 
 @media (max-width: 768px) {
   .btn-calendar-nav {
-    width: 40px;
-    height: 40px;
-    font-size: 1rem;
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
     border-radius: 10px;
-    min-width: 40px;
+    min-width: 36px;
+    max-width: 36px;
     flex-shrink: 0;
   }
 }
@@ -946,9 +956,14 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
 
 @media (max-width: 768px) {
   .calendar-title {
-    font-size: 1rem;
-    padding: 0 8px;
+    font-size: 0.9rem;
+    padding: 0 4px;
     text-align: center;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
@@ -1418,12 +1433,40 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   .container-fluid {
     padding-left: 8px;
     padding-right: 8px;
+    overflow-x: hidden;
+  }
+  
+  .card {
+    overflow-x: hidden;
+  }
+  
+  .alert {
+    position: relative;
+    padding-right: 40px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  .alert .btn-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 8px;
+    font-size: 0.8rem;
+  }
+  
+  .timerex-header {
+    padding: 16px 12px;
+    overflow: hidden;
   }
   
   .timerex-header h2 {
     font-size: 1.1rem;
     line-height: 1.4;
-    padding: 12px 8px;
+    padding: 0;
+    margin: 0;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
   
   .timerex-header h2 small {
@@ -1500,13 +1543,25 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
 }
 
 @media (max-width: 480px) {
+  .timerex-header {
+    padding: 12px 8px;
+  }
+  
   .timerex-header h2 {
-    font-size: 1rem;
-    padding: 10px 6px;
+    font-size: 0.95rem;
+    padding: 0;
+    margin: 0;
   }
   
   .timerex-header h2 i {
-    font-size: 0.9em;
+    font-size: 0.85em;
+  }
+  
+  .alert .btn-close {
+    top: 6px;
+    right: 6px;
+    padding: 6px;
+    font-size: 0.75rem;
   }
   
   .step-title {
