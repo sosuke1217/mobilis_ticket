@@ -3251,6 +3251,15 @@
             min-width: 650px;
         }
 
+        /* グリッドの列幅を統一（ヘッダーとボディのずれを防ぐ） */
+        .schedule-header {
+            grid-template-columns: 60px repeat(7, 1fr) !important;
+        }
+
+        .schedule-body {
+            grid-template-columns: 60px repeat(7, 1fr) !important;
+        }
+
         /* サイドバーの調整 */
         .course-blocks-container {
             padding: 0.5rem;
