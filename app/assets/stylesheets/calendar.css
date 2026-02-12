@@ -3221,3 +3221,183 @@
     .modal .future-reservations-section .future-reservation-course {
         color: #6c757d !important;
     }
+
+    /* モバイル向けレスポンシブデザイン */
+    @media (max-width: 767px) {
+        /* コンテナのパディング調整 */
+        #calendar-page-wrapper .container-lg {
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+
+        /* ヘッダー部分の調整 */
+        #calendar-page-wrapper h1 {
+            font-size: 1.25rem;
+        }
+
+        /* カレンダーカードの調整 */
+        .card {
+            margin-bottom: 1rem;
+        }
+
+        /* スケジュールコンテナの横スクロール対応 */
+        .schedule-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .schedule-header,
+        .schedule-body {
+            min-width: 800px;
+        }
+
+        /* サイドバーの調整 */
+        .course-blocks-container {
+            padding: 0.5rem;
+        }
+
+        .course-blocks-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+
+        .course-block {
+            font-size: 0.75rem;
+        }
+
+        .course-block-header {
+            padding: 0.25rem;
+        }
+
+        .course-block-body {
+            padding: 0.25rem;
+        }
+
+        /* モーダルの調整 */
+        .modal-dialog {
+            margin: 0.5rem;
+            max-width: calc(100% - 1rem);
+        }
+
+        .modal-content {
+            border-radius: 0.5rem;
+        }
+
+        .modal-header {
+            padding: 0.75rem 1rem;
+        }
+
+        .modal-body {
+            padding: 1rem;
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+
+        /* ボタンの調整 */
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        /* 予約詳細フォームの調整 */
+        #reservationDetailsForm {
+            padding: 0.75rem;
+        }
+
+        #reservationDetailsForm .form-group {
+            margin-bottom: 0.75rem;
+        }
+
+        /* ミニカレンダーの調整 */
+        .mini-calendar {
+            width: calc(100vw - 2rem);
+            max-width: 320px;
+            left: 50% !important;
+            transform: translateX(-50%);
+        }
+
+        /* 週表示の調整 */
+        #currentWeek {
+            font-size: 0.875rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+        }
+
+        /* カレンダーヘッダーの調整 */
+        .card-header {
+            padding: 0.75rem;
+        }
+
+        /* 予約ブロックの調整 */
+        .reservation-block {
+            font-size: 0.7rem;
+            padding: 2px 4px;
+            line-height: 1.2;
+        }
+
+        .reservation-block .customer-name {
+            font-size: 0.65rem;
+        }
+
+        .reservation-block .reservation-time {
+            font-size: 0.6rem;
+        }
+
+        /* タイムスロットの調整 */
+        .time-slot {
+            font-size: 0.7rem;
+            padding: 4px 2px;
+        }
+
+        .day-header {
+            font-size: 0.75rem;
+            padding: 8px 4px;
+        }
+
+        /* フォーム要素の調整 */
+        .form-control,
+        .form-select {
+            font-size: 0.875rem;
+            padding: 0.375rem 0.5rem;
+        }
+
+        /* ユーザー選択セクションの調整 */
+        .selected-user-display {
+            padding: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        /* コースブロックのドラッグ時の視認性向上 */
+        .course-block.dragging {
+            opacity: 0.7;
+            transform: scale(0.95);
+        }
+    }
+
+    /* より小さな画面向け（480px以下） */
+    @media (max-width: 480px) {
+        .schedule-header,
+        .schedule-body {
+            min-width: 700px;
+        }
+
+        .course-blocks-grid {
+            grid-template-columns: 1fr;
+        }
+
+        #currentWeek {
+            max-width: 120px;
+            font-size: 0.75rem;
+        }
+
+        .btn-sm {
+            padding: 0.2rem 0.4rem;
+            font-size: 0.8rem;
+        }
+
+        .card-header h5 {
+            font-size: 0.9rem;
+        }
+    }
