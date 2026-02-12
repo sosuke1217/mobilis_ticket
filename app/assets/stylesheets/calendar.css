@@ -3260,6 +3260,23 @@
             grid-template-columns: 60px repeat(7, 1fr) !important;
         }
 
+        .schedule-row {
+            grid-template-columns: 60px repeat(7, 1fr) !important;
+        }
+
+        /* 時刻列の幅を統一 */
+        .time-column-header {
+            width: 60px !important;
+            min-width: 60px !important;
+            max-width: 60px !important;
+        }
+
+        .time-slot {
+            width: 60px !important;
+            min-width: 60px !important;
+            max-width: 60px !important;
+        }
+
         /* サイドバーの調整 */
         .course-blocks-container {
             padding: 0.5rem;
