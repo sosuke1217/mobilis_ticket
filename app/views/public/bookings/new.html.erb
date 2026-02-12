@@ -1535,10 +1535,36 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   
   .card-body {
     padding: 16px !important;
+    overflow-x: hidden;
   }
   
   .step-section {
     margin-bottom: 24px !important;
+  }
+  
+  .calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: nowrap;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 4px;
+  }
+  
+  .calendar-title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 4px;
+  }
+  
+  .btn-calendar-nav {
+    flex-shrink: 0;
+    min-width: 40px;
   }
 }
 
