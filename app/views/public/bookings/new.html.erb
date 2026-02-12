@@ -1,18 +1,17 @@
 <!-- app/views/public/bookings/new.html.erb -->
 <% content_for :title, "Mobilis｜ご予約 / Reservation" %>
-<div class="container my-4 my-md-5">
-  <div class="row justify-content-center">
-    <div class="col-lg-10 col-xl-9">
-      <div class="card shadow-lg timerex-style">
-        <div class="card-header timerex-header text-center">
-          <h2 class="mb-0">
-            <i class="fas fa-calendar-check me-2"></i>
-            Mobilis｜ご予約（身体評価・調整／オンライン分析）<br>
-            <small style="font-size: 0.6em; opacity: 0.9;">Mobilis | Reservation (Body Assessment & Adjustment / Online Analysis)</small>
-          </h2>
-        </div>
-        
-        <div class="card-body p-4 p-md-5">
+<div class="booking-page-container">
+  <div class="booking-wrapper">
+    <div class="booking-card">
+      <div class="booking-header">
+        <h1 class="booking-title">
+          <i class="fas fa-calendar-check"></i>
+          Mobilis｜ご予約
+        </h1>
+        <p class="booking-subtitle">身体評価・調整／オンライン分析<br>Body Assessment & Adjustment / Online Analysis</p>
+      </div>
+      
+      <div class="booking-content">
           <!-- エラーメッセージ表示 -->
           <% if flash[:alert] %>
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -207,7 +206,6 @@
               </button>
             </div>
           <% end %>
-        </div>
       </div>
     </div>
   </div>
@@ -691,6 +689,98 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
 </script>
 
 <style>
+/* 予約ページ全体のレイアウト */
+.booking-page-container {
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+.booking-wrapper {
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+.booking-card {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0;
+  padding: 0;
+}
+
+.booking-header {
+  background: linear-gradient(135deg, #0879A6 0%, #066a8f 100%);
+  color: white;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  border-radius: 0;
+}
+
+.booking-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.booking-title i {
+  font-size: 1.3rem;
+}
+
+.booking-subtitle {
+  font-size: 0.85rem;
+  margin: 0;
+  opacity: 0.95;
+  line-height: 1.5;
+}
+
+.booking-content {
+  padding: 1.5rem 1rem;
+}
+
+@media (min-width: 768px) {
+  .booking-page-container {
+    padding: 2rem 1rem;
+  }
+  
+  .booking-wrapper {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  
+  .booking-card {
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+  
+  .booking-header {
+    padding: 2rem;
+    border-radius: 16px 16px 0 0;
+  }
+  
+  .booking-title {
+    font-size: 2rem;
+  }
+  
+  .booking-subtitle {
+    font-size: 1rem;
+  }
+  
+  .booking-content {
+    padding: 2.5rem;
+  }
+}
+
 /* TimeRex風スタイル */
 .timerex-style {
   border-radius: 16px;
@@ -1433,154 +1523,181 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
 
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
-  .container {
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-  
-  .card {
-    margin: 0;
-    border-radius: 0;
-  }
-  
-  .card-body {
-    padding: 1rem !important;
-  }
-  
-  .timerex-header h2 {
-    font-size: 1.1rem;
-    line-height: 1.4;
-    padding: 0.75rem;
-  }
-  
-  .timerex-header h2 small {
-    font-size: 0.5em !important;
-    display: block;
-    margin-top: 0.25rem;
+  .step-section {
+    margin-bottom: 2rem;
   }
   
   .step-title {
     font-size: 1.1rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e0e0e0;
   }
   
   .step-number {
-    width: 28px;
-    height: 28px;
-    font-size: 0.9rem;
-    line-height: 28px;
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+    line-height: 32px;
+    margin-right: 0.75rem;
   }
   
   .course-card {
-    margin-bottom: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  .course-option {
+    border: 2px solid #e0e0e0;
+    transition: all 0.3s ease;
   }
   
   .course-option .card-body {
-    padding: 1rem 0.75rem;
+    padding: 1.25rem 1rem;
   }
   
   .course-option .card-title {
-    font-size: 1rem;
-    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
   }
   
   .price-display {
-    font-size: 1.1rem;
-    margin: 0.5rem 0;
+    font-size: 1.4rem;
+    margin: 0.75rem 0;
+    font-weight: 700;
   }
   
   .timerex-calendar-container {
-    margin: 0 -10px;
-    padding: 0 10px;
+    margin: 0;
+    padding: 0.75rem 0.5rem;
+    border-radius: 12px;
+  }
+  
+  .calendar-header {
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
   }
   
   .timerex-calendar-grid {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
+    grid-template-columns: 50px repeat(7, minmax(60px, 1fr)) 50px;
+    grid-auto-rows: 50px;
   }
   
   .day-header-cell {
-    padding: 0.5rem 0.25rem;
-    font-size: 0.75rem;
+    padding: 0.4rem 0.2rem;
+    font-size: 0.7rem;
+    min-height: 60px;
   }
   
   .day-name {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
+    margin-bottom: 0.25rem;
   }
   
   .day-date {
-    font-size: 0.85rem;
-  }
-  
-  .today-badge {
-    font-size: 0.6rem;
-    padding: 2px 4px;
-    margin-top: 2px;
-  }
-  
-  .time-label {
-    font-size: 0.7rem;
-    padding: 0.25rem;
-  }
-  
-  .time-cell {
-    min-height: 40px;
-  }
-  
-  .form-label {
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .form-control {
-    font-size: 0.9rem;
-    padding: 0.5rem 0.75rem;
-  }
-  
-  .btn {
-    font-size: 0.9rem;
-    padding: 0.75rem 1.5rem;
-    width: 100%;
-    margin-bottom: 0.5rem;
-  }
-  
-  .btn-primary {
-    padding: 1rem;
-    font-size: 1rem;
+    font-size: 0.8rem;
     font-weight: 600;
   }
   
-  .selected-time-display {
-    font-size: 0.9rem;
+  .today-badge {
+    font-size: 0.55rem;
+    padding: 2px 4px;
+    margin-top: 0.25rem;
+  }
+  
+  .time-label {
+    font-size: 0.65rem;
+    padding: 0.2rem;
+    width: 50px;
+    min-width: 50px;
+    max-width: 50px;
+  }
+  
+  .time-cell {
+    min-height: 50px;
+  }
+  
+  .step-section {
+    background: #f8f9fa;
+    padding: 1.25rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-label {
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .form-control {
+    font-size: 1rem;
     padding: 0.75rem;
-    margin-top: 1rem;
+    border-radius: 8px;
+    border: 2px solid #e0e0e0;
   }
   
-  .calendar-days-header {
-    grid-template-columns: repeat(7, 1fr);
-    gap: 4px;
-    overflow-x: auto;
+  .form-control:focus {
+    border-color: #0879A6;
+    box-shadow: 0 0 0 0.2rem rgba(8, 121, 166, 0.15);
   }
   
-  .day-column {
-    min-width: 80px;
+  textarea.form-control {
+    min-height: 100px;
   }
   
-  .time-slots {
-    max-height: 300px;
+  .btn {
+    font-size: 1rem;
+    padding: 1rem 1.5rem;
+    width: 100%;
+    margin-bottom: 0.75rem;
+    border-radius: 10px;
+    font-weight: 600;
   }
   
-  .week-navigation {
-    margin: 1rem 0;
+  .btn-primary {
+    padding: 1.25rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(8, 121, 166, 0.3);
   }
   
-  .week-navigation button {
-    padding: 0.5rem 1rem;
-    font-size: 0.85rem;
+  .btn-primary:active {
+    transform: scale(0.98);
   }
   
-  .week-navigation .current-week {
-    font-size: 0.85rem;
-    padding: 0.5rem;
+  .selected-time-display {
+    font-size: 0.95rem;
+    padding: 1rem;
+    margin-top: 1.25rem;
+    border-radius: 10px;
+  }
+  
+  .selected-time-display .alert {
+    border-radius: 10px;
+    padding: 1rem;
+  }
+  
+  .alert {
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .row {
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+  }
+  
+  .row > * {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  .col-md-6 {
+    margin-bottom: 1rem;
   }
 }
 </style>
