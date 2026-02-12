@@ -1515,6 +1515,10 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   .timerex-header {
     padding: 10px 6px !important;
     overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
   
   .timerex-header h2 {
@@ -1524,18 +1528,31 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
     padding: 0 !important;
     word-wrap: break-word !important;
     overflow-wrap: break-word !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    width: 100% !important;
   }
   
   .timerex-header h2 i {
     font-size: 0.8em !important;
-    margin-right: 4px !important;
+    margin-right: 0 !important;
+    margin-bottom: 4px !important;
+    display: block !important;
+  }
+  
+  .timerex-header h2 br {
+    display: none !important;
   }
   
   .timerex-header h2 small {
     font-size: 0.4em !important;
     display: block !important;
-    margin-top: 2px !important;
+    margin-top: 4px !important;
     line-height: 1.2 !important;
+    width: 100% !important;
+    text-align: center !important;
   }
   
   /* ステップセクション */
