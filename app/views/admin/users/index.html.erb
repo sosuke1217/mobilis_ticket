@@ -551,6 +551,12 @@
   function init() {
     console.log('🔍 Initializing User Management...');
     
+    // ユーザー管理ページでない場合はスキップ
+    if (!document.getElementById('addUserBtn')) {
+      console.log('🔍 Not on user management page, skipping initialization');
+      return;
+    }
+    
     const addUserBtn = document.getElementById('addUserBtn');
     if (!addUserBtn) {
       console.error('❌ Add user button not found');
