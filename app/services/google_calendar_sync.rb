@@ -287,7 +287,7 @@ class GoogleCalendarSync
 
   # イベントの色ID（ステータスに応じて）
   def event_color_id(reservation)
-    case reservation.status
+    case reservation.status.to_s
     when 'confirmed'
       '10' # 緑
     when 'tentative'
