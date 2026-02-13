@@ -147,6 +147,11 @@ class GoogleCalendarSync
     { synced: synced_count, created: created_count, updated: updated_count }
   end
 
+  # 認証済みかチェック
+  def authorized?
+    @service.authorization.present?
+  end
+
   private
 
   # OAuth認証
@@ -225,11 +230,6 @@ class GoogleCalendarSync
     nil
   end
 
-  # 認証済みかチェック
-  def authorized?
-    @service.authorization.present?
-  end
-
   # 認証情報ファイルのパス
   def credentials_path
     Rails.root.join('config', 'google_calendar_credentials.json')
@@ -298,7 +298,8 @@ class GoogleCalendarSync
 
   # イベントの色ID（ステータスに応じて）
   def event_color_id(reservation)
-    case reservation.status.to_s
+    status_str = reservation.status.to_s.downcase
+    case status_str
     when 'confirmed'
       '10' # 緑
     when 'tentative'
@@ -310,6 +311,10 @@ class GoogleCalendarSync
     else
       '1'  # ラベンダー
     end
+  rescue => e
+    Rails.logger.error "❌ Error in event_color_id: #{e.message}"
+    Rails.logger.error "❌ Reservation status: #{reservation.status.inspect} (#{reservation.status.class})"
+    '1' # デフォルトの色
   end
 
   # Googleカレンダーイベントから予約を作成
