@@ -88,7 +88,7 @@
                 <i class="fas fa-check-circle me-2"></i>認証が完了しています
               </div>
             <% else %>
-              <%= link_to "認証を開始", admin_google_calendar_authorize_path, class: "btn btn-primary" %>
+              <%= link_to "認証を開始", authorize_admin_google_calendar_index_path, class: "btn btn-primary" %>
             <% end %>
           <% else %>
             <div class="alert alert-warning">

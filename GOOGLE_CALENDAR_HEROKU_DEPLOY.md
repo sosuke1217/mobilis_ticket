@@ -35,28 +35,20 @@ heroku config:set GOOGLE_CALENDAR_SYNC_ENABLED=true
 heroku run rails db:migrate
 ```
 
-### 4. 認証情報ファイルの配置
+### 4. 認証情報の環境変数設定（推奨）
 
-Herokuでは、認証情報ファイルを直接配置する必要があります。以下の方法で配置できます：
-
-#### 方法1: Herokuのファイルシステムに直接配置（推奨）
+Herokuでは、環境変数から認証情報ファイルを動的に生成します。これにより、デプロイのたびに再配置する必要がなくなります。
 
 ```bash
-# 認証情報ファイルをHerokuにアップロード
-heroku run bash
-# Herokuのbashセッション内で：
-mkdir -p config
-# ローカルからファイルをコピー（別のターミナルで）
-# または、ファイルの内容を直接作成
-cat > config/google_calendar_credentials.json << 'EOF'
-{"installed":{"client_id":"YOUR_CLIENT_ID","project_id":"YOUR_PROJECT_ID","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_secret":"YOUR_CLIENT_SECRET","redirect_uris":["http://localhost"]}}
-EOF
-exit
+# 認証情報を環境変数として設定
+heroku config:set GOOGLE_CALENDAR_CLIENT_ID="1082079540400-ta3lg7vq2jeloc6gpl9jud02n8bn94oa.apps.googleusercontent.com"
+heroku config:set GOOGLE_CALENDAR_CLIENT_SECRET="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"
+heroku config:set GOOGLE_CALENDAR_PROJECT_ID="mobilis-ticket"
 ```
 
-**注意**: Herokuのファイルシステムは一時的なので、デプロイのたびに再配置する必要があります。
+**注意**: アプリケーション起動時に、`config/initializers/google_calendar_credentials.rb`が環境変数から認証情報ファイルを自動生成します。
 
-#### 方法2: 環境変数から動的に生成（推奨）
+#### 方法2: ファイルシステムに直接配置（非推奨）
 
 認証情報を環境変数として設定し、アプリケーション起動時にファイルを生成する方法：
 

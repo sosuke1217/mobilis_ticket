@@ -5,9 +5,18 @@ class Admin::GoogleCalendarController < ApplicationController
   before_action :authenticate_admin_user!
 
   def index
-    @sync_enabled = ENV['GOOGLE_CALENDAR_SYNC_ENABLED'] == 'true'
-    @credentials_exist = File.exist?(Rails.root.join('config', 'google_calendar_credentials.json'))
-    @token_exist = File.exist?(Rails.root.join('config', 'google_calendar_token.yaml'))
+    begin
+      @sync_enabled = ENV['GOOGLE_CALENDAR_SYNC_ENABLED'] == 'true'
+      @credentials_exist = File.exist?(Rails.root.join('config', 'google_calendar_credentials.json'))
+      @token_exist = File.exist?(Rails.root.join('config', 'google_calendar_token.yaml'))
+    rescue => e
+      Rails.logger.error "❌ Error in GoogleCalendarController#index: #{e.message}"
+      Rails.logger.error "❌ Backtrace: #{e.backtrace.first(5).join("\n")}"
+      @sync_enabled = false
+      @credentials_exist = false
+      @token_exist = false
+      flash[:alert] = "設定の読み込み中にエラーが発生しました: #{e.message}"
+    end
   end
 
   def authorize
