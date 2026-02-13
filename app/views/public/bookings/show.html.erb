@@ -107,12 +107,18 @@
               <div class="detail-section mb-4">
                 <h5 class="section-title">
                   <i class="fas fa-user me-2"></i>
-                  お客様情報 (Customer Information)
+                  お客様情報 / Customer Information
                 </h5>
                 <div class="detail-content">
                   <div class="detail-item">
                     <span class="detail-label">お名前 / Name</span>
-                    <span class="detail-value"><%= @reservation.name.presence || (@reservation.user&.name) || '未設定 / Not Set' %></span>
+                    <span class="detail-value">
+                      <% if @reservation.user %>
+                        <%= @reservation.user.name || '未設定 / Not Set' %>
+                      <% else %>
+                        <%= @reservation.name.presence || '未設定 / Not Set' %>
+                      <% end %>
+                    </span>
                   </div>
                   <% if @reservation.user %>
                     <% if @reservation.user.phone_number.present? %>
