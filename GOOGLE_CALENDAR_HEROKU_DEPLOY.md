@@ -108,6 +108,50 @@ Herokuのファイルシステム（`/app`）は一時的です：
 
 ## 🔄 継続的な運用
 
+### 自動同期の設定（Heroku Scheduler）
+
+Googleカレンダーから予約を自動的に同期するには、Heroku Schedulerアドオンを使用します。
+
+#### 1. Heroku Schedulerアドオンの追加
+
+```bash
+# Heroku Schedulerアドオンを追加（無料プランで利用可能）
+heroku addons:create scheduler:standard
+```
+
+#### 2. Schedulerダッシュボードで設定
+
+```bash
+# Schedulerダッシュボードを開く
+heroku addons:open scheduler
+```
+
+または、Heroku Dashboardから：
+1. アプリケーションを選択
+2. 「Resources」タブを開く
+3. 「Heroku Scheduler」をクリック
+4. 「Create job」をクリック
+
+#### 3. ジョブの設定
+
+以下の設定でジョブを作成：
+
+- **Schedule**: `Every 10 minutes`（10分ごと）または `Every 1 hour`（1時間ごと）
+- **Run Command**: `rake google_calendar:sync_from_google`
+
+**推奨設定**:
+- **頻繁な同期が必要な場合**: `Every 10 minutes`
+- **通常の運用**: `Every 1 hour`
+
+#### 4. 手動実行でのテスト
+
+設定前に、手動で実行して動作を確認：
+
+```bash
+# 手動で同期タスクを実行
+heroku run rake google_calendar:sync_from_google
+```
+
 ### 定期的な再認証
 
 認証トークンが期限切れになった場合：
@@ -123,6 +167,9 @@ heroku logs --tail
 
 # Googleカレンダー関連のエラーを確認
 heroku logs --tail | grep -i "google\|calendar"
+
+# スケジューラーの実行ログを確認
+heroku logs --tail | grep -i "scheduler\|google_calendar"
 ```
 
 ## 🐛 トラブルシューティング
