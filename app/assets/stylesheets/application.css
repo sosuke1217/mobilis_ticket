@@ -40,8 +40,9 @@
 }
 
 .navbar-logo {
-  width: 40px !important;
-  height: 40px !important;
+  width: 120px !important;
+  height: auto !important;
+  max-height: 40px !important;
   object-fit: contain !important;
   filter: brightness(0) invert(1) !important;
   transition: none !important;

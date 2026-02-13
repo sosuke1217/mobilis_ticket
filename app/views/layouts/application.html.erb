@@ -51,8 +51,9 @@
       
       /* ロゴの初期スタイル */
       .navbar-logo {
-        width: 40px !important;
-        height: 40px !important;
+        width: 120px !important;
+        height: auto !important;
+        max-height: 40px !important;
         object-fit: contain !important;
         filter: brightness(0) invert(1) !important;
         transition: none !important;
@@ -97,10 +98,9 @@
       <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
           <a class="navbar-brand d-flex align-items-center" href="<%= root_path %>">
-            <div class="logo-container me-2">
+            <div class="logo-container">
               <%= image_tag "mobilis-logo.png?v=#{Time.now.to_i}", alt: "Mobilis Logo", class: "navbar-logo" %>
             </div>
-            <span class="brand-text">Mobilis</span>
           </a>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
             aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -231,8 +231,9 @@
         // ロゴのスタイルを確実に適用
         const logo = document.querySelector('.navbar-logo');
         if (logo) {
-          logo.style.width = '40px';
-          logo.style.height = '40px';
+          logo.style.width = '120px';
+          logo.style.height = 'auto';
+          logo.style.maxHeight = '40px';
           logo.style.objectFit = 'contain';
           logo.style.filter = 'brightness(0) invert(1)';
           logo.style.transition = 'none';
