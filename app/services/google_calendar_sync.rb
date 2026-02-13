@@ -158,6 +158,63 @@ class GoogleCalendarSync
     @service.authorization.present?
   end
 
+  # チャンネルを登録（Webhookを開始）
+  def watch_calendar(webhook_url, channel_id = SecureRandom.uuid)
+    return nil unless authorized?
+    
+    Rails.logger.info "🔄 Registering webhook channel: #{channel_id}, URL: #{webhook_url}"
+    
+    channel = Google::Apis::CalendarV3::Channel.new(
+      id: channel_id,
+      type: 'web_hook',
+      address: webhook_url,
+      expiration: (Time.current + 7.days).to_i * 1000  # 7日間有効（ミリ秒）
+    )
+    
+    begin
+      result = @service.watch_event(CALENDAR_ID, channel)
+      Rails.logger.info "✅ Channel registered: #{result.id}, expiration: #{Time.at(result.expiration / 1000)}"
+      
+      # チャンネル情報をデータベースに保存
+      GoogleCalendarChannel.find_or_create_by(channel_id: channel_id) do |c|
+        c.resource_id = result.resource_id
+        c.expiration = Time.at(result.expiration / 1000)
+        c.webhook_url = webhook_url
+      end
+      
+      result
+    rescue => e
+      Rails.logger.error "❌ Failed to register channel: #{e.message}"
+      Rails.logger.error "❌ Backtrace: #{e.backtrace.first(5).join("\n")}"
+      nil
+    end
+  end
+
+  # チャンネルを停止
+  def stop_channel(channel_id, resource_id)
+    return false unless authorized?
+    
+    Rails.logger.info "🔄 Stopping channel: #{channel_id}"
+    
+    channel = Google::Apis::CalendarV3::Channel.new(
+      id: channel_id,
+      resource_id: resource_id
+    )
+    
+    begin
+      @service.stop_channel(channel)
+      Rails.logger.info "✅ Channel stopped: #{channel_id}"
+      
+      # データベースから削除
+      GoogleCalendarChannel.find_by(channel_id: channel_id)&.destroy
+      
+      true
+    rescue => e
+      Rails.logger.error "❌ Failed to stop channel: #{e.message}"
+      false
+    end
+  end
+
   private
 
   # OAuth認証
@@ -590,63 +647,6 @@ class GoogleCalendarSync
     
     # ハイフン、括弧、スペース、ドットを削除
     phone.gsub(/[-\s()\.]/, '')
-  end
-
-  # チャンネルを登録（Webhookを開始）
-  def watch_calendar(webhook_url, channel_id = SecureRandom.uuid)
-    return nil unless authorized?
-    
-    Rails.logger.info "🔄 Registering webhook channel: #{channel_id}, URL: #{webhook_url}"
-    
-    channel = Google::Apis::CalendarV3::Channel.new(
-      id: channel_id,
-      type: 'web_hook',
-      address: webhook_url,
-      expiration: (Time.current + 7.days).to_i * 1000  # 7日間有効（ミリ秒）
-    )
-    
-    begin
-      result = @service.watch_event(CALENDAR_ID, channel)
-      Rails.logger.info "✅ Channel registered: #{result.id}, expiration: #{Time.at(result.expiration / 1000)}"
-      
-      # チャンネル情報をデータベースに保存
-      GoogleCalendarChannel.find_or_create_by(channel_id: channel_id) do |c|
-        c.resource_id = result.resource_id
-        c.expiration = Time.at(result.expiration / 1000)
-        c.webhook_url = webhook_url
-      end
-      
-      result
-    rescue => e
-      Rails.logger.error "❌ Failed to register channel: #{e.message}"
-      Rails.logger.error "❌ Backtrace: #{e.backtrace.first(5).join("\n")}"
-      nil
-    end
-  end
-
-  # チャンネルを停止
-  def stop_channel(channel_id, resource_id)
-    return false unless authorized?
-    
-    Rails.logger.info "🔄 Stopping channel: #{channel_id}"
-    
-    channel = Google::Apis::CalendarV3::Channel.new(
-      id: channel_id,
-      resource_id: resource_id
-    )
-    
-    begin
-      @service.stop_channel(channel)
-      Rails.logger.info "✅ Channel stopped: #{channel_id}"
-      
-      # データベースから削除
-      GoogleCalendarChannel.find_by(channel_id: channel_id)&.destroy
-      
-      true
-    rescue => e
-      Rails.logger.error "❌ Failed to stop channel: #{e.message}"
-      false
-    end
   end
 end
 
