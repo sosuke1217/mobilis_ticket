@@ -84,21 +84,21 @@
     display: inline-block;
     padding: 0.5rem;
     border-radius: 50%;
-    background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(0, 153, 204, 0.1) 100%);
-    border: 2px solid rgba(0, 212, 255, 0.2);
+    background: transparent;
+    border: none;
   }
   
   .logo-image {
     width: 150px;
     height: 150px;
     object-fit: contain;
-    filter: drop-shadow(0 4px 8px rgba(0, 212, 255, 0.3));
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
     transition: all 0.3s ease;
   }
   
   .logo-container:hover .logo-image {
-    transform: scale(1.1);
-    filter: drop-shadow(0 6px 12px rgba(0, 212, 255, 0.4));
+    transform: scale(1.05);
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
   }
   
   /* カードスタイリング */
