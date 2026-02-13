@@ -27,10 +27,12 @@ class GoogleCalendarSync
       return nil
     end
 
-    event = build_event_from_reservation(reservation)
-    Rails.logger.info "🔄 Event built: #{event.summary} from #{event.start.date_time} to #{event.end.date_time}"
-    
     begin
+      event = build_event_from_reservation(reservation)
+      Rails.logger.info "🔄 Event built: #{event.summary} from #{event.start.date_time} to #{event.end.date_time}"
+      Rails.logger.info "🔄 Event color_id: #{event.color_id.inspect}"
+      Rails.logger.info "🔄 Event extended_properties: #{event.extended_properties.inspect}"
+      
       result = @service.insert_event(CALENDAR_ID, event)
       reservation.update_columns(
         google_calendar_event_id: result.id,
@@ -242,26 +244,54 @@ class GoogleCalendarSync
 
   # 予約からGoogleカレンダーイベントを構築
   def build_event_from_reservation(reservation)
-    extended_props = Google::Apis::CalendarV3::Event::ExtendedProperties.new
-    extended_props.private = {
-      'source' => 'mobilis_reservation',
-      'reservation_id' => reservation.id.to_s
-    }
+    Rails.logger.info "🔄 Building event for reservation #{reservation.id}"
     
-    Google::Apis::CalendarV3::Event.new(
-      summary: event_summary(reservation),
-      description: event_description(reservation),
-      start: Google::Apis::CalendarV3::EventDateTime.new(
-        date_time: reservation.start_time.iso8601,
+    begin
+      # ExtendedPropertiesを構築
+      extended_props = Google::Apis::CalendarV3::Event::ExtendedProperties.new
+      private_hash = {
+        'source' => 'mobilis_reservation',
+        'reservation_id' => reservation.id.to_s
+      }
+      extended_props.private = private_hash
+      Rails.logger.info "🔄 ExtendedProperties created: #{extended_props.inspect}"
+      
+      # EventDateTimeを構築
+      start_time_str = reservation.start_time.iso8601
+      end_time_str = reservation.end_time.iso8601
+      Rails.logger.info "🔄 Start time: #{start_time_str}, End time: #{end_time_str}"
+      
+      start_dt = Google::Apis::CalendarV3::EventDateTime.new(
+        date_time: start_time_str,
         time_zone: 'Asia/Tokyo'
-      ),
-      end: Google::Apis::CalendarV3::EventDateTime.new(
-        date_time: reservation.end_time.iso8601,
+      )
+      end_dt = Google::Apis::CalendarV3::EventDateTime.new(
+        date_time: end_time_str,
         time_zone: 'Asia/Tokyo'
-      ),
-      extended_properties: extended_props,
-      color_id: event_color_id(reservation)
-    )
+      )
+      Rails.logger.info "🔄 EventDateTime objects created"
+      
+      # color_idを取得
+      color_id_value = event_color_id(reservation)
+      Rails.logger.info "🔄 Color ID: #{color_id_value.inspect} (#{color_id_value.class})"
+      
+      # Eventを構築
+      event = Google::Apis::CalendarV3::Event.new(
+        summary: event_summary(reservation),
+        description: event_description(reservation),
+        start: start_dt,
+        end: end_dt,
+        extended_properties: extended_props,
+        color_id: color_id_value
+      )
+      Rails.logger.info "🔄 Event object created successfully"
+      
+      event
+    rescue => e
+      Rails.logger.error "❌ Error in build_event_from_reservation: #{e.message}"
+      Rails.logger.error "❌ Backtrace: #{e.backtrace.first(10).join("\n")}"
+      raise
+    end
   end
 
   # イベントを予約情報で更新
