@@ -321,7 +321,12 @@ class GoogleCalendarSync
     parts = []
     parts << "予約ID: #{reservation.id}"
     parts << "メニュー: #{reservation.course}" if reservation.course.present?
-    parts << "料金: ¥#{reservation.get_price.to_s(:delimited)}" if reservation.get_price.present?
+    if reservation.get_price.present?
+      price = reservation.get_price
+      # 数値をカンマ区切りでフォーマット
+      formatted_price = price.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\1,').reverse
+      parts << "料金: ¥#{formatted_price}"
+    end
     parts << "ステータス: #{reservation.status_text}" if reservation.status.present?
     parts << "メモ: #{reservation.note}" if reservation.note.present?
     parts.join("\n")
