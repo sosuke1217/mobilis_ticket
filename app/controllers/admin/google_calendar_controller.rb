@@ -156,8 +156,12 @@ class Admin::GoogleCalendarController < ApplicationController
     begin
       sync_service = GoogleCalendarSync.new
       
-      # Webhook URLを構築
-      webhook_url = "#{request.protocol}#{request.host_with_port}/admin/google_calendar/webhook"
+      # Webhook URLを構築（HTTPSを強制）
+      protocol = Rails.env.production? ? 'https' : request.protocol
+      host = Rails.env.production? ? (ENV['HEROKU_APP_NAME'] ? "#{ENV['HEROKU_APP_NAME']}.herokuapp.com" : request.host_with_port) : request.host_with_port
+      webhook_url = "#{protocol}://#{host}/admin/google_calendar/webhook"
+      
+      Rails.logger.info "🔄 Registering webhook with URL: #{webhook_url}"
       
       # 既存のチャンネルを停止
       GoogleCalendarChannel.active.find_each do |channel|
