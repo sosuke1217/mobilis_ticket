@@ -361,11 +361,17 @@ class GoogleCalendarSync
   def create_reservation_from_event(event)
     return nil if event.start.date_time.nil?
 
+    # 既にこのイベントIDで予約が存在する場合はスキップ
+    return nil if Reservation.exists?(google_calendar_event_id: event.id)
+
     # イベントの説明から予約情報を抽出
     reservation_data = parse_event_description(event.description || '')
     
     # 顧客名を抽出（サマリーから）
-    customer_name = event.summary&.split(' - ')&.first || 'Googleカレンダーから同期'
+    # フォーマット: "顧客名 - コース名" または単に "イベント名"
+    summary_parts = event.summary&.split(' - ') || []
+    customer_name = summary_parts.first || 'Googleカレンダーから同期'
+    course_from_summary = summary_parts[1] if summary_parts.length > 1
 
     # ユーザーを検索または作成
     user = User.find_or_create_by(name: customer_name) do |u|
@@ -373,14 +379,23 @@ class GoogleCalendarSync
       u.email = reservation_data[:email] || ''
     end
 
+    # コース名を決定（説明から抽出、またはサマリーから、またはデフォルト）
+    course_name = reservation_data[:course] || course_from_summary || 'Googleカレンダーから同期'
+
+    # 終了時間を計算（イベントに終了時間がない場合は開始時間から60分後）
+    end_time = event.end&.date_time
+    if end_time.nil?
+      end_time = event.start.date_time + 60.minutes
+    end
+
     # 予約を作成
     reservation = Reservation.new(
       user: user,
       name: customer_name,
-      course: reservation_data[:course] || 'Googleカレンダーから同期',
+      course: course_name,
       start_time: event.start.date_time,
-      end_time: event.end.date_time,
-      note: reservation_data[:note] || event.description,
+      end_time: end_time,
+      note: reservation_data[:note] || event.description || '',
       status: :confirmed,
       google_calendar_event_id: event.id,
       google_calendar_synced_at: Time.current,
@@ -391,7 +406,7 @@ class GoogleCalendarSync
     )
 
     if reservation.save
-      Rails.logger.info "✅ Created reservation #{reservation.id} from Google Calendar event #{event.id}"
+      Rails.logger.info "✅ Created reservation #{reservation.id} from Google Calendar event #{event.id} (#{event.summary})"
       reservation
     else
       Rails.logger.error "❌ Failed to create reservation from Google Calendar event: #{reservation.errors.full_messages.join(', ')}"
@@ -399,6 +414,7 @@ class GoogleCalendarSync
     end
   rescue => e
     Rails.logger.error "❌ Error creating reservation from Google Calendar event: #{e.message}"
+    Rails.logger.error "❌ Backtrace: #{e.backtrace.first(5).join("\n")}"
     nil
   end
 
