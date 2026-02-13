@@ -379,13 +379,35 @@ class GoogleCalendarSync
       u.email = reservation_data[:email] || ''
     end
 
-    # コース名を決定（説明から抽出、またはサマリーから、またはデフォルト）
-    course_name = reservation_data[:course] || course_from_summary || 'Googleカレンダーから同期'
-
     # 終了時間を計算（イベントに終了時間がない場合は開始時間から60分後）
     end_time = event.end&.date_time
     if end_time.nil?
       end_time = event.start.date_time + 60.minutes
+    end
+    
+    # 予約時間からメニューの長さを推定
+    duration_minutes = if end_time && event.start.date_time
+      ((end_time - event.start.date_time) / 60).to_i
+    else
+      60
+    end
+
+    # コース名を決定（説明から抽出、またはサマリーから、または時間から推定）
+    course_name = reservation_data[:course] || course_from_summary
+    
+    # コース名が未設定の場合は、時間から推定
+    if course_name.blank? || course_name == 'Googleカレンダーから同期'
+      if duration_minutes == 60
+        course_name = '対面セッション（スタジオ／出張）'
+      elsif duration_minutes == 30
+        course_name = 'オンライン身体分析・設計'
+      elsif duration_minutes == 40
+        course_name = '40分コース'
+      elsif duration_minutes == 80
+        course_name = '80分コース'
+      else
+        course_name = "#{duration_minutes}分コース"
+      end
     end
 
     # 予約を作成
