@@ -96,12 +96,15 @@ Rails.application.configure do
   config.active_record.attributes_for_inspect = [ :id ]
 
   # Enable DNS rebinding protection and other `Host` header attacks.
+  # Heroku環境では動的にホストが変わるため、本番環境では無効化
+  # 本番環境で特定のホストを許可する場合は以下を有効化
   # config.hosts = [
-  #   "example.com",     # Allow requests from example.com
-  #   /.*\.example\.com/ # Allow requests from subdomains like `www.example.com`
+  #   "your-app.herokuapp.com",     # Herokuアプリ名
+  #   "yourdomain.com",              # カスタムドメイン
+  #   /.*\.herokuapp\.com/           # Herokuサブドメイン
   # ]
   # Skip DNS rebinding protection for the default health check endpoint.
-  # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+  config.host_authorization = { exclude: ->(request) { request.path == "/up" || request.path == "/health" } }
   config.action_mailer.perform_deliveries = true
   config.action_mailer.raise_delivery_errors = false # 本番では false が推奨
   config.action_mailer.perform_caching = false
