@@ -4743,10 +4743,27 @@
                 </div>
             ` : '';
             
+            // Googleカレンダー同期状態アイコン
+            const syncIcon = (() => {
+                if (reservation.google_calendar_event_id) {
+                    // 同期済み（24時間以内に同期された場合は緑、それ以外は黄色）
+                    const syncedAt = reservation.google_calendar_synced_at ? new Date(reservation.google_calendar_synced_at) : null;
+                    const hoursSinceSync = syncedAt ? (Date.now() - syncedAt.getTime()) / (1000 * 60 * 60) : null;
+                    if (hoursSinceSync !== null && hoursSinceSync < 24) {
+                        return '<i class="fas fa-calendar-check" style="color: #28a745; font-size: 10px; margin-left: 4px;" title="Googleカレンダーと同期済み"></i>';
+                    } else {
+                        return '<i class="fas fa-calendar-check" style="color: #ffc107; font-size: 10px; margin-left: 4px;" title="Googleカレンダーと同期済み（古い）"></i>';
+                    }
+                } else {
+                    // 未同期
+                    return '<i class="fas fa-calendar-times" style="color: #dc3545; font-size: 10px; margin-left: 4px;" title="Googleカレンダーと未同期"></i>';
+                }
+            })();
+            
             block.innerHTML = `
                 <div style="height: ${preparationTime > 0 ? bookingHeight : exactHeight}px; display: flex; flex-direction: column; justify-content: center; padding: 8px; position: relative;">
-                    <div style="font-size: 12px; font-weight: 600; margin-bottom: 4px; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">
-                        ${statusIcon[reservation.status] || ''} ${reservation.customer}
+                    <div style="font-size: 12px; font-weight: 600; margin-bottom: 4px; text-shadow: 0 1px 2px rgba(0,0,0,0.3); display: flex; align-items: center;">
+                        ${statusIcon[reservation.status] || ''} ${reservation.customer}${syncIcon}
       </div>
                     <div style="font-size: 10px; opacity: 0.9; background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 10px; display: inline-block; backdrop-filter: blur(2px); margin-bottom: 4px;">
                         ${(() => {

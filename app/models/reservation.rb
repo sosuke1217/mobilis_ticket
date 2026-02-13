@@ -826,6 +826,13 @@ class Reservation < ApplicationRecord
     rescue => e
       Rails.logger.error "❌ Failed to sync reservation #{id} to Google Calendar: #{e.message}"
       Rails.logger.error "❌ Backtrace: #{e.backtrace.first(5).join("\n")}"
+      # 同期エラーを通知（管理者向け）
+      if defined?(Rails::Console) == false && Rails.env.production?
+        AdminUser.find_each do |admin|
+          # ここで通知を送信（メール、LINE、など）
+          Rails.logger.warn "⚠️ Google Calendar sync failed for reservation #{id}, admin #{admin.id} should be notified"
+        end
+      end
       # エラーが発生しても予約作成は続行
     end
   end
@@ -850,6 +857,10 @@ class Reservation < ApplicationRecord
       end
     rescue => e
       Rails.logger.error "❌ Failed to sync reservation #{id} update to Google Calendar: #{e.message}"
+      # 同期エラーを通知（管理者向け）
+      if defined?(Rails::Console) == false && Rails.env.production?
+        Rails.logger.warn "⚠️ Google Calendar sync update failed for reservation #{id}"
+      end
     end
   end
 

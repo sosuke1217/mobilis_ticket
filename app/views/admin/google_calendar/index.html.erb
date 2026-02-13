@@ -190,6 +190,50 @@
         </div>
       </div>
 
+      <% if @sync_stats %>
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">同期統計</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-3">
+              <div class="text-center p-3 bg-light rounded">
+                <h3 class="mb-0 text-primary"><%= @sync_stats[:total_reservations] %></h3>
+                <small class="text-muted">総予約数</small>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="text-center p-3 bg-light rounded">
+                <h3 class="mb-0 text-success"><%= @sync_stats[:synced_reservations] %></h3>
+                <small class="text-muted">同期済み</small>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="text-center p-3 bg-light rounded">
+                <h3 class="mb-0 <%= @sync_stats[:unsynced_reservations] > 0 ? 'text-warning' : 'text-muted' %>"><%= @sync_stats[:unsynced_reservations] %></h3>
+                <small class="text-muted">未同期</small>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="text-center p-3 bg-light rounded">
+                <h3 class="mb-0 text-info"><%= @sync_stats[:recently_synced] %></h3>
+                <small class="text-muted">24時間以内に同期</small>
+              </div>
+            </div>
+          </div>
+          
+          <% if @sync_stats[:unsynced_reservations] > 0 %>
+          <div class="alert alert-warning mt-3">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>注意:</strong> <%= @sync_stats[:unsynced_reservations] %>件の予約がGoogleカレンダーと同期されていません。
+            「予約 → Googleカレンダー」ボタンで手動同期を実行してください。
+          </div>
+          <% end %>
+        </div>
+      </div>
+      <% end %>
+
       <div class="card">
         <div class="card-header">
           <h5 class="mb-0">自動同期について</h5>

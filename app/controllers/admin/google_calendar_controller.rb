@@ -13,6 +13,18 @@ class Admin::GoogleCalendarController < ApplicationController
       @token_exist = GoogleCalendarToken.exists?(user_id: 'default') || File.exist?(Rails.root.join('config', 'google_calendar_token.yaml'))
       # アクティブなWebhookチャンネルを取得
       @active_channel = GoogleCalendarChannel.active.first
+      
+      # 同期統計を取得
+      if @sync_enabled && @token_exist
+        @sync_stats = {
+          total_reservations: Reservation.where('start_time >= ?', Time.current).where.not(status: :cancelled).count,
+          synced_reservations: Reservation.where('start_time >= ?', Time.current).where.not(status: :cancelled).where.not(google_calendar_event_id: nil).count,
+          unsynced_reservations: Reservation.where('start_time >= ?', Time.current).where.not(status: :cancelled).where(google_calendar_event_id: nil).count,
+          recently_synced: Reservation.where('start_time >= ?', Time.current).where.not(status: :cancelled).where('google_calendar_synced_at > ?', 24.hours.ago).count
+        }
+      else
+        @sync_stats = nil
+      end
     rescue => e
       Rails.logger.error "❌ Error in GoogleCalendarController#index: #{e.message}"
       Rails.logger.error "❌ Backtrace: #{e.backtrace.first(5).join("\n")}"
@@ -20,6 +32,7 @@ class Admin::GoogleCalendarController < ApplicationController
       @credentials_exist = false
       @token_exist = false
       @active_channel = nil
+      @sync_stats = nil
       flash[:alert] = "設定の読み込み中にエラーが発生しました: #{e.message}"
     end
   end
@@ -125,6 +138,28 @@ class Admin::GoogleCalendarController < ApplicationController
     resource_uri = request.headers['X-Goog-Resource-URI']
     
     Rails.logger.info "🔔 Google Calendar webhook received: channel_id=#{channel_id}, state=#{resource_state}"
+    
+    # セキュリティ検証: 必須ヘッダーの確認
+    unless channel_id.present? && resource_id.present? && resource_state.present?
+      Rails.logger.warn "⚠️ Invalid webhook request: missing required headers"
+      head :bad_request
+      return
+    end
+    
+    # セキュリティ検証: チャンネルIDの検証（登録されているチャンネルのみ受け入れる）
+    unless GoogleCalendarChannel.exists?(channel_id: channel_id)
+      Rails.logger.warn "⚠️ Invalid webhook request: unknown channel_id #{channel_id}"
+      head :forbidden
+      return
+    end
+    
+    # セキュリティ検証: Resource IDの検証
+    channel = GoogleCalendarChannel.find_by(channel_id: channel_id)
+    if channel && channel.resource_id != resource_id
+      Rails.logger.warn "⚠️ Invalid webhook request: resource_id mismatch. Expected: #{channel.resource_id}, Got: #{resource_id}"
+      head :forbidden
+      return
+    end
     
     # 初回の通知（sync）は無視
     if resource_state == 'sync'
