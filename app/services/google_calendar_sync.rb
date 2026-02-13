@@ -139,8 +139,22 @@ class GoogleCalendarSync
     events.each do |event|
       next if event.start.date_time.nil? # 終日イベントはスキップ
       
-      # 既存の予約を検索（GoogleカレンダーイベントIDで）
+      # 既存の予約を検索
+      # 1. GoogleカレンダーイベントIDで検索
       reservation = Reservation.find_by(google_calendar_event_id: event.id)
+      
+      # 2. イベントIDで見つからない場合、extended_propertiesのreservation_idで検索
+      if reservation.nil?
+        reservation_id_from_event = event.extended_properties&.private&.dig('reservation_id')
+        if reservation_id_from_event.present?
+          reservation = Reservation.find_by(id: reservation_id_from_event)
+          # 見つかった場合、google_calendar_event_idを更新（イベントIDが変わった場合に対応）
+          if reservation && reservation.google_calendar_event_id != event.id
+            Rails.logger.info "🔄 Updating google_calendar_event_id for reservation #{reservation.id}: #{reservation.google_calendar_event_id} -> #{event.id}"
+            reservation.update_column(:google_calendar_event_id, event.id)
+          end
+        end
+      end
 
       if reservation
         # 既存の予約は常に更新（時間変更などに対応）
@@ -466,6 +480,20 @@ class GoogleCalendarSync
 
     # 既にこのイベントIDで予約が存在する場合はスキップ
     return nil if Reservation.exists?(google_calendar_event_id: event.id)
+    
+    # extended_propertiesのreservation_idで既存の予約を検索
+    reservation_id_from_event = event.extended_properties&.private&.dig('reservation_id')
+    if reservation_id_from_event.present?
+      existing_reservation = Reservation.find_by(id: reservation_id_from_event)
+      if existing_reservation
+        Rails.logger.info "🔄 Found existing reservation #{existing_reservation.id} by reservation_id, updating google_calendar_event_id"
+        # google_calendar_event_idを更新して、既存の予約を返す
+        existing_reservation.update_column(:google_calendar_event_id, event.id)
+        # 時間も更新
+        update_reservation_from_event(existing_reservation, event)
+        return existing_reservation
+      end
+    end
 
     # イベントの説明から予約情報を抽出
     reservation_data = parse_event_description(event.description || '')
