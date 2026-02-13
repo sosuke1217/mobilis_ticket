@@ -527,10 +527,10 @@ class GoogleCalendarSync
       end
     end
 
-    # 3. 名前で完全一致検索
-    user = User.where("TRIM(name) = ?", name.strip).first
+    # 3. 名前で完全一致検索（大文字小文字を無視）
+    user = User.where("LOWER(TRIM(name)) = ?", name.strip.downcase).first
     if user
-      Rails.logger.info "✅ Matched user by exact name: #{user.name} (ID: #{user.id})"
+      Rails.logger.info "✅ Matched user by exact name (case-insensitive): #{user.name} (ID: #{user.id})"
       return user
     end
 
@@ -577,6 +577,9 @@ class GoogleCalendarSync
     
     # 全角英字を半角に変換
     normalized = normalized.tr('Ａ-Ｚａ-ｚ', 'A-Za-z')
+    
+    # 大文字小文字を統一（小文字に変換）
+    normalized = normalized.downcase
     
     normalized
   end
