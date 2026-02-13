@@ -74,6 +74,17 @@ Rails.application.routes.draw do
     resources :notification_logs, only: [:index, :destroy]
     resources :notification_preferences, only: [:index]
     
+    # Googleカレンダー同期
+    resources :google_calendar, only: [:index] do
+      collection do
+        get 'authorize'
+        get 'callback'
+        post 'sync_to_google'
+        post 'sync_from_google'
+        post 'test_connection'
+      end
+    end
+    
     # テスト用コントローラー
     namespace :test do
       get 'simple'

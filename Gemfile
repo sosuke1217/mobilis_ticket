@@ -69,6 +69,10 @@ end
 
 gem "ransack", "~> 4.3"
 
+# Google Calendar API
+gem 'google-apis-calendar_v3', '~> 0.1'
+gem 'googleauth', '~> 1.0'
+
 group :development do
   gem 'letter_opener'
   gem 'letter_opener_web'

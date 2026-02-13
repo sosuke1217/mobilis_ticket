@@ -1,0 +1,153 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <h1 class="mb-4">
+        <i class="fas fa-calendar-alt me-2"></i>Googleカレンダー連携設定
+      </h1>
+
+      <% if flash[:notice] %>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          <%= flash[:notice] %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      <% end %>
+
+      <% if flash[:alert] %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <%= flash[:alert] %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      <% end %>
+
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">設定状況</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <p>
+                <strong>同期機能:</strong>
+                <% if @sync_enabled %>
+                  <span class="badge bg-success">有効</span>
+                <% else %>
+                  <span class="badge bg-secondary">無効</span>
+                  <small class="text-muted d-block mt-1">
+                    環境変数 <code>GOOGLE_CALENDAR_SYNC_ENABLED=true</code> を設定してください
+                  </small>
+                <% end %>
+              </p>
+            </div>
+            <div class="col-md-6">
+              <p>
+                <strong>認証情報:</strong>
+                <% if @credentials_exist %>
+                  <span class="badge bg-success">設定済み</span>
+                <% else %>
+                  <span class="badge bg-warning">未設定</span>
+                  <small class="text-muted d-block mt-1">
+                    <code>config/google_calendar_credentials.json</code> を配置してください
+                  </small>
+                <% end %>
+              </p>
+            </div>
+            <div class="col-md-6">
+              <p>
+                <strong>アクセストークン:</strong>
+                <% if @token_exist %>
+                  <span class="badge bg-success">認証済み</span>
+                <% else %>
+                  <span class="badge bg-warning">未認証</span>
+                  <small class="text-muted d-block mt-1">
+                    認証ボタンから認証を完了してください
+                  </small>
+                <% end %>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">認証設定</h5>
+        </div>
+        <div class="card-body">
+          <p>Googleカレンダーと連携するには、まず認証が必要です。</p>
+          <ol>
+            <li>Google Cloud Consoleでプロジェクトを作成</li>
+            <li>Calendar APIを有効化</li>
+            <li>OAuth認証情報を作成</li>
+            <li>認証情報ファイルを <code>config/google_calendar_credentials.json</code> に配置</li>
+            <li>下の「認証」ボタンから認証を完了</li>
+          </ol>
+          
+          <% if @credentials_exist %>
+            <% if @token_exist %>
+              <div class="alert alert-success">
+                <i class="fas fa-check-circle me-2"></i>認証が完了しています
+              </div>
+            <% else %>
+              <%= link_to "認証を開始", admin_google_calendar_authorize_path, class: "btn btn-primary" %>
+            <% end %>
+          <% else %>
+            <div class="alert alert-warning">
+              <i class="fas fa-exclamation-triangle me-2"></i>認証情報ファイルが設定されていません
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">同期操作</h5>
+        </div>
+        <div class="card-body">
+          <p>予約データとGoogleカレンダーを双方向で同期できます。</p>
+          
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <h6>予約 → Googleカレンダー</h6>
+              <p class="text-muted small">システム内の予約をGoogleカレンダーに送信します</p>
+              <%= form_with url: sync_to_google_admin_google_calendar_index_path, method: :post, local: true do |f| %>
+                <%= f.submit "予約をGoogleカレンダーに同期", class: "btn btn-outline-primary", disabled: !@sync_enabled || !@token_exist %>
+              <% end %>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <h6>Googleカレンダー → 予約</h6>
+              <p class="text-muted small">Googleカレンダーのイベントを予約として取り込みます</p>
+              <%= form_with url: sync_from_google_admin_google_calendar_index_path, method: :post, local: true do |f| %>
+                <%= f.submit "Googleカレンダーから予約を同期", class: "btn btn-outline-success", disabled: !@sync_enabled || !@token_exist %>
+              <% end %>
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <%= form_with url: test_connection_admin_google_calendar_index_path, method: :post, local: true do |f| %>
+              <%= f.submit "接続テスト", class: "btn btn-outline-info", disabled: !@sync_enabled || !@token_exist %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">自動同期について</h5>
+        </div>
+        <div class="card-body">
+          <p>以下の操作で自動的にGoogleカレンダーと同期されます：</p>
+          <ul>
+            <li>予約作成時 → Googleカレンダーにイベントを作成</li>
+            <li>予約更新時（日時・コース・ステータス変更） → Googleカレンダーのイベントを更新</li>
+            <li>予約キャンセル時 → Googleカレンダーからイベントを削除</li>
+          </ul>
+          <p class="text-muted small">
+            <strong>注意:</strong> 自動同期を有効にするには、環境変数 <code>GOOGLE_CALENDAR_SYNC_ENABLED=true</code> を設定してください。
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

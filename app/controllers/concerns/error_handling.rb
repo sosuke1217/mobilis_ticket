@@ -19,8 +19,8 @@ module ErrorHandling
           flash[:alert] = "エラーが発生しました: #{error.message}"
           redirect_to new_public_booking_path
         else
-          flash[:alert] = "エラーが発生しました。管理者にお問い合わせください。"
-          redirect_to admin_root_path 
+        flash[:alert] = "エラーが発生しました。管理者にお問い合わせください。"
+        redirect_to admin_root_path 
         end
       }
       format.json { 
@@ -40,7 +40,7 @@ module ErrorHandling
         if self.class.name.start_with?('Public::')
           redirect_to new_public_booking_path
         else
-          redirect_to admin_root_path 
+        redirect_to admin_root_path 
         end
       }
       format.json { 

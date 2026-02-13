@@ -48,6 +48,11 @@ class Reservation < ApplicationRecord
   after_create :log_reservation_created
   after_update :log_reservation_updated, if: :saved_change_to_status?
   
+  # Googleカレンダー同期
+  after_create :sync_to_google_calendar, if: -> { should_sync_to_google_calendar? }
+  after_update :sync_to_google_calendar_on_update, if: -> { should_sync_to_google_calendar? && (saved_change_to_start_time? || saved_change_to_end_time? || saved_change_to_course? || saved_change_to_status?) }
+  after_update :delete_from_google_calendar, if: -> { should_sync_to_google_calendar? && saved_change_to_status? && cancelled? }
+  
   # デバッグ用：バリデーション前の状態をログ出力
   before_validation :log_validation_state
   
@@ -787,6 +792,57 @@ class Reservation < ApplicationRecord
       rescue => e
         Rails.logger.error "LINEキャンセル通知送信エラー: #{e.message}"
       end
+    end
+  end
+
+  # Googleカレンダー同期メソッド
+  def should_sync_to_google_calendar?
+    # 環境変数で有効/無効を制御
+    ENV['GOOGLE_CALENDAR_SYNC_ENABLED'] == 'true'
+  end
+
+  def sync_to_google_calendar
+    return unless should_sync_to_google_calendar?
+    return if cancelled? # キャンセル済みは同期しない
+
+    begin
+      sync_service = GoogleCalendarSync.new
+      if google_calendar_event_id.present?
+        sync_service.update_event(self)
+      else
+        sync_service.create_event(self)
+      end
+    rescue => e
+      Rails.logger.error "❌ Failed to sync reservation #{id} to Google Calendar: #{e.message}"
+      # エラーが発生しても予約作成は続行
+    end
+  end
+
+  def sync_to_google_calendar_on_update
+    return unless should_sync_to_google_calendar?
+    return if cancelled? # キャンセル済みは同期しない
+
+    begin
+      sync_service = GoogleCalendarSync.new
+      if google_calendar_event_id.present?
+        sync_service.update_event(self)
+      else
+        sync_service.create_event(self)
+      end
+    rescue => e
+      Rails.logger.error "❌ Failed to sync reservation #{id} update to Google Calendar: #{e.message}"
+    end
+  end
+
+  def delete_from_google_calendar
+    return unless should_sync_to_google_calendar?
+    return unless google_calendar_event_id.present?
+
+    begin
+      sync_service = GoogleCalendarSync.new
+      sync_service.delete_event(self)
+    rescue => e
+      Rails.logger.error "❌ Failed to delete reservation #{id} from Google Calendar: #{e.message}"
     end
   end
 
