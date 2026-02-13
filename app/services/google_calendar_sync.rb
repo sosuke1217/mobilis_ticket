@@ -143,8 +143,9 @@ class GoogleCalendarSync
       reservation = Reservation.find_by(google_calendar_event_id: event.id)
 
       if reservation
-        # アプリケーションから作成された予約の場合は更新
-        if event.extended_properties&.private&.dig('source') == 'mobilis_reservation'
+        # 既存の予約は常に更新（時間変更などに対応）
+        # ただし、キャンセル済みの予約は更新しない
+        unless reservation.cancelled?
           update_reservation_from_event(reservation, event)
           updated_count += 1
         end
@@ -562,15 +563,62 @@ class GoogleCalendarSync
   def update_reservation_from_event(reservation, event)
     return if event.start.date_time.nil?
 
+    # 更新が必要かどうかをチェック
+    needs_update = false
+    update_attributes = {}
+    
     # 時間が変更されている場合は更新
-    # update_columnsを使用してコールバックをスキップ（無限ループを防ぐ）
     if reservation.start_time != event.start.date_time || reservation.end_time != event.end.date_time
-      reservation.update_columns(
-        start_time: event.start.date_time,
-        end_time: event.end.date_time,
-        google_calendar_synced_at: Time.current
-      )
-      Rails.logger.info "✅ Updated reservation #{reservation.id} from Google Calendar event #{event.id} (skipping callbacks to prevent duplicate sync)"
+      needs_update = true
+      update_attributes[:start_time] = event.start.date_time
+      
+      # 終了時間を計算
+      end_time = event.end&.date_time
+      if end_time.nil? || end_time <= event.start.date_time
+        # 終了時間が無効な場合は、開始時間から予約時間を計算
+        duration_minutes = reservation.get_duration_minutes || 60
+        end_time = event.start.date_time + duration_minutes.minutes
+      end
+      update_attributes[:end_time] = end_time
+    end
+    
+    # コース名が変更されている場合は更新（イベントのタイトルから抽出）
+    if event.summary.present?
+      summary_parts = event.summary.split(' - ')
+      course_from_summary = summary_parts[1] if summary_parts.length > 1
+      
+      # コース名が抽出できた場合、または時間から推定できる場合
+      if course_from_summary.present? && course_from_summary != reservation.course
+        needs_update = true
+        update_attributes[:course] = course_from_summary
+      elsif course_from_summary.blank?
+        # 時間からコース名を推定
+        start_time = event.start.date_time
+        end_time = update_attributes[:end_time] || event.end&.date_time || (start_time + 60.minutes)
+        duration_minutes = ((end_time - start_time) / 60).to_i
+        
+        if duration_minutes > 0
+          estimated_course = case duration_minutes
+                            when 60 then '対面セッション（スタジオ／出張）'
+                            when 30 then 'オンライン身体分析・設計'
+                            when 40 then '40分コース'
+                            when 80 then '80分コース'
+                            else "#{duration_minutes}分コース"
+                            end
+          
+          if estimated_course != reservation.course
+            needs_update = true
+            update_attributes[:course] = estimated_course
+          end
+        end
+      end
+    end
+    
+    # 更新が必要な場合のみ実行
+    if needs_update
+      update_attributes[:google_calendar_synced_at] = Time.current
+      reservation.update_columns(update_attributes)
+      Rails.logger.info "✅ Updated reservation #{reservation.id} from Google Calendar event #{event.id}: #{update_attributes.keys.join(', ')}"
     end
   end
 
