@@ -802,18 +802,29 @@ class Reservation < ApplicationRecord
   end
 
   def sync_to_google_calendar
+    Rails.logger.info "🔄 sync_to_google_calendar called for reservation #{id}"
+    Rails.logger.info "🔄 should_sync_to_google_calendar? = #{should_sync_to_google_calendar?}"
+    Rails.logger.info "🔄 ENV['GOOGLE_CALENDAR_SYNC_ENABLED'] = #{ENV['GOOGLE_CALENDAR_SYNC_ENABLED']}"
+    
     return unless should_sync_to_google_calendar?
     return if cancelled? # キャンセル済みは同期しない
 
     begin
+      Rails.logger.info "🔄 Creating GoogleCalendarSync service..."
       sync_service = GoogleCalendarSync.new
+      Rails.logger.info "🔄 GoogleCalendarSync service created, authorized? = #{sync_service.authorized?}"
+      
       if google_calendar_event_id.present?
+        Rails.logger.info "🔄 Updating existing event: #{google_calendar_event_id}"
         sync_service.update_event(self)
       else
+        Rails.logger.info "🔄 Creating new event..."
         sync_service.create_event(self)
       end
+      Rails.logger.info "✅ Successfully synced reservation #{id} to Google Calendar"
     rescue => e
       Rails.logger.error "❌ Failed to sync reservation #{id} to Google Calendar: #{e.message}"
+      Rails.logger.error "❌ Backtrace: #{e.backtrace.first(5).join("\n")}"
       # エラーが発生しても予約作成は続行
     end
   end

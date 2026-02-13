@@ -10,14 +10,25 @@ class GoogleCalendarSync
 
   def initialize
     @service = Google::Apis::CalendarV3::CalendarService.new
+    Rails.logger.info "🔄 GoogleCalendarSync initializing..."
+    Rails.logger.info "🔄 Credentials file exists: #{File.exist?(credentials_path)}"
+    Rails.logger.info "🔄 Token file exists: #{File.exist?(token_path)}"
     @service.authorization = authorize
+    Rails.logger.info "🔄 Authorization result: #{@service.authorization.present? ? 'SUCCESS' : 'FAILED'}"
   end
 
   # 予約をGoogleカレンダーに作成
   def create_event(reservation)
-    return unless authorized?
+    Rails.logger.info "🔄 create_event called for reservation #{reservation.id}"
+    Rails.logger.info "🔄 authorized? = #{authorized?}"
+    
+    unless authorized?
+      Rails.logger.error "❌ Not authorized to create Google Calendar event"
+      return nil
+    end
 
     event = build_event_from_reservation(reservation)
+    Rails.logger.info "🔄 Event built: #{event.summary} from #{event.start.date_time} to #{event.end.date_time}"
     
     begin
       result = @service.insert_event(CALENDAR_ID, event)
@@ -29,6 +40,7 @@ class GoogleCalendarSync
       result
     rescue => e
       Rails.logger.error "❌ Failed to create Google Calendar event: #{e.message}"
+      Rails.logger.error "❌ Backtrace: #{e.backtrace.first(5).join("\n")}"
       raise
     end
   end
@@ -139,24 +151,35 @@ class GoogleCalendarSync
 
   # OAuth認証
   def authorize
+    Rails.logger.info "🔄 authorize called"
+    Rails.logger.info "🔄 credentials_path: #{credentials_path}"
+    Rails.logger.info "🔄 credentials_path exists: #{File.exist?(credentials_path)}"
+    Rails.logger.info "🔄 token_path: #{token_path}"
+    Rails.logger.info "🔄 token_path exists: #{File.exist?(token_path)}"
+    
     return nil unless File.exist?(credentials_path)
     
-    client_id = Google::Auth::ClientId.from_file(credentials_path)
-    token_store = Google::Auth::Stores::FileTokenStore.new(file: token_path)
-    authorizer = Google::Auth::UserAuthorizer.new(client_id, Google::Apis::CalendarV3::AUTH_CALENDAR, token_store)
-    
-    user_id = 'default'
-    credentials = authorizer.get_credentials(user_id)
-    
-    if credentials.nil?
-      # 認証が必要な場合はnilを返す（コントローラーで処理）
-      return nil
+    begin
+      client_id = Google::Auth::ClientId.from_file(credentials_path)
+      token_store = Google::Auth::Stores::FileTokenStore.new(file: token_path)
+      authorizer = Google::Auth::UserAuthorizer.new(client_id, Google::Apis::CalendarV3::AUTH_CALENDAR, token_store)
+      
+      user_id = 'default'
+      credentials = authorizer.get_credentials(user_id)
+      
+      if credentials.nil?
+        Rails.logger.warn "⚠️ No credentials found for user_id: #{user_id}"
+        # 認証が必要な場合はnilを返す（コントローラーで処理）
+        return nil
+      end
+      
+      Rails.logger.info "✅ Authorization successful"
+      credentials
+    rescue => e
+      Rails.logger.error "❌ Google Calendar authorization failed: #{e.message}"
+      Rails.logger.error "❌ Backtrace: #{e.backtrace.first(5).join("\n")}"
+      nil
     end
-    
-    credentials
-  rescue => e
-    Rails.logger.error "❌ Google Calendar authorization failed: #{e.message}"
-    nil
   end
 
   # 認証URLを取得
