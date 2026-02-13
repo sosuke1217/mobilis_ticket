@@ -82,6 +82,9 @@ Rails.application.routes.draw do
         post 'sync_to_google'
         post 'sync_from_google'
         post 'test_connection'
+        post 'register_webhook'
+        post 'stop_webhook'
+        post 'webhook'  # Webhookエンドポイント（Googleからの通知）
       end
     end
     

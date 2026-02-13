@@ -64,6 +64,22 @@
                 <% end %>
               </p>
             </div>
+            <div class="col-md-6">
+              <p>
+                <strong>リアルタイム同期（Webhook）:</strong>
+                <% if @active_channel %>
+                  <span class="badge bg-success">有効</span>
+                  <small class="text-muted d-block mt-1">
+                    有効期限: <%= @active_channel.expiration.strftime('%Y年%m月%d日 %H:%M') %>
+                  </small>
+                <% else %>
+                  <span class="badge bg-secondary">無効</span>
+                  <small class="text-muted d-block mt-1">
+                    Googleカレンダーの変更をリアルタイムで同期するには、Webhookを登録してください
+                  </small>
+                <% end %>
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -144,18 +160,55 @@
         </div>
       </div>
 
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">リアルタイム同期（Webhook）</h5>
+        </div>
+        <div class="card-body">
+          <p>Googleカレンダーに変更があったときに、即座にアプリケーションに同期されます。</p>
+          
+          <% if @active_channel %>
+            <div class="alert alert-success">
+              <i class="fas fa-check-circle me-2"></i>
+              Webhookが登録されています（有効期限: <%= @active_channel.expiration.strftime('%Y年%m月%d日 %H:%M') %>）
+            </div>
+            <p class="text-muted small">
+              <strong>注意:</strong> Webhookチャンネルは7日間有効です。有効期限が近づいたら、Heroku Schedulerで自動更新するか、手動で更新してください。
+            </p>
+            <%= form_with url: stop_webhook_admin_google_calendar_index_path, method: :post, local: true do |f| %>
+              <%= f.submit "Webhookを停止", class: "btn btn-outline-danger", disabled: !@sync_enabled || !@token_exist %>
+            <% end %>
+          <% else %>
+            <div class="alert alert-info">
+              <i class="fas fa-info-circle me-2"></i>
+              Webhookを登録すると、Googleカレンダーの変更をリアルタイムで同期できます。
+            </div>
+            <%= form_with url: register_webhook_admin_google_calendar_index_path, method: :post, local: true do |f| %>
+              <%= f.submit "Webhookを登録（リアルタイム同期開始）", class: "btn btn-success", disabled: !@sync_enabled || !@token_exist %>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+
       <div class="card">
         <div class="card-header">
           <h5 class="mb-0">自動同期について</h5>
         </div>
         <div class="card-body">
-          <p>以下の操作で自動的にGoogleカレンダーと同期されます：</p>
+          <p><strong>アプリ → Googleカレンダー:</strong> 以下の操作で自動的にGoogleカレンダーと同期されます：</p>
           <ul>
             <li>予約作成時 → Googleカレンダーにイベントを作成</li>
             <li>予約更新時（日時・コース・ステータス変更） → Googleカレンダーのイベントを更新</li>
             <li>予約キャンセル時 → Googleカレンダーからイベントを削除</li>
           </ul>
-          <p class="text-muted small">
+          
+          <p class="mt-3"><strong>Googleカレンダー → アプリ:</strong></p>
+          <ul>
+            <li>Webhook登録時 → 変更があったときに即座に同期</li>
+            <li>手動同期 → 上記の「Googleカレンダーから予約を同期」ボタンで手動実行</li>
+          </ul>
+          
+          <p class="text-muted small mt-3">
             <strong>注意:</strong> 自動同期を有効にするには、環境変数 <code>GOOGLE_CALENDAR_SYNC_ENABLED=true</code> を設定してください。
           </p>
         </div>
