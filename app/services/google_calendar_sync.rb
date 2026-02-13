@@ -164,6 +164,17 @@ class GoogleCalendarSync
     
     Rails.logger.info "🔄 Registering webhook channel: #{channel_id}, URL: #{webhook_url}"
     
+    # 既存のチャンネルを確認（同じURLで既に登録されている場合）
+    existing_channel = GoogleCalendarChannel.active.find_by(webhook_url: webhook_url)
+    if existing_channel && existing_channel.expiration > 1.day.from_now
+      Rails.logger.info "⏭️ Active channel already exists for this URL, skipping registration"
+      return Google::Apis::CalendarV3::Channel.new(
+        id: existing_channel.channel_id,
+        resource_id: existing_channel.resource_id,
+        expiration: existing_channel.expiration.to_i * 1000
+      )
+    end
+    
     channel = Google::Apis::CalendarV3::Channel.new(
       id: channel_id,
       type: 'web_hook',
@@ -173,7 +184,7 @@ class GoogleCalendarSync
     
     begin
       result = @service.watch_event(CALENDAR_ID, channel)
-      Rails.logger.info "✅ Channel registered: #{result.id}, expiration: #{Time.at(result.expiration / 1000)}"
+      Rails.logger.info "✅ Channel registered: #{result.id}, resource_id: #{result.resource_id}, expiration: #{Time.at(result.expiration / 1000)}"
       
       # チャンネル情報をデータベースに保存
       GoogleCalendarChannel.find_or_create_by(channel_id: channel_id) do |c|
@@ -185,7 +196,7 @@ class GoogleCalendarSync
       result
     rescue => e
       Rails.logger.error "❌ Failed to register channel: #{e.message}"
-      Rails.logger.error "❌ Backtrace: #{e.backtrace.first(5).join("\n")}"
+      Rails.logger.error "❌ Backtrace: #{e.backtrace.first(10).join("\n")}"
       nil
     end
   end

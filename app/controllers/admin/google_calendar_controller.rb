@@ -2,7 +2,7 @@
 # Googleカレンダー同期管理コントローラー
 
 class Admin::GoogleCalendarController < ApplicationController
-  before_action :authenticate_admin_user!
+  before_action :authenticate_admin_user!, except: [:webhook]
   skip_before_action :verify_authenticity_token, only: [:webhook]
 
   def index
