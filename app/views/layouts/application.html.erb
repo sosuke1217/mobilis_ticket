@@ -10,9 +10,9 @@
     <%= yield :head %>
 
     <link rel="manifest" href="/manifest.json">
-    <link rel="icon" href="/icon.png" type="image/png">
-    <link rel="icon" href="/icon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="/icon.png">
+    <link rel="icon" href="/icon.png?v=#{Time.now.to_i}" type="image/png">
+    <link rel="icon" href="/favicon.ico?v=#{Time.now.to_i}" type="image/x-icon">
+    <link rel="apple-touch-icon" href="/icon.png?v=#{Time.now.to_i}">
 
     <!-- 外部CDNリソースを最初に読み込み -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
