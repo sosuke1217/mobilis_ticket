@@ -125,7 +125,16 @@ class GoogleCalendarSync
     synced_count = 0
     created_count = 0
     updated_count = 0
+    deleted_count = 0
 
+    # Googleカレンダーに存在するイベントIDのセットを作成
+    event_ids = Set.new
+    events.each do |event|
+      next if event.start.date_time.nil? # 終日イベントはスキップ
+      event_ids.add(event.id)
+    end
+
+    # イベントを処理
     events.each do |event|
       next if event.start.date_time.nil? # 終日イベントはスキップ
       
@@ -149,8 +158,32 @@ class GoogleCalendarSync
       end
     end
 
-    Rails.logger.info "✅ Google Calendar sync completed: #{synced_count} events processed (#{created_count} created, #{updated_count} updated)"
-    { synced: synced_count, created: created_count, updated: updated_count }
+    # 同期範囲内の予約で、Googleカレンダーに存在しないものを検出して削除
+    reservations_with_google_id = Reservation.where('start_time >= ? AND start_time <= ?', start_time, end_time)
+                                             .where.not(google_calendar_event_id: nil)
+                                             .where.not(status: :cancelled)
+
+    reservations_with_google_id.find_each do |reservation|
+      unless event_ids.include?(reservation.google_calendar_event_id)
+        Rails.logger.info "🗑️ Google Calendar event deleted: #{reservation.google_calendar_event_id}, cancelling reservation #{reservation.id}"
+        
+        # 予約をキャンセル（削除ではなくキャンセルで履歴を残す）
+        reservation.update_columns(
+          status: :cancelled,
+          cancelled_at: Time.current,
+          cancellation_reason: 'Googleカレンダーから削除されました'
+        )
+        
+        # Googleカレンダー同期フラグをクリア（無限ループを防ぐ）
+        reservation.update_column(:google_calendar_synced_at, nil)
+        
+        deleted_count += 1
+        synced_count += 1
+      end
+    end
+
+    Rails.logger.info "✅ Google Calendar sync completed: #{synced_count} events processed (#{created_count} created, #{updated_count} updated, #{deleted_count} deleted)"
+    { synced: synced_count, created: created_count, updated: updated_count, deleted: deleted_count }
   end
 
   # 認証済みかチェック
