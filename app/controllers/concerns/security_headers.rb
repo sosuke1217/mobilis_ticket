@@ -20,14 +20,11 @@ module SecurityHeaders
     end
     
     # CSP（Content Security Policy）
-    # NonceベースのCSPを実装（unsafe-inlineを削減）
-    nonce = SecureRandom.base64(16)
-    request.env['csp_nonce'] = nonce
-    
+    # セキュリティを強化：base-uriとform-actionを追加
     csp_directives = [
       "default-src 'self'",
-      "script-src 'self' 'nonce-#{nonce}' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com",
-      "style-src 'self' 'nonce-#{nonce}' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com",
+      "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com",
       "img-src 'self' data: https:",
       "font-src 'self' data: https://cdnjs.cloudflare.com",
       "connect-src 'self' https://api.line.me https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",

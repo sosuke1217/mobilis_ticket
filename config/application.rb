@@ -39,5 +39,13 @@ module Mobilis
 
     # レート制限（Rackミドルウェア）
     config.middleware.use RateLimiter unless Rails.env.development? || Rails.env.test?
+    
+    # セッション設定の強化
+    config.session_store :cookie_store, 
+                         key: '_mobilis_session',
+                         httponly: true,
+                         secure: Rails.env.production?,
+                         same_site: :lax,
+                         expire_after: 30.minutes
   end
 end
