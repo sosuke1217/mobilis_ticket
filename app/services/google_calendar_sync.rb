@@ -423,9 +423,9 @@ class GoogleCalendarSync
     end
 
     # 予約を作成
-    reservation = Reservation.new(
+    # userが存在する場合はnameを設定しない（user.nameを優先）
+    reservation_attributes = {
       user: user,
-      name: customer_name,
       course: course_name,
       start_time: event.start.date_time,
       end_time: end_time,
@@ -437,7 +437,11 @@ class GoogleCalendarSync
       skip_advance_booking_validation: true,
       skip_advance_notice_validation: true,
       skip_overlap_validation: true
-    )
+    }
+    # userが存在しない場合のみnameを設定
+    reservation_attributes[:name] = customer_name unless user.present?
+    
+    reservation = Reservation.new(reservation_attributes)
 
     if reservation.save
       Rails.logger.info "✅ Created reservation #{reservation.id} from Google Calendar event #{event.id} (#{event.summary})"
@@ -457,13 +461,14 @@ class GoogleCalendarSync
     return if event.start.date_time.nil?
 
     # 時間が変更されている場合は更新
+    # update_columnsを使用してコールバックをスキップ（無限ループを防ぐ）
     if reservation.start_time != event.start.date_time || reservation.end_time != event.end.date_time
       reservation.update_columns(
         start_time: event.start.date_time,
         end_time: event.end.date_time,
         google_calendar_synced_at: Time.current
       )
-      Rails.logger.info "✅ Updated reservation #{reservation.id} from Google Calendar event #{event.id}"
+      Rails.logger.info "✅ Updated reservation #{reservation.id} from Google Calendar event #{event.id} (skipping callbacks to prevent duplicate sync)"
     end
   end
 

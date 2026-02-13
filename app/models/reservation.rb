@@ -832,6 +832,13 @@ class Reservation < ApplicationRecord
   def sync_to_google_calendar_on_update
     return unless should_sync_to_google_calendar?
     return if cancelled? # キャンセル済みは同期しない
+    
+    # Googleカレンダーから同期した直後の更新はスキップ（無限ループを防ぐ）
+    # google_calendar_synced_atが最近（5秒以内）に更新された場合は、Googleカレンダーからの同期と判断
+    if google_calendar_synced_at.present? && google_calendar_synced_at > 5.seconds.ago
+      Rails.logger.info "⏭️ Skipping Google Calendar sync for reservation #{id} (recently synced from Google Calendar)"
+      return
+    end
 
     begin
       sync_service = GoogleCalendarSync.new
