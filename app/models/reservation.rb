@@ -52,6 +52,7 @@ class Reservation < ApplicationRecord
   after_create :sync_to_google_calendar, if: -> { should_sync_to_google_calendar? }
   after_update :sync_to_google_calendar_on_update, if: -> { should_sync_to_google_calendar? && (saved_change_to_start_time? || saved_change_to_end_time? || saved_change_to_course? || saved_change_to_status?) }
   after_update :delete_from_google_calendar, if: -> { should_sync_to_google_calendar? && saved_change_to_status? && cancelled? }
+  before_destroy :delete_from_google_calendar_before_destroy, if: -> { should_sync_to_google_calendar? }
   
   # デバッグ用：バリデーション前の状態をログ出力
   before_validation :log_validation_state
@@ -861,6 +862,21 @@ class Reservation < ApplicationRecord
       sync_service.delete_event(self)
     rescue => e
       Rails.logger.error "❌ Failed to delete reservation #{id} from Google Calendar: #{e.message}"
+    end
+  end
+
+  # 予約削除前にGoogleカレンダーからも削除
+  def delete_from_google_calendar_before_destroy
+    return unless should_sync_to_google_calendar?
+    return unless google_calendar_event_id.present?
+
+    begin
+      Rails.logger.info "🗑️ Deleting reservation #{id} from Google Calendar before destroy"
+      sync_service = GoogleCalendarSync.new
+      sync_service.delete_event(self)
+    rescue => e
+      Rails.logger.error "❌ Failed to delete reservation #{id} from Google Calendar before destroy: #{e.message}"
+      # エラーが発生しても削除処理は続行
     end
   end
 
