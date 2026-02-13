@@ -384,17 +384,24 @@ class GoogleCalendarSync
       email: email
     )
 
-    # 終了時間を計算（イベントに終了時間がない場合は開始時間から60分後）
+    # 終了時間を計算
+    start_time = event.start.date_time
     end_time = event.end&.date_time
-    if end_time.nil?
-      end_time = event.start.date_time + 60.minutes
+    
+    # 終了時間がnil、または開始時間と同じ/以前の場合は、デフォルトで60分後を設定
+    if end_time.nil? || end_time <= start_time
+      end_time = start_time + 60.minutes
+      Rails.logger.info "⚠️ Google Calendar event has invalid end time, using default 60 minutes: #{event.id}"
     end
     
     # 予約時間からメニューの長さを推定
-    duration_minutes = if end_time && event.start.date_time
-      ((end_time - event.start.date_time) / 60).to_i
-    else
-      60
+    duration_minutes = ((end_time - start_time) / 60).to_i
+    
+    # 時間が0分以下の場合は、デフォルトで60分を設定
+    if duration_minutes <= 0
+      duration_minutes = 60
+      end_time = start_time + 60.minutes
+      Rails.logger.info "⚠️ Google Calendar event has invalid duration (#{duration_minutes} minutes), using default 60 minutes: #{event.id}"
     end
 
     # コース名を決定（説明から抽出、またはサマリーから、または時間から推定）
