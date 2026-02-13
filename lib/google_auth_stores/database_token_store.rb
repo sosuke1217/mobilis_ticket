@@ -1,11 +1,10 @@
 # lib/google_auth_stores/database_token_store.rb
 # Google OAuthトークンをデータベースに保存するカスタムストア
 
-require 'googleauth/stores/token_store'
-
 module GoogleAuthStores
   class DatabaseTokenStore
-    include Google::Auth::Stores::TokenStore
+    # Google::Auth::Stores::TokenStoreインターフェースを実装
+    # load, store, delete メソッドを提供
 
     def load(id)
       token_record = GoogleCalendarToken.find_by(user_id: id)
