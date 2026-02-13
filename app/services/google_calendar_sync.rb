@@ -128,21 +128,25 @@ class GoogleCalendarSync
 
     events.each do |event|
       next if event.start.date_time.nil? # 終日イベントはスキップ
-      next unless event.extended_properties&.private&.dig('source') == 'mobilis_reservation'
-
+      
       # 既存の予約を検索（GoogleカレンダーイベントIDで）
       reservation = Reservation.find_by(google_calendar_event_id: event.id)
 
       if reservation
-        # 更新
-        update_reservation_from_event(reservation, event)
-        updated_count += 1
+        # アプリケーションから作成された予約の場合は更新
+        if event.extended_properties&.private&.dig('source') == 'mobilis_reservation'
+          update_reservation_from_event(reservation, event)
+          updated_count += 1
+        end
+        synced_count += 1
       else
-        # 新規作成（Googleカレンダーから作成された予約）
+        # 新規作成（Googleカレンダーから直接作成された予約も含む）
         reservation = create_reservation_from_event(event)
-        created_count += 1 if reservation
+        if reservation
+          created_count += 1
+          synced_count += 1
+        end
       end
-      synced_count += 1
     end
 
     Rails.logger.info "✅ Google Calendar sync completed: #{synced_count} events processed (#{created_count} created, #{updated_count} updated)"
