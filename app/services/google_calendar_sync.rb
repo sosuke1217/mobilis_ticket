@@ -4,6 +4,7 @@
 require 'google/apis/calendar_v3'
 require 'googleauth'
 require 'googleauth/stores/file_token_store'
+require_relative '../../lib/google_auth_stores/database_token_store'
 
 class GoogleCalendarSync
   CALENDAR_ID = 'primary' # プライマリカレンダーを使用
@@ -161,7 +162,12 @@ class GoogleCalendarSync
     
     begin
       client_id = Google::Auth::ClientId.from_file(credentials_path)
-      token_store = Google::Auth::Stores::FileTokenStore.new(file: token_path)
+      # データベースにトークンが存在する場合はデータベースストアを使用、なければファイルストアを使用（後方互換性）
+      token_store = if GoogleCalendarToken.exists?(user_id: 'default')
+        GoogleAuthStores::DatabaseTokenStore.new
+      else
+        Google::Auth::Stores::FileTokenStore.new(file: token_path)
+      end
       authorizer = Google::Auth::UserAuthorizer.new(client_id, Google::Apis::CalendarV3::AUTH_CALENDAR, token_store)
       
       user_id = 'default'
@@ -187,7 +193,12 @@ class GoogleCalendarSync
     return nil unless File.exist?(Rails.root.join('config', 'google_calendar_credentials.json'))
     
     client_id = Google::Auth::ClientId.from_file(Rails.root.join('config', 'google_calendar_credentials.json'))
-    token_store = Google::Auth::Stores::FileTokenStore.new(file: Rails.root.join('config', 'google_calendar_token.yaml'))
+    # データベースにトークンが存在する場合はデータベースストアを使用、なければファイルストアを使用（後方互換性）
+    token_store = if GoogleCalendarToken.exists?(user_id: 'default')
+      GoogleAuthStores::DatabaseTokenStore.new
+    else
+      Google::Auth::Stores::FileTokenStore.new(file: Rails.root.join('config', 'google_calendar_token.yaml'))
+    end
     authorizer = Google::Auth::UserAuthorizer.new(client_id, Google::Apis::CalendarV3::AUTH_CALENDAR, token_store)
     
     authorizer.get_authorization_url(base_url: 'urn:ietf:wg:oauth:2.0:oob')
@@ -201,7 +212,8 @@ class GoogleCalendarSync
     return nil unless File.exist?(Rails.root.join('config', 'google_calendar_credentials.json'))
     
     client_id = Google::Auth::ClientId.from_file(Rails.root.join('config', 'google_calendar_credentials.json'))
-    token_store = Google::Auth::Stores::FileTokenStore.new(file: Rails.root.join('config', 'google_calendar_token.yaml'))
+    # 認証時は常にデータベースストアを使用（新しいトークンはデータベースに保存）
+    token_store = GoogleAuthStores::DatabaseTokenStore.new
     authorizer = Google::Auth::UserAuthorizer.new(client_id, Google::Apis::CalendarV3::AUTH_CALENDAR, token_store)
     
     user_id = 'default'

@@ -15,6 +15,9 @@ module Mobilis
     # データベースも東京時間で保存するように変更
     config.active_record.default_timezone = :local
     
+    # libディレクトリを自動ロード
+    config.autoload_lib(ignore: %w(assets tasks))
+    
     # 多言語対応の設定
     config.i18n.available_locales = [:ja, :en]
     config.i18n.default_locale = :ja

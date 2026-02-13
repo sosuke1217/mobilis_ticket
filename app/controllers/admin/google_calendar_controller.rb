@@ -8,7 +8,8 @@ class Admin::GoogleCalendarController < ApplicationController
     begin
       @sync_enabled = ENV['GOOGLE_CALENDAR_SYNC_ENABLED'] == 'true'
       @credentials_exist = File.exist?(Rails.root.join('config', 'google_calendar_credentials.json'))
-      @token_exist = File.exist?(Rails.root.join('config', 'google_calendar_token.yaml'))
+      # データベースまたはファイルにトークンが存在するか確認
+      @token_exist = GoogleCalendarToken.exists?(user_id: 'default') || File.exist?(Rails.root.join('config', 'google_calendar_token.yaml'))
     rescue => e
       Rails.logger.error "❌ Error in GoogleCalendarController#index: #{e.message}"
       Rails.logger.error "❌ Backtrace: #{e.backtrace.first(5).join("\n")}"
