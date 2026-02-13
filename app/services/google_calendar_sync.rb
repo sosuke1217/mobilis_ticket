@@ -242,6 +242,12 @@ class GoogleCalendarSync
 
   # 予約からGoogleカレンダーイベントを構築
   def build_event_from_reservation(reservation)
+    extended_props = Google::Apis::CalendarV3::Event::ExtendedProperties.new
+    extended_props.private = {
+      'source' => 'mobilis_reservation',
+      'reservation_id' => reservation.id.to_s
+    }
+    
     Google::Apis::CalendarV3::Event.new(
       summary: event_summary(reservation),
       description: event_description(reservation),
@@ -253,12 +259,7 @@ class GoogleCalendarSync
         date_time: reservation.end_time.iso8601,
         time_zone: 'Asia/Tokyo'
       ),
-      extended_properties: Google::Apis::CalendarV3::Event::ExtendedProperties.new(
-        private: {
-          'source' => 'mobilis_reservation',
-          'reservation_id' => reservation.id.to_s
-        }
-      ),
+      extended_properties: extended_props,
       color_id: event_color_id(reservation)
     )
   end
