@@ -4,7 +4,7 @@
 require 'google/apis/calendar_v3'
 require 'googleauth'
 require 'googleauth/stores/file_token_store'
-require_relative '../../lib/google_auth_stores/database_token_store'
+require 'google_auth_stores/database_token_store'
 
 class GoogleCalendarSync
   CALENDAR_ID = 'primary' # プライマリカレンダーを使用
