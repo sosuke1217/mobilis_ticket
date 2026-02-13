@@ -10815,6 +10815,21 @@ function showMessage(message, type = 'info') {
                 console.log('📅 Refreshed reservations:', reservationsData);
                 console.log('📅 Refreshed shift settings:', shiftData);
                 
+                // 現在の週の日付キーをすべて取得
+                const currentWeekDateKeys = [];
+                for (let i = 0; i < 7; i++) {
+                    const date = new Date(currentWeekStart);
+                    date.setDate(date.getDate() + i);
+                    currentWeekDateKeys.push(formatDateKey(date));
+                }
+                
+                // 現在の週の予約データを完全にクリア
+                currentWeekDateKeys.forEach(dateKey => {
+                    if (reservations[dateKey]) {
+                        delete reservations[dateKey];
+                    }
+                });
+                
                 // 予約データを更新
                 if (reservationsData.success) {
                     for (const [dateKey, newReservations] of Object.entries(reservationsData.reservations)) {
