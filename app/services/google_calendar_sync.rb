@@ -373,11 +373,16 @@ class GoogleCalendarSync
     customer_name = summary_parts.first || 'Googleカレンダーから同期'
     course_from_summary = summary_parts[1] if summary_parts.length > 1
 
-    # ユーザーを検索または作成
-    user = User.find_or_create_by(name: customer_name) do |u|
-      u.phone_number = reservation_data[:phone] || ''
-      u.email = reservation_data[:email] || ''
-    end
+    # 電話番号とメールアドレスを取得
+    phone_number = reservation_data[:phone]
+    email = reservation_data[:email]&.strip&.downcase
+
+    # 既存のユーザーを検索（名前、電話番号、メールアドレスでマッチング）
+    user = find_or_match_user(
+      name: customer_name,
+      phone_number: phone_number,
+      email: email
+    )
 
     # 終了時間を計算（イベントに終了時間がない場合は開始時間から60分後）
     end_time = event.end&.date_time
@@ -467,9 +472,109 @@ class GoogleCalendarSync
       when /メモ:\s*(.+)/ then data[:note] = $1.strip
       when /電話:\s*(.+)/ then data[:phone] = $1.strip
       when /メール:\s*(.+)/ then data[:email] = $1.strip
+      when /電話番号:\s*(.+)/ then data[:phone] = $1.strip
+      when /Email:\s*(.+)/i then data[:email] = $1.strip
+      when /E-mail:\s*(.+)/i then data[:email] = $1.strip
       end
     end
     data
+  end
+
+  # 既存のユーザーを検索または作成（名前、電話番号、メールアドレスでマッチング）
+  def find_or_match_user(name:, phone_number: nil, email: nil)
+    # 名前を正規化
+    normalized_name = normalize_name(name)
+    
+    # 1. 電話番号で検索（最も確実）
+    if phone_number.present?
+      normalized_phone = normalize_phone(phone_number)
+      user = User.where("REPLACE(REPLACE(REPLACE(phone_number, '-', ''), '(', ''), ')', '') = ?", 
+                        normalized_phone.gsub(/[-\s()]/, '')).first
+      if user
+        Rails.logger.info "✅ Matched user by phone number: #{user.name} (ID: #{user.id})"
+        # 名前が異なる場合は更新
+        if normalize_name(user.name) != normalized_name && name.present?
+          user.update(name: name)
+          Rails.logger.info "✅ Updated user name: #{user.name} -> #{name}"
+        end
+        return user
+      end
+    end
+
+    # 2. メールアドレスで検索
+    if email.present?
+      user = User.where("LOWER(email) = ?", email.downcase).first
+      if user
+        Rails.logger.info "✅ Matched user by email: #{user.name} (ID: #{user.id})"
+        # 名前が異なる場合は更新
+        if normalize_name(user.name) != normalized_name && name.present?
+          user.update(name: name)
+          Rails.logger.info "✅ Updated user name: #{user.name} -> #{name}"
+        end
+        return user
+      end
+    end
+
+    # 3. 名前で完全一致検索
+    user = User.where("TRIM(name) = ?", name.strip).first
+    if user
+      Rails.logger.info "✅ Matched user by exact name: #{user.name} (ID: #{user.id})"
+      return user
+    end
+
+    # 4. 名前で正規化後の一致検索
+    User.all.each do |u|
+      if normalize_name(u.name) == normalized_name
+        Rails.logger.info "✅ Matched user by normalized name: #{u.name} (ID: #{u.id})"
+        return u
+      end
+    end
+
+    # 5. 名前で部分一致検索（類似度が高い場合）
+    User.all.each do |u|
+      normalized_existing = normalize_name(u.name)
+      # 名前が完全に含まれている、または既存の名前が含まれている場合
+      if normalized_name.include?(normalized_existing) || normalized_existing.include?(normalized_name)
+        # 長さが近い場合のみマッチ（短い名前の誤マッチを防ぐ）
+        length_diff = (normalized_name.length - normalized_existing.length).abs
+        if length_diff <= 2 && normalized_name.length >= 2 && normalized_existing.length >= 2
+          Rails.logger.info "✅ Matched user by partial name: #{u.name} (ID: #{u.id})"
+          return u
+        end
+      end
+    end
+
+    # 6. 見つからない場合は新規作成
+    Rails.logger.info "📝 Creating new user: #{name}"
+    User.create!(
+      name: name,
+      phone_number: phone_number || '',
+      email: email || ''
+    )
+  end
+
+  # 名前を正規化（スペース削除、全角半角統一など）
+  def normalize_name(name)
+    return '' if name.blank?
+    
+    # スペース、タブ、改行を削除
+    normalized = name.strip.gsub(/[\s\t\n\r]/, '')
+    
+    # 全角数字を半角に変換
+    normalized = normalized.tr('０-９', '0-9')
+    
+    # 全角英字を半角に変換
+    normalized = normalized.tr('Ａ-Ｚａ-ｚ', 'A-Za-z')
+    
+    normalized
+  end
+
+  # 電話番号を正規化（ハイフン、括弧、スペースを削除）
+  def normalize_phone(phone)
+    return '' if phone.blank?
+    
+    # ハイフン、括弧、スペース、ドットを削除
+    phone.gsub(/[-\s()\.]/, '')
   end
 end
 
