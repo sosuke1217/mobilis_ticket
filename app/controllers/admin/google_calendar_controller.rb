@@ -217,9 +217,14 @@ class Admin::GoogleCalendarController < ApplicationController
         flash[:alert] = "Webhookチャンネルの登録に失敗しました（認証されていない可能性があります）"
       end
     rescue => e
-      msg = "Webhook登録エラー: #{e.message}"
-      msg += "（WebhookのURLはHTTPSで、Googleから到達可能である必要があります。本番ではHEROKU_APP_NAMEの設定を確認してください）" if e.message.to_s.include?('invalid') || e.message.to_s.include?('address')
-      flash[:alert] = msg
+      msg = e.message.to_s
+      if msg.include?('invalid_grant') || msg.include?('expired') || msg.include?('revoked')
+        flash[:alert] = "Googleカレンダーの認証の有効期限が切れています。「認証する」ボタンから再度Googleアカウントで認証してから、Webhookを登録してください。"
+      elsif msg.include?('invalid') && msg.include?('address')
+        flash[:alert] = "Webhook登録エラー: #{msg}（WebhookのURLはHTTPSで、Googleから到達可能である必要があります。本番ではHEROKU_APP_NAMEの設定を確認してください）"
+      else
+        flash[:alert] = "Webhook登録エラー: #{msg}"
+      end
       Rails.logger.error "❌ Webhook registration error: #{e.class} #{e.message}"
       Rails.logger.error e.backtrace.first(8).join("\n")
     end
