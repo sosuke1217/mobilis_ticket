@@ -228,7 +228,7 @@
               Webhookを登録すると、Googleカレンダーの変更をリアルタイムで同期できます。
             </div>
             <p class="text-muted small">
-              登録に失敗した場合は、表示されるエラー内容を確認してください。本番環境ではWebhookのURLは<strong>HTTPS</strong>である必要があります。Herokuの場合は<code>APP_URL</code>（例: <code>https://あなたのアプリ名.herokuapp.com</code>）を設定するとURLを明示できます。
+              Herokuで登録に失敗する場合は、<code>HEROKU_APP_NAME</code>（アプリ名）を設定すると解決することがあります。WebhookのURLはHTTPSでGoogleから到達可能である必要があります。
             </p>
             <%= form_with url: register_webhook_admin_google_calendar_index_path, method: :post, local: true do |f| %>
               <%= f.submit "Webhookを登録（リアルタイム同期開始）", class: "btn btn-success", disabled: !@sync_enabled || !@token_exist %>

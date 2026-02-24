@@ -209,8 +209,11 @@ class GoogleCalendarSync
 
   # チャンネルを登録（Webhookを開始）
   def watch_calendar(webhook_url, channel_id = SecureRandom.uuid)
-    return nil unless authorized?
-    
+    unless authorized?
+      Rails.logger.error "❌ Cannot register webhook: not authorized (token missing or invalid)"
+      raise "Googleカレンダーに認証されていません。先に「認証する」から再度認証してください。"
+    end
+
     Rails.logger.info "🔄 Registering webhook channel: #{channel_id}, URL: #{webhook_url}"
     
     # 既存のチャンネルを確認（同じURLで既に登録されている場合）
@@ -234,21 +237,17 @@ class GoogleCalendarSync
     begin
       result = @service.watch_event(CALENDAR_ID, channel)
       Rails.logger.info "✅ Channel registered: #{result.id}, resource_id: #{result.resource_id}, expiration: #{Time.at(result.expiration / 1000)}"
-      
-      # チャンネル情報をデータベースに保存
-      GoogleCalendarChannel.find_or_create_by(channel_id: channel_id) do |c|
-        c.resource_id = result.resource_id
-        c.expiration = Time.at(result.expiration / 1000)
-        c.webhook_url = webhook_url
-      end
-      
+
+      # チャンネル情報をデータベースに保存（新規のみ。既存は update で上書き）
+      record = GoogleCalendarChannel.find_or_initialize_by(channel_id: channel_id)
+      record.assign_attributes(
+        resource_id: result.resource_id,
+        expiration: Time.at(result.expiration / 1000),
+        webhook_url: webhook_url
+      )
+      record.save!
+
       result
-    rescue Google::Apis::ClientError => e
-      msg = "Google API: #{e.status_code} - #{e.message}"
-      msg += " (#{e.body})" if e.respond_to?(:body) && e.body.present?
-      Rails.logger.error "❌ Failed to register channel: #{msg}"
-      Rails.logger.error "❌ Backtrace: #{e.backtrace.first(10).join("\n")}"
-      raise RuntimeError, msg
     rescue => e
       Rails.logger.error "❌ Failed to register channel: #{e.message}"
       Rails.logger.error "❌ Backtrace: #{e.backtrace.first(10).join("\n")}"

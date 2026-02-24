@@ -45,10 +45,10 @@ Rails.application.configure do
   # config.action_cable.allowed_request_origins = [ "http://example.com", /http:\/\/example.*/ ]
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
-  # Heroku で X-Forwarded-Proto を信頼し、リダイレクトループを防ぐ
-  config.assume_ssl = true
+  # Can be used together with config.force_ssl for Strict-Transport-Security and secure cookies.
+  # config.assume_ssl = true
 
-  # Force all access to the app over SSL（Heroku は手前で HTTPS 終端するため assume_ssl と併用）
+  # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
   config.force_ssl = true
 
   # Skip http-to-https redirect for the default health check endpoint.
@@ -95,9 +95,15 @@ Rails.application.configure do
   # Only use :id for inspections in production.
   config.active_record.attributes_for_inspect = [ :id ]
 
-  # Host 認証: いったん全ホスト許可してページ表示を優先（Heroku/プロキシで Host が変わる場合の対策）
-  config.hosts.clear
-  config.hosts << /.*/
+  # Enable DNS rebinding protection and other `Host` header attacks.
+  # Heroku環境では動的にホストが変わるため、本番環境では無効化
+  # 本番環境で特定のホストを許可する場合は以下を有効化
+  # config.hosts = [
+  #   "your-app.herokuapp.com",     # Herokuアプリ名
+  #   "yourdomain.com",              # カスタムドメイン
+  #   /.*\.herokuapp\.com/           # Herokuサブドメイン
+  # ]
+  # Skip DNS rebinding protection for the default health check endpoint.
   config.host_authorization = { exclude: ->(request) { request.path == "/up" || request.path == "/health" } }
   config.action_mailer.perform_deliveries = true
   config.action_mailer.raise_delivery_errors = false # 本番では false が推奨

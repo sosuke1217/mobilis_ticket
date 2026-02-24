@@ -15,8 +15,8 @@
               <p class="text-muted">管理画面にログイン</p>
             </div>
 
-            <!-- ログインフォーム（data-turbo=false で通常送信にし、Cookie/セッションを確実に保存） -->
-            <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "needs-validation", novalidate: true, data: { turbo: false } }) do |f| %>
+            <!-- ログインフォーム -->
+            <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "needs-validation", novalidate: true }) do |f| %>
               <!-- メールアドレス -->
               <div class="mb-3">
                 <%= f.label :email, "メールアドレス", class: "form-label fw-bold text-dark" %>
