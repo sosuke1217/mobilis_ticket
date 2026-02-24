@@ -69,6 +69,9 @@ end
 
 gem "ransack", "~> 4.3"
 
+# 本番でセッションをDBに保存（HerokuでCookieが維持されない問題の対策）
+gem "activerecord-session_store"
+
 # Google Calendar API
 gem 'google-apis-calendar_v3', '~> 0.1'
 gem 'googleauth', '~> 1.0'

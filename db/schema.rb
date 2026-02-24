@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_13_000003) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_24_000001) do
   create_table "admin_users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -111,6 +111,15 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_13_000003) do
     t.index ["status", "start_time"], name: "index_reservations_on_status_and_start_time"
     t.index ["status"], name: "index_reservations_on_status"
     t.index ["user_id", "start_time"], name: "index_reservations_on_user_id_and_start_time"
+  end
+
+  create_table "sessions", force: :cascade do |t|
+    t.string "session_id", null: false
+    t.text "data"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["session_id"], name: "index_sessions_on_session_id", unique: true
+    t.index ["updated_at"], name: "index_sessions_on_updated_at"
   end
 
   create_table "ticket_templates", force: :cascade do |t|
