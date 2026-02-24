@@ -45,8 +45,8 @@ Rails.application.configure do
   # config.action_cable.allowed_request_origins = [ "http://example.com", /http:\/\/example.*/ ]
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
-  # Can be used together with config.force_ssl for Strict-Transport-Security and secure cookies.
-  # config.assume_ssl = true
+  # HerokuでSSL終端するため必須。これがないとリダイレクトURLがhttpになり、SecureなセッションCookieが送られずログインが維持されない。
+  config.assume_ssl = true
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
   config.force_ssl = true
@@ -128,6 +128,9 @@ Rails.application.configure do
     host: ENV.fetch('APP_HOST', 'mobilis-stretch.com'),
     protocol: 'https'
   }
+
+  # リダイレクト・URL生成を常にHTTPSに（ログイン後のセッションCookie送信のため必須）
+  config.action_controller.default_url_options = { protocol: 'https' }
   
   # 本番環境でのエラーハンドリング
   config.action_mailer.perform_caching = false
