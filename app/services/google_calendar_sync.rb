@@ -244,14 +244,15 @@ class GoogleCalendarSync
       
       result
     rescue Google::Apis::ClientError => e
-      Rails.logger.error "❌ Google API error on watch: #{e.message}"
-      Rails.logger.error "❌ Status: #{e.status_code}, Body: #{e.body}" if e.respond_to?(:status_code)
-      # ユーザーに表示するため再送出（エラー内容を表示できるようにする）
-      raise e
+      msg = "Google API: #{e.status_code} - #{e.message}"
+      msg += " (#{e.body})" if e.respond_to?(:body) && e.body.present?
+      Rails.logger.error "❌ Failed to register channel: #{msg}"
+      Rails.logger.error "❌ Backtrace: #{e.backtrace.first(10).join("\n")}"
+      raise RuntimeError, msg
     rescue => e
       Rails.logger.error "❌ Failed to register channel: #{e.message}"
       Rails.logger.error "❌ Backtrace: #{e.backtrace.first(10).join("\n")}"
-      raise e
+      raise
     end
   end
 

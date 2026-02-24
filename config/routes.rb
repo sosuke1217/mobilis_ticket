@@ -84,7 +84,7 @@ Rails.application.routes.draw do
         post 'test_connection'
         post 'register_webhook'
         post 'stop_webhook'
-        post 'webhook'  # Webhookエンドポイント（Googleからの通知）
+        match 'webhook', to: 'google_calendar#webhook', via: [:get, :post]  # GET=検証用、POST=通知
       end
     end
     
