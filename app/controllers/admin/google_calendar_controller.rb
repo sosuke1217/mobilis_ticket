@@ -190,32 +190,46 @@ class Admin::GoogleCalendarController < ApplicationController
   def register_webhook
     begin
       sync_service = GoogleCalendarSync.new
-      
-      # Webhook URLを構築（HTTPSを強制）
-      protocol = Rails.env.production? ? 'https' : request.protocol
-      host = Rails.env.production? ? (ENV['HEROKU_APP_NAME'] ? "#{ENV['HEROKU_APP_NAME']}.herokuapp.com" : request.host_with_port) : request.host_with_port
-      webhook_url = "#{protocol}://#{host}/admin/google_calendar/webhook"
-      
+
+      unless sync_service.authorized?
+        flash[:alert] = "Googleカレンダーとの認証が完了していません。先に「認証」を実行してください。"
+        redirect_to admin_google_calendar_index_path
+        return
+      end
+
+      # Webhook URLを構築（本番では必ずHTTPS・公開URL。GoogleはHTTPSのみ受け付ける）
+      if Rails.env.production?
+        host = ENV['HEROKU_APP_NAME'].presence ? "#{ENV['HEROKU_APP_NAME'].strip}.herokuapp.com" : request.host
+        webhook_url = "https://#{host}/admin/google_calendar/webhook"
+      else
+        webhook_url = "#{request.protocol}#{request.host_with_port}/admin/google_calendar/webhook"
+      end
+
       Rails.logger.info "🔄 Registering webhook with URL: #{webhook_url}"
-      
+
       # 既存のチャンネルを停止
       GoogleCalendarChannel.active.find_each do |channel|
         sync_service.stop_channel(channel.channel_id, channel.resource_id)
       end
-      
+
       # 新しいチャンネルを登録
       result = sync_service.watch_calendar(webhook_url)
-      
+
       if result
         flash[:notice] = "Webhookチャンネルを登録しました（有効期限: #{Time.at(result.expiration / 1000).strftime('%Y年%m月%d日 %H:%M')}）"
       else
-        flash[:alert] = "Webhookチャンネルの登録に失敗しました"
+        flash[:alert] = "Webhookチャンネルの登録に失敗しました（認証エラーの可能性があります）"
       end
+    rescue Google::Apis::ClientError => e
+      msg = "Webhook登録エラー: #{e.message}"
+      msg += " (URLはHTTPSで公開アクセス可能である必要があります)" if e.message.to_s.include?("invalid") || e.status_code == 400
+      flash[:alert] = msg
+      Rails.logger.error "❌ Webhook registration error: #{e.class} #{e.message} status=#{e.status_code} body=#{e.body}"
     rescue => e
       flash[:alert] = "Webhook登録エラー: #{e.message}"
-      Rails.logger.error "❌ Webhook registration error: #{e.message}"
+      Rails.logger.error "❌ Webhook registration error: #{e.class} #{e.message} #{e.backtrace.first(3)}"
     end
-    
+
     redirect_to admin_google_calendar_index_path
   end
 
