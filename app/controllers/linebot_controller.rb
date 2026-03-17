@@ -97,9 +97,6 @@ class LinebotController < ApplicationController
         unless postback_data
           Rails.logger.error "❌ Could not extract postback data from event"
           Rails.logger.error "🔍 Full event structure: #{event.inspect}"
-          # ポストバックデータがない場合はメインメニューを表示
-          user = find_or_create_user_with_profile(user_id)
-          send_main_menu(reply_token) if reply_token
           next
         end
 
@@ -122,9 +119,7 @@ class LinebotController < ApplicationController
         if user.notification_preference.nil?
           user.create_notification_preference!(enabled: true)
         end
-        
-        # 新規ユーザーにメインメニューを送信
-        send_main_menu(event['replyToken'])
+        # フォロー時はメインメニューを自動送信しない（「メニュー」と送ると表示可能）
       end
     end
   end
@@ -484,9 +479,8 @@ class LinebotController < ApplicationController
       end
 
     else
-      # 認識されないメッセージの場合はメインメニューを表示
-      Rails.logger.info "🔍 Unrecognized message: '#{message_text}' - showing main menu"
-      send_main_menu(reply_token)
+      # 認識されないメッセージでは自動送信しない（「メニュー」と送るとメインメニューを表示）
+      Rails.logger.info "🔍 Unrecognized message: '#{message_text}' - no auto reply"
     end
   end
 
