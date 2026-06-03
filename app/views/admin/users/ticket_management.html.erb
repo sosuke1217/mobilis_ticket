@@ -1,52 +1,53 @@
 <style>
-  /* 削除モーダルのカスタムスタイル */
-  #deleteTicketModal .modal-content {
-    /* 高さ制限を完全に削除 */
+  /* チケット管理モーダル共通スタイル（削除・有効期限延長） */
+  #deleteTicketModal .modal-content,
+  #extendExpiryModal .modal-content {
     max-height: none;
     min-height: 400px;
     overflow: visible;
   }
-  
-  #deleteTicketModal .modal-body {
-    /* スクロール制限を完全に削除 */
+
+  #deleteTicketModal .modal-body,
+  #extendExpiryModal .modal-body {
     overflow: visible;
     padding: 2rem;
     min-height: 200px;
   }
-  
-  #deleteTicketModal .modal-footer {
+
+  #deleteTicketModal .modal-footer,
+  #extendExpiryModal .modal-footer {
     border-top: 1px solid #dee2e6;
     padding: 1.5rem;
     background-color: #f8f9fa;
     margin-top: 0;
     min-height: 80px;
-    /* フッターの幅をボディと合わせる */
     width: 100%;
     margin-left: 0;
     margin-right: 0;
+    justify-content: center;
   }
-  
+
+  #deleteTicketModal .btn,
+  #extendExpiryModal .btn {
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+  }
+
   #deleteTicketModal .alert {
     margin-bottom: 0;
     border: none;
     background-color: #fff3cd;
     color: #856404;
   }
-  
-  #deleteTicketModal .btn {
-    padding: 0.5rem 1.5rem;
-    font-weight: 500;
-  }
-  
+
   #deleteTicketModal .text-danger {
     color: #dc3545 !important;
   }
-  
+
   #deleteTicketModal .text-muted {
     color: #6c757d !important;
   }
-  
-  /* モーダル背景の暗さを調整 */
+
   #deleteTicketModal.modal-backdrop {
     opacity: 0.2 !important;
   }
@@ -59,24 +60,6 @@
   /* モーダル背景の透明度を調整 */
   .modal-backdrop.show {
     opacity: 0.2 !important;
-  }
-
-  /* 有効期限延長モーダルのスタイル */
-  #extendExpiryModal {
-    z-index: 1055 !important;
-  }
-  
-  #extendExpiryModal .modal-dialog {
-    z-index: 1056 !important;
-  }
-  
-  #extendExpiryModal .modal-content {
-    z-index: 1057 !important;
-    position: relative;
-  }
-  
-  #extendExpiryModal.show {
-    display: block !important;
   }
 
   /* グラデーションクラス */
@@ -661,7 +644,7 @@
           </div>
         </form>
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer justify-content-center">
         <button type="button" class="btn btn-secondary" onclick="hideExtendExpiryModal()">
           <i class="fas fa-times me-1"></i>キャンセル
         </button>
