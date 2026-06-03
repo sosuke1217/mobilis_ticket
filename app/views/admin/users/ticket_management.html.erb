@@ -1068,6 +1068,9 @@ function setupExtendMethodToggle() {
   const extendByDateSection = document.getElementById('extendByDateSection');
   
   if (!extendByDays || !extendByDate) return;
+  if (extendByDays.dataset.bound === 'true') return;
+  extendByDays.dataset.bound = 'true';
+  extendByDate.dataset.bound = 'true';
   
   extendByDays.addEventListener('change', function() {
     if (this.checked) {
@@ -1092,7 +1095,8 @@ function setupExtendMethodToggle() {
 // 延長確認ボタンの送信処理
 function setupExtendExpirySubmit() {
   const confirmExtendBtn = document.getElementById('confirmExtendExpiryBtn');
-  if (!confirmExtendBtn) return;
+  if (!confirmExtendBtn || confirmExtendBtn.dataset.bound === 'true') return;
+  confirmExtendBtn.dataset.bound = 'true';
   
   confirmExtendBtn.addEventListener('click', function() {
     const ticketId = document.getElementById('extendTicketId').value;
@@ -1123,16 +1127,37 @@ function setupExtendExpirySubmit() {
       data.new_expiry_date = newExpiryDate;
     }
     
-    // フォーム送信
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    if (!csrfToken) {
+      alert('CSRFトークンが見つかりません。ページを再読み込みしてください。');
+      return;
+    }
+    
+    confirmExtendBtn.disabled = true;
+    
     fetch(url, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+        'Accept': 'application/json',
+        'X-CSRF-Token': csrfToken
       },
       body: JSON.stringify(data)
     })
-    .then(response => response.json())
+    .then(async response => {
+      let payload = {};
+      try {
+        payload = await response.json();
+      } catch (e) {
+        payload = {};
+      }
+      
+      if (!response.ok) {
+        throw new Error(payload.error || '延長に失敗しました');
+      }
+      
+      return payload;
+    })
     .then(data => {
       if (data.success) {
         alert(data.message || '有効期限を延長しました');
@@ -1143,34 +1168,55 @@ function setupExtendExpirySubmit() {
     })
     .catch(error => {
       console.error('Error:', error);
-      alert('エラーが発生しました: ' + error.message);
+      alert(error.message || 'エラーが発生しました');
+    })
+    .finally(() => {
+      confirmExtendBtn.disabled = false;
     });
   });
 }
 
-// DOMContentLoadedでイベントリスナーを設定
-document.addEventListener('DOMContentLoaded', function() {
-  // 削除モーダルを初期化
+// 有効期限延長UIの初期化（Turbo遷移でも動作するよう turbo:load でも実行）
+function initExtendExpiryPage() {
+  if (!document.getElementById('extendExpiryModal')) return;
+  
+  setupExtendMethodToggle();
+  setupExtendExpirySubmit();
+  
+  const extendDaysInput = document.getElementById('extendDays');
+  if (extendDaysInput && extendDaysInput.dataset.bound !== 'true') {
+    extendDaysInput.dataset.bound = 'true';
+    extendDaysInput.addEventListener('input', updateExpiryPreview);
+  }
+  
+  const extendExpiryModal = document.getElementById('extendExpiryModal');
+  if (extendExpiryModal && extendExpiryModal.dataset.previewBound !== 'true') {
+    extendExpiryModal.dataset.previewBound = 'true';
+    extendExpiryModal.addEventListener('shown.bs.modal', function() {
+      updateExpiryPreview();
+    });
+  }
+}
+
+function bootTicketManagementPageScripts() {
   initializeDeleteTicketModal();
-  
-  // チケット数に応じて余白クラスを追加
   adjustTableSpacing();
+  initExtendExpiryPage();
+}
+
+// 延長ボタン・日数ボタンはイベント委譲（1回だけ登録）
+if (!window.__extendExpiryDelegationBound) {
+  window.__extendExpiryDelegationBound = true;
   
-  // 延長ボタンのイベントリスナー（イベント委譲）
   document.addEventListener('click', function(e) {
     const extendBtn = e.target.closest('.extend-expiry-btn');
     if (extendBtn) {
       e.preventDefault();
       e.stopPropagation();
       handleExtendExpiryClick(extendBtn);
+      return;
     }
-  });
-  
-  // 延長方法の切り替えを設定
-  setupExtendMethodToggle();
-  
-  // 延長日数ボタンのクリックイベント（イベント委譲）
-  document.addEventListener('click', function(e) {
+    
     if (e.target.closest('.extend-days-btn')) {
       const btn = e.target.closest('.extend-days-btn');
       const days = btn.getAttribute('data-days');
@@ -1181,24 +1227,13 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   });
-  
-  // 延長日数の入力でプレビューを更新
-  const extendDaysInput = document.getElementById('extendDays');
-  if (extendDaysInput) {
-    extendDaysInput.addEventListener('input', updateExpiryPreview);
-  }
-  
-  // 延長確認ボタンの送信処理を設定
-  setupExtendExpirySubmit();
-  
-  // モーダルが表示されたときに初期化
-  const extendExpiryModal = document.getElementById('extendExpiryModal');
-  if (extendExpiryModal) {
-    extendExpiryModal.addEventListener('shown.bs.modal', function() {
-      updateExpiryPreview();
-    });
-  }
-});
+}
+
+document.addEventListener('turbo:load', bootTicketManagementPageScripts);
+document.addEventListener('DOMContentLoaded', bootTicketManagementPageScripts);
+if (document.readyState !== 'loading') {
+  bootTicketManagementPageScripts();
+}
   
 
 // ============================================
