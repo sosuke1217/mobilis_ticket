@@ -4,15 +4,15 @@
 require 'json'
 
 begin
-  if Rails.env.production? && ENV['GOOGLE_CALENDAR_SYNC_ENABLED'] == 'true'
+  if Rails.env.production?
     credentials_path = Rails.root.join('config', 'google_calendar_credentials.json')
-    
+
     # 環境変数から認証情報を取得
     client_id = ENV['GOOGLE_CALENDAR_CLIENT_ID']
     client_secret = ENV['GOOGLE_CALENDAR_CLIENT_SECRET']
     project_id = ENV['GOOGLE_CALENDAR_PROJECT_ID'] || 'mobilis-ticket'
-    
-    # 環境変数が設定されている場合、認証情報ファイルを生成
+
+    # 同期が無効でも再認証できるよう、環境変数があれば認証情報を生成する
     if client_id.present? && client_secret.present?
       unless File.exist?(credentials_path)
         credentials_data = {
@@ -26,7 +26,7 @@ begin
             redirect_uris: ["http://localhost"]
           }
         }
-        
+
         begin
           File.write(credentials_path, JSON.pretty_generate(credentials_data))
           Rails.logger.info "✅ Google Calendar credentials file created from environment variables"
@@ -44,4 +44,3 @@ rescue => e
   Rails.logger.error "❌ Backtrace: #{e.backtrace.first(5).join("\n")}"
   # エラーが発生してもアプリケーションは起動を続行
 end
-
