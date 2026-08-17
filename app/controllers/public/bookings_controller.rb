@@ -322,6 +322,16 @@ class Public::BookingsController < ApplicationController
     existing_reservations.each do |res|
       Rails.logger.debug "  - #{res.start_time.strftime('%Y-%m-%d %H:%M')} - #{res.end_time.strftime('%H:%M')} (status: #{res.status}, course: #{res.course})"
     end
+
+    google_busy_periods = google_calendar_busy_periods_for(date)
+
+    # When Google Calendar integration is enabled, failing to check the
+    # calendar must not expose every slot as available and cause double
+    # bookings. Return no slots and let the customer retry shortly.
+    if google_calendar_enabled? && google_busy_periods.nil?
+      Rails.logger.error "❌ Availability hidden because Google Calendar could not be checked for #{date}"
+      return []
+    end
     
     # 各時間スロットごとに利用可能な時間を生成
     time_slots.each do |time_slot|
@@ -339,7 +349,8 @@ class Public::BookingsController < ApplicationController
         end
         
         # インターバルを考慮した空きチェック
-        if time_slot_available_with_interval?(current_time, end_time, interval_minutes)
+        if time_slot_available_with_interval?(current_time, end_time, interval_minutes) &&
+           google_calendar_slot_available?(current_time, end_time, interval_minutes, google_busy_periods)
         available_slots << {
           start_time: current_time,
           end_time: end_time,
@@ -354,6 +365,34 @@ class Public::BookingsController < ApplicationController
     Rails.logger.info "✅ Available slots for #{date}: #{available_slots.count}"
     Rails.logger.info "📋 Available slot times for #{date}: #{available_slots.map { |s| "#{s[:start_time].strftime('%H:%M')}-#{s[:end_time].strftime('%H:%M')}" }.join(', ')}"
     available_slots
+  end
+
+  def google_calendar_enabled?
+    ENV['GOOGLE_CALENDAR_SYNC_ENABLED'] == 'true'
+  end
+
+  def google_calendar_busy_periods_for(date)
+    return [] unless google_calendar_enabled?
+
+    @google_calendar_sync ||= GoogleCalendarSync.new
+    @google_calendar_sync.busy_periods(
+      start_time: date.beginning_of_day.in_time_zone,
+      end_time: date.end_of_day.in_time_zone
+    )
+  rescue => e
+    Rails.logger.error "❌ Google Calendar availability check failed for #{date}: #{e.message}"
+    nil
+  end
+
+  def google_calendar_slot_available?(start_time, end_time, interval_minutes, busy_periods)
+    return true if busy_periods.blank?
+
+    interval_start = start_time - interval_minutes.minutes
+    interval_end = end_time + interval_minutes.minutes
+
+    busy_periods.none? do |period|
+      period[:start_time] < interval_end && period[:end_time] > interval_start
+    end
   end
 
   def time_slot_available_with_interval?(start_time, end_time, interval_minutes = nil)
