@@ -345,7 +345,7 @@ class SystemHealthChecker
       return 0 unless File.exist?(log_file)
       
       # 簡易実装：過去100行のCompleted行を解析
-      lines = `tail -100 #{log_file}`.split("\n")
+      lines = tail_lines(log_file, 100)
       completed_lines = lines.select { |line| line.include?('Completed') && line.include?('in ') }
       
       return 0 if completed_lines.empty?
@@ -368,8 +368,9 @@ class SystemHealthChecker
       return 0 unless File.exist?(log_file)
       
       one_minute_ago = 1.minute.ago.strftime('%Y-%m-%d %H:%M')
-      request_count = `grep "#{one_minute_ago}" #{log_file} | grep "Started" | wc -l`.to_i
-      request_count
+      tail_lines(log_file, 5_000).count do |line|
+        line.include?(one_minute_ago) && line.include?("Started")
+      end
     rescue
       0
     end
@@ -381,7 +382,7 @@ class SystemHealthChecker
       log_file = Rails.root.join('log', "#{Rails.env}.log")
       return 0 unless File.exist?(log_file)
       
-      lines = `tail -200 #{log_file}`.split("\n")
+      lines = tail_lines(log_file, 200)
       completed_lines = lines.select { |line| line.include?('Completed') }
       error_lines = completed_lines.select { |line| line.include?(' 5') }
       
@@ -393,6 +394,17 @@ class SystemHealthChecker
     end
   end
   
+  def tail_lines(path, limit)
+    lines = []
+
+    File.foreach(path) do |line|
+      lines << line
+      lines.shift if lines.length > limit
+    end
+
+    lines
+  end
+
   def calculate_cache_hit_rate
     # キャッシュを使用している場合の実装例
     # Redisの統計情報から計算
