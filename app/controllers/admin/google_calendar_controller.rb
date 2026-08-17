@@ -13,6 +13,7 @@ class Admin::GoogleCalendarController < ApplicationController
       @token_exist = GoogleCalendarToken.exists?(user_id: 'default') || File.exist?(Rails.root.join('config', 'google_calendar_token.yaml'))
       # アクティブなWebhookチャンネルを取得
       @active_channel = GoogleCalendarChannel.active.first
+      @calendar_health = GoogleCalendarHealth.current
       
       # 同期統計を取得
       if @sync_enabled && @token_exist
@@ -32,6 +33,7 @@ class Admin::GoogleCalendarController < ApplicationController
       @credentials_exist = false
       @token_exist = false
       @active_channel = nil
+      @calendar_health = nil
       @sync_stats = nil
       flash[:alert] = "設定の読み込み中にエラーが発生しました: #{e.message}"
     end

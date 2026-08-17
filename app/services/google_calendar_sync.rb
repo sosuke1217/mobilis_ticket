@@ -125,7 +125,10 @@ class GoogleCalendarSync
   # nil means Google Calendar could not be checked. An empty array means the
   # calendar was checked successfully and there are no busy periods.
   def busy_periods(start_time:, end_time:)
-    return nil unless authorized?
+    unless authorized?
+      GoogleCalendarHealth.record_failure!("Google Calendar authorization is unavailable")
+      return nil
+    end
 
     request = Google::Apis::CalendarV3::FreeBusyRequest.new(
       time_min: start_time.to_datetime,
@@ -137,14 +140,18 @@ class GoogleCalendarSync
     response = @service.query_freebusy(request)
     calendars = response.calendars || {}
 
-    calendars.values.flat_map { |calendar| calendar.busy || [] }.map do |period|
+    periods = calendars.values.flat_map { |calendar| calendar.busy || [] }.map do |period|
       {
         start_time: Time.zone.parse(period.start.to_s),
         end_time: Time.zone.parse(period.end.to_s)
       }
     end
+
+    GoogleCalendarHealth.record_success!
+    periods
   rescue => e
     Rails.logger.error "❌ Failed to fetch Google Calendar free/busy data: #{e.message}"
+    GoogleCalendarHealth.record_failure!(e.message)
     nil
   end
 
