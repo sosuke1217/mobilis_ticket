@@ -137,9 +137,9 @@
           <ol>
             <li>Google Cloud Consoleでプロジェクトを作成</li>
             <li>Calendar APIを有効化</li>
-            <li>OAuth認証情報を作成</li>
-            <li>認証情報ファイルを <code>config/google_calendar_credentials.json</code> に配置</li>
-            <li>下の「認証」ボタンから認証を完了</li>
+            <li>OAuth認証情報（ウェブアプリケーション）を作成</li>
+            <li>HerokuにクライアントID・シークレット・リダイレクトURIを設定</li>
+            <li>下の「認証」ボタンからGoogle認証を完了</li>
           </ol>
           
           <% if @credentials_exist %>
@@ -153,20 +153,12 @@
             <div class="mb-3">
               <%= link_to(@token_exist ? "再認証を開始" : "認証を開始",
                           authorize_admin_google_calendar_index_path,
-                          class: "btn btn-primary",
-                          target: "_blank") %>
+                          class: "btn btn-primary") %>
             </div>
 
-            <div class="mt-3">
-              <p class="mb-2"><strong>認証コードを入力してください：</strong></p>
-              <p class="text-muted small mb-3">
-                Googleの認証画面で認証コードが表示されたら、そのコードをコピーして下のフォームに入力してください。
-              </p>
-              <%= form_with url: callback_admin_google_calendar_index_path, method: :get, local: true, class: "d-flex gap-2" do |f| %>
-                <%= f.text_field :code, class: "form-control", placeholder: "認証コードを貼り付け", required: true %>
-                <%= f.submit "認証を完了", class: "btn btn-success" %>
-              <% end %>
-            </div>
+            <p class="text-muted small mb-0">
+              Googleで認証すると、この管理画面へ自動的に戻ります。
+            </p>
           <% else %>
             <div class="alert alert-warning">
               <i class="fas fa-exclamation-triangle me-2"></i>認証情報ファイルが設定されていません

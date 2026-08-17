@@ -38,36 +38,63 @@ class Admin::GoogleCalendarController < ApplicationController
   end
 
   def authorize
-    begin
-      auth_url = GoogleCalendarSync.get_authorization_url
-      if auth_url
-        redirect_to auth_url, allow_other_host: true
-      else
-        flash[:alert] = "認証URLの取得に失敗しました。認証情報ファイルが正しく設定されているか確認してください。"
-        redirect_to admin_google_calendar_index_path
-      end
-    rescue => e
-      flash[:alert] = "認証エラー: #{e.message}"
+    state = SecureRandom.hex(32)
+    session[:google_calendar_oauth_state] = state
+    callback_url = callback_admin_google_calendar_index_url
+
+    auth_url = GoogleCalendarSync.get_authorization_url(
+      base_url: callback_url,
+      state: state
+    )
+
+    if auth_url
+      redirect_to auth_url, allow_other_host: true
+    else
+      flash[:alert] = "認証URLの取得に失敗しました。Google CloudのOAuth設定を確認してください。"
       redirect_to admin_google_calendar_index_path
     end
+  rescue => e
+    flash[:alert] = "認証エラー: #{e.message}"
+    redirect_to admin_google_calendar_index_path
   end
 
   def callback
-    code = params[:code]
-    if code.present?
-      begin
-        credentials = GoogleCalendarSync.authorize_with_code(code)
-        if credentials
-          flash[:notice] = "Googleカレンダーとの認証が完了しました"
-        else
-          flash[:alert] = "認証に失敗しました。認証コードが正しいか確認してください。"
-        end
-      rescue => e
-        flash[:alert] = "認証エラー: #{e.message}"
+    if params[:error].present?
+      flash[:alert] = "Google認証がキャンセルされました: #{params[:error]}"
+      redirect_to admin_google_calendar_index_path
+      return
+    end
+
+    expected_state = session.delete(:google_calendar_oauth_state)
+    received_state = params[:state].to_s
+    state_valid = expected_state.present? &&
+                  received_state.bytesize == expected_state.bytesize &&
+                  ActiveSupport::SecurityUtils.secure_compare(received_state, expected_state)
+
+    unless state_valid
+      flash[:alert] = "認証の確認に失敗しました。もう一度認証を開始してください。"
+      redirect_to admin_google_calendar_index_path
+      return
+    end
+
+    if params[:code].present?
+      credentials = GoogleCalendarSync.authorize_with_code(
+        params[:code],
+        base_url: callback_admin_google_calendar_index_url
+      )
+
+      if credentials
+        flash[:notice] = "Googleカレンダーとの認証が完了しました"
+      else
+        flash[:alert] = "認証に失敗しました。Google CloudのOAuth設定を確認してください。"
       end
     else
-      flash[:alert] = "認証コードが取得できませんでした。"
+      flash[:alert] = "Googleから認証コードを取得できませんでした。"
     end
+
+    redirect_to admin_google_calendar_index_path
+  rescue => e
+    flash[:alert] = "認証エラー: #{e.message}"
     redirect_to admin_google_calendar_index_path
   end
 
