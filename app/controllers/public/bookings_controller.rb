@@ -1,6 +1,8 @@
 # app/controllers/public/bookings_controller.rb の修正版
 
 class Public::BookingsController < ApplicationController
+  GOOGLE_CALENDAR_AVAILABILITY_CACHE_TTL = 10.minutes
+
   # 認証をスキップ（一般ユーザー向けページのため）
   skip_before_action :verify_authenticity_token, only: [:available_times, :week_calendar]
   
@@ -140,6 +142,21 @@ class Public::BookingsController < ApplicationController
       return render :new, status: :unprocessable_entity
     end
     
+    # 表示には短時間のキャッシュを利用できるが、予約確定前は必ず
+    # Google Calendarを直接確認して二重予約を防ぐ。
+    google_calendar_status = google_calendar_booking_status(@reservation)
+    if google_calendar_status == :conflict
+      Rails.logger.error "❌ Google Calendar conflict detected"
+      flash[:alert] = '選択された時間は既に予定が入っています。別の時間をお選びください。'
+      @reservation = Reservation.new
+      return render :new, status: :unprocessable_entity
+    elsif google_calendar_status == :unavailable
+      Rails.logger.error "❌ Booking rejected because Google Calendar could not be checked"
+      flash[:alert] = '現在カレンダーを確認できません。恐れ入りますが、少し時間をおいて再度お試しください。'
+      @reservation = Reservation.new
+      return render :new, status: :service_unavailable
+    end
+
     if @reservation.save
         Rails.logger.info "✅ Reservation created successfully: #{@reservation.id}"
       # LINE通知を送信
@@ -374,14 +391,65 @@ class Public::BookingsController < ApplicationController
   def google_calendar_busy_periods_for(date)
     return [] unless google_calendar_enabled?
 
+    cache_key = google_calendar_cache_key(date)
     @google_calendar_sync ||= GoogleCalendarSync.new
-    @google_calendar_sync.busy_periods(
+    busy_periods = @google_calendar_sync.busy_periods(
       start_time: date.beginning_of_day.in_time_zone,
       end_time: date.end_of_day.in_time_zone
     )
+
+    if busy_periods.nil?
+      cached_periods = google_calendar_cache.read(cache_key)
+      unless cached_periods.nil?
+        Rails.logger.warn "⚠️ Using cached Google Calendar availability for #{date}"
+        return cached_periods
+      end
+
+      return nil
+    end
+
+    google_calendar_cache.write(
+      cache_key,
+      busy_periods,
+      expires_in: GOOGLE_CALENDAR_AVAILABILITY_CACHE_TTL
+    )
+    busy_periods
   rescue => e
     Rails.logger.error "❌ Google Calendar availability check failed for #{date}: #{e.message}"
+    cached_periods = google_calendar_cache.read(google_calendar_cache_key(date))
+    return cached_periods unless cached_periods.nil?
+
     nil
+  end
+
+  def google_calendar_booking_status(reservation)
+    return :available unless google_calendar_enabled?
+
+    interval_minutes = ApplicationSetting.current.reservation_interval_minutes
+    @google_calendar_sync ||= GoogleCalendarSync.new
+    busy_periods = @google_calendar_sync.busy_periods(
+      start_time: reservation.start_time - interval_minutes.minutes,
+      end_time: reservation.end_time + interval_minutes.minutes
+    )
+    return :unavailable if busy_periods.nil?
+
+    google_calendar_slot_available?(
+      reservation.start_time,
+      reservation.end_time,
+      interval_minutes,
+      busy_periods
+    ) ? :available : :conflict
+  rescue => e
+    Rails.logger.error "❌ Final Google Calendar booking check failed: #{e.message}"
+    :unavailable
+  end
+
+  def google_calendar_cache
+    Rails.cache
+  end
+
+  def google_calendar_cache_key(date)
+    "google_calendar/busy_periods/#{date.iso8601}"
   end
 
   def google_calendar_slot_available?(start_time, end_time, interval_minutes, busy_periods)
