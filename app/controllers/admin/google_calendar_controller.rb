@@ -117,12 +117,16 @@ class Admin::GoogleCalendarController < ApplicationController
   def test_connection
     begin
       sync_service = GoogleCalendarSync.new
-      events = sync_service.fetch_events(
+      busy_periods = sync_service.busy_periods(
         start_time: Time.current.beginning_of_day,
         end_time: 1.day.from_now.end_of_day
       )
-      
-      flash[:notice] = "接続成功: #{events.count}件のイベントを取得しました"
+
+      if busy_periods.nil?
+        flash[:alert] = "接続エラー: Googleカレンダーの認証が無効です。再認証してください。"
+      else
+        flash[:notice] = "接続成功: Googleカレンダーの空き状況を取得できました"
+      end
     rescue => e
       flash[:alert] = "接続エラー: #{e.message}"
     end

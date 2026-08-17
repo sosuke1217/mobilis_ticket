@@ -144,25 +144,29 @@
           
           <% if @credentials_exist %>
             <% if @token_exist %>
-              <div class="alert alert-success">
-                <i class="fas fa-check-circle me-2"></i>認証が完了しています
-              </div>
-            <% else %>
-              <div class="mb-3">
-                <%= link_to "認証を開始", authorize_admin_google_calendar_index_path, class: "btn btn-primary", target: "_blank" %>
-              </div>
-              
-              <div class="mt-3">
-                <p class="mb-2"><strong>認証コードを入力してください：</strong></p>
-                <p class="text-muted small mb-3">
-                  Googleの認証画面で認証コードが表示されたら、そのコードをコピーして下のフォームに入力してください。
-                </p>
-                <%= form_with url: callback_admin_google_calendar_index_path, method: :get, local: true, class: "d-flex gap-2" do |f| %>
-                  <%= f.text_field :code, class: "form-control", placeholder: "認証コードを貼り付け", required: true %>
-                  <%= f.submit "認証を完了", class: "btn btn-success" %>
-                <% end %>
+              <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                認証情報が保存されています。接続エラーが出る場合は再認証してください。
               </div>
             <% end %>
+
+            <div class="mb-3">
+              <%= link_to(@token_exist ? "再認証を開始" : "認証を開始",
+                          authorize_admin_google_calendar_index_path,
+                          class: "btn btn-primary",
+                          target: "_blank") %>
+            </div>
+
+            <div class="mt-3">
+              <p class="mb-2"><strong>認証コードを入力してください：</strong></p>
+              <p class="text-muted small mb-3">
+                Googleの認証画面で認証コードが表示されたら、そのコードをコピーして下のフォームに入力してください。
+              </p>
+              <%= form_with url: callback_admin_google_calendar_index_path, method: :get, local: true, class: "d-flex gap-2" do |f| %>
+                <%= f.text_field :code, class: "form-control", placeholder: "認証コードを貼り付け", required: true %>
+                <%= f.submit "認証を完了", class: "btn btn-success" %>
+              <% end %>
+            </div>
           <% else %>
             <div class="alert alert-warning">
               <i class="fas fa-exclamation-triangle me-2"></i>認証情報ファイルが設定されていません
