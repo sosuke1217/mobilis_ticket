@@ -40,7 +40,7 @@ class Admin::GoogleCalendarController < ApplicationController
   def authorize
     state = SecureRandom.hex(32)
     session[:google_calendar_oauth_state] = state
-    callback_url = callback_admin_google_calendar_index_url
+    callback_url = google_oauth_callback_url
 
     auth_url = GoogleCalendarSync.get_authorization_url(
       base_url: callback_url,
@@ -80,7 +80,7 @@ class Admin::GoogleCalendarController < ApplicationController
     if params[:code].present?
       credentials = GoogleCalendarSync.authorize_with_code(
         params[:code],
-        base_url: callback_admin_google_calendar_index_url
+        base_url: google_oauth_callback_url
       )
 
       if credentials
@@ -279,6 +279,13 @@ class Admin::GoogleCalendarController < ApplicationController
     end
     
     redirect_to admin_google_calendar_index_path
+  end
+
+  private
+
+  def google_oauth_callback_url
+    ENV['GOOGLE_CALENDAR_REDIRECT_URI'].presence ||
+      callback_admin_google_calendar_index_url
   end
 end
 
