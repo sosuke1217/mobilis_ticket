@@ -287,6 +287,5 @@ class Admin::GoogleCalendarController < ApplicationController
     ENV['GOOGLE_CALENDAR_REDIRECT_URI'].presence ||
       callback_admin_google_calendar_index_url
   end
-
 end
 
