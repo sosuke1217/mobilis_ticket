@@ -425,7 +425,7 @@ class Public::BookingsController < ApplicationController
   def google_calendar_booking_status(reservation)
     return :available unless google_calendar_enabled?
 
-    interval_minutes = ApplicationSetting.current.reservation_interval_minutes
+    interval_minutes = google_calendar_interval_minutes
     @google_calendar_sync ||= GoogleCalendarSync.new
     busy_periods = @google_calendar_sync.busy_periods(
       start_time: reservation.start_time - interval_minutes.minutes,
@@ -442,6 +442,10 @@ class Public::BookingsController < ApplicationController
   rescue => e
     Rails.logger.error "❌ Final Google Calendar booking check failed: #{e.message}"
     :unavailable
+  end
+
+  def google_calendar_interval_minutes
+    ApplicationSetting.current.reservation_interval_minutes
   end
 
   def google_calendar_cache
