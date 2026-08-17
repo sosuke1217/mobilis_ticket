@@ -118,6 +118,36 @@ class GoogleCalendarSync
     end
   end
 
+  # Return busy periods directly from Google Calendar without importing them as
+  # Reservation records. This is used by the public booking screen so its
+  # availability is always based on the latest Google Calendar state.
+  #
+  # nil means Google Calendar could not be checked. An empty array means the
+  # calendar was checked successfully and there are no busy periods.
+  def busy_periods(start_time:, end_time:)
+    return nil unless authorized?
+
+    request = Google::Apis::CalendarV3::FreeBusyRequest.new(
+      time_min: start_time.iso8601,
+      time_max: end_time.iso8601,
+      time_zone: Time.zone.name,
+      items: [Google::Apis::CalendarV3::FreeBusyRequestItem.new(id: CALENDAR_ID)]
+    )
+
+    response = @service.query_freebusy(request)
+    calendars = response.calendars || {}
+
+    calendars.values.flat_map { |calendar| calendar.busy || [] }.map do |period|
+      {
+        start_time: Time.zone.parse(period.start.to_s),
+        end_time: Time.zone.parse(period.end.to_s)
+      }
+    end
+  rescue => e
+    Rails.logger.error "❌ Failed to fetch Google Calendar free/busy data: #{e.message}"
+    nil
+  end
+
   # Googleカレンダーのイベントを予約として同期
   def sync_events_to_reservations(start_time: Time.current.beginning_of_day, end_time: 30.days.from_now.end_of_day)
     return unless authorized?
@@ -775,4 +805,3 @@ class GoogleCalendarSync
     phone.gsub(/[-\s()\.]/, '')
   end
 end
-
