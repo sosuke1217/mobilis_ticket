@@ -11,19 +11,20 @@ begin
     client_id = ENV['GOOGLE_CALENDAR_CLIENT_ID']
     client_secret = ENV['GOOGLE_CALENDAR_CLIENT_SECRET']
     project_id = ENV['GOOGLE_CALENDAR_PROJECT_ID'] || 'mobilis-ticket'
+    redirect_uri = ENV['GOOGLE_CALENDAR_REDIRECT_URI']
 
     # 同期が無効でも再認証できるよう、環境変数があれば認証情報を生成する
-    if client_id.present? && client_secret.present?
+    if client_id.present? && client_secret.present? && redirect_uri.present?
       unless File.exist?(credentials_path)
         credentials_data = {
-          installed: {
+          web: {
             client_id: client_id,
             project_id: project_id,
             auth_uri: "https://accounts.google.com/o/oauth2/auth",
             token_uri: "https://oauth2.googleapis.com/token",
             auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
             client_secret: client_secret,
-            redirect_uris: ["http://localhost"]
+            redirect_uris: [redirect_uri]
           }
         }
 
@@ -36,7 +37,7 @@ begin
         end
       end
     else
-      Rails.logger.warn "⚠️ Google Calendar credentials environment variables not set"
+      Rails.logger.warn "⚠️ Google Calendar credential or redirect URI environment variables not set"
     end
   end
 rescue => e
