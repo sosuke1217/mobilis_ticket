@@ -351,36 +351,33 @@ class GoogleCalendarSync
   end
 
   # 認証URLを取得
-  def self.get_authorization_url
+  def self.get_authorization_url(base_url:, state:)
     return nil unless File.exist?(Rails.root.join('config', 'google_calendar_credentials.json'))
-    
+
     client_id = Google::Auth::ClientId.from_file(Rails.root.join('config', 'google_calendar_credentials.json'))
-    # データベースにトークンが存在する場合はデータベースストアを使用、なければファイルストアを使用（後方互換性）
-    token_store = if GoogleCalendarToken.exists?(user_id: 'default')
-      GoogleAuthStores::DatabaseTokenStore.new
-    else
-      Google::Auth::Stores::FileTokenStore.new(file: Rails.root.join('config', 'google_calendar_token.yaml'))
-    end
+    token_store = GoogleAuthStores::DatabaseTokenStore.new
     authorizer = Google::Auth::UserAuthorizer.new(client_id, Google::Apis::CalendarV3::AUTH_CALENDAR, token_store)
-    
-    authorizer.get_authorization_url(base_url: 'urn:ietf:wg:oauth:2.0:oob')
+
+    authorizer.get_authorization_url(base_url: base_url, state: state)
   rescue => e
     Rails.logger.error "❌ Failed to get authorization URL: #{e.message}"
     nil
   end
 
-  # 認証コードからトークンを取得
-  def self.authorize_with_code(code)
+  # GoogleのWebコールバックで受け取った認証コードからトークンを取得
+  def self.authorize_with_code(code, base_url:)
     return nil unless File.exist?(Rails.root.join('config', 'google_calendar_credentials.json'))
-    
+
     client_id = Google::Auth::ClientId.from_file(Rails.root.join('config', 'google_calendar_credentials.json'))
-    # 認証時は常にデータベースストアを使用（新しいトークンはデータベースに保存）
     token_store = GoogleAuthStores::DatabaseTokenStore.new
     authorizer = Google::Auth::UserAuthorizer.new(client_id, Google::Apis::CalendarV3::AUTH_CALENDAR, token_store)
-    
-    user_id = 'default'
-    credentials = authorizer.get_and_store_credentials_from_code(user_id: user_id, code: code, base_url: 'urn:ietf:wg:oauth:2.0:oob')
-    
+
+    credentials = authorizer.get_and_store_credentials_from_code(
+      user_id: 'default',
+      code: code,
+      base_url: base_url
+    )
+
     Rails.logger.info "✅ Google Calendar authorization completed"
     credentials
   rescue => e
