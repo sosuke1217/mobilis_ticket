@@ -3,6 +3,7 @@
 Rails.application.routes.draw do
   # ルートページ
   root 'admin/dashboard#index'
+  get 'oauth2callback', to: 'admin/google_calendar#callback'
   
   # 管理者用ルート
   namespace :admin do
