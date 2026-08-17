@@ -1,5 +1,6 @@
 require "test_helper"
 require "ostruct"
+require "minitest/mock"
 
 class GoogleCalendarSyncTest < ActiveSupport::TestCase
   test "FreeBusy request uses DateTime values and an IANA time zone" do
