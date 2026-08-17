@@ -1,5 +1,4 @@
 require "test_helper"
-require "minitest/mock"
 require "ostruct"
 
 class Public::BookingsControllerTest < ActiveSupport::TestCase
@@ -95,9 +94,9 @@ class Public::BookingsControllerTest < ActiveSupport::TestCase
     @controller.instance_variable_set(:@google_calendar_sync, sync)
     @controller.define_singleton_method(:google_calendar_enabled?) { true }
 
-    ApplicationSetting.stub(:current, OpenStruct.new(reservation_interval_minutes: 20)) do
-      assert_equal :unavailable, @controller.send(:google_calendar_booking_status, reservation)
-    end
+    @controller.define_singleton_method(:google_calendar_interval_minutes) { 20 }
+
+    assert_equal :unavailable, @controller.send(:google_calendar_booking_status, reservation)
   end
 
   test "final booking check rejects a live Google conflict" do
@@ -109,8 +108,8 @@ class Public::BookingsControllerTest < ActiveSupport::TestCase
     @controller.instance_variable_set(:@google_calendar_sync, sync)
     @controller.define_singleton_method(:google_calendar_enabled?) { true }
 
-    ApplicationSetting.stub(:current, OpenStruct.new(reservation_interval_minutes: 20)) do
-      assert_equal :conflict, @controller.send(:google_calendar_booking_status, reservation)
-    end
+    @controller.define_singleton_method(:google_calendar_interval_minutes) { 20 }
+
+    assert_equal :conflict, @controller.send(:google_calendar_booking_status, reservation)
   end
 end
