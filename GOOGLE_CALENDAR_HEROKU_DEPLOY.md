@@ -41,9 +41,9 @@ Herokuでは、環境変数から認証情報ファイルを動的に生成し�
 
 ```bash
 # 認証情報を環境変数として設定
-heroku config:set GOOGLE_CALENDAR_CLIENT_ID="1082079540400-ta3lg7vq2jeloc6gpl9jud02n8bn94oa.apps.googleusercontent.com"
-heroku config:set GOOGLE_CALENDAR_CLIENT_SECRET="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"
-heroku config:set GOOGLE_CALENDAR_PROJECT_ID="mobilis-ticket"
+heroku config:set GOOGLE_CALENDAR_CLIENT_ID="YOUR_CLIENT_ID"
+heroku config:set GOOGLE_CALENDAR_CLIENT_SECRET="YOUR_CLIENT_SECRET"
+heroku config:set GOOGLE_CALENDAR_PROJECT_ID="YOUR_PROJECT_ID"
 ```
 
 **注意**: アプリケーション起動時に、`config/initializers/google_calendar_credentials.rb`が環境変数から認証情報ファイルを自動生成します。
