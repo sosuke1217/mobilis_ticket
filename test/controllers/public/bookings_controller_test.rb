@@ -1,4 +1,5 @@
 require "test_helper"
+require "ostruct"
 
 class Public::BookingsControllerTest < ActiveSupport::TestCase
   setup do
@@ -55,5 +56,62 @@ class Public::BookingsControllerTest < ActiveSupport::TestCase
     )
 
     assert available
+  end
+
+  test "recent Google availability is used when a refresh temporarily fails" do
+    date = Date.new(2026, 8, 20)
+    periods = [{ start_time: @start_time, end_time: @end_time }]
+    responses = [periods, nil]
+    sync = Object.new
+    sync.define_singleton_method(:busy_periods) { |**| responses.shift }
+    cache = ActiveSupport::Cache::MemoryStore.new
+
+    @controller.instance_variable_set(:@google_calendar_sync, sync)
+    @controller.define_singleton_method(:google_calendar_enabled?) { true }
+    @controller.define_singleton_method(:google_calendar_cache) { cache }
+
+    assert_equal periods, @controller.send(:google_calendar_busy_periods_for, date)
+    assert_equal periods, @controller.send(:google_calendar_busy_periods_for, date)
+  end
+
+  test "availability fails closed without a recent cache" do
+    date = Date.new(2026, 8, 20)
+    sync = Object.new
+    sync.define_singleton_method(:busy_periods) { |**| nil }
+    cache = ActiveSupport::Cache::MemoryStore.new
+
+    @controller.instance_variable_set(:@google_calendar_sync, sync)
+    @controller.define_singleton_method(:google_calendar_enabled?) { true }
+    @controller.define_singleton_method(:google_calendar_cache) { cache }
+
+    assert_nil @controller.send(:google_calendar_busy_periods_for, date)
+  end
+
+  test "final booking check rejects a booking when Google cannot be reached" do
+    reservation = OpenStruct.new(start_time: @start_time, end_time: @end_time)
+    sync = Object.new
+    sync.define_singleton_method(:busy_periods) { |**| nil }
+    @controller.instance_variable_set(:@google_calendar_sync, sync)
+    @controller.define_singleton_method(:google_calendar_enabled?) { true }
+
+    @controller.define_singleton_method(:google_calendar_interval_minutes) { 20 }
+
+    assert_equal :unavailable, @controller.send(:google_calendar_booking_status, reservation)
+  end
+
+  test "final booking check rejects a live Google conflict" do
+    reservation = OpenStruct.new(start_time: @start_time, end_time: @end_time)
+    busy_start = @start_time + 30.minutes
+    busy_end = @end_time + 30.minutes
+    sync = Object.new
+    sync.define_singleton_method(:busy_periods) do |**|
+      [{ start_time: busy_start, end_time: busy_end }]
+    end
+    @controller.instance_variable_set(:@google_calendar_sync, sync)
+    @controller.define_singleton_method(:google_calendar_enabled?) { true }
+
+    @controller.define_singleton_method(:google_calendar_interval_minutes) { 20 }
+
+    assert_equal :conflict, @controller.send(:google_calendar_booking_status, reservation)
   end
 end
