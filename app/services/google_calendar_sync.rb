@@ -128,9 +128,9 @@ class GoogleCalendarSync
     return nil unless authorized?
 
     request = Google::Apis::CalendarV3::FreeBusyRequest.new(
-      time_min: start_time.iso8601,
-      time_max: end_time.iso8601,
-      time_zone: Time.zone.name,
+      time_min: start_time.to_datetime,
+      time_max: end_time.to_datetime,
+      time_zone: Time.zone.tzinfo.name,
       items: [Google::Apis::CalendarV3::FreeBusyRequestItem.new(id: CALENDAR_ID)]
     )
 
