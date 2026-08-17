@@ -66,6 +66,28 @@
             </div>
             <div class="col-md-6">
               <p>
+                <strong>Google接続状態:</strong>
+                <% if @calendar_health&.status == "healthy" %>
+                  <span class="badge bg-success">正常</span>
+                <% elsif @calendar_health&.status == "failing" %>
+                  <span class="badge bg-danger">接続エラー</span>
+                <% else %>
+                  <span class="badge bg-secondary">未確認</span>
+                <% end %>
+                <% if @calendar_health&.last_success_at %>
+                  <small class="text-muted d-block mt-1">
+                    最終成功: <%= @calendar_health.last_success_at.in_time_zone.strftime('%Y年%m月%d日 %H:%M') %>
+                  </small>
+                <% end %>
+                <% if @calendar_health&.status == "failing" && @calendar_health.last_error.present? %>
+                  <small class="text-danger d-block mt-1">
+                    <%= truncate(@calendar_health.last_error, length: 120) %>
+                  </small>
+                <% end %>
+              </p>
+            </div>
+            <div class="col-md-6">
+              <p>
                 <strong>リアルタイム同期（Webhook）:</strong>
                 <% if @active_channel %>
                   <span class="badge bg-success">有効</span>
