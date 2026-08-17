@@ -101,9 +101,11 @@ class Public::BookingsControllerTest < ActiveSupport::TestCase
 
   test "final booking check rejects a live Google conflict" do
     reservation = OpenStruct.new(start_time: @start_time, end_time: @end_time)
+    busy_start = @start_time + 30.minutes
+    busy_end = @end_time + 30.minutes
     sync = Object.new
     sync.define_singleton_method(:busy_periods) do |**|
-      [{ start_time: @start_time + 30.minutes, end_time: @end_time + 30.minutes }]
+      [{ start_time: busy_start, end_time: busy_end }]
     end
     @controller.instance_variable_set(:@google_calendar_sync, sync)
     @controller.define_singleton_method(:google_calendar_enabled?) { true }
