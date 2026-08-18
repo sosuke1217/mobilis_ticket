@@ -29,6 +29,15 @@ class ReservationMailerTest < ActionMailer::TestCase
     assert_includes mail.subject, "Booking Request Received"
   end
 
+  test "reminder email describes tomorrow's confirmed reservation" do
+    reservation = Reservation.new(**@attributes, status: :confirmed)
+
+    mail = ReservationMailer.reminder(reservation)
+
+    assert_includes mail.subject, "明日のご予約について"
+    assert_includes mail.body.decoded, "明日のご予約"
+  end
+
   test "tentative reservation is described as a booking request" do
     reservation = Reservation.new(**@attributes, status: :tentative)
 
