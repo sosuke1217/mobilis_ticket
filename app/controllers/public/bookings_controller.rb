@@ -591,7 +591,13 @@ class Public::BookingsController < ApplicationController
     phone = booking_params[:phone_number]
     
     user = User.find_by(phone_number: phone)
-    return user if user
+    if user
+      # Repeated bookings must keep the customer profile in sync with the
+      # values submitted in the current booking form.
+      user.assign_attributes(user_attributes.compact_blank)
+      user.save
+      return user
+    end
 
     # 新規ユーザー作成
     User.create(user_attributes)

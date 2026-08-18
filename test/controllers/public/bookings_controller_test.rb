@@ -8,6 +8,27 @@ class Public::BookingsControllerTest < ActiveSupport::TestCase
     @end_time = Time.zone.parse("2026-08-20 11:00")
   end
 
+  test "existing customer is updated from the current booking form" do
+    user = users(:one)
+    user.update!(phone_number: "09012345678", email: nil, address: nil)
+
+    submitted = ActionController::Parameters.new(
+      name: "Updated Name",
+      phone_number: "09012345678",
+      email: "updated@example.com",
+      address: "Updated Address"
+    ).permit!
+
+    @controller.define_singleton_method(:booking_params) { submitted }
+
+    result = @controller.send(:find_or_create_user)
+
+    assert_equal user.id, result.id
+    assert_equal "updated@example.com", result.reload.email
+    assert_equal "Updated Name", result.name
+    assert_equal "Updated Address", result.address
+  end
+
   test "Google busy period blocks an overlapping booking slot" do
     busy_periods = [
       {
