@@ -5,41 +5,47 @@ namespace :reservation do
   task send_reminders: :environment do
     puts "[#{Time.current}] 予約リマインダータスク開始"
     
-    # 明日の予約を取得
+    # 明日の確定予約で、まだリマインダーを送信していないもの
     tomorrow = Date.current + 1.day
-    upcoming_reservations = Reservation.active
-      .includes(:user)
+    upcoming_reservations = Reservation.confirmed
+      .includes(user: :notification_preference)
       .where(start_time: tomorrow.beginning_of_day..tomorrow.end_of_day)
-      .where(reminder_sent_at: nil) # まだリマインダーを送信していない予約のみ
-    
-    puts "明日(#{tomorrow})の予約数: #{upcoming_reservations.count}件"
-    
+      .where(reminder_sent_at: nil)
+
+    puts "明日(#{tomorrow})の確定予約数: #{upcoming_reservations.count}件"
+
     upcoming_reservations.each do |reservation|
       user = reservation.user
-      
-      # ユーザーがLINE連携していない場合はスキップ
-      next unless user&.line_user_id
-      
-      # 通知設定が無効の場合はスキップ
-      next unless user.notification_preference&.enabled?
-      
-      begin
-        # LINE通知送信
-        LineBookingNotifier.send_reminder(reservation)
-        puts "✅ リマインダー送信: #{user.name}様 - #{reservation.start_time.strftime('%H:%M')}"
-        
-        # 送信済みフラグを更新
-        reservation.update_column(:reminder_sent_at, Time.current)
-        
-        # API制限対策で少し待機
-        sleep(0.5)
-        
-      rescue => e
-        puts "❌ リマインダー送信失敗: #{user.name}様 - #{e.message}"
-        Rails.logger.error "予約リマインダー送信エラー: #{e.message}"
+      next unless user
+
+      delivered = false
+
+      if user.email.present?
+        begin
+          ReservationMailer.reminder(reservation).deliver_now
+          delivered = true
+          puts "✅ メールリマインダー送信: #{user.name}様 - #{reservation.start_time.strftime('%H:%M')}"
+        rescue => e
+          puts "❌ メールリマインダー送信失敗: #{user.name}様 - #{e.message}"
+          Rails.logger.error "予約メールリマインダー送信エラー: #{e.message}"
+        end
       end
+
+      if user.line_user_id.present? && user.notification_preference&.enabled?
+        begin
+          LineBookingNotifier.send_reminder(reservation)
+          delivered = true
+          puts "✅ LINEリマインダー送信: #{user.name}様 - #{reservation.start_time.strftime('%H:%M')}"
+        rescue => e
+          puts "❌ LINEリマインダー送信失敗: #{user.name}様 - #{e.message}"
+          Rails.logger.error "予約LINEリマインダー送信エラー: #{e.message}"
+        end
+      end
+
+      reservation.update_column(:reminder_sent_at, Time.current) if delivered
+      sleep(0.5) if delivered
     end
-    
+
     puts "[#{Time.current}] 予約リマインダータスク完了"
   end
   
