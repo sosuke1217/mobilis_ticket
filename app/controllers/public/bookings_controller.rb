@@ -634,7 +634,7 @@ class Public::BookingsController < ApplicationController
   end
 
   def notify_admin(reservation)
-    AdminNotificationJob.perform_later(reservation)
+    AdminNotificationJob.perform_now(reservation)
   rescue => e
     Rails.logger.error "管理者通知エラー: #{e.message}"
   end
