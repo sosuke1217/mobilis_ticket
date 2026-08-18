@@ -81,13 +81,10 @@ class ReservationMailer < ApplicationMailer
   
   # ユーザーの言語設定を判定するメソッド
   def detect_user_language(user)
-    # メールアドレスのドメインで言語を判定
-    return :en if user.email&.include?('.com') || user.email&.include?('.org') || user.email&.include?('.net')
-    
-    # 名前の文字種で言語を判定（簡易判定）
+    # 名前が英字のみの場合は英語、それ以外は日本語。
+    # Gmailなどのドメインは言語を表さないため判定には使用しない。
     return :en if user.name&.match?(/\A[a-zA-Z\s]+\z/)
     
-    # デフォルトは日本語
     :ja
   end
 end
