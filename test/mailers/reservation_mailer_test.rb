@@ -17,7 +17,7 @@ class ReservationMailerTest < ActionMailer::TestCase
     mail = ReservationMailer.confirmation(reservation)
 
     assert_includes mail.subject, "仮予約を受け付けました"
-    assert_includes mail.html_part.body.decoded, "現在はまだ予約確定前です"
+    assert_includes mail.body.decoded, "現在はまだ予約確定前です"
   end
 
   test "confirmed reservation is described as confirmed" do
@@ -26,6 +26,6 @@ class ReservationMailerTest < ActionMailer::TestCase
     mail = ReservationMailer.confirmation(reservation)
 
     assert_includes mail.subject, "ご予約確定"
-    assert_includes mail.html_part.body.decoded, "ご予約が確定しました"
+    assert_includes mail.body.decoded, "ご予約が確定しました"
   end
 end
