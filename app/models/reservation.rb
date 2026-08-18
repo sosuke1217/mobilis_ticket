@@ -43,6 +43,7 @@ class Reservation < ApplicationRecord
   
   before_validation :set_name_from_user, if: -> { name.blank? && user.present? }
   before_validation :set_end_time, if: -> { start_time.present? && course.present? }
+  # Heroku runs without a persistent Active Job worker, so deliver after commit in-process.
   after_create_commit :schedule_confirmation_email
   after_update :handle_status_change
   after_create :log_reservation_created
