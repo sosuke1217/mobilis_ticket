@@ -43,7 +43,7 @@ class Reservation < ApplicationRecord
   
   before_validation :set_name_from_user, if: -> { name.blank? && user.present? }
   before_validation :set_end_time, if: -> { start_time.present? && course.present? }
-  after_create :schedule_confirmation_email
+  after_create_commit :schedule_confirmation_email
   after_update :handle_status_change
   after_create :log_reservation_created
   after_update :log_reservation_updated, if: :saved_change_to_status?
@@ -719,7 +719,7 @@ class Reservation < ApplicationRecord
     return unless user && user.email.present?
     
     begin
-      ReservationMailer.confirmation(self).deliver_later(wait: 5.minutes)
+      ReservationMailer.confirmation(self).deliver_now
       Rails.logger.info "📧 Confirmation email scheduled for: #{user.email}"
     rescue => e
       Rails.logger.error "確認メール送信エラー: #{e.message}"
@@ -750,7 +750,7 @@ class Reservation < ApplicationRecord
     # メール通知
     if user&.email.present?
       begin
-        ReservationMailer.confirmation(self).deliver_later
+        ReservationMailer.confirmation(self).deliver_now
         Rails.logger.info "📧 Confirmation notification sent to: #{user.email}"
       rescue => e
         Rails.logger.error "確認通知送信エラー: #{e.message}"
@@ -778,7 +778,7 @@ class Reservation < ApplicationRecord
     # メール通知
     if user&.email.present?
       begin
-        ReservationMailer.cancellation_notification(self).deliver_later
+        ReservationMailer.cancellation_notification(self).deliver_now
         Rails.logger.info "📧 Cancellation notification sent to: #{user.email}"
       rescue => e
         Rails.logger.error "キャンセル通知送信エラー: #{e.message}"
