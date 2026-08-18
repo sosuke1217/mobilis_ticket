@@ -3,7 +3,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>予約確認</title>
+  <title><%= @tentative ? "仮予約受付" : "予約確定" %></title>
   <style>
     body { 
       font-family: Arial, sans-serif; 
@@ -53,14 +53,19 @@
 <body>
   <div class="header">
     <h1><%= @salon_name %></h1>
-    <h2>✅ ご予約確認</h2>
+    <h2><%= @tentative ? "🕒 仮予約を受け付けました" : "✅ ご予約が確定しました" %></h2>
   </div>
   
   <div class="content">
     <p><strong><%= @user.name %></strong> 様</p>
     
-    <p>いつもご利用いただきありがとうございます。<br>
-    以下の内容でご予約を承りました。</p>
+    <% if @tentative %>
+      <p>ご予約リクエストを受け付けました。<br>
+      現在はまだ予約確定前です。内容を確認後、改めて予約確定メールをお送りします。</p>
+    <% else %>
+      <p>いつもご利用いただきありがとうございます。<br>
+      以下の内容でご予約が確定しました。</p>
+    <% end %>
     
     <div class="reservation-details">
       <h3>📅 予約詳細</h3>
@@ -88,8 +93,13 @@
     
 
     
-    <p>ご不明な点がございましたら、お気軽にお問い合わせください。<br>
-    当日お会いできることを楽しみにしております。</p>
+    <% if @tentative %>
+      <p>確定のご連絡まで、しばらくお待ちください。<br>
+      ご不明な点がございましたら、お気軽にお問い合わせください。</p>
+    <% else %>
+      <p>ご不明な点がございましたら、お気軽にお問い合わせください。<br>
+      当日お会いできることを楽しみにしております。</p>
+    <% end %>
   </div>
   
   <div class="footer">

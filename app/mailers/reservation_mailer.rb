@@ -7,6 +7,7 @@ class ReservationMailer < ApplicationMailer
     @reservation = reservation
     @user = reservation.user
     @salon_name = "Mobilis Stretch"
+    @tentative = reservation.tentative?
     
     # ユーザーの言語設定を判定（デフォルトは日本語）
     user_language = detect_user_language(@user)
@@ -14,9 +15,11 @@ class ReservationMailer < ApplicationMailer
     # 件名を言語に応じて設定
     subject = case user_language
     when :en
-      "[#{@salon_name}] Reservation Confirmation - #{@reservation.start_time.strftime('%m/%d %H:%M')}"
+      status_text = @tentative ? "Booking Request Received" : "Reservation Confirmed"
+      "[#{@salon_name}] #{status_text} - #{@reservation.start_time.strftime('%m/%d %H:%M')}"
     else
-      "【#{@salon_name}】ご予約確認 - #{@reservation.start_time.strftime('%m/%d %H:%M')}"
+      status_text = @tentative ? "仮予約を受け付けました" : "ご予約確定"
+      "【#{@salon_name}】#{status_text} - #{@reservation.start_time.strftime('%m/%d %H:%M')}"
     end
     
     mail(

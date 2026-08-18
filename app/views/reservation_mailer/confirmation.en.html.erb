@@ -3,7 +3,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Reservation Confirmation</title>
+  <title><%= @tentative ? "Booking Request Received" : "Reservation Confirmed" %></title>
   <style>
     body { 
       font-family: Arial, sans-serif; 
@@ -46,14 +46,19 @@
 <body>
   <div class="header">
     <h1><%= @salon_name %></h1>
-    <h2>✅ Reservation Confirmation</h2>
+    <h2><%= @tentative ? "🕒 Booking Request Received" : "✅ Reservation Confirmed" %></h2>
   </div>
   
   <div class="content">
     <p>Dear <strong><%= @user.name %></strong>,</p>
     
-    <p>Thank you for choosing our services.<br>
-    We have received your reservation with the following details:</p>
+    <% if @tentative %>
+      <p>We have received your booking request with the details below.<br>
+      Your appointment is not confirmed yet. We will send another email after reviewing the request.</p>
+    <% else %>
+      <p>Thank you for choosing our services.<br>
+      Your reservation has been confirmed with the following details:</p>
+    <% end %>
     
     <div class="reservation-details">
       <h3>📅 Reservation Details</h3>
@@ -79,8 +84,13 @@
       </table>
     </div>
     
-    <p>If you have any questions, please don't hesitate to contact us.<br>
-    We look forward to seeing you on the day of your appointment.</p>
+    <% if @tentative %>
+      <p>Please wait for your confirmation email.<br>
+      If you have any questions, please don't hesitate to contact us.</p>
+    <% else %>
+      <p>If you have any questions, please don't hesitate to contact us.<br>
+      We look forward to seeing you on the day of your appointment.</p>
+    <% end %>
   </div>
   
   <div class="footer">
