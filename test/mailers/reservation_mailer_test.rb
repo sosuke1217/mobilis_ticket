@@ -11,6 +11,24 @@ class ReservationMailerTest < ActionMailer::TestCase
     }
   end
 
+  test "Japanese customer with Gmail receives Japanese email" do
+    user = User.new(name: "山田太郎", email: "customer@gmail.com")
+    reservation = Reservation.new(**@attributes.merge(user: user), status: :tentative)
+
+    mail = ReservationMailer.confirmation(reservation)
+
+    assert_includes mail.subject, "仮予約を受け付けました"
+  end
+
+  test "customer with an English name receives English email" do
+    user = User.new(name: "Taylor Smith", email: "customer@gmail.com")
+    reservation = Reservation.new(**@attributes.merge(user: user), status: :tentative)
+
+    mail = ReservationMailer.confirmation(reservation)
+
+    assert_includes mail.subject, "Booking Request Received"
+  end
+
   test "tentative reservation is described as a booking request" do
     reservation = Reservation.new(**@attributes, status: :tentative)
 
