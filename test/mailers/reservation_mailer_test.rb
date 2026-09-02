@@ -55,4 +55,40 @@ class ReservationMailerTest < ActionMailer::TestCase
     assert_includes mail.subject, "ご予約確定"
     assert_includes mail.body.decoded, "ご予約が確定しました"
   end
+  test "reservation update email includes old and new Japanese details" do
+    reservation = Reservation.new(
+      **@attributes.merge(
+        start_time: Time.zone.parse("2026-08-21 13:00"),
+        end_time: Time.zone.parse("2026-08-21 14:20"),
+        course: "80分"
+      ),
+      status: :confirmed
+    )
+    previous_details = {
+      start_time: Time.zone.parse("2026-08-20 10:00"),
+      end_time: Time.zone.parse("2026-08-20 11:00"),
+      course: "60分"
+    }
+
+    mail = ReservationMailer.reservation_updated(reservation, previous_details)
+
+    assert_includes mail.subject, "予約内容変更のお知らせ"
+    assert_includes mail.body.decoded, "変更前"
+    assert_includes mail.body.decoded, "変更後"
+    assert_includes mail.body.decoded, "60分"
+    assert_includes mail.body.decoded, "80分"
+  end
+
+  test "reservation update email is English for an English name" do
+    user = User.new(name: "Taylor Smith", email: "customer@example.com")
+    reservation = Reservation.new(**@attributes.merge(user: user), status: :confirmed)
+    previous_details = @attributes.slice(:start_time, :end_time, :course)
+
+    mail = ReservationMailer.reservation_updated(reservation, previous_details)
+
+    assert_includes mail.subject, "Reservation Updated"
+    assert_includes mail.body.decoded, "Previous"
+    assert_includes mail.body.decoded, "Updated"
+  end
+
 end
