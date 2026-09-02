@@ -1552,8 +1552,8 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: min(760px, calc(100vw - 32px));
-  max-width: 760px;
+  width: min(920px, calc(100vw - 48px));
+  max-width: 920px;
   max-height: calc(100vh - 32px);
   margin: 0;
   padding: 0;
@@ -1582,6 +1582,23 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
 
 .booking-confirmation-dialog .modal-body {
   overflow-y: auto;
+}
+
+.booking-confirmation-dialog .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.booking-confirmation-dialog .modal-title {
+  flex: 1 1 auto;
+  margin: 0;
+}
+
+.booking-confirmation-dialog .btn-close {
+  flex: 0 0 auto;
+  margin: 0 0 0 auto;
 }
 
 @media (max-width: 767px) {
