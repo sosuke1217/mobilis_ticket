@@ -623,6 +623,11 @@ class Admin::ReservationsController < ApplicationController
     begin
       reservation_id = params[:id]
       @reservation = Reservation.find(reservation_id)
+      previous_details = {
+        start_time: @reservation.start_time,
+        end_time: @reservation.end_time,
+        course: @reservation.course
+      }
       
       # ユーザーを検索または作成
       user = nil
@@ -682,9 +687,10 @@ class Admin::ReservationsController < ApplicationController
         Rails.logger.info "🔄 start_time update detected: #{reservation_attrs[:start_time]}"
         Rails.logger.info "🔄 Current reservation course: #{@reservation.course}"
         
-        # 既存のコース時間を使用してend_timeを計算
-        if @reservation.course.present?
-          course_duration = extract_course_duration(@reservation.course)
+        # 変更後のコース時間を使用してend_timeを計算
+        updated_course = reservation_attrs[:course].presence || @reservation.course
+        if updated_course.present?
+          course_duration = extract_course_duration(updated_course)
           begin
             new_start_time = Time.zone.parse(reservation_attrs[:start_time])
             new_end_time = new_start_time + course_duration.minutes
@@ -709,6 +715,7 @@ class Admin::ReservationsController < ApplicationController
       
       if @reservation.update(reservation_attrs)
         Rails.logger.info "✅ Reservation #{reservation_id} updated successfully"
+        send_change_notification(@reservation, previous_details)
         Rails.logger.info "✅ Updated reservation state: start_time=#{@reservation.start_time}, end_time=#{@reservation.end_time}, course=#{@reservation.course}"
         Rails.logger.info "✅ Updated reservation user: name=#{@reservation.name}, user_id=#{@reservation.user_id}, user_name=#{@reservation.user&.name}"
         render json: {
