@@ -11531,6 +11531,17 @@ function loadUsersForQuickReservation() {
     });
 }
 
+// 新規コースと既存予約のドロップを正しい処理へ振り分ける
+function handleReservationDropRouter(e) {
+  const reservationId = e.dataTransfer.getData('text/plain');
+
+  if (reservationId === 'new-course-block' || window.draggedCourseData) {
+    handleNewReservationDrop(e);
+  } else {
+    handleDrop(e);
+  }
+}
+
 // タイムスロットにドロップイベントリスナーを設定
 function setupNewReservationDropListeners() {
   const timeSlots = document.querySelectorAll('.time-slot:not(.hour-marker)');
@@ -11542,12 +11553,14 @@ function setupNewReservationDropListeners() {
     slot.removeEventListener('dragenter', handleDragEnter);
     slot.removeEventListener('dragleave', handleDragLeave);
     slot.removeEventListener('drop', handleNewReservationDrop);
+    slot.removeEventListener('drop', handleDrop);
+    slot.removeEventListener('drop', handleReservationDropRouter);
     
     // 新しいイベントリスナーを追加
     slot.addEventListener('dragover', handleDragOver, { passive: false });
     slot.addEventListener('dragenter', handleDragEnter, { passive: false });
     slot.addEventListener('dragleave', handleDragLeave, { passive: false });
-    slot.addEventListener('drop', handleNewReservationDrop, { passive: false });
+    slot.addEventListener('drop', handleReservationDropRouter, { passive: false });
     
     // デバッグ用：最初の数個のスロットの状態を確認
     if (index < 3) {
@@ -11569,12 +11582,14 @@ function setupNewReservationDropListeners() {
     cell.removeEventListener('dragenter', handleDragEnter);
     cell.removeEventListener('dragleave', handleDragLeave);
     cell.removeEventListener('drop', handleNewReservationDrop);
+    cell.removeEventListener('drop', handleDrop);
+    cell.removeEventListener('drop', handleReservationDropRouter);
     
     // 新しいイベントリスナーを追加
     cell.addEventListener('dragover', handleDragOver, { passive: false });
     cell.addEventListener('dragenter', handleDragEnter, { passive: false });
     cell.addEventListener('dragleave', handleDragLeave, { passive: false });
-    cell.addEventListener('drop', handleNewReservationDrop, { passive: false });
+    cell.addEventListener('drop', handleReservationDropRouter, { passive: false });
     
     // デバッグ用：最初の数個のセルの状態を確認
     if (index < 3) {
