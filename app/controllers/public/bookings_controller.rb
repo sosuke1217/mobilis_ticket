@@ -685,6 +685,7 @@ class Public::BookingsController < ApplicationController
 
   def course_duration(course)
     case course
+    when '初回評価セッション' then 60
     when '対面セッション（スタジオ／出張）' then 60
     when 'オンライン身体分析・設計' then 30
     else 60
@@ -693,6 +694,7 @@ class Public::BookingsController < ApplicationController
 
   def load_courses
     [
+      { name: '初回評価セッション', duration: 60, price: 11000 },
       { name: '対面セッション（スタジオ／出張）', duration: 60, price: 15000 },
       { name: 'オンライン身体分析・設計', duration: 30, price: 5000 }
     ]

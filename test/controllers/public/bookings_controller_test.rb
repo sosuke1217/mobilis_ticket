@@ -166,4 +166,13 @@ class Public::BookingsControllerTest < ActiveSupport::TestCase
     active.update_columns(status: Reservation.statuses[:cancelled])
     assert_not @controller.send(:time_conflict_exists?, candidate)
   end
+
+  test "course list includes the initial assessment first" do
+    courses = @controller.send(:load_courses)
+
+    assert_equal "初回評価セッション", courses.first[:name]
+    assert_equal 60, courses.first[:duration]
+    assert_equal 11_000, courses.first[:price]
+    assert_equal 60, @controller.send(:course_duration, courses.first[:name])
+  end
 end
