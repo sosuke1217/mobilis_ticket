@@ -113,6 +113,12 @@ class Public::BookingsController < ApplicationController
     Rails.logger.info "📝 Booking params: #{booking_params.inspect}"
     
     begin
+      unless booking_email_valid?
+        flash[:alert] = '有効なメールアドレスを入力してください。 / Please enter a valid email address.'
+        @reservation = Reservation.new
+        return render :new, status: :unprocessable_entity
+      end
+
     @user = find_or_create_user
       
       unless @user.persisted?
@@ -613,6 +619,11 @@ class Public::BookingsController < ApplicationController
       .where.not(id: reservation.id)
       .where('start_time < ? AND end_time > ?', reservation.end_time, reservation.start_time)
       .exists?
+  end
+
+  def booking_email_valid?
+    email = booking_params[:email].to_s.strip
+    email.present? && email.match?(URI::MailTo::EMAIL_REGEXP)
   end
 
   def find_or_create_user
