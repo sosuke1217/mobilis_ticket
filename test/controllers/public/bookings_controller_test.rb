@@ -8,6 +8,27 @@ class Public::BookingsControllerTest < ActiveSupport::TestCase
     @end_time = Time.zone.parse("2026-08-20 11:00")
   end
 
+  test "booking email is required" do
+    submitted = ActionController::Parameters.new(email: "").permit!
+    @controller.define_singleton_method(:booking_params) { submitted }
+
+    assert_not @controller.send(:booking_email_valid?)
+  end
+
+  test "booking email must have a valid format" do
+    submitted = ActionController::Parameters.new(email: "invalid-email").permit!
+    @controller.define_singleton_method(:booking_params) { submitted }
+
+    assert_not @controller.send(:booking_email_valid?)
+  end
+
+  test "valid booking email is accepted" do
+    submitted = ActionController::Parameters.new(email: "customer@example.com").permit!
+    @controller.define_singleton_method(:booking_params) { submitted }
+
+    assert @controller.send(:booking_email_valid?)
+  end
+
   test "existing customer is updated from the current booking form" do
     user = users(:one)
     user.update!(phone_number: "09012345678", email: nil, address: nil)

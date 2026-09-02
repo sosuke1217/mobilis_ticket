@@ -160,10 +160,10 @@
               </div>
               
               <div class="mb-3">
-                <%= label_tag 'booking[email]', 'メールアドレス / Email', class: 'form-label' %>
+                <%= label_tag 'booking[email]', 'メールアドレス / Email', class: 'form-label required' %>
                 <%= email_field_tag 'booking[email]', (@user_info&.dig(:email) || ''), 
-                      { class: 'form-control', placeholder: 'example@email.com' } %>
-                <div class="form-text">ご連絡用（任意） / For contact (Optional)</div>
+                      { class: 'form-control', required: true, placeholder: 'example@email.com' } %>
+                <div class="form-text">予約確認メールの送信に使用します / Used to send your reservation confirmation</div>
               </div>
               
               <div class="mb-3" id="address-field-container">
@@ -696,6 +696,7 @@ function initializeBookingPage() {
     const selectedCourse = document.querySelector('input[name="booking[course]"]:checked');
     const nameField = document.querySelector('input[name="booking[name]"]');
     const phoneField = document.querySelector('input[name="booking[phone_number]"]');
+    const emailField = document.querySelector('input[name="booking[email]"]');
     const addressField = document.querySelector('textarea[name="booking[address]"]');
     
     let allValid = true;
@@ -714,6 +715,10 @@ function initializeBookingPage() {
     }
     
     if (!phoneField || !phoneField.value.trim()) {
+      allValid = false;
+    }
+
+    if (!emailField || !emailField.value.trim() || !emailField.validity.valid) {
       allValid = false;
     }
     
