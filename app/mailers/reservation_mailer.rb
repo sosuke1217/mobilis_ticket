@@ -52,6 +52,22 @@ class ReservationMailer < ApplicationMailer
     )
   end
 
+  def reservation_updated(reservation, previous_details)
+    @reservation = reservation
+    @previous_details = previous_details.with_indifferent_access
+    @user = reservation.user
+    @salon_name = "Mobilis Stretch"
+
+    user_language = detect_user_language(@user)
+    subject = if user_language == :en
+      "[#{@salon_name}] Reservation Updated - #{@reservation.start_time.strftime('%m/%d %H:%M')}"
+    else
+      "【#{@salon_name}】予約内容変更のお知らせ - #{@reservation.start_time.strftime('%m/%d %H:%M')}"
+    end
+
+    mail(to: @user.email, subject: subject, locale: user_language)
+  end
+
   def cancellation_notification(reservation)
     @reservation = reservation
     @user = reservation.user
