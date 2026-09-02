@@ -252,7 +252,8 @@ function initializeBookingPage() {
         duration: parseInt(radio.dataset.duration)
       };
       
-      // カレンダーを更新
+      // メニュー変更前の日時はコース時間と一致しないためクリア
+      clearTimeSelection();
       loadWeekCalendar();
       
       // 住所フィールドの必須/任意を切り替え
@@ -339,8 +340,99 @@ function initializeBookingPage() {
       });
   }
   
-  // 週間カレンダーの描画（TimeRex風：時間軸縦表示）
+  function selectBookingSlot(element) {
+    document.querySelectorAll('.time-cell, .mobile-time-button').forEach(item => item.classList.remove('selected'));
+    element.classList.add('selected');
+
+    selectedSlot = {
+      datetime: element.dataset.datetime,
+      display: element.textContent.trim()
+    };
+
+    const datetimeField = document.getElementById('selected-datetime');
+    datetimeField.value = selectedSlot.datetime;
+
+    const date = new Date(selectedSlot.datetime);
+    const dateStrJP = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 ${date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`;
+    const dateStrEN = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + ' ' +
+      date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+    document.getElementById('selected-date-time').textContent = dateStrJP + ' / ' + dateStrEN;
+    document.getElementById('selected-time-display').style.display = 'block';
+    validateForm();
+  }
+
+  // スマホでは日付と時間を分け、大きなボタンで選べるようにする
+  function renderMobileCalendar(data) {
+    const calendarWeek = document.getElementById('calendar-week');
+    const entries = Object.entries(data.week_data);
+    const firstAvailableDate = entries.find(([, day]) => day.slots && day.slots.length > 0)?.[0];
+    let activeDate = firstAvailableDate || entries[0]?.[0];
+
+    calendarWeek.innerHTML = `
+      <div class="mobile-booking-calendar">
+        <div class="mobile-day-tabs" role="tablist" aria-label="予約日を選択"></div>
+        <div class="mobile-time-list"></div>
+      </div>
+    `;
+
+    const dayTabs = calendarWeek.querySelector('.mobile-day-tabs');
+    const timeList = calendarWeek.querySelector('.mobile-time-list');
+
+    function renderTimes(dateStr) {
+      activeDate = dateStr;
+      dayTabs.querySelectorAll('.mobile-day-button').forEach(button => {
+        const isActive = button.dataset.date === dateStr;
+        button.classList.toggle('active', isActive);
+        button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+
+      const day = data.week_data[dateStr];
+      if (!day || !day.slots || day.slots.length === 0) {
+        timeList.innerHTML = '<div class="mobile-no-times">この日の空き時間はありません<br><small>No available times for this day</small></div>';
+        return;
+      }
+
+      timeList.innerHTML = `
+        <p class="mobile-time-guide">空いている時間を選択してください<br><small>Select an available time</small></p>
+        <div class="mobile-time-buttons">
+          ${day.slots.map(slot => {
+            const start = new Date(slot.start_datetime);
+            const end = new Date(slot.end_datetime);
+            const startText = start.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+            const endText = end.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+            return `<button type="button" class="mobile-time-button" data-datetime="${slot.start_datetime}">${startText} – ${endText}</button>`;
+          }).join('')}
+        </div>
+      `;
+
+      timeList.querySelectorAll('.mobile-time-button').forEach(button => {
+        button.addEventListener('click', () => selectBookingSlot(button));
+      });
+    }
+
+    entries.forEach(([dateStr, day]) => {
+      const date = new Date(dateStr + 'T00:00:00');
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'mobile-day-button';
+      button.dataset.date = dateStr;
+      button.disabled = !day.slots || day.slots.length === 0;
+      button.setAttribute('role', 'tab');
+      button.innerHTML = `<span>${date.toLocaleDateString('ja-JP', { weekday: 'short' })}</span><strong>${date.getMonth() + 1}/${date.getDate()}</strong>`;
+      button.addEventListener('click', () => renderTimes(dateStr));
+      dayTabs.appendChild(button);
+    });
+
+    if (activeDate) renderTimes(activeDate);
+  }
+
+  // 週間カレンダーの描画（PCは週間グリッド、スマホは日付＋時間ボタン）
   function renderWeekCalendar(data) {
+    if (window.matchMedia('(max-width: 767px)').matches) {
+      renderMobileCalendar(data);
+      return;
+    }
     const calendarWeek = document.getElementById('calendar-week');
     const dayNames = ['日', '月', '火', '水', '木', '金', '土']; // JavaScriptのgetDay()は0=日曜日から
     
@@ -525,31 +617,7 @@ function initializeBookingPage() {
     // 時間スロットのクリックイベント
     document.querySelectorAll('.time-cell.available').forEach(cell => {
       cell.addEventListener('click', function() {
-        // 他のセルの選択解除
-        document.querySelectorAll('.time-cell').forEach(c => c.classList.remove('selected'));
-        
-        // このセルを選択
-        this.classList.add('selected');
-        selectedSlot = {
-          datetime: this.dataset.datetime,
-          display: this.querySelector('.time-slot-block').textContent.trim()
-        };
-        
-        // フォームに値を設定
-        const datetimeField = document.getElementById('selected-datetime');
-        if (datetimeField) {
-          datetimeField.value = selectedSlot.datetime;
-          console.log('✅ Selected datetime set:', selectedSlot.datetime);
-        }
-        
-        // 選択された日時を表示
-        const date = new Date(selectedSlot.datetime);
-        const dateStrJP = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 ${date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`;
-        const dateStrEN = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + ' ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-        document.getElementById('selected-date-time').textContent = dateStrJP + ' / ' + dateStrEN;
-        document.getElementById('selected-time-display').style.display = 'block';
-        
-        validateForm();
+        selectBookingSlot(this);
       });
     });
   }
@@ -1431,6 +1499,118 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
   
   .timerex-header h2 {
     font-size: 1.5rem;
+  }
+}
+
+/* Mobile booking flow */
+.mobile-booking-calendar {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .timerex-calendar-container {
+    overflow: visible;
+  }
+
+  .mobile-booking-calendar {
+    display: block;
+  }
+
+  .mobile-day-tabs {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(58px, 1fr));
+    gap: 8px;
+    overflow-x: auto;
+    padding: 2px 2px 10px;
+  }
+
+  .mobile-day-button {
+    min-width: 58px;
+    padding: 10px 5px;
+    border: 1px solid #d8e2e8;
+    border-radius: 10px;
+    background: #fff;
+    color: #334155;
+    line-height: 1.2;
+  }
+
+  .mobile-day-button span,
+  .mobile-day-button strong {
+    display: block;
+  }
+
+  .mobile-day-button span {
+    font-size: 0.75rem;
+    margin-bottom: 4px;
+  }
+
+  .mobile-day-button.active {
+    border-color: #0879A6;
+    background: #0879A6;
+    color: #fff;
+    box-shadow: 0 3px 10px rgba(8, 121, 166, 0.25);
+  }
+
+  .mobile-day-button:disabled {
+    background: #f3f4f6;
+    color: #a0a7af;
+    opacity: 0.65;
+  }
+
+  .mobile-time-list {
+    margin-top: 14px;
+  }
+
+  .mobile-time-guide {
+    margin-bottom: 12px;
+    color: #475569;
+    text-align: center;
+  }
+
+  .mobile-time-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .mobile-time-button {
+    min-height: 52px;
+    border: 2px solid #b9d9e6;
+    border-radius: 10px;
+    background: #fff;
+    color: #08678d;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  .mobile-time-button.selected {
+    border-color: #0879A6;
+    background: #0879A6;
+    color: #fff;
+    box-shadow: 0 3px 10px rgba(8, 121, 166, 0.25);
+  }
+
+  .mobile-no-times {
+    padding: 24px 12px;
+    border-radius: 10px;
+    background: #f8fafc;
+    color: #64748b;
+    text-align: center;
+  }
+
+  .step-section {
+    padding-left: 12px;
+  }
+
+  .step-title {
+    font-size: 1.05rem;
+  }
+
+  .step-number {
+    width: 30px;
+    height: 30px;
+    margin-right: 8px;
+    font-size: 0.95rem;
   }
 }
 </style>
