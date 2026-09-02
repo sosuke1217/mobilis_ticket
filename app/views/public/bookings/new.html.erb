@@ -206,12 +206,47 @@
               </ul>
             </div>
             
-            <!-- 送信ボタン -->
+            <!-- 内容確認ボタン -->
             <div class="text-center mt-4">
-              <button type="submit" class="btn btn-primary btn-lg px-5" id="submit-btn" disabled>
-                <i class="fas fa-paper-plane me-2"></i>
-                予約リクエストを送信 / Submit Reservation Request
+              <button type="button" class="btn btn-primary btn-lg px-5" id="submit-btn" disabled>
+                <i class="fas fa-check-circle me-2"></i>
+                入力内容を確認 / Review Reservation
               </button>
+            </div>
+
+            <!-- 予約内容確認モーダル -->
+            <div class="modal fade" id="booking-confirmation-modal" tabindex="-1" aria-labelledby="booking-confirmation-title" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="booking-confirmation-title">予約内容の確認 / Review Reservation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる / Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <p class="text-muted small">内容をご確認ください。まだ予約は送信されていません。<br>Please review your details. Your request has not been submitted yet.</p>
+                    <dl class="booking-confirmation-list mb-0">
+                      <div><dt>メニュー / Menu</dt><dd id="confirm-course"></dd></div>
+                      <div><dt>日時 / Date & Time</dt><dd id="confirm-datetime"></dd></div>
+                      <div><dt>お名前 / Name</dt><dd id="confirm-name"></dd></div>
+                      <div><dt>電話番号 / Phone</dt><dd id="confirm-phone"></dd></div>
+                      <div><dt>メール / Email</dt><dd id="confirm-email"></dd></div>
+                      <div id="confirm-address-row"><dt>住所 / Address</dt><dd id="confirm-address"></dd></div>
+                      <div id="confirm-access-row"><dt>アクセス・入館方法 / Access</dt><dd id="confirm-access"></dd></div>
+                      <div><dt>ご要望 / Requests</dt><dd id="confirm-notes"></dd></div>
+                    </dl>
+                    <div class="alert alert-warning mt-3 mb-0 py-2">
+                      <strong>仮予約です / Tentative reservation</strong><br>
+                      <small>確認のご連絡後に正式確定となります。 / Confirmed after we contact you.</small>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">修正する / Edit</button>
+                    <button type="button" class="btn btn-primary" id="confirm-submit-btn">
+                      <i class="fas fa-paper-plane me-2"></i>この内容で予約する / Submit
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           <% end %>
         </div>
@@ -736,6 +771,40 @@ function initializeBookingPage() {
   if (bookingForm) {
     bookingForm.addEventListener('input', validateForm);
     bookingForm.addEventListener('change', validateForm);
+
+    submitBtn.addEventListener('click', function() {
+      if (!bookingForm.checkValidity()) {
+        bookingForm.reportValidity();
+        return;
+      }
+
+      const selectedCourseField = document.querySelector('input[name="booking[course]"]:checked');
+      const isOnline = selectedCourseField?.value === 'オンライン身体分析・設計';
+      const valueOf = (selector) => document.querySelector(selector)?.value.trim() || '';
+      const setConfirmation = (id, value) => {
+        document.getElementById(id).textContent = value || 'なし / None';
+      };
+
+      setConfirmation('confirm-course', selectedCourseField?.value);
+      setConfirmation('confirm-datetime', document.getElementById('selected-date-time')?.textContent.trim());
+      setConfirmation('confirm-name', valueOf('input[name="booking[name]"]'));
+      setConfirmation('confirm-phone', valueOf('input[name="booking[phone_number]"]'));
+      setConfirmation('confirm-email', valueOf('input[name="booking[email]"]'));
+      setConfirmation('confirm-address', valueOf('textarea[name="booking[address]"]'));
+      setConfirmation('confirm-access', valueOf('textarea[name="booking[access_notes]"]'));
+      setConfirmation('confirm-notes', valueOf('textarea[name="booking[notes]"]'));
+
+      document.getElementById('confirm-address-row').style.display = isOnline ? 'none' : '';
+      document.getElementById('confirm-access-row').style.display = isOnline ? 'none' : '';
+
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('booking-confirmation-modal')).show();
+    });
+
+    document.getElementById('confirm-submit-btn').addEventListener('click', function() {
+      this.disabled = true;
+      this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>送信中 / Sending...';
+      bookingForm.requestSubmit();
+    });
     
     // フォーム送信前の確認
     bookingForm.addEventListener('submit', function(e) {
@@ -1460,6 +1529,25 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
 
 .selected-time-display {
   margin-top: 16px;
+}
+
+.booking-confirmation-list > div {
+  padding: 10px 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.booking-confirmation-list dt {
+  color: #5f6b76;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.booking-confirmation-list dd {
+  margin: 3px 0 0;
+  color: #1f2937;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 .required::after {
