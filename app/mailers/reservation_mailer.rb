@@ -65,9 +65,8 @@ class ReservationMailer < ApplicationMailer
       "【#{@salon_name}】予約内容変更のお知らせ - #{@reservation.start_time.strftime('%m/%d %H:%M')}"
     end
 
-    template_name = user_language == :en ? "reservation_updated.en" : "reservation_updated"
-    mail(to: @user.email, subject: subject) do |format|
-      format.html { render template: "reservation_mailer/#{template_name}" }
+    I18n.with_locale(user_language) do
+      mail(to: @user.email, subject: subject)
     end
   end
 
