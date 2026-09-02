@@ -9671,6 +9671,12 @@ function showMessage(message, type = 'info') {
             
             // Use the original block as the drag image so it follows the cursor
             e.dataTransfer.setDragImage(reservationBlock, 50, 25);
+
+            // After the browser captures the drag image, let pointer hit-testing pass
+            // through the spanning reservation block to the underlying 10-minute cells.
+            requestAnimationFrame(() => {
+                reservationBlock.style.pointerEvents = 'none';
+            });
             
             // Prevent other drag events from firing
             e.stopPropagation();
@@ -9682,6 +9688,7 @@ function showMessage(message, type = 'info') {
             
             if (reservationBlock && reservationBlock.classList.contains('reservation-block')) {
                 reservationBlock.classList.remove('dragging');
+                reservationBlock.style.pointerEvents = '';
             }
             
             document.querySelectorAll('.schedule-cell').forEach(cell => {
