@@ -135,4 +135,35 @@ class Public::BookingsControllerTest < ActiveSupport::TestCase
 
     assert_equal :conflict, @controller.send(:google_calendar_booking_status, reservation)
   end
+
+  test "booking creation lock returns the result of the protected operation" do
+    result = @controller.send(:serialize_booking_creation) { :created }
+
+    assert_equal :created, result
+  end
+
+  test "time conflict check includes tentative reservations and ignores cancelled ones" do
+    active = Reservation.new(
+      name: "Active",
+      course: "60分",
+      start_time: @start_time,
+      end_time: @end_time,
+      status: :tentative
+    )
+    active.skip_time_validation = true
+    active.skip_business_hours_validation = true
+    active.skip_advance_booking_validation = true
+    active.skip_advance_notice_validation = true
+    active.save!(validate: false)
+
+    candidate = Reservation.new(
+      start_time: @start_time + 10.minutes,
+      end_time: @end_time + 10.minutes
+    )
+
+    assert @controller.send(:time_conflict_exists?, candidate)
+
+    active.update_columns(status: Reservation.statuses[:cancelled])
+    assert_not @controller.send(:time_conflict_exists?, candidate)
+  end
 end

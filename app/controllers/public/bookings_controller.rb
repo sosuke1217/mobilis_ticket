@@ -2,6 +2,8 @@
 
 class Public::BookingsController < ApplicationController
   GOOGLE_CALENDAR_AVAILABILITY_CACHE_TTL = 10.minutes
+  BOOKING_CREATION_LOCK_KEY = 1_492_024_001
+  BOOKING_CREATION_MUTEX = Mutex.new
 
   # 認証をスキップ（一般ユーザー向けページのため）
   skip_before_action :verify_authenticity_token, only: [:available_times, :week_calendar]
@@ -134,45 +136,53 @@ class Public::BookingsController < ApplicationController
         return render :new, status: :unprocessable_entity
       end
     
-    # 予約時間の重複チェック
-    if time_conflict_exists?(@reservation)
-        Rails.logger.error "❌ Time conflict detected"
-      flash[:alert] = '選択された時間は既に予約が入っています。別の時間をお選びください。'
-        @reservation = Reservation.new
-      return render :new, status: :unprocessable_entity
+    booking_result = serialize_booking_creation do
+      # The availability shown in the browser can become stale. Recheck both
+      # reservations and Google Calendar while holding one cross-process lock.
+      if time_conflict_exists?(@reservation)
+        :reservation_conflict
+      else
+        google_status = google_calendar_booking_status(@reservation)
+
+        if google_status == :conflict
+          :google_conflict
+        elsif google_status == :unavailable
+          :google_unavailable
+        elsif @reservation.save
+          :created
+        else
+          :invalid
+        end
+      end
     end
-    
-    # 表示には短時間のキャッシュを利用できるが、予約確定前は必ず
-    # Google Calendarを直接確認して二重予約を防ぐ。
-    google_calendar_status = google_calendar_booking_status(@reservation)
-    if google_calendar_status == :conflict
+
+    case booking_result
+    when :reservation_conflict
+      Rails.logger.error "❌ Time conflict detected"
+      flash[:alert] = '選択された時間は既に予約が入っています。別の時間をお選びください。'
+      @reservation = Reservation.new
+      render :new, status: :unprocessable_entity
+    when :google_conflict
       Rails.logger.error "❌ Google Calendar conflict detected"
       flash[:alert] = '選択された時間は既に予定が入っています。別の時間をお選びください。'
       @reservation = Reservation.new
-      return render :new, status: :unprocessable_entity
-    elsif google_calendar_status == :unavailable
+      render :new, status: :unprocessable_entity
+    when :google_unavailable
       Rails.logger.error "❌ Booking rejected because Google Calendar could not be checked"
       flash[:alert] = '現在カレンダーを確認できません。恐れ入りますが、少し時間をおいて再度お試しください。'
       @reservation = Reservation.new
-      return render :new, status: :service_unavailable
-    end
-
-    if @reservation.save
-        Rails.logger.info "✅ Reservation created successfully: #{@reservation.id}"
-      # LINE通知を送信
+      render :new, status: :service_unavailable
+    when :created
+      Rails.logger.info "✅ Reservation created successfully: #{@reservation.id}"
       send_booking_notification(@reservation) if @reservation.user.line_user_id
-      
-      # 管理者への通知
       notify_admin(@reservation)
-      
-      redirect_to public_booking_path(@reservation), 
+      redirect_to public_booking_path(@reservation),
                   notice: 'ご予約リクエストを承りました。確認のご連絡をお待ちください。'
     else
-        Rails.logger.error "❌ Reservation save failed: #{@reservation.errors.full_messages.join(', ')}"
-        flash[:alert] = "予約の作成に失敗しました: #{@reservation.errors.full_messages.join(', ')}"
-        @reservation = Reservation.new
-        render :new, status: :unprocessable_entity
-      end
+      Rails.logger.error "❌ Reservation save failed: #{@reservation.errors.full_messages.join(', ')}"
+      flash[:alert] = "予約の作成に失敗しました: #{@reservation.errors.full_messages.join(', ')}"
+      render :new, status: :unprocessable_entity
+    end
     rescue => e
       Rails.logger.error "❌ Booking creation error: #{e.message}"
       Rails.logger.error "❌ Backtrace: #{e.backtrace.first(10).join("\n")}"
@@ -222,6 +232,24 @@ class Public::BookingsController < ApplicationController
   end
 
   private
+
+  def serialize_booking_creation(&block)
+    if ActiveRecord::Base.connection.adapter_name.downcase.include?("postgres")
+      Reservation.transaction do
+        # Transaction-scoped advisory locks work across every Heroku web dyno.
+        ActiveRecord::Base.connection.select_value(
+          "SELECT pg_advisory_xact_lock(#{BOOKING_CREATION_LOCK_KEY})"
+        )
+        yield
+      end
+    else
+      # SQLite is used in development and test, where a process lock provides
+      # equivalent serialization without PostgreSQL-specific SQL.
+      BOOKING_CREATION_MUTEX.synchronize do
+        Reservation.transaction(&block)
+      end
+    end
+  end
 
   # 空き時間スロットを取得
   def get_available_time_slots(date, duration)
