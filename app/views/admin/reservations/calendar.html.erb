@@ -12072,8 +12072,11 @@ function handleDrop(e) {
     
     if (!canMove) break;
     
-    // Move to next cell
-    currentCell = currentCell.nextElementSibling;
+    // Move to the next 10-minute row in the same day column.
+    // nextElementSibling would incorrectly move horizontally to another day.
+    const currentRow = currentCell.parentElement;
+    const nextRow = currentRow?.nextElementSibling;
+    currentCell = nextRow?.querySelector(`[data-day="${newDay}"]`) || null;
   }
   
   if (!canMove) {
