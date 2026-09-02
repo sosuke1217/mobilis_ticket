@@ -222,12 +222,12 @@
 </div>
 
 <!-- 予約内容確認モーダル -->
-<div class="modal fade" id="booking-confirmation-modal" tabindex="-1" aria-labelledby="booking-confirmation-title" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+<dialog class="booking-confirmation-dialog" id="booking-confirmation-modal" aria-labelledby="booking-confirmation-title">
+  <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="booking-confirmation-title">予約内容の確認 / Review Reservation</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる / Close"></button>
+        <button type="button" class="btn-close booking-confirmation-close" aria-label="閉じる / Close"></button>
       </div>
       <div class="modal-body">
         <p class="text-muted small">内容をご確認ください。まだ予約は送信されていません。<br>Please review your details. Your request has not been submitted yet.</p>
@@ -247,14 +247,14 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">修正する / Edit</button>
+        <button type="button" class="btn btn-outline-secondary booking-confirmation-close">修正する / Edit</button>
         <button type="button" class="btn btn-primary" id="confirm-submit-btn">
           <i class="fas fa-paper-plane me-2"></i>この内容で予約する / Submit
         </button>
       </div>
     </div>
   </div>
-</div>
+</dialog>
 
 <!-- JavaScript for TimeRex風カレンダー -->
 <script>
@@ -774,9 +774,6 @@ function initializeBookingPage() {
     bookingForm.addEventListener('change', validateForm);
 
     const confirmationModalElement = document.getElementById('booking-confirmation-modal');
-    if (confirmationModalElement && confirmationModalElement.parentElement !== document.body) {
-      document.body.appendChild(confirmationModalElement);
-    }
 
     submitBtn.addEventListener('click', function() {
       if (!bookingForm.checkValidity()) {
@@ -803,7 +800,19 @@ function initializeBookingPage() {
       document.getElementById('confirm-address-row').style.display = isOnline ? 'none' : '';
       document.getElementById('confirm-access-row').style.display = isOnline ? 'none' : '';
 
-      bootstrap.Modal.getOrCreateInstance(document.getElementById('booking-confirmation-modal')).show();
+      if (confirmationModalElement && !confirmationModalElement.open) {
+        confirmationModalElement.showModal();
+      }
+    });
+
+    document.querySelectorAll('.booking-confirmation-close').forEach(button => {
+      button.addEventListener('click', function() {
+        confirmationModalElement?.close();
+      });
+    });
+
+    confirmationModalElement?.addEventListener('click', function(event) {
+      if (event.target === confirmationModalElement) confirmationModalElement.close();
     });
 
     document.getElementById('confirm-submit-btn').addEventListener('click', function() {
@@ -1535,6 +1544,57 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
 
 .selected-time-display {
   margin-top: 16px;
+}
+
+.booking-confirmation-dialog {
+  width: min(760px, calc(100vw - 32px));
+  max-width: 760px;
+  max-height: calc(100vh - 32px);
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  overflow: hidden;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.32);
+}
+
+.booking-confirmation-dialog::backdrop {
+  background: rgba(15, 23, 42, 0.62);
+}
+
+.booking-confirmation-dialog .modal-dialog {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  margin: 0;
+}
+
+.booking-confirmation-dialog .modal-content {
+  max-height: calc(100vh - 32px);
+  border: 0;
+}
+
+.booking-confirmation-dialog .modal-body {
+  overflow-y: auto;
+}
+
+@media (max-width: 767px) {
+  .booking-confirmation-dialog {
+    width: calc(100vw - 20px);
+    max-height: calc(100vh - 20px);
+  }
+
+  .booking-confirmation-dialog .modal-content {
+    max-height: calc(100vh - 20px);
+  }
+
+  .booking-confirmation-dialog .modal-footer {
+    gap: 8px;
+  }
+
+  .booking-confirmation-dialog .modal-footer .btn {
+    flex: 1 1 100%;
+  }
 }
 
 .booking-confirmation-list > div {
