@@ -174,7 +174,7 @@
                 <div class="form-text" id="address-help-text" style="display: none;">オンラインメニューの場合は任意です / Optional for online menu</div>
               </div>
               
-              <div class="mb-3">
+              <div class="mb-3" id="access-field-container">
                 <%= label_tag 'booking[access_notes]', 'アクセス・入館方法 / Access & Entry Method', class: 'form-label' %>
                 <%= text_area_tag 'booking[access_notes]', '', 
                       { class: 'form-control', rows: 2,
@@ -268,31 +268,30 @@ function initializeBookingPage() {
     });
   });
   
-  // 住所フィールドの必須/任意を切り替える関数
+  // メニューに応じて訪問先情報の表示と必須状態を切り替える関数
   function updateAddressFieldRequirement() {
+    const addressContainer = document.getElementById('address-field-container');
+    const accessContainer = document.getElementById('access-field-container');
     const addressField = document.getElementById('address-field');
     const addressLabel = document.getElementById('address-label');
-    const addressHelpText = document.getElementById('address-help-text');
     const selectedCourse = document.querySelector('input[name="booking[course]"]:checked');
     
-    if (!addressField || !addressLabel || !selectedCourse) return;
+    if (!addressContainer || !accessContainer || !addressField || !addressLabel || !selectedCourse) return;
     
-    const courseName = selectedCourse.value;
-    const isOnline = courseName === 'オンライン身体分析・設計';
+    const isOnline = selectedCourse.value === 'オンライン身体分析・設計';
     
     if (isOnline) {
-      // オンラインコースの場合：任意
       addressField.removeAttribute('required');
       addressLabel.classList.remove('required');
-      addressHelpText.style.display = 'block';
+      addressContainer.style.display = 'none';
+      accessContainer.style.display = 'none';
     } else {
-      // 対面セッションの場合：必須
       addressField.setAttribute('required', 'required');
       addressLabel.classList.add('required');
-      addressHelpText.style.display = 'none';
+      addressContainer.style.display = '';
+      accessContainer.style.display = '';
     }
     
-    // バリデーションを再実行
     validateForm();
   }
   
