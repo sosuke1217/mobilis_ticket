@@ -361,6 +361,12 @@ class Admin::ReservationsController < ApplicationController
   def delete_reservation
     Rails.logger.info "🔄 Delete reservation called"
     Rails.logger.info "📝 Params: #{params.inspect}"
+
+    previous_details = {
+      start_time: @reservation.start_time,
+      end_time: @reservation.end_time,
+      course: @reservation.course
+    }
     
     begin
       reservation_id = params[:reservation_id]
@@ -1119,6 +1125,7 @@ class Admin::ReservationsController < ApplicationController
       
       if success
         Rails.logger.info "✅ Reservation updated successfully"
+        send_change_notification(@reservation, previous_details)
         
         respond_to do |format|
           format.html { redirect_to calendar_admin_reservations_path, notice: '予約を更新しました' }
@@ -1359,6 +1366,17 @@ class Admin::ReservationsController < ApplicationController
     @reservation = Reservation.find(params[:id])
   end
   
+  def send_change_notification(reservation, previous_details)
+    relevant_changes = reservation.saved_changes.keys & %w[start_time end_time course]
+    return if relevant_changes.empty? || reservation.user&.email.blank?
+    return if reservation.cancelled?
+
+    ReservationMailer.reservation_updated(reservation, previous_details).deliver_now
+    Rails.logger.info "✅ Reservation change email sent to: #{reservation.user.email}"
+  rescue => e
+    Rails.logger.error "❌ Error sending reservation change email: #{e.message}"
+  end
+
   # 削除前にキャンセル通知を送信
   def send_cancellation_notifications_before_delete(reservation)
     Rails.logger.info "📧 Sending cancellation notifications before delete for reservation #{reservation.id}"
