@@ -63,7 +63,10 @@
                       <div class="card h-100 course-option">
                         <div class="card-body text-center">
                           <h5 class="card-title">
-                            <% if course[:name] == '対面セッション（スタジオ／出張）' %>
+                            <% if course[:name] == '初回評価セッション' %>
+                              初回評価セッション<br>
+                              <small style="font-size: 0.7em; color: #666; font-weight: normal;">Initial Assessment Session</small>
+                            <% elsif course[:name] == '対面セッション（スタジオ／出張）' %>
                               対面セッション<br>
                               <small style="font-size: 0.7em; color: #666; font-weight: normal;">In-Person Session</small>
                             <% elsif course[:name] == 'オンライン身体分析・設計' %>
@@ -74,7 +77,11 @@
                             <% end %>
                           </h5>
                           <p class="price-display">
-                            <% if course[:name] == 'オンライン身体分析・設計' %>
+                            <% if course[:name] == '初回評価セッション' %>
+                              <span class="price-main">¥<%= number_with_delimiter(course[:price]) %></span>
+                              <br class="price-break">
+                              <small class="price-sub" style="font-size: 0.65em; color: #0879A6;">初めての方 / First-time clients</small>
+                            <% elsif course[:name] == 'オンライン身体分析・設計' %>
                               <span class="price-main">¥<%= number_with_delimiter(course[:price]) %>（テスト導入）</span>
                               <br class="price-break">
                               <small class="price-sub" style="font-size: 0.6em; color: #666;">¥<%= number_with_delimiter(course[:price]) %> (Test Price)</small>
