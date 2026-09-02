@@ -214,42 +214,44 @@
               </button>
             </div>
 
-            <!-- 予約内容確認モーダル -->
-            <div class="modal fade" id="booking-confirmation-modal" tabindex="-1" aria-labelledby="booking-confirmation-title" aria-hidden="true">
-              <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title" id="booking-confirmation-title">予約内容の確認 / Review Reservation</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる / Close"></button>
-                  </div>
-                  <div class="modal-body">
-                    <p class="text-muted small">内容をご確認ください。まだ予約は送信されていません。<br>Please review your details. Your request has not been submitted yet.</p>
-                    <dl class="booking-confirmation-list mb-0">
-                      <div><dt>メニュー / Menu</dt><dd id="confirm-course"></dd></div>
-                      <div><dt>日時 / Date & Time</dt><dd id="confirm-datetime"></dd></div>
-                      <div><dt>お名前 / Name</dt><dd id="confirm-name"></dd></div>
-                      <div><dt>電話番号 / Phone</dt><dd id="confirm-phone"></dd></div>
-                      <div><dt>メール / Email</dt><dd id="confirm-email"></dd></div>
-                      <div id="confirm-address-row"><dt>住所 / Address</dt><dd id="confirm-address"></dd></div>
-                      <div id="confirm-access-row"><dt>アクセス・入館方法 / Access</dt><dd id="confirm-access"></dd></div>
-                      <div><dt>ご要望 / Requests</dt><dd id="confirm-notes"></dd></div>
-                    </dl>
-                    <div class="alert alert-warning mt-3 mb-0 py-2">
-                      <strong>仮予約です / Tentative reservation</strong><br>
-                      <small>確認のご連絡後に正式確定となります。 / Confirmed after we contact you.</small>
-                    </div>
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">修正する / Edit</button>
-                    <button type="button" class="btn btn-primary" id="confirm-submit-btn">
-                      <i class="fas fa-paper-plane me-2"></i>この内容で予約する / Submit
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+
           <% end %>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 予約内容確認モーダル -->
+<div class="modal fade" id="booking-confirmation-modal" tabindex="-1" aria-labelledby="booking-confirmation-title" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="booking-confirmation-title">予約内容の確認 / Review Reservation</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる / Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small">内容をご確認ください。まだ予約は送信されていません。<br>Please review your details. Your request has not been submitted yet.</p>
+        <dl class="booking-confirmation-list mb-0">
+          <div><dt>メニュー / Menu</dt><dd id="confirm-course"></dd></div>
+          <div><dt>日時 / Date & Time</dt><dd id="confirm-datetime"></dd></div>
+          <div><dt>お名前 / Name</dt><dd id="confirm-name"></dd></div>
+          <div><dt>電話番号 / Phone</dt><dd id="confirm-phone"></dd></div>
+          <div><dt>メール / Email</dt><dd id="confirm-email"></dd></div>
+          <div id="confirm-address-row"><dt>住所 / Address</dt><dd id="confirm-address"></dd></div>
+          <div id="confirm-access-row"><dt>アクセス・入館方法 / Access</dt><dd id="confirm-access"></dd></div>
+          <div><dt>ご要望 / Requests</dt><dd id="confirm-notes"></dd></div>
+        </dl>
+        <div class="alert alert-warning mt-3 mb-0 py-2">
+          <strong>仮予約です / Tentative reservation</strong><br>
+          <small>確認のご連絡後に正式確定となります。 / Confirmed after we contact you.</small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">修正する / Edit</button>
+        <button type="button" class="btn btn-primary" id="confirm-submit-btn">
+          <i class="fas fa-paper-plane me-2"></i>この内容で予約する / Submit
+        </button>
       </div>
     </div>
   </div>
