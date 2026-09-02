@@ -154,7 +154,7 @@ class Public::BookingsControllerTest < ActiveSupport::TestCase
     active.skip_business_hours_validation = true
     active.skip_advance_booking_validation = true
     active.skip_advance_notice_validation = true
-    active.save!
+    active.save!(validate: false)
 
     candidate = Reservation.new(
       start_time: @start_time + 10.minutes,
