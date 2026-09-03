@@ -149,27 +149,30 @@
                 <div class="col-md-6 mb-3">
                   <%= label_tag 'booking[name]', 'お名前 / Name', class: 'form-label required' %>
                   <%= text_field_tag 'booking[name]', (@user_info&.dig(:name) || ''), 
-                        { class: 'form-control', required: true, placeholder: '山田太郎 / Yamada Taro' } %>
+                        { class: 'form-control', required: true, autocomplete: 'name',
+                          placeholder: '山田太郎 / Yamada Taro' } %>
                 </div>
                 
                 <div class="col-md-6 mb-3">
                   <%= label_tag 'booking[phone_number]', 'お電話番号 / Phone Number', class: 'form-label required' %>
                   <%= telephone_field_tag 'booking[phone_number]', (@user_info&.dig(:phone_number) || ''), 
-                        { class: 'form-control', required: true, placeholder: '090-1234-5678' } %>
+                        { class: 'form-control', required: true, autocomplete: 'tel', inputmode: 'tel',
+                          placeholder: '090-1234-5678' } %>
                 </div>
               </div>
               
               <div class="mb-3">
                 <%= label_tag 'booking[email]', 'メールアドレス / Email', class: 'form-label required' %>
                 <%= email_field_tag 'booking[email]', (@user_info&.dig(:email) || ''), 
-                      { class: 'form-control', required: true, placeholder: 'example@email.com' } %>
+                      { class: 'form-control', required: true, autocomplete: 'email', inputmode: 'email',
+                        autocapitalize: 'none', spellcheck: false, placeholder: 'example@email.com' } %>
                 <div class="form-text">予約確認メールの送信に使用します / Used to send your reservation confirmation</div>
               </div>
               
               <div class="mb-3" id="address-field-container">
                 <%= label_tag 'booking[address]', 'ご住所 / Address', class: 'form-label required', id: 'address-label' %>
                 <%= text_area_tag 'booking[address]', (@user_info&.dig(:address) || ''), 
-                      { class: 'form-control', rows: 2, id: 'address-field',
+                      { class: 'form-control', rows: 2, id: 'address-field', autocomplete: 'street-address',
                         placeholder: '港区南麻布○-○-○　○○マンション○○号室 / Minato-ku Minami-Azabu ○-○-○ ○○ Mansion ○○' } %>
                 <div class="form-text" id="address-help-text" style="display: none;">オンラインメニューの場合は任意です / Optional for online menu</div>
               </div>
@@ -177,8 +180,9 @@
               <div class="mb-3" id="access-field-container">
                 <%= label_tag 'booking[access_notes]', 'アクセス・入館方法 / Access & Entry Method', class: 'form-label' %>
                 <%= text_area_tag 'booking[access_notes]', '', 
-                      { class: 'form-control', rows: 2,
+                      { class: 'form-control', rows: 2, autocomplete: 'off',
                         placeholder: '最寄り駅、目印となる建物など / Nearest station, landmark buildings, etc.' } %>
+                <div class="form-text">安全のため、入館方法は端末へ自動保存しません / For security, entry details are not saved for autofill</div>
               </div>
             </div>
             
@@ -191,7 +195,7 @@
               <div class="mb-3">
                 <%= label_tag 'booking[notes]', 'ご要望・気になる箇所など / Requests & Concerns', class: 'form-label' %>
                 <%= text_area_tag 'booking[notes]', '', 
-                      { class: 'form-control', rows: 3,
+                      { class: 'form-control', rows: 3, autocomplete: 'off',
                         placeholder: '肩こりがひどい、腰痛が気になる、初回で不安など / Severe shoulder stiffness, lower back pain concerns, first-time anxiety, etc.' } %>
               </div>
             </div>
