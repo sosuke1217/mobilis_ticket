@@ -1585,10 +1585,12 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
 }
 
 .booking-confirmation-dialog .modal-header {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
+  padding-right: 64px;
 }
 
 .booking-confirmation-dialog .modal-title {
@@ -1597,8 +1599,21 @@ document.addEventListener('turbo:frame-load', initializeBookingPage);
 }
 
 .booking-confirmation-dialog .btn-close {
-  flex: 0 0 auto;
-  margin: 0 0 0 auto;
+  position: absolute;
+  top: 50%;
+  right: 24px;
+  margin: 0;
+  transform: translateY(-50%);
+}
+
+@media (max-width: 767px) {
+  .booking-confirmation-dialog .modal-header {
+    padding-right: 52px;
+  }
+
+  .booking-confirmation-dialog .btn-close {
+    right: 16px;
+  }
 }
 
 @media (max-width: 767px) {
