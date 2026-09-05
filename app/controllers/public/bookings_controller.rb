@@ -114,7 +114,7 @@ class Public::BookingsController < ApplicationController
     
     begin
       unless booking_email_valid?
-        flash[:alert] = '有効なメールアドレスを入力してください。 / Please enter a valid email address.'
+        flash[:alert] = 'メールアドレスを確認し、同じ内容を2回入力してください。 / Please enter the same valid email address twice.'
         @reservation = Reservation.new
         return render :new, status: :unprocessable_entity
       end
@@ -631,7 +631,12 @@ class Public::BookingsController < ApplicationController
 
   def booking_email_valid?
     email = booking_params[:email].to_s.strip
-    email.present? && email.match?(URI::MailTo::EMAIL_REGEXP)
+    confirmation = booking_params[:email_confirmation].to_s.strip
+
+    email.present? &&
+      email.match?(URI::MailTo::EMAIL_REGEXP) &&
+      confirmation.present? &&
+      email.casecmp?(confirmation)
   end
 
   def find_or_create_user
@@ -688,7 +693,7 @@ class Public::BookingsController < ApplicationController
 
   def booking_params
     params.require(:booking).permit(
-      :name, :phone_number, :email, :address, :building_info,
+      :name, :phone_number, :email, :email_confirmation, :address, :building_info,
       :course, :selected_datetime, :notes, :access_notes
     )
   end
