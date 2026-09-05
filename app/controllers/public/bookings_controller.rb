@@ -705,9 +705,9 @@ class Public::BookingsController < ApplicationController
 
   def load_courses
     [
-      { name: '初回評価セッション', duration: 60, price: ApplicationConfig::COURSE_PRICES.fetch('初回評価セッション') },
-      { name: '対面セッション（スタジオ／出張）', duration: 60, price: ApplicationConfig::COURSE_PRICES.fetch('対面セッション（スタジオ／出張）') },
-      { name: 'オンライン身体分析・設計', duration: 30, price: ApplicationConfig::COURSE_PRICES.fetch('オンライン身体分析・設計') }
+      { name: '初回評価セッション', duration: 60, price: Reservation.price_for('初回評価セッション') },
+      { name: '対面セッション（スタジオ／出張）', duration: 60, price: Reservation.price_for('対面セッション（スタジオ／出張）') },
+      { name: 'オンライン身体分析・設計', duration: 30, price: Reservation.price_for('オンライン身体分析・設計') }
     ]
   end
 end
