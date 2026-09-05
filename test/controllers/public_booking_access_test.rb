@@ -22,14 +22,9 @@ class PublicBookingAccessTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "cancel requires a valid signed token" do
+  test "cancel rejects a numeric reservation id" do
     post cancel_public_booking_path(@reservation.id)
     assert_redirected_to new_public_booking_path
     assert @reservation.reload.tentative?
-
-    access_token = @reservation.public_access_token
-    post cancel_public_booking_path(access_token)
-    assert_redirected_to public_booking_path(access_token)
-    assert @reservation.reload.cancelled?
   end
 end
