@@ -9,24 +9,37 @@ class Public::BookingsControllerTest < ActiveSupport::TestCase
   end
 
   test "booking email is required" do
-    submitted = ActionController::Parameters.new(email: "").permit!
+    submitted = ActionController::Parameters.new(email: "", email_confirmation: "").permit!
     @controller.define_singleton_method(:booking_params) { submitted }
 
     assert_not @controller.send(:booking_email_valid?)
   end
 
   test "booking email must have a valid format" do
-    submitted = ActionController::Parameters.new(email: "invalid-email").permit!
+    submitted = ActionController::Parameters.new(email: "invalid-email", email_confirmation: "invalid-email").permit!
     @controller.define_singleton_method(:booking_params) { submitted }
 
     assert_not @controller.send(:booking_email_valid?)
   end
 
   test "valid booking email is accepted" do
-    submitted = ActionController::Parameters.new(email: "customer@example.com").permit!
+    submitted = ActionController::Parameters.new(
+      email: "customer@example.com",
+      email_confirmation: "customer@example.com"
+    ).permit!
     @controller.define_singleton_method(:booking_params) { submitted }
 
     assert @controller.send(:booking_email_valid?)
+  end
+
+  test "booking email and confirmation must match" do
+    submitted = ActionController::Parameters.new(
+      email: "customer@example.com",
+      email_confirmation: "different@example.com"
+    ).permit!
+    @controller.define_singleton_method(:booking_params) { submitted }
+
+    assert_not @controller.send(:booking_email_valid?)
   end
 
   test "existing customer is updated from the current booking form" do

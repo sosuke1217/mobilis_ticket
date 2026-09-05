@@ -168,6 +168,14 @@
                         autocapitalize: 'none', spellcheck: false, placeholder: 'example@email.com' } %>
                 <div class="form-text">予約確認メールの送信に使用します / Used to send your reservation confirmation</div>
               </div>
+
+              <div class="mb-3">
+                <%= label_tag 'booking[email_confirmation]', 'メールアドレス（確認） / Confirm Email', class: 'form-label required' %>
+                <%= email_field_tag 'booking[email_confirmation]', '',
+                      { class: 'form-control', required: true, autocomplete: 'off', inputmode: 'email',
+                        autocapitalize: 'none', spellcheck: false, placeholder: 'もう一度入力してください / Enter again' } %>
+                <div class="invalid-feedback">メールアドレスが一致しません / Email addresses do not match</div>
+              </div>
               
               <div class="mb-3" id="address-field-container">
                 <%= label_tag 'booking[address]', 'ご住所 / Address', class: 'form-label required', id: 'address-label' %>
@@ -737,6 +745,7 @@ function initializeBookingPage() {
     const nameField = document.querySelector('input[name="booking[name]"]');
     const phoneField = document.querySelector('input[name="booking[phone_number]"]');
     const emailField = document.querySelector('input[name="booking[email]"]');
+    const emailConfirmationField = document.querySelector('input[name="booking[email_confirmation]"]');
     const addressField = document.querySelector('textarea[name="booking[address]"]');
     
     let allValid = true;
@@ -759,6 +768,15 @@ function initializeBookingPage() {
     }
 
     if (!emailField || !emailField.value.trim() || !emailField.validity.valid) {
+      allValid = false;
+    }
+
+    const emailsMatch = emailField && emailConfirmationField &&
+      emailField.value.trim().toLowerCase() === emailConfirmationField.value.trim().toLowerCase();
+    if (emailConfirmationField) {
+      emailConfirmationField.setCustomValidity(emailsMatch ? '' : 'Email addresses do not match');
+    }
+    if (!emailConfirmationField || !emailConfirmationField.value.trim() || !emailConfirmationField.validity.valid || !emailsMatch) {
       allValid = false;
     }
     
