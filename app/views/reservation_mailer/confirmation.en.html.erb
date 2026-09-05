@@ -84,12 +84,14 @@
       </table>
     </div>
 
+    <% if @reservation_url.present? %>
     <p style="text-align: center; margin: 24px 0;">
       <a href="<%= @reservation_url %>" style="display: inline-block; padding: 12px 22px; background: #0879A6; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold;">
         View Reservation Details
       </a><br>
       <small>Do not share this private link with anyone.</small>
     </p>
+    <% end %>
 
     <% if @tentative %>
       <p>Please wait for your confirmation email.<br>
