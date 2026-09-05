@@ -199,9 +199,10 @@ class Reservation < ApplicationRecord
 
   # 料金を取得
   def get_price
+    configured_price = ApplicationConfig::COURSE_PRICES[course]
+    return configured_price if configured_price
+
     case course
-    when "対面セッション（スタジオ／出張）" then 15000
-    when "オンライン身体分析・設計" then 5000
     when "40分", "40分コース" then 8000
     when "60分", "60分コース" then 12000
     when "80分", "80分コース" then 16000
