@@ -5,7 +5,7 @@ class ReservationTest < ActiveSupport::TestCase
     reservation = Reservation.new(course: "初回評価セッション")
 
     assert_equal 11_000, reservation.get_price
-    assert_equal ApplicationConfig::COURSE_PRICES.fetch("初回評価セッション"), reservation.get_price
+    assert_equal Reservation.price_for("初回評価セッション"), reservation.get_price
   end
 
   test "public booking course prices use the same source of truth" do
