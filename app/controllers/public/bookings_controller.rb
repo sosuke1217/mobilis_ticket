@@ -113,6 +113,12 @@ class Public::BookingsController < ApplicationController
     Rails.logger.info "📝 Booking params: #{booking_params.inspect}"
     
     begin
+      unless turnstile_valid?
+        flash[:alert] = '安全確認に失敗しました。ページを再読み込みして、もう一度お試しください。 / Security verification failed. Please reload the page and try again.'
+        @reservation = Reservation.new
+        return render :new, status: :unprocessable_entity
+      end
+
       unless booking_email_valid?
         flash[:alert] = 'メールアドレスを確認し、同じ内容を2回入力してください。 / Please enter the same valid email address twice.'
         @reservation = Reservation.new
@@ -637,6 +643,13 @@ class Public::BookingsController < ApplicationController
       email.match?(URI::MailTo::EMAIL_REGEXP) &&
       confirmation.present? &&
       email.casecmp?(confirmation)
+  end
+
+  def turnstile_valid?
+    TurnstileVerifier.valid?(
+      token: params["cf-turnstile-response"],
+      remote_ip: request.remote_ip
+    )
   end
 
   def find_or_create_user
