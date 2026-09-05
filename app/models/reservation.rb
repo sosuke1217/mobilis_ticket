@@ -1,6 +1,12 @@
 # app/models/reservation.rb の修正
 
 class Reservation < ApplicationRecord
+  PUBLIC_COURSE_PRICES = {
+    "初回評価セッション" => ENV.fetch('PRICE_INITIAL_ASSESSMENT', 11000).to_i,
+    "対面セッション（スタジオ／出張）" => ENV.fetch('PRICE_FACE_TO_FACE', 15000).to_i,
+    "オンライン身体分析・設計" => ENV.fetch('PRICE_ONLINE', 5000).to_i
+  }.freeze
+
   # ステータス定義（Rails 8対応）
   enum :status, {
     confirmed: 0,    # 確定
@@ -199,7 +205,7 @@ class Reservation < ApplicationRecord
 
   # 料金を取得
   def get_price
-    configured_price = ApplicationConfig::COURSE_PRICES[course]
+    configured_price = self.class.price_for(course)
     return configured_price if configured_price
 
     case course
@@ -208,6 +214,10 @@ class Reservation < ApplicationRecord
     when "80分", "80分コース" then 16000
     else 15000
     end
+  end
+
+  def self.price_for(course_name)
+    PUBLIC_COURSE_PRICES[course_name]
   end
 
   # 予約の説明文
