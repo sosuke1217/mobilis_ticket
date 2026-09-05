@@ -8,7 +8,12 @@ class User < ApplicationRecord
   # バリデーション
   validates :name, presence: true, length: { maximum: 100 }
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
-  validates :phone_number, format: { with: /\A[\d\-\(\)\s]+\z/ }, allow_blank: true
+  before_validation :normalize_phone_number
+
+  validates :phone_number,
+            format: { with: /\A\+?[\d\s().-]+\z/ },
+            length: { minimum: 7, maximum: 30 },
+            allow_blank: true
   validates :postal_code, format: { with: /\A\d{3}-?\d{4}\z/ }, allow_blank: true
   
   after_create :build_default_notification_preference
@@ -35,6 +40,18 @@ class User < ApplicationRecord
 
   def self.ransackable_associations(auth_object = nil)
     []
+  end
+
+  def self.normalize_phone_number(value)
+    value.to_s
+         .unicode_normalize(:nfkc)
+         .tr('‐‑‒–—―−ー', '-')
+         .gsub(/\s+/, ' ')
+         .strip
+  end
+
+  def normalize_phone_number
+    self.phone_number = self.class.normalize_phone_number(phone_number) if phone_number.present?
   end
 
   # ✅ 残チケット枚数の合計
