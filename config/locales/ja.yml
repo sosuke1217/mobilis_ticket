@@ -34,6 +34,10 @@ ja:
         not_an_integer: "は整数で入力してください"
         odd: "は奇数にしてください"
         even: "は偶数にしてください"
+        invalid: "の形式が正しくありません"
+    attributes:
+      user:
+        phone_number: "電話番号"
   
   helpers:
     select:
