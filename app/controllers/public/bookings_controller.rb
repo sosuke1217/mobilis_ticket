@@ -627,7 +627,7 @@ class Public::BookingsController < ApplicationController
   end
 
   def find_or_create_user
-    phone = booking_params[:phone_number]
+    phone = User.normalize_phone_number(booking_params[:phone_number])
     
     user = User.find_by(phone_number: phone)
     if user
@@ -688,7 +688,7 @@ class Public::BookingsController < ApplicationController
   def user_attributes
     {
       name: booking_params[:name],
-      phone_number: booking_params[:phone_number],
+      phone_number: User.normalize_phone_number(booking_params[:phone_number]),
       email: booking_params[:email],
       address: booking_params[:address]
     }
