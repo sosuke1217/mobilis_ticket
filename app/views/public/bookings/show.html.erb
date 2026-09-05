@@ -79,7 +79,7 @@
 
           <% if !@reservation.cancelled? && @reservation.cancellable? %>
             <div class="secondary-actions">
-              <%= link_to cancel_public_booking_path(@reservation), class: "cancel-link",
+              <%= link_to cancel_public_booking_path(@reservation.public_access_token), class: "cancel-link",
                     data: { turbo_method: :post, turbo_confirm: "本当にキャンセルしますか？\nAre you sure you want to cancel?" } do %>
                 予約をキャンセル / Cancel reservation
               <% end %>

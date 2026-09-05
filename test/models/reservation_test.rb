@@ -18,6 +18,16 @@ class ReservationTest < ActiveSupport::TestCase
     end
   end
 
+  test "public access token resolves only with the correct signature" do
+    reservation = Reservation.new(name: "Token Test", course: "初回評価セッション")
+    reservation.save!(validate: false)
+    token = reservation.public_access_token
+
+    assert_equal reservation, Reservation.find_by_public_access_token(token)
+    assert_nil Reservation.find_by_public_access_token("#{token}tampered")
+    assert_nil Reservation.find_by_public_access_token(reservation.id.to_s)
+  end
+
   # test "the truth" do
   #   assert true
   # end

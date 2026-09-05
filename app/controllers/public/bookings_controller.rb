@@ -182,7 +182,7 @@ class Public::BookingsController < ApplicationController
       Rails.logger.info "✅ Reservation created successfully: #{@reservation.id}"
       send_booking_notification(@reservation) if @reservation.user.line_user_id
       notify_admin(@reservation)
-      redirect_to public_booking_path(@reservation),
+      redirect_to public_booking_path(@reservation.public_access_token),
                   notice: 'ご予約リクエストを承りました。確認のご連絡をお待ちください。'
     else
       Rails.logger.error "❌ Reservation save failed: #{@reservation.errors.full_messages.join(', ')}"
@@ -200,7 +200,7 @@ class Public::BookingsController < ApplicationController
 
   def show
     begin
-      @reservation = Reservation.find_by(id: params[:id])
+      @reservation = Reservation.find_by_public_access_token(params[:id])
       
       unless @reservation
         flash[:alert] = '予約が見つかりませんでした。'
@@ -221,7 +221,15 @@ class Public::BookingsController < ApplicationController
   end
 
   def cancel
-    @reservation = Reservation.find(params[:id])
+    @reservation = Reservation.find_by_public_access_token(params[:id])
+
+    unless @reservation
+      redirect_to new_public_booking_path,
+                  alert: '予約リンクが無効または期限切れです。 / This reservation link is invalid or has expired.'
+      return
+    end
+
+    access_token = params[:id]
     
     if @reservation.cancellable?
       @reservation.cancel!('お客様都合によるキャンセル')
@@ -229,10 +237,10 @@ class Public::BookingsController < ApplicationController
       # LINE通知
       send_cancellation_notification(@reservation) if @reservation.user.line_user_id
       
-      redirect_to public_booking_path(@reservation), 
+      redirect_to public_booking_path(access_token),
                   notice: 'ご予約をキャンセルいたしました。'
     else
-      redirect_to public_booking_path(@reservation), 
+      redirect_to public_booking_path(access_token),
                   alert: 'この予約はキャンセルできません。'
     end
   end

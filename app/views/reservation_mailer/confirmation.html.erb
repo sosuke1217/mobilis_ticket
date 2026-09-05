@@ -90,7 +90,15 @@
         <% end %>
       </table>
     </div>
-    
+
+    <% if @reservation_url.present? %>
+    <p style="text-align: center; margin: 24px 0;">
+      <a href="<%= @reservation_url %>" style="display: inline-block; padding: 12px 22px; background: #0879A6; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold;">
+        予約内容を確認する
+      </a><br>
+      <small>この専用リンクは他の方へ共有しないでください。</small>
+    </p>
+    <% end %>
 
     
     <% if @tentative %>

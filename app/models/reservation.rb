@@ -1,6 +1,9 @@
 # app/models/reservation.rb の修正
 
 class Reservation < ApplicationRecord
+  PUBLIC_ACCESS_PURPOSE = :public_booking_access
+  PUBLIC_ACCESS_DURATION = 90.days
+
   PUBLIC_COURSE_PRICES = {
     "初回評価セッション" => ENV.fetch('PRICE_INITIAL_ASSESSMENT', 11000).to_i,
     "対面セッション（スタジオ／出張）" => ENV.fetch('PRICE_FACE_TO_FACE', 15000).to_i,
@@ -112,6 +115,14 @@ class Reservation < ApplicationRecord
   # キャンセル可能かチェック
   def cancellable?
     confirmed? || tentative?
+  end
+
+  def public_access_token
+    signed_id(purpose: PUBLIC_ACCESS_PURPOSE, expires_in: PUBLIC_ACCESS_DURATION)
+  end
+
+  def self.find_by_public_access_token(token)
+    find_signed(token, purpose: PUBLIC_ACCESS_PURPOSE)
   end
 
   # 編集可能かチェック
