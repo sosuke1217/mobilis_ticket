@@ -1,5 +1,10 @@
 <!-- app/views/public/bookings/new.html.erb -->
 <% content_for :title, "Mobilis｜ご予約 / Reservation" %>
+<% if TurnstileVerifier.enabled? %>
+  <% content_for :head do %>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <% end %>
+<% end %>
 <div class="container my-4 my-md-5">
   <div class="row justify-content-center">
     <div class="col-lg-10 col-xl-9">
@@ -219,6 +224,13 @@
             </div>
             
             <!-- 内容確認ボタン -->
+            <% if TurnstileVerifier.enabled? %>
+              <div class="cf-turnstile d-flex justify-content-center mt-4"
+                   data-sitekey="<%= ENV.fetch('TURNSTILE_SITE_KEY') %>"
+                   data-theme="light"
+                   data-size="flexible"></div>
+            <% end %>
+
             <div class="text-center mt-4">
               <button type="button" class="btn btn-primary btn-lg px-5" id="submit-btn" disabled>
                 <i class="fas fa-check-circle me-2"></i>
