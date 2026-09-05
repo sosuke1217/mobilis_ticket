@@ -32,3 +32,4 @@ class PublicBookingAccessTest < ActionDispatch::IntegrationTest
     assert_redirected_to public_booking_path(access_token)
     assert @reservation.reload.cancelled?
   end
+end
