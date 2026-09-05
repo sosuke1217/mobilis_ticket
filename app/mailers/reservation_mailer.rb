@@ -8,6 +8,7 @@ class ReservationMailer < ApplicationMailer
     @user = reservation.user
     @salon_name = "Mobilis Stretch"
     @tentative = reservation.tentative?
+    @reservation_url = public_booking_url(reservation.public_access_token)
     
     # ユーザーの言語設定を判定（デフォルトは日本語）
     user_language = detect_user_language(@user)
