@@ -1171,7 +1171,13 @@
                 noteTextarea: noteTextarea ? 'found' : 'not found'
             });
             
-            const newCourse = courseSelect ? courseSelect.value : `${currentReservation.duration}分`;
+            // The dropdown may use a display-normalized value such as "60分"
+            // while an existing booking stores "60 min". Only submit a new
+            // course value when the admin actually changed the dropdown.
+            const courseWasChanged = courseSelect?.dataset.userChanged === 'true';
+            const newCourse = courseWasChanged
+                ? courseSelect.value
+                : (currentReservation.course || `${currentReservation.duration}分`);
             const newDuration = extractDurationFromCourse(newCourse);
             const currentInterval = currentReservation.effective_interval_minutes ?? 10;
             
@@ -2300,6 +2306,7 @@
             }
             
             // ローカルデータを即座に更新（警告があっても更新する）
+            courseSelect.dataset.userChanged = 'true';
             currentReservation.duration = newDuration;
             currentReservation.course = newCourse;
             
