@@ -1,0 +1,16 @@
+<div class="container py-5" style="max-width: 520px;">
+  <div class="card shadow-sm">
+    <div class="card-body p-4">
+      <h1 class="h4 mb-3">二段階認証 / Two-Factor Authentication</h1>
+      <p class="text-muted">認証アプリに表示される6桁コード、またはバックアップコードを入力してください。</p>
+      <%= form_with url: admin_user_two_factor_path, method: :post, local: true do %>
+        <%= label_tag :code, "認証コード", class: "form-label" %>
+        <%= text_field_tag :code, nil, class: "form-control form-control-lg mb-3", required: true,
+              inputmode: "numeric", autocomplete: "one-time-code", autofocus: true %>
+        <%= submit_tag "確認してログイン", class: "btn btn-primary w-100" %>
+      <% end %>
+      <%= button_to "ログアウト", destroy_admin_user_session_path, method: :delete,
+            class: "btn btn-link w-100 mt-2", form: { data: { turbo: false } } %>
+    </div>
+  </div>
+</div>
