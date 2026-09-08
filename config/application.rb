@@ -47,14 +47,14 @@ module Mobilis
                            httponly: true,
                            secure: true,
                            same_site: :lax,
-                           expire_after: 30.minutes
+                           expire_after: 12.hours
     else
       config.session_store :cookie_store,
                            key: '_mobilis_session',
                            httponly: true,
                            secure: false,
                            same_site: :lax,
-                           expire_after: 30.minutes
+                           expire_after: 12.hours
     end
   end
 end
