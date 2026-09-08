@@ -743,7 +743,7 @@ class Reservation < ApplicationRecord
     
     begin
       ReservationMailer.confirmation(self).deliver_now
-      Rails.logger.info "📧 Confirmation email scheduled for: #{user.email}"
+      Rails.logger.info "📧 Confirmation email scheduled: reservation_id=#{id}"
     rescue => e
       Rails.logger.error "確認メール送信エラー: #{e.message}"
     end
@@ -768,13 +768,13 @@ class Reservation < ApplicationRecord
 
   def send_confirmation_notifications
     Rails.logger.info "📧 send_confirmation_notifications called for reservation #{id}"
-    Rails.logger.info "📧 user: #{user&.name}, email: #{user&.email.present?}, line_user_id: #{user&.line_user_id.present?}"
+    Rails.logger.info "📧 notification channels: email=#{user&.email.present?}, line=#{user&.line_user_id.present?}"
     
     # メール通知
     if user&.email.present?
       begin
         ReservationMailer.confirmation(self).deliver_now
-        Rails.logger.info "📧 Confirmation notification sent to: #{user.email}"
+        Rails.logger.info "📧 Confirmation notification sent: reservation_id=#{id}"
       rescue => e
         Rails.logger.error "確認通知送信エラー: #{e.message}"
       end
@@ -785,13 +785,13 @@ class Reservation < ApplicationRecord
       begin
         Rails.logger.info "📱 Attempting to send LINE confirmation notification"
         LineBookingNotifier.booking_confirmed(self)
-        Rails.logger.info "📱 LINE confirmation notification sent to: #{user.line_user_id}"
+        Rails.logger.info "📱 LINE confirmation notification sent: reservation_id=#{id}"
       rescue => e
         Rails.logger.error "LINE確認通知送信エラー: #{e.message}"
         Rails.logger.error "LINE確認通知送信エラー詳細: #{e.backtrace.first(5).join("\n")}"
       end
     else
-      Rails.logger.info "📱 No LINE user ID found for user: #{user&.name}"
+      Rails.logger.info "📱 No LINE user ID found: reservation_id=#{id}"
     end
   end
 
@@ -802,7 +802,7 @@ class Reservation < ApplicationRecord
     if user&.email.present?
       begin
         ReservationMailer.cancellation_notification(self).deliver_now
-        Rails.logger.info "📧 Cancellation notification sent to: #{user.email}"
+        Rails.logger.info "📧 Cancellation notification sent: reservation_id=#{id}"
       rescue => e
         Rails.logger.error "キャンセル通知送信エラー: #{e.message}"
       end
@@ -812,7 +812,7 @@ class Reservation < ApplicationRecord
     if user&.line_user_id.present?
       begin
         LineBookingNotifier.send_cancellation_notification(self)
-        Rails.logger.info "📱 LINE cancellation notification sent to: #{user.line_user_id}"
+        Rails.logger.info "📱 LINE cancellation notification sent: reservation_id=#{id}"
       rescue => e
         Rails.logger.error "LINEキャンセル通知送信エラー: #{e.message}"
       end
@@ -915,11 +915,11 @@ class Reservation < ApplicationRecord
   end
 
   def log_reservation_created
-    Rails.logger.info "✅ 新規予約作成: ID=#{id}, #{name}様, #{start_time&.strftime('%m/%d %H:%M')}, #{course}"
+    Rails.logger.info "✅ 新規予約作成: ID=#{id}"
   end
 
   def log_reservation_updated
-    Rails.logger.info "📝 予約ステータス変更: ID=#{id}, #{name}様, #{status}"
+    Rails.logger.info "📝 予約ステータス変更: ID=#{id}, status=#{status}"
   end
 
   # スコープも個別インターバル対応

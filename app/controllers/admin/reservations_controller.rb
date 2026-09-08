@@ -15,7 +15,7 @@ class Admin::ReservationsController < ApplicationController
       format.json do
         if request.format.json?
           Rails.logger.info "🔍 JSON request received for calendar events"
-          Rails.logger.info "📋 All params: #{params.inspect}"
+          Rails.logger.info "📋 Calendar JSON request"
 
           begin
             # システム設定を取得
@@ -108,7 +108,6 @@ class Admin::ReservationsController < ApplicationController
             Rails.logger.info "  course: #{reservation.course.inspect}"
             Rails.logger.info "  duration: #{reservation.duration.inspect}"
             Rails.logger.info "  course_duration_minutes: #{course_duration_minutes}"
-            Rails.logger.info "  customer_name: #{customer_name.inspect}"
               
               event = {
                 id: reservation.id.to_s,
@@ -272,7 +271,7 @@ class Admin::ReservationsController < ApplicationController
 
   def create_booking
     Rails.logger.info "🔄 Create booking called"
-    Rails.logger.info "📝 Params: #{params.inspect}"
+    Rails.logger.info "📝 Admin booking creation request"
     
     # パラメータの検証
     if params[:reservation].blank?
@@ -289,7 +288,7 @@ class Admin::ReservationsController < ApplicationController
     user = nil
     if params[:reservation][:user_id].present?
       user = User.find_by(id: params[:reservation][:user_id])
-      Rails.logger.info "🔍 Found user by ID: #{user&.name} (ID: #{user&.id})"
+      Rails.logger.info "🔍 Found user by ID: #{user&.id}"
     elsif params[:reservation][:user_attributes].present?
       user_attrs = params[:reservation][:user_attributes]
       # 名前をメインにしてユーザーを検索
@@ -301,14 +300,14 @@ class Admin::ReservationsController < ApplicationController
           phone_number: user_attrs[:phone_number],
           email: user_attrs[:email]
         )
-        Rails.logger.info "🔄 Created new user by name: #{user.name} (ID: #{user.id})"
+        Rails.logger.info "🔄 Created new user: user_id=#{user.id}"
       else
         # 既存ユーザーの情報を更新（電話番号やメールが変更された場合）
         user.update!(
           phone_number: user_attrs[:phone_number],
           email: user_attrs[:email]
         )
-        Rails.logger.info "🔍 Found existing user by name: #{user.name} (ID: #{user.id})"
+        Rails.logger.info "🔍 Found existing user: user_id=#{user.id}"
       end
     end
 
@@ -360,7 +359,7 @@ class Admin::ReservationsController < ApplicationController
 
   def delete_reservation
     Rails.logger.info "🔄 Delete reservation called"
-    Rails.logger.info "📝 Params: #{params.inspect}"
+    Rails.logger.info "📝 Admin reservation deletion request"
 
     previous_details = {
       start_time: @reservation.start_time,
@@ -405,7 +404,7 @@ class Admin::ReservationsController < ApplicationController
 
   def search_users
     Rails.logger.info "🔍 Search users called"
-    Rails.logger.info "📝 Params: #{params.inspect}"
+    Rails.logger.info "📝 Admin user search request"
     
     begin
       query = params[:query]&.strip
@@ -452,7 +451,7 @@ class Admin::ReservationsController < ApplicationController
 
   def update_reservation_status
     Rails.logger.info "🔄 Update reservation status called"
-    Rails.logger.info "📝 Params: #{params.inspect}"
+    Rails.logger.info "📝 Admin reservation status update request"
     
     begin
       reservation_id = params[:reservation_id]
@@ -503,7 +502,7 @@ class Admin::ReservationsController < ApplicationController
   end
 
   def load_reservations
-    Rails.logger.info "🔄 load_reservations called with params: #{params}"
+    Rails.logger.info "🔄 load_reservations called"
     week_start_date = params[:week_start_date]
     
     if week_start_date.blank?
@@ -566,7 +565,7 @@ class Admin::ReservationsController < ApplicationController
 
   def update_interval
     Rails.logger.info "🔄 update_interval called"
-    Rails.logger.info "📝 Params: #{params.inspect}"
+    Rails.logger.info "📝 Admin interval update request"
     
     begin
       reservation_id = params[:id]
@@ -618,7 +617,7 @@ class Admin::ReservationsController < ApplicationController
 
   def update_booking
     Rails.logger.info "🔄 Update booking called"
-    Rails.logger.info "📝 Params: #{params.inspect}"
+    Rails.logger.info "📝 Admin booking update request: reservation_id=#{params[:id]}"
     
     begin
       reservation_id = params[:id]
@@ -635,7 +634,7 @@ class Admin::ReservationsController < ApplicationController
       # 直接user_idが指定された場合の処理を追加
       if params[:reservation][:user_id].present?
         user = User.find(params[:reservation][:user_id])
-        Rails.logger.info "🔄 Found user by ID: #{user.name} (ID: #{user.id})"
+        Rails.logger.info "🔄 Found user by ID: #{user.id}"
       elsif params[:reservation][:user_attributes].present?
         user_attrs = params[:reservation][:user_attributes]
         # 名前をメインにしてユーザーを検索
@@ -647,14 +646,14 @@ class Admin::ReservationsController < ApplicationController
             phone_number: user_attrs[:phone_number],
             email: user_attrs[:email]
           )
-          Rails.logger.info "🔄 Created new user by name for update: #{user.name} (ID: #{user.id})"
+          Rails.logger.info "🔄 Created new user for update: user_id=#{user.id}"
         else
           # 既存ユーザーの情報を更新（電話番号やメールが変更された場合）
           user.update!(
             phone_number: user_attrs[:phone_number],
             email: user_attrs[:email]
           )
-          Rails.logger.info "🔍 Found existing user by name for update: #{user.name} (ID: #{user.id})"
+          Rails.logger.info "🔍 Found existing user for update: user_id=#{user.id}"
         end
       end
       
@@ -663,8 +662,8 @@ class Admin::ReservationsController < ApplicationController
       if user
         reservation_attrs[:user_id] = user.id
         reservation_attrs[:name] = user.name  # 予約のnameフィールドも更新
-        Rails.logger.info "🔄 Updating reservation name to: #{user.name}"
-        Rails.logger.info "🔄 User details: id=#{user.id}, name=#{user.name}, phone=#{user.phone_number}"
+        Rails.logger.info "🔄 Updating reservation user: user_id=#{user.id}"
+        Rails.logger.info "🔄 Reservation user selected: user_id=#{user.id}"
       else
         Rails.logger.warn "⚠️ No user found for reservation update"
       end
@@ -697,7 +696,6 @@ class Admin::ReservationsController < ApplicationController
             
             reservation_attrs[:end_time] = new_end_time
             Rails.logger.info "🔄 Recalculated end_time: #{new_end_time} (course: #{course_duration}分)"
-            Rails.logger.info "🔄 Final reservation_attrs: #{reservation_attrs}"
           rescue => e
             Rails.logger.error "❌ Error parsing start_time: #{e.message}"
             Rails.logger.error "❌ start_time value: #{reservation_attrs[:start_time]}"
@@ -707,17 +705,17 @@ class Admin::ReservationsController < ApplicationController
           Rails.logger.warn "⚠️ No course found for reservation, skipping end_time calculation"
         end
       else
-        Rails.logger.info "🔍 No start_time update, reservation_attrs: #{reservation_attrs}"
+        Rails.logger.info "🔍 No start_time update"
       end
       
-      Rails.logger.info "🔄 Attempting to update reservation with attributes: #{reservation_attrs}"
+      Rails.logger.info "🔄 Attempting reservation update: reservation_id=#{@reservation.id}"
       Rails.logger.info "🔄 Current reservation state: start_time=#{@reservation.start_time}, end_time=#{@reservation.end_time}, course=#{@reservation.course}"
       
       if @reservation.update(reservation_attrs)
         Rails.logger.info "✅ Reservation #{reservation_id} updated successfully"
         send_change_notification(@reservation, previous_details)
         Rails.logger.info "✅ Updated reservation state: start_time=#{@reservation.start_time}, end_time=#{@reservation.end_time}, course=#{@reservation.course}"
-        Rails.logger.info "✅ Updated reservation user: name=#{@reservation.name}, user_id=#{@reservation.user_id}, user_name=#{@reservation.user&.name}"
+        Rails.logger.info "✅ Updated reservation user: user_id=#{@reservation.user_id}"
         render json: {
           success: true,
           message: '予約が更新されました',
@@ -741,8 +739,7 @@ class Admin::ReservationsController < ApplicationController
       else
         Rails.logger.error "❌ Failed to update reservation: #{@reservation.errors.full_messages}"
         Rails.logger.error "❌ Validation details: #{@reservation.errors.details}"
-        Rails.logger.error "❌ Reservation attributes: #{@reservation.attributes}"
-        Rails.logger.error "❌ Attempted attributes: #{reservation_attrs}"
+        Rails.logger.error "❌ Reservation validation failed: reservation_id=#{@reservation.id}"
         render json: {
           success: false,
           message: "予約の更新に失敗しました: #{@reservation.errors.full_messages.join(', ')}"
@@ -765,7 +762,7 @@ class Admin::ReservationsController < ApplicationController
 
   def save_shift_settings
     Rails.logger.info "🔄 Save shift settings called"
-    Rails.logger.info "📝 Params: #{params.inspect}"
+    Rails.logger.info "📝 Admin reservation request"
     
     begin
       schedule_data = params[:schedule_data]
@@ -900,7 +897,7 @@ class Admin::ReservationsController < ApplicationController
 
   # 空き時間取得用のAPIエンドポイント
   def available_times
-    Rails.logger.info "🔍 Available times request received: #{params.inspect}"
+    Rails.logger.info "🔍 Available times request received"
     
     date = Date.parse(params[:date])
     duration = params[:duration].to_i
@@ -929,7 +926,7 @@ class Admin::ReservationsController < ApplicationController
 
   def create
     Rails.logger.info "🔄 Create reservation"
-    Rails.logger.info "📝 Params: #{params.inspect}"
+    Rails.logger.info "📝 Admin reservation creation request"
     
     begin
       # パラメータの処理（時間をJST として適切に処理）
@@ -1031,7 +1028,7 @@ class Admin::ReservationsController < ApplicationController
 
   def update
     Rails.logger.info "🔄 Update reservation #{@reservation.id}"
-    Rails.logger.info "📝 Params: #{params.inspect}"
+    Rails.logger.info "📝 Admin reservation update request: reservation_id=#{@reservation.id}"
     
     begin
       # パラメータの処理（時間をJST として適切に処理）
@@ -1103,7 +1100,7 @@ class Admin::ReservationsController < ApplicationController
         Rails.logger.info "🔄 Drag update detected, skipping interval adjustment"
       end
       
-      Rails.logger.info "🔄 Processed params: #{processed_params.inspect}"
+      Rails.logger.info "🔄 Reservation parameters processed"
       Rails.logger.info "🔄 Individual interval minutes: #{processed_params[:individual_interval_minutes]}"
       
       # 管理者用のバリデーションスキップ設定（営業時間はチェックする）
@@ -1226,7 +1223,7 @@ class Admin::ReservationsController < ApplicationController
     
     if @reservation.user_id.present?
       user = @reservation.user
-      Rails.logger.info "👤 Found user: #{user.name} (ID: #{user.id})"
+      Rails.logger.info "👤 Found user: user_id=#{user.id}"
       
       tickets = user.tickets.includes(:ticket_template)
         .order(created_at: :desc)
@@ -1323,7 +1320,7 @@ class Admin::ReservationsController < ApplicationController
   # 特定の曜日の全予約を取得（定期的なスケジュール変更の影響チェック用）
   def by_day_of_week
     Rails.logger.info "🔍 by_day_of_week called - FIXED VISIBILITY"
-    Rails.logger.info "📝 Params: #{params.inspect}"
+    Rails.logger.info "📝 Admin reservation request"
     
     begin
       day_of_week = params[:day_of_week].to_i
@@ -1379,7 +1376,7 @@ class Admin::ReservationsController < ApplicationController
     return if reservation.cancelled?
 
     ReservationMailer.reservation_updated(reservation, previous_details).deliver_now
-    Rails.logger.info "✅ Reservation change email sent to: #{reservation.user.email}"
+    Rails.logger.info "✅ Reservation change email sent: reservation_id=#{reservation.id}"
   rescue => e
     Rails.logger.error "❌ Error sending reservation change email: #{e.message}"
   end
@@ -1395,13 +1392,13 @@ class Admin::ReservationsController < ApplicationController
       # メール通知
       if reservation.user&.email.present?
         ReservationMailer.cancellation_notification(reservation).deliver_now
-        Rails.logger.info "✅ Cancellation email sent to: #{reservation.user.email}"
+        Rails.logger.info "✅ Cancellation email sent: reservation_id=#{reservation.id}"
       end
       
       # LINE通知
       if reservation.user&.line_user_id.present?
         LineBookingNotifier.send_cancellation_notification(reservation)
-        Rails.logger.info "✅ LINE cancellation notification sent to: #{reservation.user.line_user_id}"
+        Rails.logger.info "✅ LINE cancellation notification sent: reservation_id=#{reservation.id}"
       end
       
       Rails.logger.info "📧 Cancellation notifications completed for reservation #{reservation.id}"
@@ -1442,8 +1439,7 @@ class Admin::ReservationsController < ApplicationController
       :start_time, :end_time, :date, :time, :individual_interval_minutes
     ).to_h.with_indifferent_access
   
-    Rails.logger.info "🔍 Raw params: #{params.inspect}"
-    Rails.logger.info "🔍 Processed params before: #{processed_params.inspect}"
+    Rails.logger.info "🔍 Processing reservation parameters"
     
     # date + time から start_time を作成
     if processed_params[:date].present? && processed_params[:time].present?
@@ -1484,7 +1480,7 @@ class Admin::ReservationsController < ApplicationController
       end
     end
   
-    Rails.logger.info "🔄 Final processed params: #{processed_params.inspect}"
+    Rails.logger.info "🔄 Reservation parameters ready"
     
     processed_params
   end
@@ -1540,13 +1536,13 @@ class Admin::ReservationsController < ApplicationController
       # メール通知
       if reservation.user&.email.present?
         ReservationMailer.cancellation_notification(reservation).deliver_now
-        Rails.logger.info "✅ Cancellation email sent to: #{reservation.user.email}"
+        Rails.logger.info "✅ Cancellation email sent: reservation_id=#{reservation.id}"
       end
       
       # LINE通知
       if reservation.user&.line_user_id.present?
         LineBookingNotifier.send_cancellation_notification(reservation)
-        Rails.logger.info "✅ LINE cancellation notification sent to: #{reservation.user.line_user_id}"
+        Rails.logger.info "✅ LINE cancellation notification sent: reservation_id=#{reservation.id}"
       end
       
       Rails.logger.info "📧 Cancellation notifications completed for reservation #{reservation.id}"

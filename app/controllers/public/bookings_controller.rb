@@ -109,8 +109,7 @@ class Public::BookingsController < ApplicationController
     @courses = load_courses
     
     Rails.logger.info "📝 Booking creation started"
-    Rails.logger.info "📝 Params: #{params.inspect}"
-    Rails.logger.info "📝 Booking params: #{booking_params.inspect}"
+    Rails.logger.info "📝 Public booking request received"
     
     begin
       unless turnstile_valid?
@@ -134,7 +133,7 @@ class Public::BookingsController < ApplicationController
         return render :new, status: :unprocessable_entity
       end
 
-      Rails.logger.info "✅ User found/created: #{@user.id} (#{@user.name})"
+      Rails.logger.info "✅ User found/created: user_id=#{@user.id}"
 
     @reservation = build_reservation(@user)
       

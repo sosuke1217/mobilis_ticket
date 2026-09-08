@@ -37,10 +37,9 @@ class Admin::UsersController < ApplicationController
   end
 
   def create
-    Rails.logger.info "Creating user with params: #{params[:user]}"
+    Rails.logger.info "Creating user"
     Rails.logger.info "Request format: #{request.format}"
     Rails.logger.info "Content-Type: #{request.content_type}"
-    Rails.logger.info "Permitted params: #{user_params}"
     
     @user = User.new(user_params)
     
@@ -51,7 +50,6 @@ class Admin::UsersController < ApplicationController
         format.json { render json: { success: true, user: @user }, status: :created }
       else
         Rails.logger.error "User creation failed: #{@user.errors.full_messages}"
-        Rails.logger.error "User attributes: #{@user.attributes}"
         format.html { render :new, status: :unprocessable_entity }
         format.json { render json: { success: false, errors: @user.errors.full_messages }, status: :unprocessable_entity }
       end
@@ -223,7 +221,7 @@ class Admin::UsersController < ApplicationController
       source_user = User.find(source_user_id)
       target_user = User.find(target_user_id)
       
-      Rails.logger.info "📊 Merging users: #{source_user.id} (#{source_user.name}) -> #{target_user.id} (#{target_user.name})"
+      Rails.logger.info "📊 Merging users: source_id=#{source_user.id} -> target_id=#{target_user.id}"
       
       # データベーストランザクションで結合を実行
       ActiveRecord::Base.transaction do
@@ -323,7 +321,7 @@ class Admin::UsersController < ApplicationController
   def update_line_profile
     if @user.line_user_id.present? && @user.line_user_id != ''
       begin
-        Rails.logger.info "LINE情報更新開始: ユーザーID #{@user.id}, LINE ID #{@user.line_user_id}"
+        Rails.logger.info "LINE情報更新開始: ユーザーID #{@user.id}"
         
         # 環境変数の確認
         unless ENV['LINE_CHANNEL_SECRET'].present? && ENV['LINE_CHANNEL_TOKEN'].present?
@@ -402,7 +400,7 @@ class Admin::UsersController < ApplicationController
           linebot_controller.send(:update_user_profile, @user, line_user_id)
         end
         
-        Rails.logger.info "LINE連携作成成功: ユーザーID #{@user.id}, LINE ID #{line_user_id}"
+        Rails.logger.info "LINE連携作成成功: ユーザーID #{@user.id}"
         
         respond_to do |format|
           format.html { redirect_to admin_user_path(@user), notice: 'LINE連携を作成しました' }
@@ -447,7 +445,7 @@ class Admin::UsersController < ApplicationController
           display_name: ''
         )
         
-        Rails.logger.info "LINE連携削除成功: ユーザーID #{@user.id}, LINE ID #{line_user_id}"
+        Rails.logger.info "LINE連携削除成功: ユーザーID #{@user.id}"
         
         respond_to do |format|
           format.html { redirect_to admin_user_path(@user), notice: 'LINE連携を削除しました' }
@@ -511,10 +509,10 @@ class Admin::UsersController < ApplicationController
             # 既存ユーザーのプロフィールを更新
             if linebot_controller.update_user_profile(user, line_user_id)
               updated_users += 1
-              Rails.logger.info "✅ Updated user: #{user.id} (#{line_user_id})"
+              Rails.logger.info "✅ Updated user: #{user.id}"
             else
               errors += 1
-              Rails.logger.error "❌ Failed to update user: #{user.id} (#{line_user_id})"
+              Rails.logger.error "❌ Failed to update user: #{user.id}"
             end
           else
             # 新規ユーザーを作成
@@ -532,15 +530,15 @@ class Admin::UsersController < ApplicationController
               linebot_controller.update_user_profile(new_user, line_user_id)
               
               new_users += 1
-              Rails.logger.info "✅ Created new user: #{new_user.id} (#{line_user_id})"
+              Rails.logger.info "✅ Created new user: #{new_user.id}"
             else
               errors += 1
-              Rails.logger.error "❌ Failed to create user: #{line_user_id} - #{new_user.errors.full_messages}"
+              Rails.logger.error "❌ Failed to create LINE user: #{new_user.errors.full_messages}"
             end
           end
         rescue => e
           errors += 1
-          Rails.logger.error "❌ Error processing follower #{follower['userId']}: #{e.message}"
+          Rails.logger.error "❌ Error processing LINE follower: #{e.class}"
         end
       end
       

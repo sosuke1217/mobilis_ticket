@@ -30,7 +30,7 @@ class LinebotController < ApplicationController
         next unless event.type == Line::Bot::Event::MessageType::Text
 
         user_id = event['source']['userId']
-        Rails.logger.info "📝 Text message from user: #{user_id}"
+        Rails.logger.info "📝 LINE text message received"
         user = find_or_create_user_with_profile(user_id)
 
         if user.notification_preference.nil?
@@ -43,7 +43,6 @@ class LinebotController < ApplicationController
       when Line::Bot::Event::Postback
         Rails.logger.info "🔄 Postback event received"
         Rails.logger.info "🔍 Event class: #{event.class}"
-        Rails.logger.info "🔍 Event inspect: #{event.inspect}"
         
         # ポストバックデータを取得（複数の方法を試す）
         postback_data = nil
@@ -78,7 +77,6 @@ class LinebotController < ApplicationController
             # LINE Bot SDKのイベントオブジェクトは通常Hashのようにアクセスできる
             if event.respond_to?(:[])
               Rails.logger.info "🔍 Event supports [] access"
-              Rails.logger.info "🔍 event['postback']: #{event['postback'].inspect}" if event['postback']
             end
           rescue => e
             Rails.logger.warn "⚠️ Event structure check failed: #{e.message}"
@@ -96,7 +94,6 @@ class LinebotController < ApplicationController
         
         unless postback_data
           Rails.logger.error "❌ Could not extract postback data from event"
-          Rails.logger.error "🔍 Full event structure: #{event.inspect}"
           next
         end
 
@@ -112,7 +109,7 @@ class LinebotController < ApplicationController
         handle_postback_action(user, postback_data, reply_token)
 
       when Line::Bot::Event::Follow
-        Rails.logger.info "👋 Follow event: user: #{event['source']['userId']}"
+        Rails.logger.info "👋 LINE follow event received"
         user_id = event['source']['userId']
         user = find_or_create_user_with_profile(user_id)
         
@@ -241,7 +238,7 @@ class LinebotController < ApplicationController
         
         # レスポンスボディをJSONとして解析
         profile = JSON.parse(response.body)
-        Rails.logger.info "LINEプロフィール取得成功: #{profile.inspect}"
+        Rails.logger.info "LINEプロフィール取得成功"
       rescue => e
         error_msg = "LINE API呼び出しに失敗しました: #{e.class}: #{e.message}"
         Rails.logger.error error_msg
@@ -260,12 +257,11 @@ class LinebotController < ApplicationController
         display_name: profile['displayName']
       }
       
-      Rails.logger.info "更新パラメータ: #{update_params.inspect}"
       
       # ユーザー情報の更新
       begin
         if user.update!(update_params)
-          Rails.logger.info "LINEプロフィール更新完了: #{user_id} - #{profile['displayName']}"
+          Rails.logger.info "LINEプロフィール更新完了: user_id=#{user.id}"
           return true
         else
           Rails.logger.error "LINEプロフィール更新失敗: #{user.errors.full_messages}"
@@ -406,10 +402,8 @@ class LinebotController < ApplicationController
   def handle_text_message(user, message_text, reply_token)
     # 🆕 デバッグログ：現在の状態を確認
     Rails.logger.info "🔍 handle_text_message called with:"
-    Rails.logger.info "🔍 message_text: '#{message_text}'"
     Rails.logger.info "🔍 user.booking_state: '#{user.booking_state}'"
     Rails.logger.info "🔍 user.booking_location: '#{user.booking_location}'"
-    Rails.logger.info "🔍 user.address: '#{user.address}'"
     
     # ユーザー情報収集中の場合は特別処理
     if user.booking_state == 'collecting_name'
@@ -480,7 +474,7 @@ class LinebotController < ApplicationController
 
     else
       # 認識されないメッセージでは自動送信しない（「メニュー」と送るとメインメニューを表示）
-      Rails.logger.info "🔍 Unrecognized message: '#{message_text}' - no auto reply"
+      Rails.logger.info "🔍 Unrecognized LINE message - no auto reply"
     end
   end
 
@@ -488,13 +482,12 @@ class LinebotController < ApplicationController
     Rails.logger.info "🔄 Postback action received: #{data}"
     Rails.logger.info "🔍 Postback data type: #{data.class}"
     Rails.logger.info "🔍 Postback data length: #{data.length}"
-    Rails.logger.info "🔍 User ID: #{user.id}, User name: #{user.name}"
+    Rails.logger.info "🔍 User ID: #{user.id}"
     
     begin
       case data
     when "check_tickets"
-      Rails.logger.info "📋 Checking tickets for user: #{user.id} (#{user.name})"
-      Rails.logger.info "📋 User line_user_id: #{user.line_user_id}"
+      Rails.logger.info "📋 Checking tickets for user: #{user.id}"
       send_ticket_status(user, reply_token)
 
     when "usage_history"
@@ -531,7 +524,7 @@ class LinebotController < ApplicationController
       send_news_menu(reply_token)
 
     when "check_reservations"
-      Rails.logger.info "📅 Showing reservation check for user: #{user.id} (#{user.name})"
+      Rails.logger.info "📅 Showing reservation check for user: #{user.id}"
       Rails.logger.info "📅 User has #{user.reservations.count} total reservations"
       Rails.logger.info "📅 User has #{user.reservations.where('start_time > ?', Time.current).count} upcoming reservations"
       send_reservation_check(user, reply_token)
@@ -673,7 +666,7 @@ class LinebotController < ApplicationController
 
   # 🆕 予約ページのURLを送信
   def send_booking_page_url(user, reply_token)
-    Rails.logger.info "📅 send_booking_page_url called for user: #{user.id} (#{user.name})"
+    Rails.logger.info "📅 send_booking_page_url called for user: #{user.id}"
     
     base_url = ENV['APP_HOST'] || ENV['app_host'] || 'https://mobilis-stretch.com'
     booking_url = "#{base_url}/public/bookings/new"
@@ -760,7 +753,7 @@ class LinebotController < ApplicationController
 
   # 🆕 予約オプションを送信
   def send_booking_options(user, reply_token)
-    Rails.logger.info "📅 send_booking_options called for user: #{user.id} (#{user.name})"
+    Rails.logger.info "📅 send_booking_options called for user: #{user.id}"
     message = {
       type: "flex",
       altText: "ご予約・メニュー選択",
@@ -1388,7 +1381,7 @@ class LinebotController < ApplicationController
   # 🆕 ユーザー情報入力を促す
   def send_user_info_request(user, reply_token, course)
     Rails.logger.info "📝 send_user_info_request called for user #{user.id}"
-    Rails.logger.info "📝 User current info - name: '#{user.name}', phone: '#{user.phone_number}', address: '#{user.address}'"
+    Rails.logger.info "📝 User booking profile loaded: user_id=#{user.id}"
     
     missing_info = []
     missing_info << "お名前" unless user.name.present?
@@ -1495,9 +1488,7 @@ class LinebotController < ApplicationController
   # 🆕 住所入力の処理
   def handle_address_input(user, message_text, reply_token)
     Rails.logger.info "🔍 handle_address_input called with:"
-    Rails.logger.info "🔍 message_text: '#{message_text}'"
     Rails.logger.info "🔍 user.booking_location: '#{user.booking_location}'"
-    Rails.logger.info "🔍 user.address: '#{user.address}'"
     
     # 🆕 「日程選択開始」などの特殊なメッセージは住所として保存しない
     if message_text.match?(/日程選択開始|日付選択開始|date selection/i)
@@ -1532,7 +1523,7 @@ class LinebotController < ApplicationController
       user.update(address: location_text, booking_state: nil, booking_location: nil)
     end
     
-    Rails.logger.info "🔍 Address saved: '#{location_text}'"
+    Rails.logger.info "🔍 Address saved: user_id=#{user.id}"
     
     # 予約フローを再開
     course = user.booking_course
@@ -1551,7 +1542,7 @@ class LinebotController < ApplicationController
   # 🆕 情報収集開始
   def start_info_collection(user, reply_token)
     Rails.logger.info "📝 start_info_collection called for user #{user.id}"
-    Rails.logger.info "📝 User current info - name: '#{user.name}', phone: '#{user.phone_number}', address: '#{user.address}'"
+    Rails.logger.info "📝 User booking profile loaded: user_id=#{user.id}"
     Rails.logger.info "📝 User booking_state: #{user.booking_state}"
     
     # 不足している情報を確認
@@ -2151,7 +2142,6 @@ class LinebotController < ApplicationController
 
       # 🆕 デバッグログ：住所情報を確認
       Rails.logger.info "🔍 予約作成時の住所情報確認:"
-      Rails.logger.info "🔍 user.address: '#{user.address}'"
       Rails.logger.info "🔍 user.booking_location: '#{user.booking_location}'"
       Rails.logger.info "🔍 user.booking_state: '#{user.booking_state}'"
 
@@ -2163,7 +2153,7 @@ class LinebotController < ApplicationController
         if !original_address.include?("自宅:")
           user.update(address: "自宅: #{original_address}")
         end
-        Rails.logger.info "🔍 住所を元に戻しました: '#{user.address}'"
+        Rails.logger.info "🔍 住所を元に戻しました: user_id=#{user.id}"
       end
 
       # 🆕 別の場所の住所をクリア
@@ -2447,7 +2437,7 @@ class LinebotController < ApplicationController
       reservation.cancel!(reason)
 
       # 管理者に通知
-      Rails.logger.info "LINE予約キャンセル: 予約ID #{reservation.id}, ユーザー: #{user.name}"
+      Rails.logger.info "LINE予約キャンセル: 予約ID #{reservation.id}, user_id=#{user.id}"
 
     rescue ActiveRecord::RecordNotFound
       send_reply(reply_token, {
@@ -2534,7 +2524,7 @@ class LinebotController < ApplicationController
   end
 
   def send_ticket_status(user, reply_token)
-    Rails.logger.info "🎫 send_ticket_status called for user: #{user.id} (#{user.name})"
+    Rails.logger.info "🎫 send_ticket_status called for user: #{user.id}"
     tickets = user.tickets.where("remaining_count > 0 AND expiry_date >= ?", Time.zone.today)
     Rails.logger.info "🎫 Found #{tickets.count} active tickets"
     
@@ -2752,7 +2742,7 @@ class LinebotController < ApplicationController
   end
 
   def send_usage_history(user, reply_token)
-    Rails.logger.info "🕓 send_usage_history called for user: #{user.id} (#{user.name})"
+    Rails.logger.info "🕓 send_usage_history called for user: #{user.id}"
     usages = user.ticket_usages.order(used_at: :desc).limit(12)
     Rails.logger.info "🕓 Found #{usages.count} usage records"
   
@@ -3090,20 +3080,20 @@ class LinebotController < ApplicationController
     Rails.logger.info "📤 Message type: #{message[:type]}"
     
     begin
-      Rails.logger.info "📤 About to call LINE API with message: #{message.inspect}"
+      Rails.logger.info "📤 About to call LINE API"
       response = client.reply_message(reply_token, message)
       Rails.logger.info "📤 LINE API response code: #{response.code}"
       
       # エンコーディングエラーを避けるため、レスポンスボディを安全にログ出力
       begin
         response_body = response.body.force_encoding('UTF-8')
-        Rails.logger.info "📤 LINE API response body: #{response_body}"
+        Rails.logger.info "📤 LINE API response received"
       rescue => encoding_error
         Rails.logger.info "📤 LINE API response body: [encoding error: #{encoding_error.message}]"
       end
       
       if response.code != '200'
-        Rails.logger.error "❌ LINE API error: #{response_body}"
+        Rails.logger.error "❌ LINE API error: status=#{response.code}"
       else
         Rails.logger.info "✅ LINE API call successful"
       end
@@ -3115,17 +3105,17 @@ class LinebotController < ApplicationController
 
   # 🆕 push_messageメソッド
   def push_message(user_id, message)
-    Rails.logger.info "📤 push_message called for user: #{user_id}"
+    Rails.logger.info "📤 push_message called"
     Rails.logger.info "📤 Message type: #{message[:type]}"
     
     begin
-      Rails.logger.info "📤 About to call LINE API with push message: #{message.inspect}"
+      Rails.logger.info "📤 About to call LINE API with push message"
       response = client.push_message(user_id, message)
       Rails.logger.info "📤 LINE API response code: #{response.code}"
-      Rails.logger.info "📤 LINE API response body: #{response.body}"
+      Rails.logger.info "📤 LINE API response received"
       
       if response.code != '200'
-        Rails.logger.error "❌ LINE API error: #{response.body}"
+        Rails.logger.error "❌ LINE API error: status=#{response.code}"
       else
         Rails.logger.info "✅ LINE API push call successful"
       end
@@ -3373,7 +3363,7 @@ class LinebotController < ApplicationController
           profile = JSON.parse(response.body)
           display_name = profile['displayName'] || display_name
           display_name = display_name.present? ? display_name.strip : "LINEユーザー"
-          Rails.logger.info "📝 Got LINE profile: #{display_name}"
+          Rails.logger.info "📝 Got LINE profile"
         else
           Rails.logger.warn "⚠️ LINE profile API returned non-success: #{response.code}"
         end
@@ -3383,7 +3373,7 @@ class LinebotController < ApplicationController
         # エラーが発生した場合でもデフォルト名で続行
       end
       
-      Rails.logger.info "📝 Creating new user: #{user_id}, display_name: #{display_name}"
+      Rails.logger.info "📝 Creating new LINE user"
       
       # ユーザーを作成（プロフィール取得に失敗してもデフォルト名で作成）
       user = User.create!(
