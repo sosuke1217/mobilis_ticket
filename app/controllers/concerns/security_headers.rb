@@ -23,11 +23,12 @@ module SecurityHeaders
     # セキュリティを強化：base-uriとform-actionを追加
     csp_directives = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com",
       "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com",
       "img-src 'self' data: https:",
       "font-src 'self' data: https://cdnjs.cloudflare.com",
-      "connect-src 'self' https://api.line.me https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
+      "connect-src 'self' https://challenges.cloudflare.com https://api.line.me https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
+      "frame-src https://challenges.cloudflare.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'"
