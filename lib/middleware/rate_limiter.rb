@@ -13,6 +13,7 @@ class RateLimiter
   DEFAULT_RULES = [
     # Admin login attempts
     { name: "admin_login",  methods: ["POST"], paths: ["/admin_users/sign_in"], limit: 5, period: 15 * 60 },
+    { name: "admin_two_factor", methods: ["POST"], paths: ["/admin_users/two_factor"], limit: 10, period: 10 * 60 },
     # User login attempts
     { name: "user_login",   methods: ["POST"], paths: ["/users/sign_in"],       limit: 20, period: 20 * 60 },
     # LINE bot callback
