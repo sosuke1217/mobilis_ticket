@@ -18,6 +18,7 @@ class RateLimiter
     # LINE bot callback
     { name: "line_callback", methods: ["POST"], paths: ["/linebot/callback"],    limit: 300, period: 60 },
     # Reservation creation endpoints (public + admin)
+    { name: "public_booking_create", methods: ["POST"], paths: ["/public/bookings"], limit: 5, period: 10 * 60 },
     { name: "reservation_create", methods: ["POST"], paths: ["/reservations", "/admin/reservations"], limit: 120, period: 60 },
     # Generic admin write actions
     { name: "admin_write", methods: ["POST", "PATCH", "PUT", "DELETE"], path_prefixes: ["/admin/"], limit: 600, period: 60 }
@@ -81,19 +82,36 @@ class RateLimiter
   end
 
   def rate_limited_response(req, rule, count)
-    Rails.logger.warn("[RateLimiter] 429 #{rule[:name]} ip=#{req.ip} path=#{req.path} count=#{count} limit=#{rule[:limit]}")
+    ip_hash = Digest::SHA256.hexdigest(req.ip.to_s).first(12)
+    Rails.logger.warn("[RateLimiter] 429 #{rule[:name]} ip_hash=#{ip_hash} path=#{req.path} count=#{count} limit=#{rule[:limit]}")
 
-    body = { error: "rate_limited", message: "リクエストが多すぎます。しばらくしてから再度お試しください。" }.to_json
+    if req.get_header("HTTP_ACCEPT").to_s.include?("text/html")
+      body = <<~HTML
+        <!doctype html>
+        <html lang="ja">
+          <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Too Many Requests</title></head>
+          <body style="font-family:sans-serif;max-width:680px;margin:64px auto;padding:0 24px;line-height:1.7">
+            <h1>しばらく時間をおいてください</h1>
+            <p>短時間に複数回の送信がありました。10分ほど待ってから、もう一度お試しください。</p>
+            <p>Too many booking attempts were submitted. Please wait about 10 minutes and try again.</p>
+            <p><a href="/public/bookings/new">予約画面へ戻る / Back to booking</a></p>
+          </body>
+        </html>
+      HTML
+      content_type = "text/html; charset=utf-8"
+    else
+      body = { error: "rate_limited", message: "リクエストが多すぎます。しばらくしてから再度お試しください。" }.to_json
+      content_type = "application/json; charset=utf-8"
+    end
 
     [
       429,
       {
-        "Content-Type" => "application/json; charset=utf-8",
+        "Content-Type" => content_type,
         "Retry-After" => rule[:period].to_s
       },
       [body]
     ]
   end
 end
-
 
