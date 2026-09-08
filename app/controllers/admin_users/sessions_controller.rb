@@ -10,11 +10,13 @@ class AdminUsers::SessionsController < Devise::SessionsController
   def create
     super do |admin_user|
       RateLimiter.reset!("admin_login", request.remote_ip) if admin_user.persisted?
+      session[:admin_two_factor_verified] = !admin_user.otp_required_for_login?
     end
   end
 
   # DELETE /resource/sign_out
   def destroy
+    session.delete(:admin_two_factor_verified)
     signed_out = (Devise.sign_out_all_scopes ? sign_out : sign_out(resource_name))
     set_flash_message! :notice, :signed_out if signed_out
     yield if block_given?
