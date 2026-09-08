@@ -47,4 +47,23 @@ class RateLimiterTest < ActiveSupport::TestCase
       assert_equal 200, response.status
     end
   end
+
+  test "admin login is limited and a successful login can reset its counter" do
+    app = ->(_env) { [200, { "Content-Type" => "text/plain" }, ["ok"]] }
+    store = ActiveSupport::Cache::MemoryStore.new
+    limiter = RateLimiter.new(app)
+    request = Rack::MockRequest.new(limiter)
+    ip = "203.0.113.20"
+
+    Rails.stub(:cache, store) do
+      5.times do
+        assert_equal 200, request.post("/admin_users/sign_in", "REMOTE_ADDR" => ip).status
+      end
+      assert_equal 429, request.post("/admin_users/sign_in", "REMOTE_ADDR" => ip).status
+
+      RateLimiter.reset!("admin_login", ip)
+
+      assert_equal 200, request.post("/admin_users/sign_in", "REMOTE_ADDR" => ip).status
+    end
+  end
 end
