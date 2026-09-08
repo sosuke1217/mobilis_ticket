@@ -7,9 +7,11 @@ class AdminUsers::SessionsController < Devise::SessionsController
   # end
 
   # POST /resource/sign_in
-  # def create
-  #   super
-  # end
+  def create
+    super do |admin_user|
+      RateLimiter.reset!("admin_login", request.remote_ip) if admin_user.persisted?
+    end
+  end
 
   # DELETE /resource/sign_out
   def destroy
