@@ -2,7 +2,10 @@ require "test_helper"
 
 class AdminUserTwoFactorTest < ActiveSupport::TestCase
   test "OTP secret is encrypted and backup codes are single use" do
-    admin = admin_users(:one)
+    admin = AdminUser.create!(
+      email: "two-factor-admin@example.com",
+      password: "ValidPassword123!"
+    )
     secret = TotpService.generate_secret
     admin.otp_secret = secret
     codes = admin.generate_backup_codes
