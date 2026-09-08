@@ -51,7 +51,7 @@ class LineNotifier
     }
 
     response = client.push_message(user.line_user_id, message)
-    Rails.logger.info "[LINE NOTIFY] #{user.name} にFlex通知送信 / status: #{response.code}"
+    Rails.logger.info "[LINE NOTIFY] Flex通知送信 user_id=#{user.id} / status: #{response.code}"
 
     NotificationLog.create!(
       user: user,

@@ -30,9 +30,8 @@ class GoogleCalendarSync
 
     begin
       event = build_event_from_reservation(reservation)
-      Rails.logger.info "🔄 Event built: #{event.summary} from #{event.start.date_time} to #{event.end.date_time}"
+      Rails.logger.info "🔄 Calendar event built for reservation_id=#{reservation.id}"
       Rails.logger.info "🔄 Event color_id: #{event.color_id.inspect}"
-      Rails.logger.info "🔄 Event extended_properties: #{event.extended_properties.inspect}"
       
       result = @service.insert_event(CALENDAR_ID, event)
       reservation.update_columns(
@@ -614,7 +613,7 @@ class GoogleCalendarSync
     reservation = Reservation.new(reservation_attributes)
 
     if reservation.save
-      Rails.logger.info "✅ Created reservation #{reservation.id} from Google Calendar event #{event.id} (#{event.summary})"
+      Rails.logger.info "✅ Created reservation #{reservation.id} from Google Calendar event"
       reservation
     else
       Rails.logger.error "❌ Failed to create reservation from Google Calendar event: #{reservation.errors.full_messages.join(', ')}"
@@ -720,11 +719,11 @@ class GoogleCalendarSync
       user = User.where("REPLACE(REPLACE(REPLACE(phone_number, '-', ''), '(', ''), ')', '') = ?", 
                         normalized_phone.gsub(/[-\s()]/, '')).first
       if user
-        Rails.logger.info "✅ Matched user by phone number: #{user.name} (ID: #{user.id})"
+        Rails.logger.info "✅ Matched user by phone number: user_id=#{user.id}"
         # 名前が異なる場合は更新
         if normalize_name(user.name) != normalized_name && name.present?
           user.update(name: name)
-          Rails.logger.info "✅ Updated user name: #{user.name} -> #{name}"
+          Rails.logger.info "✅ Updated user name: user_id=#{user.id}"
         end
         return user
       end
@@ -734,11 +733,11 @@ class GoogleCalendarSync
     if email.present?
       user = User.where("LOWER(email) = ?", email.downcase).first
       if user
-        Rails.logger.info "✅ Matched user by email: #{user.name} (ID: #{user.id})"
+        Rails.logger.info "✅ Matched user by email: user_id=#{user.id}"
         # 名前が異なる場合は更新
         if normalize_name(user.name) != normalized_name && name.present?
           user.update(name: name)
-          Rails.logger.info "✅ Updated user name: #{user.name} -> #{name}"
+          Rails.logger.info "✅ Updated user name: user_id=#{user.id}"
         end
         return user
       end
@@ -747,14 +746,14 @@ class GoogleCalendarSync
     # 3. 名前で完全一致検索（大文字小文字を無視）
     user = User.where("LOWER(TRIM(name)) = ?", name.strip.downcase).first
     if user
-      Rails.logger.info "✅ Matched user by exact name (case-insensitive): #{user.name} (ID: #{user.id})"
+      Rails.logger.info "✅ Matched user by exact name: user_id=#{user.id}"
       return user
     end
 
     # 4. 名前で正規化後の一致検索
     User.all.each do |u|
       if normalize_name(u.name) == normalized_name
-        Rails.logger.info "✅ Matched user by normalized name: #{u.name} (ID: #{u.id})"
+        Rails.logger.info "✅ Matched user by normalized name: user_id=#{u.id}"
         return u
       end
     end
@@ -767,14 +766,14 @@ class GoogleCalendarSync
         # 長さが近い場合のみマッチ（短い名前の誤マッチを防ぐ）
         length_diff = (normalized_name.length - normalized_existing.length).abs
         if length_diff <= 2 && normalized_name.length >= 2 && normalized_existing.length >= 2
-          Rails.logger.info "✅ Matched user by partial name: #{u.name} (ID: #{u.id})"
+          Rails.logger.info "✅ Matched user by partial name: user_id=#{u.id}"
           return u
         end
       end
     end
 
     # 6. 見つからない場合は新規作成
-    Rails.logger.info "📝 Creating new user: #{name}"
+    Rails.logger.info "📝 Creating new user from Google Calendar"
     User.create!(
       name: name,
       phone_number: phone_number || '',

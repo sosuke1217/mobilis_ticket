@@ -14,7 +14,7 @@ class ApplicationMailer < ActionMailer::Base
     
     begin
       mail.deliver_now
-      Rails.logger.info "📧 [MAIL] Successfully sent: #{mail.subject} to #{mail.to.join(', ')}"
+      Rails.logger.info "📧 [MAIL] Successfully sent: message_id=#{mail.message_id}"
     rescue Net::SMTPError => e
       Rails.logger.error "📧 [MAIL ERROR] SMTP Error: #{e.message}"
       raise e if Rails.env.development?

@@ -100,7 +100,7 @@ class User < ApplicationRecord
       Rails.logger.debug "チケット計算: #{ticket.ticket_template.name} - 価格: #{ticket.ticket_template.price}, 総回数: #{ticket.ticket_template.total_count}, 単価: #{unit_price}, 残り回数: #{ticket.remaining_count}, チケット価値: #{ticket_value}"
     end
     
-    Rails.logger.debug "ユーザー #{id} (#{name}) の残り回数価値合計: #{total_value}"
+    Rails.logger.debug "ユーザー #{id} の残り回数価値合計: #{total_value}"
     total_value
   end
 
@@ -120,7 +120,7 @@ class User < ApplicationRecord
     
     # 例：アクティブなチケットがある場合の警告（削除は可能）
     if active_ticket_count > 0
-      Rails.logger.warn "⚠️ Deleting user with active tickets: #{name} (#{active_ticket_count} tickets)"
+      Rails.logger.warn "⚠️ Deleting user_id=#{id} with #{active_ticket_count} active tickets"
     end
   end
 end

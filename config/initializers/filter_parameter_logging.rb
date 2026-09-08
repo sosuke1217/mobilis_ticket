@@ -7,5 +7,8 @@ Rails.application.config.filter_parameters += [
   :passw, :password, :password_confirmation, :email, :secret, :token, :_key, :crypt, :salt, 
   :certificate, :otp, :ssn, :line_user_id, :google_calendar_event_id, :access_token, 
   :refresh_token, :api_key, :api_secret, :client_secret, :client_id, :signature,
-  :code, :authorization_code, :google_calendar_synced_at, :token_hash
+  :code, :authorization_code, :google_calendar_synced_at, :token_hash,
+  :name, :kana, :phone, :phone_number, :postal_code, :address, :birth_date,
+  :access_method, :booking_location, :note, :admin_memo, :cancellation_reason,
+  :otp_secret_ciphertext, :otp_backup_code_digests, :backup_code
 ]
