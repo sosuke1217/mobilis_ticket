@@ -12,7 +12,7 @@ require "digest"
 class RateLimiter
   DEFAULT_RULES = [
     # Admin login attempts
-    { name: "admin_login",  methods: ["POST"], paths: ["/admin_users/sign_in"], limit: 20, period: 20 * 60 },
+    { name: "admin_login",  methods: ["POST"], paths: ["/admin_users/sign_in"], limit: 5, period: 15 * 60 },
     # User login attempts
     { name: "user_login",   methods: ["POST"], paths: ["/users/sign_in"],       limit: 20, period: 20 * 60 },
     # LINE bot callback
@@ -27,6 +27,15 @@ class RateLimiter
   def initialize(app, rules: DEFAULT_RULES)
     @app = app
     @rules = rules
+  end
+
+  def self.reset!(rule_name, ip)
+    Rails.cache.delete(cache_key_for(rule_name, ip))
+  end
+
+  def self.cache_key_for(rule_name, ip)
+    digest = Digest::SHA256.hexdigest("#{rule_name}:#{ip}")
+    "rate_limit:#{rule_name}:#{digest}"
   end
 
   def call(env)
@@ -64,8 +73,7 @@ class RateLimiter
   end
 
   def cache_key(rule_name, ip)
-    digest = Digest::SHA256.hexdigest("#{rule_name}:#{ip}")
-    "rate_limit:#{rule_name}:#{digest}"
+    self.class.cache_key_for(rule_name, ip)
   end
 
   def increment_with_expiry(key, period)
@@ -114,4 +122,3 @@ class RateLimiter
     ]
   end
 end
-
