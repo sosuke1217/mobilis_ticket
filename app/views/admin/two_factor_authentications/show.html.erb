@@ -1,0 +1,49 @@
+<div class="container py-5" style="max-width: 720px;">
+  <div class="card shadow-sm">
+    <div class="card-body p-4 p-md-5">
+      <h1 class="h3 mb-4">二段階認証</h1>
+
+      <% if @backup_codes.present? %>
+        <div class="alert alert-warning">
+          <h2 class="h5">バックアップコードを安全な場所へ保存してください</h2>
+          <p>各コードは1回だけ使用できます。この画面を閉じると再表示できません。</p>
+          <div class="row">
+            <% @backup_codes.each do |code| %>
+              <div class="col-6"><code><%= code %></code></div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <% if current_admin_user.otp_required_for_login? %>
+        <div class="alert alert-success">二段階認証は有効です。</div>
+        <h2 class="h5 mt-4">二段階認証を解除</h2>
+        <%= form_with url: admin_two_factor_authentication_path, method: :delete, local: true do %>
+          <%= password_field_tag :password, nil, class: "form-control mb-3", placeholder: "現在のパスワード", required: true, autocomplete: "current-password" %>
+          <%= text_field_tag :code, nil, class: "form-control mb-3", placeholder: "6桁の認証コード", required: true, inputmode: "numeric", autocomplete: "one-time-code" %>
+          <%= submit_tag "二段階認証を解除", class: "btn btn-outline-danger" %>
+        <% end %>
+      <% else %>
+        <ol class="mb-4">
+          <li>Google Authenticatorなどの認証アプリを開きます。</li>
+          <li>「セットアップキーを入力」を選びます。</li>
+          <li>アカウント名に <strong><%= current_admin_user.email %></strong> を入力します。</li>
+          <li>次のキーを入力し、「時間ベース」を選択します。</li>
+        </ol>
+        <div class="bg-light border rounded p-3 mb-4 text-center">
+          <code class="fs-5 text-break"><%= @secret %></code>
+        </div>
+        <details class="mb-4">
+          <summary>認証アプリ用URIを表示</summary>
+          <code class="small text-break"><%= @provisioning_uri %></code>
+        </details>
+        <%= form_with url: admin_two_factor_authentication_path, method: :post, local: true do %>
+          <%= label_tag :code, "アプリに表示された6桁コード", class: "form-label" %>
+          <%= text_field_tag :code, nil, class: "form-control form-control-lg mb-3", required: true, inputmode: "numeric", autocomplete: "one-time-code" %>
+          <%= submit_tag "確認して二段階認証を有効にする", class: "btn btn-primary" %>
+        <% end %>
+      <% end %>
+      <div class="mt-4"><%= link_to "管理画面へ戻る", admin_root_path %></div>
+    </div>
+  </div>
+</div>
