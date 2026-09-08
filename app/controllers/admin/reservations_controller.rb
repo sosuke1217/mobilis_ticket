@@ -1374,6 +1374,10 @@ class Admin::ReservationsController < ApplicationController
     relevant_changes = reservation.saved_changes.keys & %w[start_time end_time course]
     return if relevant_changes.empty? || reservation.user&.email.blank?
     return if reservation.cancelled?
+    # A confirmation may save the submitted time/course fields together with
+    # the status. In that case the confirmation notification already contains
+    # the latest details, so do not send a second "reservation updated" email.
+    return if reservation.saved_change_to_status? && reservation.confirmed?
 
     ReservationMailer.reservation_updated(reservation, previous_details).deliver_now
     Rails.logger.info "✅ Reservation change email sent: reservation_id=#{reservation.id}"
