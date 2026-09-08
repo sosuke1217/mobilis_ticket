@@ -2,6 +2,10 @@ require "test_helper"
 require "ostruct"
 
 class Admin::ReservationsControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    @reservations_controller = Admin::ReservationsController.new
+  end
+
   test "confirmation update does not also send reservation changed email" do
     reservation = notification_reservation(
       "status" => ["tentative", "confirmed"],
@@ -10,7 +14,7 @@ class Admin::ReservationsControllerTest < ActionDispatch::IntegrationTest
     mailer_called = false
 
     ReservationMailer.stub(:reservation_updated, ->(*) { mailer_called = true }) do
-      controller.send(:send_change_notification, reservation, {})
+      @reservations_controller.send(:send_change_notification, reservation, {})
     end
 
     assert_not mailer_called
@@ -25,7 +29,7 @@ class Admin::ReservationsControllerTest < ActionDispatch::IntegrationTest
     delivery.define_singleton_method(:deliver_now) { delivered = true }
 
     ReservationMailer.stub(:reservation_updated, delivery) do
-      controller.send(:send_change_notification, reservation, {})
+      @reservations_controller.send(:send_change_notification, reservation, {})
     end
 
     assert delivered
