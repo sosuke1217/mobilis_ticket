@@ -7,6 +7,7 @@ Rails.application.routes.draw do
   
   # 管理者用ルート
   namespace :admin do
+    resource :two_factor_authentication, only: [:show, :create, :destroy]
     # ダッシュボード
     get 'dashboard', to: 'dashboard#index'
     get 'dashboard/month_options', to: 'dashboard#month_options'
@@ -130,6 +131,8 @@ Rails.application.routes.draw do
   devise_for :admin_users, path: 'admin_users', controllers: {
     sessions: 'admin_users/sessions'
   }
+  get 'admin_users/two_factor', to: 'admin_users/two_factor#show', as: :admin_user_two_factor
+  post 'admin_users/two_factor', to: 'admin_users/two_factor#create'
   
   devise_for :users, path: 'users', controllers: {
     sessions: 'users/sessions',
