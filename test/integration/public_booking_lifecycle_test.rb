@@ -4,8 +4,19 @@ class PublicBookingLifecycleTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
 
   setup do
+    @external_env = {
+      "TURNSTILE_SITE_KEY" => ENV.delete("TURNSTILE_SITE_KEY"),
+      "TURNSTILE_SECRET_KEY" => ENV.delete("TURNSTILE_SECRET_KEY"),
+      "GOOGLE_CALENDAR_SYNC_ENABLED" => ENV.delete("GOOGLE_CALENDAR_SYNC_ENABLED")
+    }
     ActionMailer::Base.deliveries.clear
     @start_time = next_bookable_weekday.in_time_zone.change(hour: 11, min: 0)
+  end
+
+  teardown do
+    @external_env.each do |key, value|
+      value.nil? ? ENV.delete(key) : ENV[key] = value
+    end
   end
 
   test "public request can be confirmed without renaming course or sending a change email" do
