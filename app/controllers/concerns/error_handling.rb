@@ -9,6 +9,14 @@ module ErrorHandling
   private
 
   def handle_standard_error(error)
+    ErrorHandlingService.log_error(
+      error,
+      source: "#{controller_path}##{action_name}",
+      request_id: request.request_id,
+      action: action_name,
+      user_id: current_admin_user&.id
+    )
+
     # エラーの詳細をログに記録（本番環境では簡潔に）
     if Rails.env.production?
       Rails.logger.error "#{error.class.name}: #{error.message}"

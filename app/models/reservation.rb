@@ -747,6 +747,7 @@ class Reservation < ApplicationRecord
       ReservationMailer.confirmation(self).deliver_now
       Rails.logger.info "📧 Confirmation email scheduled: reservation_id=#{id}"
     rescue => e
+      ErrorHandlingService.log_error(e, source: "reservation_email#tentative", reservation_id: id)
       Rails.logger.error "確認メール送信エラー: #{e.message}"
     end
   end
@@ -778,6 +779,7 @@ class Reservation < ApplicationRecord
         ReservationMailer.confirmation(self).deliver_now
         Rails.logger.info "📧 Confirmation notification sent: reservation_id=#{id}"
       rescue => e
+        ErrorHandlingService.log_error(e, source: "reservation_email#confirmed", reservation_id: id)
         Rails.logger.error "確認通知送信エラー: #{e.message}"
       end
     end
@@ -789,6 +791,7 @@ class Reservation < ApplicationRecord
         LineBookingNotifier.booking_confirmed(self)
         Rails.logger.info "📱 LINE confirmation notification sent: reservation_id=#{id}"
       rescue => e
+        ErrorHandlingService.log_error(e, source: "line#booking_confirmed", reservation_id: id)
         Rails.logger.error "LINE確認通知送信エラー: #{e.message}"
         Rails.logger.error "LINE確認通知送信エラー詳細: #{e.backtrace.first(5).join("\n")}"
       end
@@ -806,6 +809,7 @@ class Reservation < ApplicationRecord
         ReservationMailer.cancellation_notification(self).deliver_now
         Rails.logger.info "📧 Cancellation notification sent: reservation_id=#{id}"
       rescue => e
+        ErrorHandlingService.log_error(e, source: "reservation_email#cancelled", reservation_id: id)
         Rails.logger.error "キャンセル通知送信エラー: #{e.message}"
       end
     end
@@ -816,6 +820,7 @@ class Reservation < ApplicationRecord
         LineBookingNotifier.send_cancellation_notification(self)
         Rails.logger.info "📱 LINE cancellation notification sent: reservation_id=#{id}"
       rescue => e
+        ErrorHandlingService.log_error(e, source: "line#booking_cancelled", reservation_id: id)
         Rails.logger.error "LINEキャンセル通知送信エラー: #{e.message}"
       end
     end
