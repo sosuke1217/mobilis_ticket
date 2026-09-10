@@ -1,147 +1,78 @@
-# app/services/error_handling_service.rb の修正版（完全版）
+require "digest"
+require "json"
+require "net/http"
+require "singleton"
+require "uri"
 
 class ErrorHandlingService
   include Singleton
-  
+
+  NOTIFICATION_COOLDOWN = 15.minutes
+  SAFE_CONTEXT_KEYS = %i[source request_id action reservation_id user_id job].freeze
+
   def self.log_error(error, context = {})
     instance.log_error(error, context)
   end
-  
+
   def self.notify_admin(message, level = :warning)
-    instance.notify_admin(message, level)
+    instance.log_error(
+      StandardError.new(message.to_s),
+      source: "manual_notification",
+      action: level
+    )
   end
-  
+
   def log_error(error, context = {})
-    error_data = {
-      timestamp: Time.current.iso8601,
-      error_class: error.class.name,
-      error_message: error.message,
-      backtrace: error.backtrace&.first(10),
-      context: context,
-      request_id: context[:request_id],
-      user_id: context[:user_id],
-      action: context[:action]
-    }
-    
-    # Railsログに出力
-    Rails.logger.error "🔥 [ERROR] #{error.class.name}: #{error.message}"
-    Rails.logger.error "📍 Context: #{context.inspect}"
-    Rails.logger.error "📚 Backtrace:\n#{error.backtrace&.first(5)&.join("\n")}"
-    
-    # ファイルログに詳細を保存
-    log_to_file(error_data)
-    
-    # 重要なエラーの場合は管理者に通知
-    if critical_error?(error)
-      notify_admin("重要なエラーが発生しました: #{error.class.name}", :critical)
-    end
+    safe_context = sanitize_context(context)
+    Rails.logger.error(
+      "[ERROR] class=#{error.class.name} source=#{safe_context[:source] || 'unknown'} " \
+      "request_id=#{safe_context[:request_id] || 'none'}"
+    )
+
+    notify_admin_channels(error, safe_context) if Rails.env.production? || Rails.env.test?
+  rescue => notification_error
+    Rails.logger.error("[ERROR ALERT FAILURE] class=#{notification_error.class.name}")
   end
-  
-  def notify_admin(message, level = :warning)
-    # Slackやメール通知（実装例）
-    case level
-    when :critical
-      send_critical_notification(message)
-    when :warning
-      send_warning_notification(message)
-    else
-      Rails.logger.warn "📢 [ADMIN NOTIFY] #{message}"
-    end
-  end
-  
+
   private
-  
-  def log_to_file(error_data)
-    log_dir = Rails.root.join('log', 'errors')
-    FileUtils.mkdir_p(log_dir) unless Dir.exist?(log_dir)
-    
-    date_str = Time.current.strftime('%Y%m%d')
-    log_file = log_dir.join("errors_#{date_str}.log")
-    
-    File.open(log_file, 'a') do |file|
-      file.puts "=" * 80
-      file.puts "Timestamp: #{error_data[:timestamp]}"
-      file.puts "Error: #{error_data[:error_class]} - #{error_data[:error_message]}"
-      file.puts "Context: #{error_data[:context].inspect}"
-      file.puts "Backtrace:"
-      error_data[:backtrace]&.each { |line| file.puts "  #{line}" }
-      file.puts "=" * 80
-      file.puts
-    end
+
+  def sanitize_context(context)
+    context.to_h.symbolize_keys
+           .slice(*SAFE_CONTEXT_KEYS)
+           .transform_values { |value| value.to_s.truncate(200) }
   end
-  
-  def critical_error?(error)
-    critical_classes = [
-      ActiveRecord::StatementInvalid,
-      NoMethodError,
-      SystemExit,
-      SecurityError
-    ]
-    
-    critical_classes.any? { |klass| error.is_a?(klass) }
+
+  def notify_admin_channels(error, safe_context)
+    key = notification_key(error, safe_context)
+    return if Rails.cache.exist?(key)
+
+    Rails.cache.write(key, true, expires_in: NOTIFICATION_COOLDOWN)
+    notify_by_slack(error, safe_context) if ENV["SLACK_WEBHOOK_URL"].present?
+    ErrorAlertMailer.failure(
+      error_class: error.class.name,
+      source: safe_context[:source] || "unknown",
+      occurred_at: Time.current,
+      context: safe_context.except(:source)
+    ).deliver_now
   end
-  
-  def send_critical_notification(message)
-    # Slack通知の実装例
-    if ENV['SLACK_WEBHOOK_URL']
-      send_slack_notification(message, :critical)
-    end
-    
-    # メール通知
-    if ENV['ADMIN_EMAIL']
-      # AdminMailer.critical_error_notification(message).deliver_now rescue nil
-    end
-    
-    Rails.logger.error "🚨 [CRITICAL] #{message}"
+
+  def notify_by_slack(error, safe_context)
+    uri = URI(ENV.fetch("SLACK_WEBHOOK_URL"))
+    Net::HTTP.post(
+      uri,
+      {
+        text: "Mobilis error: #{error.class.name} at #{safe_context[:source] || 'unknown'}"
+      }.to_json,
+      "Content-Type" => "application/json"
+    )
+  rescue => slack_error
+    Rails.logger.error("[SLACK ALERT FAILURE] class=#{slack_error.class.name}")
   end
-  
-  def send_warning_notification(message)
-    Rails.logger.warn "⚠️ [WARNING] #{message}"
-  end
-  
-  def send_slack_notification(message, level)
-    return unless ENV['SLACK_WEBHOOK_URL']
-    
-    color = level == :critical ? '#ff0000' : '#ffaa00'
-    emoji = level == :critical ? '🚨' : '⚠️'
-    
-    payload = {
-      text: "#{emoji} Mobilis システム通知",
-      attachments: [
-        {
-          color: color,
-          fields: [
-            {
-              title: "レベル",
-              value: level.to_s.upcase,
-              short: true
-            },
-            {
-              title: "メッセージ",
-              value: message,
-              short: false
-            },
-            {
-              title: "時刻",
-              value: Time.current.strftime('%Y-%m-%d %H:%M:%S'),
-              short: true
-            }
-          ]
-        }
-      ]
-    }
-    
-    uri = URI(ENV['SLACK_WEBHOOK_URL'])
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = true
-    
-    request = Net::HTTP::Post.new(uri)
-    request['Content-Type'] = 'application/json'
-    request.body = payload.to_json
-    
-    response = http.request(request)
-    Rails.logger.info "Slack notification sent: #{response.code}"
-  rescue => e
-    Rails.logger.error "Failed to send Slack notification: #{e.message}"
+
+  def notification_key(error, safe_context)
+    fingerprint = Digest::SHA256.hexdigest(
+      [error.class.name, safe_context[:source]].join(":")
+    )
+    "error-alert/#{fingerprint}"
   end
 end
