@@ -898,3 +898,43 @@ class Reservation < ApplicationRecord
       sync_service.delete_event(self)
     rescue => e
       Rails.logger.error "❌ Failed to delete reservation #{id} from Google Calendar: #{e.message}"
+    end
+  end
+
+  # 予約削除前にGoogleカレンダーからも削除
+  def delete_from_google_calendar_before_destroy
+    return unless should_sync_to_google_calendar?
+    return unless google_calendar_event_id.present?
+
+    begin
+      Rails.logger.info "🗑️ Deleting reservation #{id} from Google Calendar before destroy"
+      sync_service = GoogleCalendarSync.new
+      sync_service.delete_event(self)
+    rescue => e
+      Rails.logger.error "❌ Failed to delete reservation #{id} from Google Calendar before destroy: #{e.message}"
+      # エラーが発生しても削除処理は続行
+    end
+  end
+
+  def log_reservation_created
+    Rails.logger.info "✅ 新規予約作成: ID=#{id}"
+  end
+
+  def log_reservation_updated
+    Rails.logger.info "📝 予約ステータス変更: ID=#{id}, status=#{status}"
+  end
+
+  # スコープも個別インターバル対応
+  scope :with_individual_interval, -> { where.not(individual_interval_minutes: nil) }
+  scope :with_system_interval, -> { where(individual_interval_minutes: nil) }
+  
+  scope :overlapping_with_individual_interval, ->(start_time, end_time) {
+    # 複雑な重複判定のためSQL直書きは避け、Rubyで処理
+    active.select do |reservation|
+      res_interval = reservation.effective_interval_minutes
+      res_end_with_interval = reservation.end_time + res_interval.minutes
+      
+      start_time < res_end_with_interval && end_time > reservation.start_time
+    end
+  }
+end
