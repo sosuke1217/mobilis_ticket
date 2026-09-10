@@ -23,22 +23,24 @@ class PublicBookingLifecycleTest < ActionDispatch::IntegrationTest
   end
 
   test "public request can be confirmed without renaming course or sending a change email" do
-    assert_difference -> { Reservation.count }, 1 do
-      assert_difference -> { ActionMailer::Base.deliveries.size }, 2 do
-        post public_bookings_path, params: {
-          booking: {
-            name: "予約テスト",
-            phone_number: "090-1234-5678",
-            email: "booking-lifecycle@example.com",
-            email_confirmation: "booking-lifecycle@example.com",
-            address: "東京都テスト区1-2-3",
-            course: "初回評価セッション",
-            selected_datetime: @start_time.iso8601,
-            notes: "Lifecycle test"
-          }
-        }
-      end
-    end
+    reservation_count = Reservation.count
+    post public_bookings_path, params: {
+      booking: {
+        name: "予約テスト",
+        phone_number: "090-1234-5678",
+        email: "booking-lifecycle@example.com",
+        email_confirmation: "booking-lifecycle@example.com",
+        address: "東京都テスト区1-2-3",
+        course: "初回評価セッション",
+        selected_datetime: @start_time.iso8601,
+        notes: "Lifecycle test"
+      }
+    }
+
+    assert_response :redirect, response.body
+    assert_equal reservation_count + 1, Reservation.count, response.body
+    assert_equal 2, ActionMailer::Base.deliveries.size,
+                 "Expected customer and admin emails, got: #{delivered_subjects.inspect}"
 
     reservation = Reservation.order(:created_at).last
     assert_redirected_to public_booking_path(reservation.public_access_token)
