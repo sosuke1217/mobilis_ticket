@@ -196,6 +196,12 @@ class Public::BookingsController < ApplicationController
       render :new, status: :unprocessable_entity
     end
     rescue => e
+      ErrorHandlingService.log_error(
+        e,
+        source: "public_booking#create",
+        request_id: request.request_id,
+        action: "create"
+      )
       Rails.logger.error "❌ Booking creation error: #{e.message}"
       Rails.logger.error "❌ Backtrace: #{e.backtrace.first(10).join("\n")}"
       flash[:alert] = "予約の作成中にエラーが発生しました: #{e.message}"
@@ -689,18 +695,21 @@ class Public::BookingsController < ApplicationController
   def send_booking_notification(reservation)
     LineBookingNotifier.new_booking_request(reservation)
   rescue => e
+    ErrorHandlingService.log_error(e, source: "line#new_booking", reservation_id: reservation.id)
     Rails.logger.error "LINE通知エラー: #{e.message}"
   end
 
   def send_cancellation_notification(reservation)
     LineBookingNotifier.send_cancellation_notification(reservation)
   rescue => e
+    ErrorHandlingService.log_error(e, source: "line#booking_cancelled", reservation_id: reservation.id)
     Rails.logger.error "LINEキャンセル通知エラー: #{e.message}"
   end
 
   def notify_admin(reservation)
     AdminNotificationJob.perform_now(reservation)
   rescue => e
+    ErrorHandlingService.log_error(e, source: "admin_email#new_booking", reservation_id: reservation.id)
     Rails.logger.error "管理者通知エラー: #{e.message}"
   end
 
