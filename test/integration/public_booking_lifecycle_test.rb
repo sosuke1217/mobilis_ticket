@@ -9,11 +9,14 @@ class PublicBookingLifecycleTest < ActionDispatch::IntegrationTest
       "TURNSTILE_SECRET_KEY" => ENV.delete("TURNSTILE_SECRET_KEY"),
       "GOOGLE_CALENDAR_SYNC_ENABLED" => ENV.delete("GOOGLE_CALENDAR_SYNC_ENABLED")
     }
+    @perform_deliveries = ActionMailer::Base.perform_deliveries
+    ActionMailer::Base.perform_deliveries = true
     ActionMailer::Base.deliveries.clear
     @start_time = next_bookable_weekday.in_time_zone.change(hour: 11, min: 0)
   end
 
   teardown do
+    ActionMailer::Base.perform_deliveries = @perform_deliveries
     @external_env.each do |key, value|
       value.nil? ? ENV.delete(key) : ENV[key] = value
     end
