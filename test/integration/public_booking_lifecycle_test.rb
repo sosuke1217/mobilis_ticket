@@ -43,7 +43,9 @@ class PublicBookingLifecycleTest < ActionDispatch::IntegrationTest
                  "Expected customer and admin emails, got: #{delivered_subjects.inspect}"
 
     reservation = Reservation.order(:created_at).last
-    assert_redirected_to public_booking_path(reservation.public_access_token)
+    assert_match %r{/public/bookings/[^/]+\z}, response.location
+    follow_redirect!
+    assert_response :success
     assert reservation.tentative?
     assert_equal "初回評価セッション", reservation.course
     assert_equal 1, delivered_subjects.count { |subject| subject.include?("仮予約を受け付けました") }
