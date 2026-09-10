@@ -6,6 +6,7 @@ class Public::BookingsController < ApplicationController
   BOOKING_CREATION_MUTEX = Mutex.new
 
   # 認証をスキップ（一般ユーザー向けページのため）
+  skip_before_action :require_admin_two_factor!
   skip_before_action :verify_authenticity_token, only: [:available_times, :week_calendar]
   
   def new

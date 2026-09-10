@@ -1,6 +1,8 @@
 require "test_helper"
 
 class PublicBookingAccessTest < ActionDispatch::IntegrationTest
+  include Devise::Test::IntegrationHelpers
+
   setup do
     @reservation = reservations(:one)
     @reservation.update_columns(
@@ -27,4 +29,17 @@ class PublicBookingAccessTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_public_booking_path
     assert @reservation.reload.tentative?
   end
+  test "public booking page does not require admin two-factor verification" do
+    admin = AdminUser.create!(
+      email: "public-booking-admin@example.com",
+      password: "ValidPassword123!",
+      otp_required_for_login: true
+    )
+    sign_in admin
+
+    get new_public_booking_path
+
+    assert_response :success
+  end
+
 end
