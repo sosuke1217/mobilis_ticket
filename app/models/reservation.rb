@@ -531,6 +531,8 @@ class Reservation < ApplicationRecord
     # インターバルを含む重複チェック
     overlapping = Reservation.active
       .where.not(id: id)
+      .where.not(start_time: nil)
+      .where.not(end_time: nil)
       .select do |other|
         # 各予約のインターバル時間を取得
         other_interval = other.effective_interval_minutes
