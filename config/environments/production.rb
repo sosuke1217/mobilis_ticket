@@ -68,7 +68,9 @@ Rails.application.configure do
   config.log_level = ENV.fetch("RAILS_LOG_LEVEL", "info")
 
   # Use a different cache store in production.
-  # config.cache_store = :mem_cache_store
+  # Keep short-lived operational safeguards, including duplicate error-alert
+  # suppression, available on Heroku without an external cache service.
+  config.cache_store = :memory_store, { size: 16.megabytes }
 
   # Use a real queuing backend for Active Job (and separate queues per environment).
   # config.active_job.queue_adapter = :resque
