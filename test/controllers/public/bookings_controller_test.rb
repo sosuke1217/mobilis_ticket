@@ -4,6 +4,7 @@ require "ostruct"
 class Public::BookingsControllerTest < ActiveSupport::TestCase
   setup do
     @controller = Public::BookingsController.new
+    @controller.define_singleton_method(:params) { ActionController::Parameters.new }
     @start_time = Time.zone.parse("2026-08-20 10:00")
     @end_time = Time.zone.parse("2026-08-20 11:00")
   end
@@ -61,6 +62,59 @@ class Public::BookingsControllerTest < ActiveSupport::TestCase
     assert_equal "updated@example.com", result.reload.email
     assert_equal "Updated Name", result.name
     assert_equal "Updated Address", result.address
+  end
+
+  test "existing customer is matched when phone formatting differs" do
+    user = users(:one)
+    user.update!(phone_number: "090-1234-5678")
+    submitted = ActionController::Parameters.new(
+      name: user.name,
+      phone_number: "０９０ １２３４ ５６７８",
+      email: "new-address@example.com"
+    ).permit!
+    @controller.define_singleton_method(:booking_params) { submitted }
+    @controller.define_singleton_method(:params) { ActionController::Parameters.new }
+
+    assert_no_difference -> { User.count } do
+      assert_equal user.id, @controller.send(:find_or_create_user).id
+    end
+    assert_equal "09012345678", user.reload.phone_number
+  end
+
+  test "existing customer is matched by email when phone changed" do
+    user = users(:one)
+    user.update!(phone_number: "09011112222", email: "Customer@Example.com")
+    submitted = ActionController::Parameters.new(
+      name: user.name,
+      phone_number: "09099998888",
+      email: "customer@example.com"
+    ).permit!
+    @controller.define_singleton_method(:booking_params) { submitted }
+    @controller.define_singleton_method(:params) { ActionController::Parameters.new }
+
+    assert_no_difference -> { User.count } do
+      assert_equal user.id, @controller.send(:find_or_create_user).id
+    end
+    assert_equal "09099998888", user.reload.phone_number
+  end
+
+  test "existing customer is matched from LINE booking link" do
+    user = users(:one)
+    user.update!(line_user_id: "line-user-123", phone_number: nil, email: nil)
+    submitted = ActionController::Parameters.new(
+      name: user.name,
+      phone_number: "09012345678",
+      email: "line-customer@example.com"
+    ).permit!
+    @controller.define_singleton_method(:booking_params) { submitted }
+    @controller.define_singleton_method(:params) do
+      ActionController::Parameters.new(line_user_id: "line-user-123")
+    end
+
+    assert_no_difference -> { User.count } do
+      assert_equal user.id, @controller.send(:find_or_create_user).id
+    end
+    assert_equal "09012345678", user.reload.phone_number
   end
 
   test "Google busy period blocks an overlapping booking slot" do
