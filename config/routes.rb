@@ -45,7 +45,9 @@ Rails.application.routes.draw do
         get :recent
         post :sync_line_users
         get :search_for_merge
+        get :duplicate_candidates
         post :merge_users
+        post "user_merges/:merge_id/undo", action: :undo_merge, as: :undo_user_merge
       end
       member do
         get 'tickets'

@@ -220,11 +220,46 @@ class Admin::UsersController < ApplicationController
       
       source_user = User.find(source_user_id)
       target_user = User.find(target_user_id)
+
+      if source_user == target_user || source_user.admin? || target_user.admin? || source_user.name.end_with?(" (結合済み)")
+        render json: { success: false, error: "この組み合わせは統合できません" }, status: :unprocessable_entity
+        return
+      end
       
       Rails.logger.info "📊 Merging users: source_id=#{source_user.id} -> target_id=#{target_user.id}"
-      
+
+      user_merge = nil
+
       # データベーストランザクションで結合を実行
       ActiveRecord::Base.transaction do
+        source_user.lock!
+        target_user.lock!
+        reservation_ids = source_user.reservation_ids
+        ticket_ids = source_user.ticket_ids
+        ticket_usage_ids = source_user.ticket_usages.ids
+        notification_log_ids = source_user.notification_logs.ids
+        profile_fields = %w[name kana phone_number email birth_date postal_code address admin_memo line_user_id display_name language consent_accepted consent_accepted_at]
+        user_merge = UserMerge.create!(
+          source_user: source_user,
+          target_user: target_user,
+          source_snapshot: source_user.attributes.slice(*profile_fields),
+          target_snapshot: target_user.attributes.slice(*profile_fields),
+          reservation_ids: reservation_ids,
+          ticket_ids: ticket_ids,
+          ticket_usage_ids: ticket_usage_ids,
+          notification_log_ids: notification_log_ids
+        )
+
+        source_line_user_id = source_user.line_user_id
+        source_user.update!(line_user_id: nil) if source_line_user_id.present? && target_user.line_user_id.blank?
+        target_user.assign_attributes(
+          source_user.attributes.slice(*profile_fields).except("name", "line_user_id").select do |key, value|
+            target_user.public_send(key).blank? && value.present?
+          end
+        )
+        target_user.line_user_id = source_line_user_id if target_user.line_user_id.blank?
+        target_user.save!
+
         # チケット使用履歴を結合先ユーザーに移動（最初に実行）
         source_user.ticket_usages.update_all(user_id: target_user.id)
         Rails.logger.info "✅ Moved #{source_user.ticket_usages.count} ticket usages"
@@ -237,12 +272,7 @@ class Admin::UsersController < ApplicationController
         source_user.reservations.update_all(user_id: target_user.id)
         Rails.logger.info "✅ Moved #{source_user.reservations.count} reservations"
         
-        # 通知設定を結合先ユーザーに移動（既存の設定がある場合は上書き）
-        if source_user.notification_preference && target_user.notification_preference
-          source_user.notification_preference.destroy
-        elsif source_user.notification_preference
-          source_user.notification_preference.update!(user_id: target_user.id)
-        end
+        # 取り消し可能にするため、結合元の通知設定はそのまま保持する
         
         # 通知ログを結合先ユーザーに移動
         source_user.notification_logs.update_all(user_id: target_user.id)
@@ -265,7 +295,8 @@ class Admin::UsersController < ApplicationController
         success: true,
         message: "ユーザーの結合が完了しました",
         target_user_id: target_user.id,
-        target_user_name: target_user.name
+        target_user_name: target_user.name,
+        merge_id: user_merge.id
       }
       
     rescue ActiveRecord::RecordNotFound => e
@@ -280,6 +311,37 @@ class Admin::UsersController < ApplicationController
       
       render json: { success: false, error: error_msg }, status: :internal_server_error
     end
+  end
+
+  def duplicate_candidates
+    @duplicate_candidates = DuplicateUserFinder.call
+    @recent_merges = UserMerge.includes(:source_user, :target_user).order(created_at: :desc).limit(20)
+  end
+
+  def undo_merge
+    user_merge = UserMerge.find(params[:merge_id])
+    unless user_merge.undoable?
+      redirect_to duplicate_candidates_admin_users_path, alert: "この統合は取り消せません"
+      return
+    end
+
+    ActiveRecord::Base.transaction do
+      source = user_merge.source_user.lock!
+      target = user_merge.target_user.lock!
+      source.update!(line_user_id: nil)
+      target.update!(line_user_id: nil)
+      Reservation.where(id: user_merge.reservation_ids, user_id: target.id).update_all(user_id: source.id)
+      Ticket.where(id: user_merge.ticket_ids, user_id: target.id).update_all(user_id: source.id)
+      TicketUsage.where(id: user_merge.ticket_usage_ids, user_id: target.id).update_all(user_id: source.id)
+      NotificationLog.where(id: user_merge.notification_log_ids, user_id: target.id).update_all(user_id: source.id)
+      source.update!(user_merge.source_snapshot)
+      target.update!(user_merge.target_snapshot)
+      user_merge.update!(status: "undone", undone_at: Time.current)
+    end
+
+    redirect_to duplicate_candidates_admin_users_path, notice: "顧客統合を取り消しました"
+  rescue ActiveRecord::RecordNotFound, ActiveRecord::RecordInvalid
+    redirect_to duplicate_candidates_admin_users_path, alert: "この統合は取り消せません"
   end
 
   # ユーザー検索API（結合用）

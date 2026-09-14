@@ -10,6 +10,9 @@
           <p class="text-muted mb-0">登録ユーザーの一覧と管理</p>
         </div>
         <div class="d-flex gap-2">
+          <%= link_to duplicate_candidates_admin_users_path, class: "btn btn-warning" do %>
+            <i class="fas fa-user-friends me-1"></i>重複候補を確認
+          <% end %>
           <button type="button" class="btn btn-info" onclick="syncLineUsers()">
             <i class="fab fa-line me-1"></i>LINEユーザー同期
           </button>

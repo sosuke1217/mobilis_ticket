@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_08_000000) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_14_070000) do
   create_table "admin_users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -197,6 +197,23 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_08_000000) do
     t.index ["line_user_id"], name: "index_users_on_line_user_id", unique: true
   end
 
+  create_table "user_merges", force: :cascade do |t|
+    t.integer "source_user_id", null: false
+    t.integer "target_user_id", null: false
+    t.string "status", default: "completed", null: false
+    t.json "source_snapshot", default: {}, null: false
+    t.json "target_snapshot", default: {}, null: false
+    t.json "reservation_ids", default: [], null: false
+    t.json "ticket_ids", default: [], null: false
+    t.json "ticket_usage_ids", default: [], null: false
+    t.json "notification_log_ids", default: [], null: false
+    t.datetime "undone_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["source_user_id"], name: "index_user_merges_on_source_user_id"
+    t.index ["target_user_id"], name: "index_user_merges_on_target_user_id"
+  end
+
   create_table "weekly_schedules", force: :cascade do |t|
     t.date "week_start_date", null: false
     t.json "schedule", default: {}
@@ -215,4 +232,6 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_08_000000) do
   add_foreign_key "ticket_usages", "users"
   add_foreign_key "tickets", "ticket_templates", on_delete: :nullify
   add_foreign_key "tickets", "users"
+  add_foreign_key "user_merges", "users", column: "source_user_id"
+  add_foreign_key "user_merges", "users", column: "target_user_id"
 end
