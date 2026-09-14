@@ -53,4 +53,11 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "#confirmMergeBtn[onclick='executeMerge()']"
   end
+
+  test "shows an empty state when there are no duplicate customers" do
+    get duplicate_candidates_admin_users_path
+
+    assert_response :success
+    assert_select ".alert-success", text: /重複候補はありません/
+  end
 end
