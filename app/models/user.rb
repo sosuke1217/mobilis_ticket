@@ -50,6 +50,13 @@ class User < ApplicationRecord
          .strip
   end
 
+  def self.phone_matching_key(value)
+    normalized = normalize_phone_number(value)
+    return if normalized.blank? || !normalized.match?(/\A\+?[\d\s().-]+\z/)
+
+    normalized.gsub(/\D/, '')
+  end
+
   def normalize_phone_number
     self.phone_number = self.class.normalize_phone_number(phone_number) if phone_number.present?
   end
