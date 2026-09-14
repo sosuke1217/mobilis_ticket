@@ -917,7 +917,7 @@
 
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" onclick="hideMergeModal()">キャンセル</button>
-            <button type="button" class="btn btn-warning" id="confirmMergeBtn" disabled>
+            <button type="button" class="btn btn-warning" id="confirmMergeBtn" onclick="executeMerge()" disabled>
               <i class="fas fa-link me-1"></i>ユーザーを結合
             </button>
           </div>
@@ -1348,12 +1348,6 @@
           searchMergeUsers();
         }
       });
-    }
-    
-    // 結合ボタンのイベントリスナー
-    const confirmMergeBtn = document.getElementById('confirmMergeBtn');
-    if (confirmMergeBtn) {
-      confirmMergeBtn.addEventListener('click', executeMerge);
     }
     
     // 背景クリックでモーダルを閉じる
