@@ -1,0 +1,63 @@
+<div class="container-lg my-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-1"><i class="fas fa-user-friends me-2 text-warning"></i>重複顧客候補</h1>
+      <p class="text-muted mb-0">電話番号・メール・LINE IDが一致する顧客だけを表示します。</p>
+    </div>
+    <%= link_to "ユーザー一覧へ戻る", admin_users_path, class: "btn btn-outline-secondary" %>
+  </div>
+
+  <% if @duplicate_candidates.empty? %>
+    <div class="alert alert-success">現在、強い一致条件による重複候補はありません。</div>
+  <% else %>
+    <% @duplicate_candidates.each do |candidate| %>
+      <% left, right = candidate[:users] %>
+      <div class="card mb-3">
+        <div class="card-header"><strong>一致項目：</strong><%= candidate[:reasons].join("・") %></div>
+        <div class="card-body">
+          <div class="row g-3">
+            <% [left, right].each do |user| %>
+              <div class="col-md-6">
+                <div class="border rounded p-3 h-100">
+                  <h5><%= user.name %> <small class="text-muted">#<%= user.id %></small></h5>
+                  <div>電話：<%= user.phone_number.presence || "未登録" %></div>
+                  <div>メール：<%= user.email.presence || "未登録" %></div>
+                  <div>予約：<%= user.reservations.count %>件 / 回数券：<%= user.tickets.count %>件</div>
+                  <%= link_to "詳細を確認", admin_user_path(user), class: "btn btn-sm btn-outline-primary mt-2" %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+          <div class="alert alert-warning mt-3 mb-0">両方の詳細を確認し、残したい顧客を「統合先」にしてください。統合操作は各顧客の詳細画面から行えます。</div>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
+
+  <div class="card mt-4">
+    <div class="card-header"><strong>最近の統合履歴</strong></div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead><tr><th>日時</th><th>統合元</th><th>統合先</th><th>状態</th><th></th></tr></thead>
+          <tbody>
+            <% @recent_merges.each do |merge| %>
+              <tr>
+                <td><%= l merge.created_at, format: :short %></td>
+                <td><%= merge.source_snapshot["name"] %> (#<%= merge.source_user_id %>)</td>
+                <td><%= merge.target_user.name %> (#<%= merge.target_user_id %>)</td>
+                <td><%= merge.undoable? ? "統合済み" : "取消済み" %></td>
+                <td>
+                  <% if merge.undoable? %>
+                    <%= button_to "取り消す", undo_user_merge_admin_users_path(merge_id: merge.id), method: :post,
+                          class: "btn btn-sm btn-outline-danger", form: { data: { turbo_confirm: "この統合を取り消しますか？統合後に更新した顧客情報は統合前へ戻ります。" } } %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
