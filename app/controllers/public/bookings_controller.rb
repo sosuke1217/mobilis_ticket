@@ -660,8 +660,12 @@ class Public::BookingsController < ApplicationController
 
   def find_or_create_user
     phone = User.normalize_phone_number(booking_params[:phone_number])
-    
-    user = User.find_by(phone_number: phone)
+
+    line_user = User.find_by(line_user_id: params[:line_user_id]) if params[:line_user_id].present?
+    phone_user = find_user_by_normalized_phone(phone)
+    email_user = find_user_by_email(booking_params[:email])
+    user = phone_user || email_user || line_user
+
     if user
       # Repeated bookings must keep the customer profile in sync with the
       # values submitted in the current booking form.
@@ -672,6 +676,21 @@ class Public::BookingsController < ApplicationController
 
     # 新規ユーザー作成
     User.create(user_attributes)
+  end
+
+  def find_user_by_normalized_phone(phone)
+    return if phone.blank?
+
+    User.where.not(phone_number: [nil, '']).find do |candidate|
+      User.normalize_phone_number(candidate.phone_number) == phone
+    end
+  end
+
+  def find_user_by_email(email)
+    normalized_email = email.to_s.strip.downcase
+    return if normalized_email.blank?
+
+    User.where('LOWER(email) = ?', normalized_email).first
   end
 
   def build_reservation(user)
