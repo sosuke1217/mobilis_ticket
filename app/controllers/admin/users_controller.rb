@@ -227,7 +227,9 @@ class Admin::UsersController < ApplicationController
       end
       
       Rails.logger.info "📊 Merging users: source_id=#{source_user.id} -> target_id=#{target_user.id}"
-      
+
+      user_merge = nil
+
       # データベーストランザクションで結合を実行
       ActiveRecord::Base.transaction do
         source_user.lock!
