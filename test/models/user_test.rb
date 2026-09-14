@@ -1,6 +1,10 @@
 require "test_helper"
 
 class UserTest < ActiveSupport::TestCase
+  test "phone matching key ignores formatting and full-width digits" do
+    assert_equal "09012345678", User.phone_matching_key("０９０ １２３４-５６７８")
+  end
+
   test "accepts and normalizes a Japanese international phone number" do
     user = User.new(name: "Test User", phone_number: "＋８１ ９０ー１２３４ー５６７８")
 
