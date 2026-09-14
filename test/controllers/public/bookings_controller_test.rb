@@ -78,7 +78,7 @@ class Public::BookingsControllerTest < ActiveSupport::TestCase
     assert_no_difference -> { User.count } do
       assert_equal user.id, @controller.send(:find_or_create_user).id
     end
-    assert_equal "09012345678", user.reload.phone_number
+    assert_equal "090 1234 5678", user.reload.phone_number
   end
 
   test "existing customer is matched by email when phone changed" do
