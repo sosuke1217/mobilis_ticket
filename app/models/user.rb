@@ -43,11 +43,14 @@ class User < ApplicationRecord
   end
 
   def self.normalize_phone_number(value)
-    value.to_s
-         .unicode_normalize(:nfkc)
-         .tr('‐‑‒–—―−ー', '-')
-         .gsub(/\s+/, ' ')
-         .strip
+    normalized = value.to_s
+                      .unicode_normalize(:nfkc)
+                      .tr('‐‑‒–—―−ー', '-')
+                      .strip
+
+    return normalized unless normalized.match?(/\A\+?[\d\s().-]+\z/)
+
+    normalized.gsub(/\D/, '')
   end
 
   def normalize_phone_number
