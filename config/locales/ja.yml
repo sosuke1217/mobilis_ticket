@@ -9,6 +9,7 @@ ja:
     formats:
       default: "%Y/%m/%d %H:%M"
       long: "%Y年%m月%d日 %H時%M分"
+      short: "%Y/%m/%d %H:%M"
       time: "%H:%M"
       date: "%Y/%m/%d"
   

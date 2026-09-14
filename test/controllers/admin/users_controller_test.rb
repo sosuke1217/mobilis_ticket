@@ -60,4 +60,20 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".alert-success", text: /重複候補はありません/
   end
+
+  test "shows recent merge history with a localized timestamp" do
+    source = User.create!(name: "Source", phone_number: "09011112222")
+    target = User.create!(name: "Target", phone_number: "09033334444")
+    UserMerge.create!(
+      source_user: source,
+      target_user: target,
+      source_snapshot: { "name" => source.name },
+      target_snapshot: { "name" => target.name }
+    )
+
+    get duplicate_candidates_admin_users_path
+
+    assert_response :success
+    assert_select "td", text: I18n.l(UserMerge.last.created_at, format: :short)
+  end
 end
