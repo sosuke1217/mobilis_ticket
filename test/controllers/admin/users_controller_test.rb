@@ -44,4 +44,13 @@ class Admin::UsersControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
   end
+
+  test "merge button works after Turbo navigation without DOMContentLoaded" do
+    user = User.create!(name: "Customer", phone_number: "09012345678")
+
+    get admin_user_path(user)
+
+    assert_response :success
+    assert_select "#confirmMergeBtn[onclick='executeMerge()']"
+  end
 end
