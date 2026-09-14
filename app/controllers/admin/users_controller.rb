@@ -315,7 +315,7 @@ class Admin::UsersController < ApplicationController
 
   def duplicate_candidates
     @duplicate_candidates = DuplicateUserFinder.call
-    @recent_merges = UserMerge.includes(:source_user, :target_user).order(created_at: :desc).limit(20)
+    @recent_merges = recent_user_merges
   end
 
   def undo_merge
@@ -343,6 +343,21 @@ class Admin::UsersController < ApplicationController
   rescue ActiveRecord::RecordNotFound, ActiveRecord::RecordInvalid
     redirect_to duplicate_candidates_admin_users_path, alert: "この統合は取り消せません"
   end
+
+  def recent_user_merges
+    unless UserMerge.table_exists?
+      Rails.logger.error "User merge history is unavailable because the user_merges table does not exist"
+      flash.now[:alert] = "統合履歴を読み込めませんでした。重複候補の確認は引き続き行えます。"
+      return UserMerge.none
+    end
+
+    UserMerge.includes(:source_user, :target_user).order(created_at: :desc).limit(20).load
+  rescue ActiveRecord::StatementInvalid => e
+    Rails.logger.error "Failed to load user merge history: #{e.class}"
+    flash.now[:alert] = "統合履歴を読み込めませんでした。重複候補の確認は引き続き行えます。"
+    UserMerge.none
+  end
+  private :recent_user_merges
 
   # ユーザー検索API（結合用）
   def search_for_merge
