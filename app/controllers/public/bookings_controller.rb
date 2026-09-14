@@ -679,10 +679,11 @@ class Public::BookingsController < ApplicationController
   end
 
   def find_user_by_normalized_phone(phone)
-    return if phone.blank?
+    matching_key = User.phone_matching_key(phone)
+    return if matching_key.blank?
 
     User.where.not(phone_number: [nil, '']).find do |candidate|
-      User.normalize_phone_number(candidate.phone_number) == phone
+      User.phone_matching_key(candidate.phone_number) == matching_key
     end
   end
 
