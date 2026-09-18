@@ -1,18 +1,13 @@
 class HealthController < ApplicationController
-  skip_before_action :verify_authenticity_token
-  
+  skip_before_action :require_admin_two_factor!
+
   def check
-    health_status = SystemHealthChecker.perform_health_check
-    
-    if health_status[:overall_status] == :healthy
-      render json: health_status, status: :ok
+    response.headers["Cache-Control"] = "no-store"
+
+    if BookingHealthChecker.healthy?
+      render json: { status: "ok" }, status: :ok
     else
-      render json: health_status, status: :service_unavailable
+      render json: { status: "unavailable" }, status: :service_unavailable
     end
-  end
-  
-  def detailed
-    detailed_status = SystemHealthChecker.detailed_health_check
-    render json: detailed_status
   end
 end

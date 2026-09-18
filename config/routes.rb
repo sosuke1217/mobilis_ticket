@@ -124,6 +124,7 @@ Rails.application.routes.draw do
   # ヘルスチェック
   get 'health', to: 'health#check'
   get 'up', to: 'health#check'
+  get 'health/booking', to: 'health#check'
   
   # PWA
   get 'manifest.json', to: 'pwa#manifest'
