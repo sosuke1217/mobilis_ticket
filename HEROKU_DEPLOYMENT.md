@@ -58,15 +58,15 @@ heroku addons:create heroku-redis:basic
 ### LINE Bot設定
 
 ```bash
-heroku config:set LINE_CHANNEL_SECRET="360b1b477e3025114f7ecde7f4f05f79"
-heroku config:set LINE_CHANNEL_TOKEN="hojBYvKt8rfBN4+/gRMdMyzofkMCb7HlJhaOFufi/hRGPPG/AGzeJZde3CLoxLoNCaei7wa92TO4xIt+kyviaS6SUS5Q9Hrj+WSJFN8ySGxFFIRICA5hU0Ha2tONO6YcLrXgbJOqmD6Y1SwbmGKEhgdB04t89/1O/w1cDnyilFU="
+heroku config:set LINE_CHANNEL_SECRET="<LINE_CHANNEL_SECRET>" --app <HEROKU_APP_NAME>
+heroku config:set LINE_CHANNEL_TOKEN="<LINE_CHANNEL_TOKEN>" --app <HEROKU_APP_NAME>
 ```
 
 ### Gmail設定
 
 ```bash
-heroku config:set GMAIL_USERNAME="mobilis.stretch@gmail.com"
-heroku config:set GMAIL_APP_PASSWORD="xtjg clst hbpw rsho"
+heroku config:set GMAIL_USERNAME="<GMAIL_USERNAME>" --app <HEROKU_APP_NAME>
+heroku config:set GMAIL_APP_PASSWORD="<GMAIL_APP_PASSWORD>" --app <HEROKU_APP_NAME>
 ```
 
 ### 管理者設定

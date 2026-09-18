@@ -33,10 +33,10 @@
 ### 2. 環境変数の設定
 ```bash
 # 本番環境で設定する環境変数
-export GMAIL_USERNAME="mobilis.stretch@gmail.com"
-export GMAIL_APP_PASSWORD="xtjg clst hbpw rsho"
-export LINE_CHANNEL_SECRET="360b1b477e3025114f7ecde7f4f05f79"
-export LINE_CHANNEL_TOKEN="hojBYvKt8rfBN4+/gRMdMyzofkMCb7HlJhaOFufi/hRGPPG/AGzeJZde3CLoxLoNCaei7wa92TO4xIt+kyviaS6SUS5Q9Hrj+WSJFN8ySGxFFIRICA5hU0Ha2tONO6YcrXgbJOqmD6Y1SwbmGKEhgdB04t89/1O/w1cDnyilFU="
+export GMAIL_USERNAME="<GMAIL_USERNAME>"
+export GMAIL_APP_PASSWORD="<GMAIL_APP_PASSWORD>"
+export LINE_CHANNEL_SECRET="<LINE_CHANNEL_SECRET>"
+export LINE_CHANNEL_TOKEN="<LINE_CHANNEL_TOKEN>"
 export ADMIN_EMAIL="mobilis.stretch@gmail.com"
 export MAIL_FROM="mobilis.stretch@gmail.com"
 export APP_HOST="https://your-production-domain.com"

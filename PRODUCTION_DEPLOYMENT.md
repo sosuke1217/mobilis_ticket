@@ -46,12 +46,12 @@ heroku config | grep REDIS_URL
 
 ```bash
 # LINE Bot設定
-heroku config:set LINE_CHANNEL_SECRET="360b1b477e3025114f7ecde7f4f05f79"
-heroku config:set LINE_CHANNEL_TOKEN="hojBYvKt8rfBN4+/gRMdMyzofkMCb7HlJhaOFufi/hRGPPG/AGzeJZde3CLoxLoNCaei7wa92TO4xIt+kyviaS6SUS5Q9Hrj+WSJFN8ySGxFFIRICA5hU0Ha2tONO6YcLrXgbJOqmD6Y1SwbmGKEhgdB04t89/1O/w1cDnyilFU="
+heroku config:set LINE_CHANNEL_SECRET="<LINE_CHANNEL_SECRET>"
+heroku config:set LINE_CHANNEL_TOKEN="<LINE_CHANNEL_TOKEN>"
 
 # Gmail設定
 heroku config:set GMAIL_USERNAME="mobilis.stretch@gmail.com"
-heroku config:set GMAIL_APP_PASSWORD="xtjg clst hbpw rsho"
+heroku config:set GMAIL_APP_PASSWORD="<GMAIL_APP_PASSWORD>"
 
 # 管理者設定
 heroku config:set ADMIN_EMAIL="mobilis.stretch@gmail.com"
